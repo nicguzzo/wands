@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.nicguzzo.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "RenderWorldMixin"
+  ],
+  "client": [    
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
