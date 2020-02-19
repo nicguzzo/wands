@@ -1,6 +1,6 @@
 package net.nicguzzo;
 
-import java.util.Arrays;
+
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
 import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
@@ -109,36 +109,42 @@ public class WandsMod implements ModInitializer {
 				boolean preview=false;
 				Direction dir=Direction.EAST;
 				
-				if(block_state.isFullCube(client.world, pos)){
+				Identifier id=  block_state.getBlock().getDropTableId();
+				//System.out.println("name: "+id);
+				//TODO: find a better way to test if its a slab...
+				boolean is_slab=id.toString().contains("slab");
+				if(block_state.isFullCube(client.world, pos)||is_slab){
 					if(WandItem.getMode()==0 ){										
-						
+						float h=1.0f;
 						float x=pos.getX();
 						float y=pos.getY();
 						float z=pos.getZ();
 						float o=0.01f;
+						if(is_slab)
+							h=0.5f;
 						switch(side){
 							case UP:
-								y+=1.0f+o;
+								y+=h+o;
 								break;
 							case DOWN:
 								y-=o;
 								break;
 							case SOUTH:
-								z+=1.0f+o;
+								z+=1+o;
 								break;
 							case NORTH:
 								z-=o;
 								break;
 							case EAST:
-								x+=1.0f+o;
+								x+=1+o;
 								break;
 							case WEST:
 								x-=o;
 								break;
 						}
 						
-						grid( side, x, y, z,bufferBuilder);
-						Direction dirs[]=getDirectionMode0(block_hit.getPos(),side);
+						grid( side, x, y, z,bufferBuilder,h);
+						Direction dirs[]=getDirectionMode0(block_hit.getPos(),side,h);
 						Direction d1=dirs[0];
 						Direction d2=dirs[1];
 					
@@ -386,7 +392,7 @@ public class WandsMod implements ModInitializer {
             y=1.0f+y;        
         return y;
     }
-    static public Direction[] getDirectionMode0(Vec3d hitPos,Direction side){
+    static public Direction[] getDirectionMode0(Vec3d hitPos,Direction side,float h){
 		Direction ret[]=new Direction[2];
 		ret[0]=null;
 		ret[1]=null;
@@ -395,15 +401,18 @@ public class WandsMod implements ModInitializer {
         float x=unitCoord((float)hitPos.getX());
         float y=unitCoord((float)hitPos.getY());
         float z=unitCoord((float)hitPos.getZ());
-        
+		float a=0.25f;
+		float b=0.75f;
+		float a2=a*h;
+		float b2=b*h;
         switch (side) {
             case UP:
             case DOWN:
-                if (x >= 0.25 && x <= 0.75) {
-                    if (z <= 0.25){
+                if (x >= a && x <= b) {
+                    if (z <= a){
 						ret[0]= Direction.NORTH;						
                     }else {
-                        if (z >= 0.75){
+                        if (z >= b){
 							ret[0]= Direction.SOUTH;							
                         }else{
                             if(player.isSneaking()){
@@ -414,28 +423,28 @@ public class WandsMod implements ModInitializer {
                         }
                     }
                 } else {
-                    if (z >= 0.25 && z <= 0.75) {
-                        if (x <= 0.25){
+                    if (z >= a && z <= b) {
+                        if (x <= a){
 							ret[0]= Direction.WEST;							
                         }else {
-                            if (x >= 0.75){
+                            if (x >= b){
 								ret[0]= Direction.EAST;								
                             }
                         }
                     }else{
-						if (x <= 0.25 && z <= 0.25){
+						if (x <= a && z <= a){
 							ret[0]= Direction.WEST;	
 							ret[1]= Direction.NORTH;
 						}
-						if (x >= 0.75 && z <= 0.25){
+						if (x >= b && z <= a){
 							ret[0]= Direction.EAST;	
 							ret[1]= Direction.NORTH;
 						}
-						if (x >= 0.75 && z >= 0.75){
+						if (x >= b && z >= b){
 							ret[0]= Direction.EAST;	
 							ret[1]= Direction.SOUTH;
 						}
-						if (x <= 0.25 && z >= 0.75){
+						if (x <= a && z >= b){
 							ret[0]= Direction.WEST;	
 							ret[1]= Direction.SOUTH;
 						}
@@ -443,13 +452,14 @@ public class WandsMod implements ModInitializer {
                 }
                 break;
             case EAST:
-            case WEST:
-                if (z >= 0.25 && z <= 0.75) {
-                    if (y <= 0.25){
+			case WEST:
+				
+                if (z >= a && z <= b) {
+                    if (y <= a2){
 						ret[0]= Direction.DOWN;
 						return ret;
 					}else {
-                        if (y >= 0.75){
+                        if (y >= b2){
 							ret[0]= Direction.UP;
 							return ret;
                         }else{
@@ -463,30 +473,30 @@ public class WandsMod implements ModInitializer {
                         }
                     }
                 } else {
-                    if (y >= 0.25 && y <= 0.75) {
-                        if (z <= 0.25){
+                    if (y >= a2 && y <= b2) {
+                        if (z <= a){
 							ret[0]= Direction.NORTH;
 							return ret;
                         }else {
-                            if (z >= 0.75){
+                            if (z >= b){
 								ret[0]= Direction.SOUTH;
 								return ret;
                             }
                         }
                     }else{
-						if (y <= 0.25 && z <= 0.25){
+						if (y <= a2 && z <= a){
 							ret[0]= Direction.DOWN;	
 							ret[1]= Direction.NORTH;
 						}
-						if (y >= 0.75 && z <= 0.25){
+						if (y >= b2 && z <= a){
 							ret[0]= Direction.UP;	
 							ret[1]= Direction.NORTH;
 						}
-						if (y >= 0.75 && z >= 0.75){
+						if (y >= b2 && z >= b){
 							ret[0]= Direction.UP;	
 							ret[1]= Direction.SOUTH;
 						}
-						if (y <= 0.25 && z >= 0.75){
+						if (y <= a2 && z >= b){
 							ret[0]= Direction.DOWN;	
 							ret[1]= Direction.SOUTH;
 						}
@@ -495,12 +505,12 @@ public class WandsMod implements ModInitializer {
                 break;
             case NORTH:
             case SOUTH:
-                if (x >= 0.25 && x <= 0.75) {
-                    if (y <= 0.25){
+                if (x >= a && x <= b) {
+                    if (y <= a2){
 						ret[0]= Direction.DOWN;
 						return ret;
 					}else {
-                        if (y >= 0.75){
+                        if (y >= b2){
 							ret[0]= Direction.UP;
 							return ret;
                         }else{
@@ -514,30 +524,30 @@ public class WandsMod implements ModInitializer {
                         }
                     }
                 } else {
-                    if (y >= 0.25 && y <= 0.75) {
-                        if (x <= 0.25){
+                    if (y >= a2 && y <= b2) {
+                        if (x <= a){
 							ret[0]= Direction.WEST;
 							return ret;
                         }else {
-                            if (x >= 0.75){
+                            if (x >= b2){
 								ret[0]= Direction.EAST;
 								return ret;
                             }
                         }
                     }else{
-						if (y <= 0.25 && x <= 0.25){
+						if (y <= a2 && x <= a){
 							ret[0]= Direction.DOWN;	
 							ret[1]= Direction.WEST;
 						}
-						if (y >= 0.75 && x <= 0.25){
+						if (y >= b2 && x <= a){
 							ret[0]= Direction.UP;	
 							ret[1]= Direction.WEST;
 						}
-						if (y >= 0.75 && x >= 0.75){
+						if (y >= b2 && x >= b){
 							ret[0]= Direction.UP;	
 							ret[1]= Direction.EAST;
 						}
-						if (y <= 0.25 && x >= 0.75){
+						if (y <= a2 && x >= b){
 							ret[0]= Direction.DOWN;	
 							ret[1]= Direction.EAST;
 						}
@@ -547,7 +557,7 @@ public class WandsMod implements ModInitializer {
         }
         return ret;        
 	}
-	public static void grid(Direction side,float x, float y,float z,BufferBuilder b){
+	public static void grid(Direction side,float x, float y,float z,BufferBuilder b,float h){
 		switch(side){
 			case UP:                        
 			case DOWN:                    
@@ -613,123 +623,123 @@ public class WandsMod implements ModInitializer {
 			}break;
 			case NORTH:                        
 			case SOUTH:{
-				b.vertex(x      ,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+1.00f,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
-				b.vertex(x      ,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x      ,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
-				b.vertex(x+1.00f,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+1.00f,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x      ,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+1.00f,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x      ,y+0.25f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+1.00f,y+0.25f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x      ,y+0.75f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+1.00f,y+0.75f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.25f,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.25f,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.75f,y      , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.75f,y+1.00f, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.40f,y+0.20f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.05f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.60f,y+0.20f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.05f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.40f,y+0.80f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.95f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.60f,y+0.80f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.95f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.20f,y+0.40f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.05f,y+0.50f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
-				b.vertex(x+0.20f,y+0.60f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.05f,y+0.50f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.80f,y+0.40f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.95f,y+0.50f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
-				b.vertex(x+0.80f,y+0.60f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.95f,y+0.50f, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x+0.40f,y+0.50f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.40f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.40f,y+0.50f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.60f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.60f,y+0.50f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.60f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.50f,y+0.40f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x+0.60f,y+0.50f, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-
-				b.vertex(x+0.10f, y+0.10f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.20f, y+0.14f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.10f, y+0.10f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.14f, y+0.20f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.90f, y+0.90f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.80f, y+0.86f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.90f, y+0.90f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.86f, y+0.80f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.90f, y+0.10f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.80f, y+0.14f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.90f, y+0.10f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.86f, y+0.20f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.10f, y+0.90f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.20f, y+0.86f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.10f, y+0.90f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x+0.14f, y+0.80f, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x      , y        , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+1.00f, y        , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
+				b.vertex(x      , y        , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x      , y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
+				b.vertex(x+1.00f, y        , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+1.00f, y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x      , y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+1.00f, y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x      , y+0.25f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+1.00f, y+0.25f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x      , y+0.75f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+1.00f, y+0.75f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.25f, y        , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.25f, y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.75f, y       , z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.75f, y+1.00f*h, z) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.40f, y+0.20f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.05f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.60f, y+0.20f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.05f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.40f, y+0.80f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.95f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.60f, y+0.80f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.95f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.20f, y+0.40f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.05f, y+0.50f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
+				b.vertex(x+0.20f, y+0.60f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.05f, y+0.50f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.80f, y+0.40f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.95f, y+0.50f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
+				b.vertex(x+0.80f, y+0.60f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.95f, y+0.50f*h, z) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x+0.40f, y+0.50f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.40f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.40f, y+0.50f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.60f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.60f, y+0.50f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.60f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.50f, y+0.40f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.60f, y+0.50f*h, z) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x+0.10f, y+0.10f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.20f, y+0.14f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.10f, y+0.10f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.14f, y+0.20f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.90f, y+0.90f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.80f, y+0.86f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.90f, y+0.90f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.86f, y+0.80f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.90f, y+0.10f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.80f, y+0.14f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.90f, y+0.10f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.86f, y+0.20f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.10f, y+0.90f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.20f, y+0.86f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.10f, y+0.90f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x+0.14f, y+0.80f*h, z) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
 			}
 			break;
 			case EAST:                        
 			case WEST:{
-				b.vertex(x,y      ,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+1.00f,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
-				b.vertex(x,y      ,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y      ,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
-				b.vertex(x,y+1.00f,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+1.00f,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y      ,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+1.00f,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y      ,z+0.25f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+1.00f,z+0.25f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y      ,z+0.75f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+1.00f,z+0.75f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.25f,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.25f,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.75f,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.75f,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.40f,z+0.20f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.05f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.60f,z+0.20f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.05f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.40f,z+0.80f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.95f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.60f,z+0.80f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.95f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.20f,z+0.40f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.05f,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
-				b.vertex(x,y+0.20f,z+0.60f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.05f,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.80f,z+0.40f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.95f,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
-				b.vertex(x,y+0.80f,z+0.60f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.95f,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.40f,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.40f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.40f,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.60f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.60f,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.60f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.50f,z+0.40f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.60f,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x,y+0.10f, z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.20f, z+0.14f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.10f, z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.14f, z+0.20f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.90f, z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.80f, z+0.86f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.90f, z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.86f, z+0.80f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.90f, z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.80f, z+0.14f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.90f, z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.86f, z+0.20f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.10f, z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.20f, z+0.86f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.10f, z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x,y+0.14f, z+0.80f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				
+				b.vertex(x,y        ,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+1.00f*h,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
+				b.vertex(x,y        ,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y        ,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();                        
+				b.vertex(x,y+1.00f*h,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+1.00f*h,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y        ,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+1.00f*h,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y        ,z+0.25f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+1.00f*h,z+0.25f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y        ,z+0.75f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+1.00f*h,z+0.75f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.25f*h,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.25f*h,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.75f*h,z      ) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.75f*h,z+1.00f) .color(1.0f, 1.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.40f*h,z+0.20f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.05f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.60f*h,z+0.20f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.05f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.40f*h,z+0.80f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.95f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.60f*h,z+0.80f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.95f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.20f*h,z+0.40f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.05f*h,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
+				b.vertex(x,y+0.20f*h,z+0.60f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.05f*h,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.80f*h,z+0.40f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.95f*h,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();						
+				b.vertex(x,y+0.80f*h,z+0.60f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.95f*h,z+0.50f) .color(0.7f, 0.0f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.40f*h,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.40f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.40f*h,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.60f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.60f*h,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.60f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.50f*h,z+0.40f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.60f*h,z+0.50f) .color(0.0f, 0.7f, 0.0f, 1.0f).next();
+				b.vertex(x,y+0.10f*h,z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.20f*h,z+0.14f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.10f*h,z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.14f*h,z+0.20f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.90f*h,z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.80f*h,z+0.86f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.90f*h,z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.86f*h,z+0.80f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.90f*h,z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.80f*h,z+0.14f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.90f*h,z+0.10f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.86f*h,z+0.20f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.10f*h,z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.20f*h,z+0.86f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.10f*h,z+0.90f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				b.vertex(x,y+0.14f*h,z+0.80f ) .color(0.0f, 0.0f, 1.0f, 1.0f).next();
 				
 			}
 			break;
