@@ -3,9 +3,9 @@
   "package": "net.nicguzzo.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "RenderWorldMixin"
   ],
-  "client": [    
+  "client": [
+    "RenderWorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
