@@ -7,6 +7,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.ActionResult;
@@ -69,17 +70,6 @@ public class  WandItem extends Item
                 passedData.writeBlockPos(pos1);
                 // Send packet to server to change the block for us
                 ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
-            }else{
-                
-            }
-           
-            if(!player.abilities.creativeMode){
-                int slot=player.inventory.getSlotWithStack(itemStack);
-                if(player.inventory.getInvStack(slot)!=ItemStack.EMPTY){
-                    player.inventory.getInvStack(slot).decrement(1);
-                }
-                ItemStack stack = player.getMainHandStack();
-                stack.setDamage(stack.getDamage() + 1);
             }
             return true;
         }
