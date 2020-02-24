@@ -1,17 +1,19 @@
 package net.nicguzzo;
 
-
+import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.block.BlockState;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-
+import io.netty.buffer.Unpooled;
 import net.minecraft.world.World;
 
 public class  WandItem extends Item
@@ -55,19 +57,35 @@ public class  WandItem extends Item
         mode=(mode+1)% 2;        
         System.out.println("Wands mode: "+mode);
     }
-    private void placeBlock(World world,PlayerEntity player,BlockPos pos,BlockState block_state){
-        if(player.abilities.creativeMode){
-            world.setBlockState(pos, block_state);
-        }else{
-            ItemStack b=new ItemStack(block_state.getBlock());
-            if(player.inventory.contains(b)){
-                world.setBlockState(pos, block_state);
-                int slot=player.inventory.getSlotWithStack(b);
-                player.inventory.getInvStack(slot).decrement(1);
+    
+    private boolean placeBlock(World world,PlayerEntity player,BlockPos pos0,BlockPos pos1,BlockState block_state,ItemStack itemStack){
+                
+        if(player.inventory.contains(itemStack) || player.abilities.creativeMode){
+            
+            if(world.isClient){
+                //System.out.println("isClient");                
+                PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+                passedData.writeBlockPos(pos0);
+                passedData.writeBlockPos(pos1);
+                // Send packet to server to change the block for us
+                ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
+            }else{
+                
+            }
+           
+            if(!player.abilities.creativeMode){
+                int slot=player.inventory.getSlotWithStack(itemStack);
+                if(player.inventory.getInvStack(slot)!=ItemStack.EMPTY){
+                    player.inventory.getInvStack(slot).decrement(1);
+                }
                 ItemStack stack = player.getMainHandStack();
                 stack.setDamage(stack.getDamage() + 1);
             }
+            return true;
         }
+
+       
+        return false;
     }
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
@@ -77,17 +95,17 @@ public class  WandItem extends Item
         }
         PlayerEntity player= context.getPlayer();        
         World world=context.getWorld();
-        BlockPos pos=context.getBlockPos();  
-        Direction side = context.getSide();        
-        BlockState block_state=world.getBlockState(pos);
-  
-        System.out.println("side: "+side);
-
+        BlockPos pos0=context.getBlockPos();  
+        BlockState block_state=world.getBlockState(pos0);
+        ItemStack item_stack=new ItemStack(block_state.getBlock());
         switch (mode) {
             case 0:
-                BlockPos pos0=new BlockPos(x1, y1, z1);
-                placeBlock(world,player,pos0,block_state);
-
+                BlockPos pos1=new BlockPos(x1, y1, z1);
+                
+                if(placeBlock(world,player,pos0,pos1,block_state,item_stack)){
+                    BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
+                    world.playSound(player, pos1, block_state.getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
+                }
             break;
             case 1:
                 int l=0;
@@ -106,8 +124,16 @@ public class  WandItem extends Item
                     break;									
                 }                
                 BlockPos pos2=new BlockPos(x1, y1, z1);
+                int placed=0;
                 for (int i = 0;i <l ;i++) {            
-                    placeBlock(world,player,pos2.offset(WandItem.mode2_dir, i),block_state);        
+                    if(placeBlock(world,player,pos0,pos2.offset(WandItem.mode2_dir, i),block_state,item_stack)){
+                        placed++;
+                    }
+                }
+                System.out.println("placed "+placed);
+                if(placed>0){
+                    BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
+                    world.playSound(player, pos0, block_state.getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
                 }
             break;
         }

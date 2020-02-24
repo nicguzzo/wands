@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 
-import net.nicguzzo.WandsMod;
+import net.nicguzzo.WandsClientMod;
 
 @Mixin(GameRenderer.class)
 public abstract class RenderWorldMixin {
@@ -23,7 +23,7 @@ public abstract class RenderWorldMixin {
     )
     
     private void onRenderWorld(float partialTicks, long nanoTime, MatrixStack matrixStack, CallbackInfo ci) {
-        WandsMod.render(partialTicks,matrixStack);
+        WandsClientMod.render(partialTicks,matrixStack);
     }
 
 }
