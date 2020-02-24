@@ -237,8 +237,11 @@ public class WandsClientMod implements ClientModInitializer {
 								boolean stop1=false;
 								boolean stop2=false;
 								boolean intersects=false;
-								
-								while(k<81 && i>0 ){
+								int n=player.inventory.countInInv(item_stack.getItem());								
+								if(n<i){
+									i=n-1;
+								}								
+								while(k<81 && i>0 ){								
 									if(!stop1 && i>0){
 										BlockState bs0 =client.world.getBlockState(pos0.offset(dir,1));
 										BlockState bs1 =client.world.getBlockState(pos1.offset(dir,1));									
@@ -249,7 +252,7 @@ public class WandsClientMod implements ClientModInitializer {
 										}else{										
 											stop1=true;
 										}
-									}
+									}									
 									if(!stop2 && i>0){
 										BlockState bs2 =client.world.getBlockState(pos2.offset(op,1));
 										BlockState bs3 =client.world.getBlockState(pos3.offset(op,1));
