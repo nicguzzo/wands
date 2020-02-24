@@ -51,19 +51,25 @@ public class WandsMod implements ModInitializer {
 
 					if (!player.abilities.creativeMode) {
 						ItemStack item_stack = new ItemStack(state.getBlock());
-						
-						int slot=-1;
-						for(int i = 0; i < player.inventory.main.size(); ++i) {
-							ItemStack stack2=(ItemStack)player.inventory.main.get(i);
-							if (!((ItemStack)player.inventory.main.get(i)).isEmpty() &&
-								item_stack.getItem() == stack2.getItem() && ItemStack.areTagsEqual(item_stack, stack2)							 
-							 ) {
-							   slot=i;
+						ItemStack off_hand_stack=(ItemStack)player.inventory.offHand.get(0);
+						if (!off_hand_stack.isEmpty() &&
+								item_stack.getItem() == off_hand_stack.getItem() && ItemStack.areTagsEqual(item_stack, off_hand_stack)							 
+						) {
+							player.inventory.offHand.get(0).decrement(1);
+						}else{
+							int slot=-1;
+							for(int i = 0; i < player.inventory.main.size(); ++i) {
+								ItemStack stack2=(ItemStack)player.inventory.main.get(i);
+								if (!((ItemStack)player.inventory.main.get(i)).isEmpty() &&
+									item_stack.getItem() == stack2.getItem() && ItemStack.areTagsEqual(item_stack, stack2)							 
+								) {
+								slot=i;
+								}
 							}
-						 }
-						//int slot = player.inventory.getSlotWithStack(item_stack);					
-						if(slot > -1)	
-							player.inventory.getInvStack(slot).decrement(1);
+							//int slot = player.inventory.getSlotWithStack(item_stack);					
+							if(slot > -1)	
+								player.inventory.getInvStack(slot).decrement(1);
+						}
 						ItemStack wand_item = player.getMainHandStack();
 						wand_item.damage(1, player.getRandom(), player instanceof ServerPlayerEntity ? (ServerPlayerEntity)player : null);
 						/*wand_item.damage(1, (LivingEntity)player, (Consumer)((e) -> {
