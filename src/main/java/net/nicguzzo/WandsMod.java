@@ -1,29 +1,34 @@
 package net.nicguzzo;
 
-import java.util.Random;
-
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
-import net.minecraft.advancement.criterion.Criterions;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.BlockState;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.enchantment.UnbreakingEnchantment;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import java.util.function.Consumer;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 
 public class WandsMod implements ModInitializer {
 
+	public static WandsConfig config;
 	public static final Identifier WAND_PACKET_ID = new Identifier("wands", "wand");
-
+	public static final Identifier WANDXP_PACKET_ID = new Identifier("wands", "wandxp");
+	public static final Identifier WANDCONF_PACKET_ID = new Identifier("wands", "wandconf");
+	
 	// public static final WandItem NETHERITE_WAND_ITEM = new WandItem(31,2031);
 	public static final WandItem DIAMOND_WAND_ITEM = new WandItem(27, 1561);
 	public static final WandItem IRON_WAND_ITEM = new WandItem(9, 250);
@@ -32,54 +37,159 @@ public class WandsMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 
+		load_config();
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "stone_wand"), STONE_WAND_ITEM);
 
-		ServerSidePacketRegistry.INSTANCE.register(WAND_PACKET_ID, (packetContext, attachedData) -> {
-			// Get the BlockPos we put earlier in the IO thread
-			BlockPos pos0 = attachedData.readBlockPos();
-			BlockPos pos1 = attachedData.readBlockPos();
-			// BlockState state = attachedData.read
+		ServerSidePacketRegistry.INSTANCE.register(WANDCONF_PACKET_ID, (packetContext, attachedData) -> {			
 			packetContext.getTaskQueue().execute(() -> {
-				// Execute on the main thread
-				// ALWAYS validate that the information received is valid in a C2S packet!
+				final PlayerEntity player = packetContext.getPlayer();
+				final PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+				passedData.writeInt(WandsMod.config.blocks_per_xp);
+				System.out.println("sending blocks_per_xp : "+WandsMod.config.blocks_per_xp);
+				ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, WandsMod.WANDCONF_PACKET_ID,passedData);				
+			});
+		});
+		ServerSidePacketRegistry.INSTANCE.register(WAND_PACKET_ID, (packetContext, attachedData) -> {
+			final BlockPos pos0 = attachedData.readBlockPos();
+			final BlockPos pos1 = attachedData.readBlockPos();
+			packetContext.getTaskQueue().execute(() -> {
 				if (World.isValid(pos0) && World.isValid(pos1)) {
-					PlayerEntity player = packetContext.getPlayer();
-					BlockState state = packetContext.getPlayer().world.getBlockState(pos0);
+					final PlayerEntity player = packetContext.getPlayer();
+					final BlockState state = player.world.getBlockState(pos0);
+					place(player,pos0,pos1,state);					
+				}
+			});
+		});
+	}
+	private void place(PlayerEntity player,BlockPos pos0,BlockPos pos1,BlockState state ){
+		int BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
+		if (player.abilities.creativeMode) {
+			player.world.setBlockState(pos1, state);
+		} else {						
+			float xp=WandsMod.calc_xp(player.experienceLevel,player.experienceProgress);		
+			float dec=0.0f;
+			if(BLOCKS_PER_XP!=0){
+				dec=  (1.0f/BLOCKS_PER_XP);
+			}
+			if (BLOCKS_PER_XP == 0 ||  (xp - dec) > 0) {
+				boolean placed = false;
+				final ItemStack item_stack = new ItemStack(state.getBlock());
+				final ItemStack off_hand_stack = (ItemStack) player.inventory.offHand.get(0);
+				if (!off_hand_stack.isEmpty() && item_stack.getItem() == off_hand_stack.getItem()
+						&& ItemStack.areTagsEqual(item_stack, off_hand_stack)) {
 					player.world.setBlockState(pos1, state);
-
-					if (!player.abilities.creativeMode) {
-						ItemStack item_stack = new ItemStack(state.getBlock());
-						ItemStack off_hand_stack=(ItemStack)player.inventory.offHand.get(0);
-						if (!off_hand_stack.isEmpty() &&
-								item_stack.getItem() == off_hand_stack.getItem() && ItemStack.areTagsEqual(item_stack, off_hand_stack)							 
-						) {
-							player.inventory.offHand.get(0).decrement(1);
-						}else{
-							int slot=-1;
-							for(int i = 0; i < player.inventory.main.size(); ++i) {
-								ItemStack stack2=(ItemStack)player.inventory.main.get(i);
-								if (!((ItemStack)player.inventory.main.get(i)).isEmpty() &&
-									item_stack.getItem() == stack2.getItem() && ItemStack.areTagsEqual(item_stack, stack2)							 
-								) {
-								slot=i;
+					placed = true;
+					player.inventory.offHand.get(0).decrement(1);
+				} else {
+					int slot = -1;
+					for (int i = 0; i < player.inventory.main.size(); ++i) {
+						final ItemStack stack2 = (ItemStack) player.inventory.main.get(i);
+						if (!((ItemStack) player.inventory.main.get(i)).isEmpty()
+								&& item_stack.getItem() == stack2.getItem()
+								&& ItemStack.areTagsEqual(item_stack, stack2)) {
+							slot = i;
+						}
+					}
+					if (slot > -1) {
+						player.world.setBlockState(pos1, state);
+						placed = true;
+						player.inventory.getInvStack(slot).decrement(1);
+					}
+				}
+				if (placed) {
+					final ItemStack wand_item = player.getMainHandStack();
+					wand_item.damage(1, player.getRandom(),
+							player instanceof ServerPlayerEntity ? (ServerPlayerEntity) player : null);
+																					
+					if(BLOCKS_PER_XP!=0){														
+						float diff=WandsMod.calc_xp_to_next_level(player.experienceLevel);
+						float prog=player.experienceProgress;
+						if(diff>0 && BLOCKS_PER_XP!=0.0f){
+							float a=(1.0f/diff)/BLOCKS_PER_XP;
+							if(prog-a>0){
+								prog=prog-a;
+							}else{
+								if(prog>0.0f){				
+									//TODO: dirty solution....								
+									prog=1.0f+(a-prog);
+								}else{
+									prog=1.0f;
+								}
+								if(player.experienceLevel>0){
+									player.experienceLevel--;
+									diff=WandsMod.calc_xp_to_next_level(player.experienceLevel);
+									a=(1.0f/diff)/BLOCKS_PER_XP;
+									if(prog-a>0){
+										prog=prog-a;
+									}
 								}
 							}
-							//int slot = player.inventory.getSlotWithStack(item_stack);					
-							if(slot > -1)	
-								player.inventory.getInvStack(slot).decrement(1);
-						}
-						ItemStack wand_item = player.getMainHandStack();
-						wand_item.damage(1, player.getRandom(), player instanceof ServerPlayerEntity ? (ServerPlayerEntity)player : null);
-						/*wand_item.damage(1, (LivingEntity)player, (Consumer)((e) -> {
-							((LivingEntity) e).sendEquipmentBreakStatus(EquipmentSlot.MAINHAND);
-							}));*/
-					}
-                }
- 
-            });
-        });
-    }
-    
+						}									
+						player.experienceProgress = prog;
+
+						final PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+						passedData.writeInt(player.experienceLevel);
+						passedData.writeFloat(player.experienceProgress);
+						ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, WandsMod.WANDXP_PACKET_ID,
+								passedData);
+					}								
+
+				}
+			}
+		}
+	}
+	public static float calc_xp(final int level,float prog) {
+		float xp=WandsMod.calc_xp_level(level);
+		if(prog>0){							
+			xp=xp+ prog * (WandsMod.calc_xp_level(level+1)-xp);
+		}
+		return xp;
+	}
+	public static float calc_xp_level(final int level) {
+		float xp_points = 0;
+		final int level2 = level * level;
+		if(level>=32){
+			xp_points=4.5f*level2 - 162.5f *level + 2220.0f;
+		}else if(level>=17){
+			xp_points=2.5f*level2 - 40.5f *level + 360.0f;
+		}else {
+			xp_points=level2 + 6*level;
+		}
+		return xp_points;
+	}
+	public static int calc_xp_to_next_level(int level){
+		int xp=0;
+		if(level>=32){
+			xp = 9 * level - 158;	
+		}else if(level>=17){
+			xp = 5 * level - 38 ;	
+		}else {
+			xp = 2  *level + 7 ;	
+		}
+		return xp;
+	}
+
+	private void load_config(){
+		File configFile = new File(FabricLoader.getInstance().getConfigDirectory(), "wands.json");
+		try (FileReader reader = new FileReader(configFile)) {
+			config = new Gson().fromJson(reader, WandsConfig.class);
+			try (FileWriter writer = new FileWriter(configFile)) {
+				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(config));
+			} catch (IOException e2) {
+				System.out.println("Failed to update config file!");
+			}
+			System.out.println("Config loaded!");
+			
+		} catch (IOException e) {
+			System.out.println("No config found, generating!");
+			config = new WandsConfig();
+			try (FileWriter writer = new FileWriter(configFile)) {
+				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(config));
+			} catch (IOException e2) {
+				System.out.println("Failed to generate config file!");
+			}
+		}
+	}
 }

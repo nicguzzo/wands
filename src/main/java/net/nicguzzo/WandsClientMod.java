@@ -4,6 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
 import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
 import net.fabricmc.fabric.api.event.client.ClientTickCallback;
+import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -13,6 +14,9 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.Matrix4f;
 import org.lwjgl.opengl.GL11;
+
+import io.netty.buffer.Unpooled;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.block.BlockState;
@@ -27,14 +31,42 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.PacketByteBuf;
 
 public class WandsClientMod implements ClientModInitializer {
 
 	private static FabricKeyBinding mode_keyBinding;
 	private static FabricKeyBinding orientation_keyBinding;
-
+	public static int BLOCKS_PER_XP=0;
+	public static boolean conf=false;
 	@Override
 	public void onInitializeClient() {
+		
+		ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDXP_PACKET_ID,
+		(packetContext, attachedData) -> {
+
+			int xp_l=attachedData.readInt();
+			float xp_p=attachedData.readFloat();
+			packetContext.getTaskQueue().execute(() -> {
+				MinecraftClient client=MinecraftClient.getInstance();
+				ClientPlayerEntity player=client.player;
+				player.experienceLevel=xp_l;
+				player.experienceProgress=xp_p;
+				//System.out.println("update xp!");
+				//System.out.println("xp prog: "+ player.experienceProgress);
+			});
+		});
+		ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDCONF_PACKET_ID,
+		(packetContext, attachedData) -> {
+
+			int bpxp=attachedData.readInt();
+
+			packetContext.getTaskQueue().execute(() -> {
+				WandsClientMod.BLOCKS_PER_XP=bpxp;				
+				System.out.println("got BLOCKS_PER_XP from server "+ BLOCKS_PER_XP);
+			});
+		});
+		
 		
 		mode_keyBinding = FabricKeyBinding.Builder.create(
 				new Identifier("wands", "wand_mode"),
@@ -61,12 +93,21 @@ public class WandsClientMod implements ClientModInitializer {
 			}
 		});
 	}
+
 	public static void render(float partialTicks,MatrixStack matrixStack){
 		MinecraftClient client=MinecraftClient.getInstance();
 		ClientPlayerEntity player=client.player;
 		ItemStack item=player.inventory.getMainHandStack();		
+		/*
+		if (!conf) {
+			//request config
+			System.out.println("request config: ");
+			PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());                
+			ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WANDCONF_PACKET_ID, passedData);
+			conf=true;
+		}*/
 		
-        if(item.getItem() instanceof WandItem){
+        if(item.getItem() instanceof WandItem){			
             HitResult hitResult = client.crosshairTarget;            
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
 				int lim=((WandItem)item.getItem()).getLimit();
@@ -101,14 +142,21 @@ public class WandsClientMod implements ClientModInitializer {
 				
 					Identifier id=  block_state.getBlock().getDropTableId();
 				
-					//TODO: find a better way to test if its a slab...
-					
-					boolean is_slab=id.toString().contains("slab");
-				
-				
+					//TODO: find a better way to test if it's a slab...					
+					boolean is_slab=id.toString().contains("slab");				
+										
+					float xp=0.0f;					
+					int max_xp_blocks=0;
+					if(BLOCKS_PER_XP>0){
+						xp=WandsMod.calc_xp(player.experienceLevel,player.experienceProgress);						
+						max_xp_blocks=(int)(xp*BLOCKS_PER_XP);
+					}
+					//System.out.println("xp: "+xp);
+					//System.out.println("xp p: "+player.experienceProgress);
+					//System.out.println("max_xp_blocks "+max_xp_blocks);
 
-				
-					if(block_state.isFullCube(client.world, pos)||is_slab){
+					if(	( max_xp_blocks>0 || BLOCKS_PER_XP == 0 || player.abilities.creativeMode) && 
+						( block_state.isFullCube(client.world, pos)||is_slab)){
 						if(WandItem.getMode()==0 ){										
 							float h=1.0f;
 							float x=pos.getX();
@@ -237,10 +285,15 @@ public class WandsClientMod implements ClientModInitializer {
 								boolean stop1=false;
 								boolean stop2=false;
 								boolean intersects=false;
-								int n=player.inventory.countInInv(item_stack.getItem());								
-								if(n<i){
-									i=n-1;
-								}								
+								if(!player.abilities.creativeMode){
+									int n=player.inventory.countInInv(item_stack.getItem());
+									if(n<i){
+										i=n-1;
+									}
+									if(BLOCKS_PER_XP != 0 && max_xp_blocks<i){
+										i=max_xp_blocks-1;
+									}
+								}
 								while(k<81 && i>0 ){								
 									if(!stop1 && i>0){
 										BlockState bs0 =client.world.getBlockState(pos0.offset(dir,1));

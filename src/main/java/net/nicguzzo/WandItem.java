@@ -63,23 +63,19 @@ public class  WandItem extends Item
                 
         if(player.inventory.contains(itemStack) || player.abilities.creativeMode){
             
-            if(world.isClient){
-                //System.out.println("isClient");                
+            if(world.isClient){                
                 PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
                 passedData.writeBlockPos(pos0);
-                passedData.writeBlockPos(pos1);
-                // Send packet to server to change the block for us
+                passedData.writeBlockPos(pos1);                
                 ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
-            }
+            }            
             return true;
         }
-
-       
         return false;
     }
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
-
+        //System.out.println("blocks per xp: "+ WandsClientMod.BLOCKS_PER_XP);
         if(!valid){
             return ActionResult.FAIL;
         }
@@ -119,8 +115,7 @@ public class  WandItem extends Item
                     if(placeBlock(world,player,pos0,pos2.offset(WandItem.mode2_dir, i),block_state,item_stack)){
                         placed++;
                     }
-                }
-                System.out.println("placed "+placed);
+                }                
                 if(placed>0){
                     BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
                     world.playSound(player, pos0, block_state.getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
