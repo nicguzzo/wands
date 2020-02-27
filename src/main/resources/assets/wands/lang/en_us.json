@@ -2,6 +2,7 @@
     "item.wands.stone_wand": "Stone Wand",
     "item.wands.iron_wand": "Iron Wand",
     "item.wands.diamond_wand": "Diamond Wand",
-    "key.wands.wand_mode": "Wand Mode",
-    "key.wands.wand_orientation": "Wand Mode"
+    "key.wands.wand_mode": "Mode",
+    "key.wands.wand_orientation": "Orientation",
+    "key.wands.wand_undo": "Undo"
   }

@@ -4,7 +4,13 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.FenceBlock;
+import net.minecraft.block.PaneBlock;
+import net.minecraft.block.SlabBlock;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -28,6 +34,7 @@ public class WandsMod implements ModInitializer {
 	public static final Identifier WAND_PACKET_ID = new Identifier("wands", "wand");
 	public static final Identifier WANDXP_PACKET_ID = new Identifier("wands", "wandxp");
 	public static final Identifier WANDCONF_PACKET_ID = new Identifier("wands", "wandconf");
+	public static final Identifier WAND_UNDO_PACKET_ID = new Identifier("wands", "wandundo");
 	
 	// public static final WandItem NETHERITE_WAND_ITEM = new WandItem(31,2031);
 	public static final WandItem DIAMOND_WAND_ITEM = new WandItem(27, 1561);
@@ -41,7 +48,7 @@ public class WandsMod implements ModInitializer {
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "stone_wand"), STONE_WAND_ITEM);
-
+		
 		ServerSidePacketRegistry.INSTANCE.register(WANDCONF_PACKET_ID, (packetContext, attachedData) -> {			
 			packetContext.getTaskQueue().execute(() -> {
 				final PlayerEntity player = packetContext.getPlayer();
@@ -57,14 +64,38 @@ public class WandsMod implements ModInitializer {
 			packetContext.getTaskQueue().execute(() -> {
 				if (World.isValid(pos0) && World.isValid(pos1)) {
 					final PlayerEntity player = packetContext.getPlayer();
+					//final BlockState state = player.world.getBlockState(pos0);
+					place(player,pos0,pos1);					
+				}
+			});
+		});
+		ServerSidePacketRegistry.INSTANCE.register(WAND_UNDO_PACKET_ID, (packetContext, attachedData) -> {
+			final BlockPos pos0 = attachedData.readBlockPos();
+			packetContext.getTaskQueue().execute(() -> {
+				if (World.isValid(pos0)) {
+					final PlayerEntity player = packetContext.getPlayer();
 					final BlockState state = player.world.getBlockState(pos0);
-					place(player,pos0,pos1,state);					
+					if(!state.isAir()){
+						if (player.abilities.creativeMode) {
+							player.world.setBlockState(pos0, Blocks.VOID_AIR.getDefaultState());
+						}
+					}
 				}
 			});
 		});
 	}
-	private void place(PlayerEntity player,BlockPos pos0,BlockPos pos1,BlockState state ){
+	private void place(PlayerEntity player,BlockPos pos0,BlockPos pos1){
 		int BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
+		BlockState state = player.world.getBlockState(pos0);
+		Block block=state.getBlock();		
+		int d=1;
+		if((block instanceof  PaneBlock) || (block instanceof  FenceBlock)){
+			state=state.getBlock().getDefaultState();
+		}else if(block instanceof SlabBlock){
+			if(state.get(SlabBlock.TYPE)==SlabType.DOUBLE){
+				d=2;//should consume 2 if its a double slab
+			}
+		}
 		if (player.abilities.creativeMode) {
 			player.world.setBlockState(pos1, state);
 		} else {						
@@ -74,28 +105,33 @@ public class WandsMod implements ModInitializer {
 				dec=  (1.0f/BLOCKS_PER_XP);
 			}
 			if (BLOCKS_PER_XP == 0 ||  (xp - dec) > 0) {
-				boolean placed = false;
+				boolean placed = false;				
 				final ItemStack item_stack = new ItemStack(state.getBlock());
 				final ItemStack off_hand_stack = (ItemStack) player.inventory.offHand.get(0);
 				if (!off_hand_stack.isEmpty() && item_stack.getItem() == off_hand_stack.getItem()
-						&& ItemStack.areTagsEqual(item_stack, off_hand_stack)) {
-					player.world.setBlockState(pos1, state);
-					placed = true;
-					player.inventory.offHand.get(0).decrement(1);
+						&& ItemStack.areTagsEqual(item_stack, off_hand_stack)
+						&& off_hand_stack.getCount()>=d
+					) {
+					placed = player.world.setBlockState(pos1, state);					
+					//placed = true;
+					if(placed)
+						player.inventory.offHand.get(0).decrement(d);
 				} else {
 					int slot = -1;
 					for (int i = 0; i < player.inventory.main.size(); ++i) {
 						final ItemStack stack2 = (ItemStack) player.inventory.main.get(i);
 						if (!((ItemStack) player.inventory.main.get(i)).isEmpty()
 								&& item_stack.getItem() == stack2.getItem()
-								&& ItemStack.areTagsEqual(item_stack, stack2)) {
+								&& ItemStack.areTagsEqual(item_stack, stack2)
+								&& stack2.getCount()>=d) {
 							slot = i;
 						}
 					}
 					if (slot > -1) {
-						player.world.setBlockState(pos1, state);
-						placed = true;
-						player.inventory.getInvStack(slot).decrement(1);
+						placed = player.world.setBlockState(pos1, state);
+						//placed = true;
+						if(placed)
+							player.inventory.getInvStack(slot).decrement(d);
 					}
 				}
 				if (placed) {
@@ -112,7 +148,7 @@ public class WandsMod implements ModInitializer {
 								prog=prog-a;
 							}else{
 								if(prog>0.0f){				
-									//TODO: dirty solution....								
+									//TODO: dirty solution....
 									prog=1.0f+(a-prog);
 								}else{
 									prog=1.0f;
