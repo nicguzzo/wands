@@ -11,13 +11,16 @@ import net.minecraft.block.FenceBlock;
 import net.minecraft.block.PaneBlock;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.SlabType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+import java.util.function.Consumer;
 import net.minecraft.world.World;
 
 import java.io.File;
@@ -135,9 +138,13 @@ public class WandsMod implements ModInitializer {
 					}
 				}
 				if (placed) {
-					final ItemStack wand_item = player.getMainHandStack();
-					wand_item.damage(1, player.getRandom(),
-							player instanceof ServerPlayerEntity ? (ServerPlayerEntity) player : null);
+					final ItemStack wand_item = player.getMainHandStack();					
+					wand_item.damage(1, (LivingEntity)player, 
+						(Consumer)((p) -> {
+								((LivingEntity)p).sendToolBreakStatus(Hand.MAIN_HAND);
+							 }
+						)
+					);
 																					
 					if(BLOCKS_PER_XP!=0){														
 						float diff=WandsMod.calc_xp_to_next_level(player.experienceLevel);
