@@ -56,7 +56,7 @@ public class WandsMod implements ModInitializer {
 			packetContext.getTaskQueue().execute(() -> {
 				final PlayerEntity player = packetContext.getPlayer();
 				final PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
-				passedData.writeInt(WandsMod.config.blocks_per_xp);
+				passedData.writeFloat(WandsMod.config.blocks_per_xp);
 				System.out.println("sending blocks_per_xp : "+WandsMod.config.blocks_per_xp);
 				ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, WandsMod.WANDCONF_PACKET_ID,passedData);				
 			});
@@ -88,7 +88,7 @@ public class WandsMod implements ModInitializer {
 		});
 	}
 	private void place(PlayerEntity player,BlockPos pos0,BlockPos pos1){
-		int BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
+		float BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
 		BlockState state = player.world.getBlockState(pos0);
 		Block block=state.getBlock();		
 		int d=1;

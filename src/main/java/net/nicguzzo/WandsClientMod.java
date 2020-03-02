@@ -45,7 +45,7 @@ public class WandsClientMod implements ClientModInitializer {
 	private static FabricKeyBinding mode_keyBinding;
 	private static FabricKeyBinding orientation_keyBinding;
 	private static FabricKeyBinding undo_keyBinding;
-	public static int BLOCKS_PER_XP=0;
+	public static float BLOCKS_PER_XP=0;
 	public static boolean conf=false;
 	
 	@Override
@@ -68,7 +68,7 @@ public class WandsClientMod implements ClientModInitializer {
 		ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDCONF_PACKET_ID,
 		(packetContext, attachedData) -> {
 
-			int bpxp=attachedData.readInt();
+			float bpxp=attachedData.readFloat();
 
 			packetContext.getTaskQueue().execute(() -> {
 				WandsClientMod.BLOCKS_PER_XP=bpxp;				

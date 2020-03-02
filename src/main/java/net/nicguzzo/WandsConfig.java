@@ -4,10 +4,11 @@ import net.minecraft.util.PacketByteBuf;
 
 
 public class WandsConfig {
-	public int blocks_per_xp;
+	public float blocks_per_xp=0.0f;
 	
-	public WandsConfig(int bpxp) {
-		this.blocks_per_xp = bpxp;		
+	public WandsConfig(float bpxp) {
+		if(bpxp>=0.0f)
+			this.blocks_per_xp = bpxp;		
 	}
 	public WandsConfig() {
 		this(0);
@@ -21,12 +22,12 @@ public class WandsConfig {
 	}
 
 	public static PacketByteBuf writeConfig(PacketByteBuf buf, WandsConfig config) {
-		buf.writeInt(config.blocks_per_xp);		
+		buf.writeFloat(config.blocks_per_xp);		
 		return buf;
 	}
 
 	public static WandsConfig readConfig(PacketByteBuf buf) {
-		int bpxp = buf.readInt();		
+		float bpxp = buf.readFloat();		
 		return new WandsConfig(bpxp);
 	}
 
