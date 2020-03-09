@@ -36,7 +36,8 @@ public class  WandItem extends Item
     public static Deque <Undo> undos=new LinkedList<>();
     private int MAX_UNDO=32;
     private int limit=32;
-    private static int mode=0;
+    private static int mode = 0;
+    private static boolean invert=false;
     private static Orientation orientation=Orientation.HORIZONTAL;
     public static int x1;
     public static int y1;
@@ -51,8 +52,17 @@ public class  WandItem extends Item
         super(new Item.Settings().group(ItemGroup.MISC).maxCount(1).maxDamage(max_damage));
         limit=lim;
     }
-    static public int getMode(){
+
+    static public int getMode() {
         return mode;
+    }
+
+    static public boolean getInvert() {
+        return invert;
+    }
+
+    static public void toggleInvert() {
+        invert = !invert;        
     }
     public int getLimit(){
         return limit;
