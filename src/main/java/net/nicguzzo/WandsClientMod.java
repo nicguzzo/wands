@@ -1,8 +1,7 @@
 package net.nicguzzo;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.FabricKeyBinding;
-import net.fabricmc.fabric.api.client.keybinding.KeyBindingRegistry;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.event.client.ClientTickCallback;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
@@ -12,7 +11,7 @@ import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.math.Matrix4f;
+
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -29,6 +28,7 @@ import net.minecraft.block.StairsBlock;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
@@ -37,15 +37,17 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 
 public class WandsClientMod implements ClientModInitializer {
 
-	private static FabricKeyBinding mode_keyBinding;
-	private static FabricKeyBinding orientation_keyBinding;
-	private static FabricKeyBinding invert_keyBinding;
-	private static FabricKeyBinding undo_keyBinding;
+	
+	private static KeyBinding modeKB;
+	private static KeyBinding orientationKB;
+	private static KeyBinding invertKB;
+	private static KeyBinding undoKB;
 	public static float BLOCKS_PER_XP = 0;
 	public static boolean conf = false;
 
@@ -75,31 +77,26 @@ public class WandsClientMod implements ClientModInitializer {
 			});
 		});
 
-		mode_keyBinding = FabricKeyBinding.Builder
-				.create(new Identifier("wands", "wand_mode"), InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "Wands").build();
-		orientation_keyBinding = FabricKeyBinding.Builder
-				.create(new Identifier("wands", "wand_orientation"), InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "Wands").build();
-		undo_keyBinding = FabricKeyBinding.Builder
-				.create(new Identifier("wands", "wand_undo"), InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "Wands").build();
-		invert_keyBinding = FabricKeyBinding.Builder
-				.create(new Identifier("wands", "wand_invert"), InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "Wands").build();
-
-		KeyBindingRegistry.INSTANCE.addCategory("Wands");
-		KeyBindingRegistry.INSTANCE.register(mode_keyBinding);
-		KeyBindingRegistry.INSTANCE.register(orientation_keyBinding);
-		KeyBindingRegistry.INSTANCE.register(invert_keyBinding);
-		KeyBindingRegistry.INSTANCE.register(undo_keyBinding);
+		modeKB = new KeyBinding("key.wands.wand_mode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "category.wands");
+		KeyBindingHelper.registerKeyBinding(modeKB);
+		orientationKB = new KeyBinding("key.wands.wand_orientation", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "category.wands");
+		KeyBindingHelper.registerKeyBinding(orientationKB);
+		undoKB        = new KeyBinding("key.wands.wand_undo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.wands" );
+		KeyBindingHelper.registerKeyBinding(undoKB);
+		invertKB      = new KeyBinding("key.wands.wand_invert", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.wands" );
+		KeyBindingHelper.registerKeyBinding(invertKB);
+		
 		ClientTickCallback.EVENT.register(e -> {
-			if (mode_keyBinding.wasPressed()) {
+			if (modeKB.wasPressed()) {
 				WandItem.toggleMode();
 			}
-			if (orientation_keyBinding.wasPressed()) {
+			if (orientationKB.wasPressed()) {
 				WandItem.cycleOrientation();
 			}
-			if (undo_keyBinding.wasPressed()) {
+			if (undoKB.wasPressed()) {
 				WandItem.undo();
 			}
-			if (invert_keyBinding.wasPressed()) {
+			if (invertKB.wasPressed()) {
 				WandItem.toggleInvert();
 			}
 		});
@@ -149,8 +146,8 @@ public class WandsClientMod implements ClientModInitializer {
 						d = 2;
 					}
 				}
-				ItemStack item_stack = new ItemStack(block);
-				if (player.inventory.countInInv(item_stack.getItem()) >= d || player.abilities.creativeMode) {
+				ItemStack item_stack = new ItemStack(block);				
+				if (player.inventory.count(item_stack.getItem()) >= d || player.abilities.creativeMode) {
 					boolean is_pane = false;
 					
 					boolean is_fence = false;
@@ -296,8 +293,8 @@ public class WandsClientMod implements ClientModInitializer {
 			int max_xp_blocks, ItemStack item_stack, boolean dont_check_state) {
 		Direction dir = Direction.EAST;
 		BlockPos pos_m = pos.offset(side, 1);
-
-		if (world.getBlockState(pos_m).isAir() || world.getBlockState(pos_m).getFluidState().matches(FluidTags.WATER)) {
+		
+		if (world.getBlockState(pos_m).isAir() || world.getBlockState(pos_m).getFluidState().isIn(FluidTags.WATER)) {
 			BlockPos pos0 = pos;
 			BlockPos pos1 = pos_m;
 			BlockPos pos2 = pos;
@@ -354,7 +351,7 @@ public class WandsClientMod implements ClientModInitializer {
 			boolean stop2 = false;
 			boolean intersects = false;
 			if (!player.abilities.creativeMode) {
-				int n = player.inventory.countInInv(item_stack.getItem());
+				int n = player.inventory.count(item_stack.getItem());
 				if (n < i) {
 					i = n - 1;
 				}
@@ -373,7 +370,7 @@ public class WandsClientMod implements ClientModInitializer {
 					} else {
 						eq = bs0.equals(block_state);
 					}
-					is_water = bs1.getFluidState().matches(FluidTags.WATER);
+					is_water = bs1.getFluidState().isIn(FluidTags.WATER);
 					if (eq && (bs1.isAir() || is_water)) {
 						pos0 = pos0.offset(dir, 1);
 						pos1 = pos1.offset(dir, 1);
@@ -390,7 +387,7 @@ public class WandsClientMod implements ClientModInitializer {
 					} else {
 						eq = bs2.equals(block_state);
 					}
-					is_water = bs3.getFluidState().matches(FluidTags.WATER);
+					is_water = bs3.getFluidState().isIn(FluidTags.WATER);
 					if (eq && (bs3.isAir() || is_water)) {
 						pos2 = pos2.offset(op, 1);
 						pos3 = pos3.offset(op, 1);
@@ -446,7 +443,7 @@ public class WandsClientMod implements ClientModInitializer {
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
 				// if(!bs.equals(block_state)){
-				boolean is_water = bs.getFluidState().matches(FluidTags.WATER);
+				boolean is_water = bs.getFluidState().isIn(FluidTags.WATER);
 				if (bs.isAir() || is_water) {
 					return pos;
 				} else {
@@ -464,7 +461,7 @@ public class WandsClientMod implements ClientModInitializer {
 			BlockState bs = world.getBlockState(pos.offset(dir, i + 1));
 			if (bs != null) {
 				if (!bs.equals(block_state)) {
-					boolean is_water = bs.getFluidState().matches(FluidTags.WATER);
+					boolean is_water = bs.getFluidState().isIn(FluidTags.WATER);
 					if (bs.isAir() || is_water) {
 						return pos.offset(dir, i + 1);
 					} else {
@@ -487,8 +484,8 @@ public class WandsClientMod implements ClientModInitializer {
 		Direction ret[] = new Direction[2];
 		ret[0] = null;
 		ret[1] = null;
-		MinecraftClient client = MinecraftClient.getInstance();
-		ClientPlayerEntity player = client.player;
+		//MinecraftClient client = MinecraftClient.getInstance();
+		//ClientPlayerEntity player = client.player;
 		float x = unitCoord((float) hitPos.getX());
 		float y = unitCoord((float) hitPos.getY());
 		float z = unitCoord((float) hitPos.getZ());

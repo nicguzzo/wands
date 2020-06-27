@@ -14,10 +14,9 @@ import net.minecraft.block.enums.SlabType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import java.util.function.Consumer;
@@ -34,20 +33,21 @@ import com.google.gson.GsonBuilder;
 public class WandsMod implements ModInitializer {
 
 	public static WandsConfig config;
-	public static final Identifier WAND_PACKET_ID = new Identifier("wands", "wand");
-	public static final Identifier WANDXP_PACKET_ID = new Identifier("wands", "wandxp");
-	public static final Identifier WANDCONF_PACKET_ID = new Identifier("wands", "wandconf");
+	public static final Identifier WAND_PACKET_ID      = new Identifier("wands", "wand");
+	public static final Identifier WANDXP_PACKET_ID    = new Identifier("wands", "wandxp");
+	public static final Identifier WANDCONF_PACKET_ID  = new Identifier("wands", "wandconf");
 	public static final Identifier WAND_UNDO_PACKET_ID = new Identifier("wands", "wandundo");
 	
-	// public static final WandItem NETHERITE_WAND_ITEM = new WandItem(31,2031);
-	public static final WandItem DIAMOND_WAND_ITEM = new WandItem(27, 1561);
-	public static final WandItem IRON_WAND_ITEM = new WandItem(9, 250);
-	public static final WandItem STONE_WAND_ITEM = new WandItem(5, 131);
+	public static final WandItem NETHERITE_WAND_ITEM = new WandItem(81,2031);
+	public static final WandItem DIAMOND_WAND_ITEM   = new WandItem(27, 1561);
+	public static final WandItem IRON_WAND_ITEM      = new WandItem(9, 250);
+	public static final WandItem STONE_WAND_ITEM     = new WandItem(5, 131);
 
 	@Override
 	public void onInitialize() {
 
 		load_config();
+		Registry.register(Registry.ITEM, new Identifier("wands", "netherite_wand"), NETHERITE_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "stone_wand"), STONE_WAND_ITEM);
@@ -64,8 +64,8 @@ public class WandsMod implements ModInitializer {
 		ServerSidePacketRegistry.INSTANCE.register(WAND_PACKET_ID, (packetContext, attachedData) -> {
 			final BlockPos pos0 = attachedData.readBlockPos();
 			final BlockPos pos1 = attachedData.readBlockPos();
-			packetContext.getTaskQueue().execute(() -> {
-				if (World.isValid(pos0) && World.isValid(pos1)) {
+			packetContext.getTaskQueue().execute(() -> {				
+				if (!World.isHeightInvalid(pos0) && !World.isHeightInvalid(pos1)) {
 					final PlayerEntity player = packetContext.getPlayer();
 					//final BlockState state = player.world.getBlockState(pos0);
 					place(player,pos0,pos1);					
@@ -75,7 +75,7 @@ public class WandsMod implements ModInitializer {
 		ServerSidePacketRegistry.INSTANCE.register(WAND_UNDO_PACKET_ID, (packetContext, attachedData) -> {
 			final BlockPos pos0 = attachedData.readBlockPos();
 			packetContext.getTaskQueue().execute(() -> {
-				if (World.isValid(pos0)) {
+				if (!World.isHeightInvalid(pos0)) {
 					final PlayerEntity player = packetContext.getPlayer();
 					final BlockState state = player.world.getBlockState(pos0);
 					if(!state.isAir()){
@@ -133,8 +133,9 @@ public class WandsMod implements ModInitializer {
 					if (slot > -1) {
 						placed = player.world.setBlockState(pos1, state);
 						//placed = true;
-						if(placed)
-							player.inventory.getInvStack(slot).decrement(d);
+						if(placed){
+							player.inventory.getStack(slot).decrement(d);
+						}
 					}
 				}
 				if (placed) {

@@ -1,7 +1,6 @@
 package net.nicguzzo;
 
-import net.minecraft.util.PacketByteBuf;
-
+import net.minecraft.network.PacketByteBuf;
 
 public class WandsConfig {
 	public float blocks_per_xp=0.0f;

@@ -2,7 +2,7 @@ package net.nicguzzo.mixin;
 
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.MinecraftClientGame;
-import net.minecraft.util.PacketByteBuf;
+import net.minecraft.network.PacketByteBuf;
 import net.nicguzzo.WandsMod;
 
 import org.spongepowered.asm.mixin.Mixin;
