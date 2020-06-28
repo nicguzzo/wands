@@ -1,20 +1,12 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-      "  #",
-      " / ",
-      "/  "
-  ],
-  "key": {
-      "#": {
-          "item": "minecraft:netherite_ingot"
-      },
-      "/": {
-          "item": "minecraft:stick"
-      }
-  },
-  "result": {
-      "item": "wands:diamond_wand",
-      "count": 1
+    "type": "minecraft:smithing",
+    "base": {
+      "item": "wands:diamond_wand"
+    },
+    "addition": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "result": {
+      "item": "wands:netherite_wand"
+    }
   }
-}

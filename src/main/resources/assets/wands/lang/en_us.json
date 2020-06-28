@@ -6,6 +6,6 @@
     "key.wands.wand_mode": "Mode",
     "key.wands.wand_orientation": "Orientation",
     "key.wands.wand_invert": "Invert",
-    "key.wands.wand_undo": "Undo",
+    "key.wands.wand_randomize": "Randomize",
     "category.wands": "Wands"
   }

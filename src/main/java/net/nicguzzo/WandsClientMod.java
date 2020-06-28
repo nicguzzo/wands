@@ -3,8 +3,10 @@ package net.nicguzzo;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.event.client.ClientTickCallback;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.lwjgl.glfw.GLFW;
@@ -30,8 +32,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.text.LiteralText;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -48,8 +52,10 @@ public class WandsClientMod implements ClientModInitializer {
 	private static KeyBinding orientationKB;
 	private static KeyBinding invertKB;
 	private static KeyBinding undoKB;
+	private static KeyBinding randomizeKB;
 	public static float BLOCKS_PER_XP = 0;
 	public static boolean conf = false;
+	public static BlockPos fill_pos1=null;
 
 	@Override
 	public void onInitializeClient() {
@@ -81,27 +87,46 @@ public class WandsClientMod implements ClientModInitializer {
 		KeyBindingHelper.registerKeyBinding(modeKB);
 		orientationKB = new KeyBinding("key.wands.wand_orientation", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "category.wands");
 		KeyBindingHelper.registerKeyBinding(orientationKB);
-		undoKB        = new KeyBinding("key.wands.wand_undo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.wands" );
-		KeyBindingHelper.registerKeyBinding(undoKB);
+		//undoKB        = new KeyBinding("key.wands.wand_undo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.wands" );
+		//KeyBindingHelper.registerKeyBinding(undoKB);
 		invertKB      = new KeyBinding("key.wands.wand_invert", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.wands" );
 		KeyBindingHelper.registerKeyBinding(invertKB);
+		randomizeKB      = new KeyBinding("key.wands.wand_randomize", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "category.wands" );
+		KeyBindingHelper.registerKeyBinding(randomizeKB);
 		
 		ClientTickCallback.EVENT.register(e -> {
+			
 			if (modeKB.wasPressed()) {
-				WandItem.toggleMode();
+				if(hasWandOnHand(e.player)) WandItem.toggleMode();
 			}
 			if (orientationKB.wasPressed()) {
-				WandItem.cycleOrientation();
+				if(hasWandOnHand(e.player)) WandItem.cycleOrientation();
 			}
-			if (undoKB.wasPressed()) {
-				WandItem.undo();
-			}
+			//if (undoKB.wasPressed()) {
+			//	WandItem.undo();
+			//}
 			if (invertKB.wasPressed()) {
-				WandItem.toggleInvert();
+				if(hasWandOnHand(e.player)) WandItem.toggleInvert();
+			}
+			if (randomizeKB.wasPressed()) {
+				if(hasWandOnHand(e.player)) WandItem.toggleRandomize();
 			}
 		});
+		
+	/*	AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+			ItemStack item = player.inventory.getMainHandStack();	
+			if (item.getItem() instanceof WandItem) {
+					//player.sendMessage(new LiteralText("wand attack"),true);        
+					return ActionResult.SUCCESS;
+			} else {
+					return ActionResult.PASS;
+			}
+		});*/
 	}
-
+	public boolean hasWandOnHand(PlayerEntity player){
+		ItemStack item = player.inventory.getMainHandStack();	
+		return (item.getItem() instanceof WandItem);
+	}
 	public static void render(float partialTicks, MatrixStack matrixStack) {
 
 		MinecraftClient client = MinecraftClient.getInstance();
@@ -147,9 +172,11 @@ public class WandsClientMod implements ClientModInitializer {
 					}
 				}
 				ItemStack item_stack = new ItemStack(block);				
-				if (player.inventory.count(item_stack.getItem()) >= d || player.abilities.creativeMode) {
-					boolean is_pane = false;
-					
+				if (player.inventory.count(item_stack.getItem()) >= d 
+						|| player.abilities.creativeMode
+						|| WandItem.getMode()==2
+						) {
+					boolean is_pane = false;					
 					boolean is_fence = false;
 					boolean is_fence_gate = false;
 					boolean is_stairs = false;
@@ -200,6 +227,46 @@ public class WandsClientMod implements ClientModInitializer {
 										max_xp_blocks, item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves));
 							}
 								break;
+							case 2: {
+								//player.sendMessage(new LiteralText("m use 2"),true);
+								WandItem.valid = true;
+								if(fill_pos1!=null){
+									float x1=fill_pos1.getX();
+									float y1=fill_pos1.getY();
+									float z1=fill_pos1.getZ();
+									float x2=pos.getX();
+									float y2=pos.getY();
+									float z2=pos.getZ();
+									if(!fill_pos1.equals(pos)){
+										if(x1>=x2){
+											x1+=1;
+										}else{
+											x2+=1;
+										}										
+										if(y1>=y2){
+											y1+=1;											
+										}else{
+											y2+=1;
+										}
+										if(z1>=z2){
+											z1+=1;
+										}else{
+											z2+=1;											
+										}
+									}else{
+										x2=x1+1;
+										y2=y1+1;
+										z2=z1+1;
+									}
+																		
+									if(Math.abs(x2-x1)<=lim && Math.abs(y2-y1)<=lim && Math.abs(z2-z1)<=lim){
+										//System.out.println("z2-z1: "+Math.abs(z2-z1));
+										preview(bufferBuilder, x1,y1,z1,x2,y2,z2);
+									}else{
+										//fill_pos1=null;
+									}
+								}
+							}break;
 							default: {
 								WandItem.valid = false;
 							}
