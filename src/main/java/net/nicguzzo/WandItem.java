@@ -34,6 +34,11 @@ public class  WandItem extends ToolItem
         HORIZONTAL,
         VERTICAL
     }
+    enum PaletteMode {
+        SAME,
+        RANDOM,
+        ROUND_ROBIN
+    }
     class Undo{
         public ArrayList<BlockPos> undo_buffer=new ArrayList<BlockPos>();
         public Block undo_block=null;
@@ -43,8 +48,9 @@ public class  WandItem extends ToolItem
     private int MAX_UNDO=32;
     private int limit=32;
     private static int mode = 0;
+    private static PaletteMode palatte_mode=PaletteMode.SAME;
     private static boolean invert=false;
-    private static boolean randomize=false;
+    //private static boolean randomize=false;
     private static Orientation orientation=Orientation.HORIZONTAL;
     public static int x1;
     public static int y1;
@@ -52,12 +58,14 @@ public class  WandItem extends ToolItem
     public static int x2;
     public static int y2;
     public static int z2;
-    public static boolean valid;
-    public static Direction mode2_dir;
+    public static boolean valid=false;
+    //public static Direction mode2_dir;
+    
     public WandItem(ToolMaterial toolMaterial,int lim,int max_damage)
     {            
         super(toolMaterial,new Item.Settings().group(ItemGroup.TOOLS).maxCount(1).maxDamage(max_damage));
         limit=lim;
+        //palatte=new ArrayList<Block>();
     }
 
     static public int getMode() {
@@ -79,15 +87,26 @@ public class  WandItem extends ToolItem
         System.out.println(s);                
         client.player.sendMessage(new LiteralText(s),true);
     }
-    static public void toggleRandomize() {
+    static public void togglePalleteMode() {
         MinecraftClient client=MinecraftClient.getInstance();        
-        String state="off";
-
-        randomize = !randomize;        
-        if(randomize){
-            state="on";
+        String state="";
+        //palatte_mode=(palatte_mode+1)% 3;
+        //palatte_mode = !palatte_mode;        
+        switch(palatte_mode){
+            case SAME:
+                palatte_mode=PaletteMode.RANDOM;
+                state="random";
+            break;
+            case RANDOM:
+                palatte_mode=PaletteMode.ROUND_ROBIN;
+                state="round robin";
+            break;
+            case ROUND_ROBIN:
+                palatte_mode=PaletteMode.SAME;
+                state="same";
+            break;
         }
-        String s="Wand randomize "+state;
+        String s="Wand palette mode "+state;
         System.out.println(s);
         client.player.sendMessage(new LiteralText(s),true);
     }
@@ -110,7 +129,7 @@ public class  WandItem extends ToolItem
     static public void toggleMode(){
         mode=(mode+1)% 3;
         String s="Wand mode: "+mode;
-        System.out.println(s);        
+        System.out.println(s);
         MinecraftClient client=MinecraftClient.getInstance();
         client.player.sendMessage(new LiteralText(s),true);
     }
@@ -127,13 +146,16 @@ public class  WandItem extends ToolItem
         }
         System.out.println("undo: "+undos.size());   
     }
-    
-    private boolean     placeBlock(BlockPos block_state,BlockPos pos0,BlockPos pos1,ItemStack itemStack){                
+    private boolean placeBlock(BlockPos block_state,BlockPos pos0,BlockPos pos1){
         PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
         passedData.writeBlockPos(block_state);
         passedData.writeBlockPos(pos0);
         passedData.writeBlockPos(pos1);
-        passedData.writeBoolean(WandItem.randomize);
+        if(WandItem.mode==2){
+            passedData.writeInt(WandItem.palatte_mode.ordinal());
+        }else{
+            passedData.writeInt(PaletteMode.SAME.ordinal());
+        }
         ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
         return true;
     }
@@ -149,24 +171,29 @@ public class  WandItem extends ToolItem
         //MinecraftClient client=MinecraftClient.getInstance();
         //client.player.sendMessage(new LiteralText("wand postHit"),true);        
         return false;
-     }
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        user.sendMessage(new LiteralText("wand reset"),true);
-        WandsClientMod.fill_pos1=null;
+     }*/
+    @Override
+    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {        
+        if(world.isClient){
+            //user.sendMessage(new LiteralText("wand reset"),true);
+            WandsClientMod.fill_pos1=null;
+        }
         return TypedActionResult.pass(user.getStackInHand(hand));
-    }*/
+    }
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
         //System.out.println("blocks per xp: "+ WandsClientMod.BLOCKS_PER_XP);
-        PlayerEntity player= context.getPlayer();        
-        if(!valid){
-            //WandsClientMod.fill_pos1=null;
-            player.sendMessage(new LiteralText("invalid"),true);
-            return ActionResult.FAIL;
-        }
         if(!context.getWorld().isClient()){
             return ActionResult.FAIL;
         }
+        
+        PlayerEntity player= context.getPlayer();        
+        if(!valid){
+            WandsClientMod.fill_pos1=null;
+            player.sendMessage(new LiteralText("invalid"),true);
+            return ActionResult.FAIL;
+        }
+        
         
         World world=context.getWorld();
         BlockPos pos_state=context.getBlockPos();  
@@ -179,7 +206,7 @@ public class  WandItem extends ToolItem
                     BlockPos pos0=new BlockPos(x1, y1, z1);
                     BlockPos pos1=new BlockPos(x1, y1, z1);
                    // WandItem.undo_buffer.clear();
-                    if(placeBlock(pos_state,pos0,pos1,item_stack)){
+                    if(placeBlock(pos_state,pos0,pos1)){
                         //WandItem.undo_buffer.add(new Vec3i(pos1.getX(),pos1.getY(),pos1.getZ()));
                         BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
                         world.playSound(player, pos_state, block_state.getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
@@ -220,7 +247,7 @@ public class  WandItem extends ToolItem
                             placed++;
                         }
                     }*/
-                    placeBlock(pos_state,new BlockPos(x1, y1, z1),new BlockPos(x2, y2, z2),item_stack);
+                    placeBlock(pos_state,new BlockPos(x1, y1, z1),new BlockPos(x2, y2, z2));
                     if(placed>0){
                         /*if(u!=null){
                             //u.undo_block=block_state.getBlock();                            
@@ -242,6 +269,7 @@ public class  WandItem extends ToolItem
                         y1=pos_state.getY();
                         z1=pos_state.getZ();
                         player.sendMessage(new LiteralText("from "+pos_state),true);
+                        //System.out.println("state "+block_state.getBlock());
                     }else{                        
                         if(WandsClientMod.fill_pos1!=pos_state){
                             x2=pos_state.getX();
@@ -263,7 +291,7 @@ public class  WandItem extends ToolItem
                                 z2-=1;											
                             }
                             BlockPos fill_pos2=new BlockPos(x2,y2,z2);
-                            placeBlock(WandsClientMod.fill_pos1,WandsClientMod.fill_pos1,fill_pos2,item_stack);
+                            placeBlock(WandsClientMod.fill_pos1,WandsClientMod.fill_pos1,fill_pos2);
                             player.sendMessage(new LiteralText("fill from "+WandsClientMod.fill_pos1+" to "+fill_pos2),true);
                         }
                         WandsClientMod.fill_pos1=null;

@@ -1,13 +1,11 @@
 package net.nicguzzo;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.event.client.ClientTickCallback;
-import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+//import net.fabricmc.fabric.api.event.client.ClientTickCallback;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.client.render.BufferBuilder;
@@ -34,8 +32,6 @@ import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tag.FluidTags;
-import net.minecraft.text.LiteralText;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -52,7 +48,7 @@ public class WandsClientMod implements ClientModInitializer {
 	private static KeyBinding orientationKB;
 	private static KeyBinding invertKB;
 	private static KeyBinding undoKB;
-	private static KeyBinding randomizeKB;
+	private static KeyBinding palKB;
 	public static float BLOCKS_PER_XP = 0;
 	public static boolean conf = false;
 	public static BlockPos fill_pos1=null;
@@ -91,10 +87,10 @@ public class WandsClientMod implements ClientModInitializer {
 		//KeyBindingHelper.registerKeyBinding(undoKB);
 		invertKB      = new KeyBinding("key.wands.wand_invert", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.wands" );
 		KeyBindingHelper.registerKeyBinding(invertKB);
-		randomizeKB      = new KeyBinding("key.wands.wand_randomize", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "category.wands" );
-		KeyBindingHelper.registerKeyBinding(randomizeKB);
+		palKB      = new KeyBinding("key.wands.wand_palette_mode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "category.wands" );
+		KeyBindingHelper.registerKeyBinding(palKB);
 		
-		ClientTickCallback.EVENT.register(e -> {
+		ClientTickEvents.END_CLIENT_TICK.register(e -> {
 			
 			if (modeKB.wasPressed()) {
 				if(hasWandOnHand(e.player)) WandItem.toggleMode();
@@ -108,8 +104,8 @@ public class WandsClientMod implements ClientModInitializer {
 			if (invertKB.wasPressed()) {
 				if(hasWandOnHand(e.player)) WandItem.toggleInvert();
 			}
-			if (randomizeKB.wasPressed()) {
-				if(hasWandOnHand(e.player)) WandItem.toggleRandomize();
+			if (palKB.wasPressed()) {
+				if(hasWandOnHand(e.player)) WandItem.togglePalleteMode();
 			}
 		});
 		
@@ -339,7 +335,7 @@ public class WandsClientMod implements ClientModInitializer {
 					WandItem.valid = false;
 				} else {
 					WandItem.valid = true;
-					WandItem.mode2_dir = d1;
+					//WandItem.mode2_dir = d1;
 					WandItem.x1 = x1;
 					WandItem.y1 = y1;
 					WandItem.z1 = z1;
@@ -360,8 +356,9 @@ public class WandsClientMod implements ClientModInitializer {
 			int max_xp_blocks, ItemStack item_stack, boolean dont_check_state) {
 		Direction dir = Direction.EAST;
 		BlockPos pos_m = pos.offset(side, 1);
+		BlockState state=world.getBlockState(pos_m);
 		
-		if (world.getBlockState(pos_m).isAir() || world.getBlockState(pos_m).getFluidState().isIn(FluidTags.WATER)) {
+		if (state.isAir() ||WandsMod.is_fluid(state)) {
 			BlockPos pos0 = pos;
 			BlockPos pos1 = pos_m;
 			BlockPos pos2 = pos;
@@ -426,7 +423,7 @@ public class WandsClientMod implements ClientModInitializer {
 					i = max_xp_blocks - 1;
 				}
 			}
-			boolean is_water;
+			//boolean is_fluid;
 			boolean eq = false;
 			while (k < 81 && i > 0) {
 				if (!stop1 && i > 0) {
@@ -437,8 +434,8 @@ public class WandsClientMod implements ClientModInitializer {
 					} else {
 						eq = bs0.equals(block_state);
 					}
-					is_water = bs1.getFluidState().isIn(FluidTags.WATER);
-					if (eq && (bs1.isAir() || is_water)) {
+					//is_fluid = bs1.getFluidState().isIn(FluidTags.WATER)||bs1.getFluidState().isIn(FluidTags.LAVA);
+					if (eq && (bs1.isAir() || WandsMod.is_fluid(bs1))) {
 						pos0 = pos0.offset(dir, 1);
 						pos1 = pos1.offset(dir, 1);
 						i--;
@@ -454,8 +451,8 @@ public class WandsClientMod implements ClientModInitializer {
 					} else {
 						eq = bs2.equals(block_state);
 					}
-					is_water = bs3.getFluidState().isIn(FluidTags.WATER);
-					if (eq && (bs3.isAir() || is_water)) {
+					//is_fluid = bs3.getFluidState().isIn(FluidTags.WATER)||bs3.getFluidState().isIn(FluidTags.LAVA);
+					if (eq && (bs3.isAir() || WandsMod.is_fluid(bs3))) {
 						pos2 = pos2.offset(op, 1);
 						pos3 = pos3.offset(op, 1);
 						i--;
@@ -487,7 +484,7 @@ public class WandsClientMod implements ClientModInitializer {
 				WandItem.valid = false;
 			} else {
 				WandItem.valid = true;
-				WandItem.mode2_dir = dir.getOpposite();
+				//WandItem.mode2_dir = dir.getOpposite();
 				WandItem.x1 = x1 + offx;
 				WandItem.y1 = y1 + offy;
 				WandItem.z1 = z1 + offz;
@@ -510,8 +507,8 @@ public class WandsClientMod implements ClientModInitializer {
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
 				// if(!bs.equals(block_state)){
-				boolean is_water = bs.getFluidState().isIn(FluidTags.WATER);
-				if (bs.isAir() || is_water) {
+				//boolean is_fluid = bs.getFluidState().isIn(FluidTags.WATER)||bs.getFluidState().isIn(FluidTags.LAVA);
+				if (bs.isAir() || WandsMod.is_fluid(bs)) {
 					return pos;
 				} else {
 					if (!bs.equals(block_state))
@@ -528,8 +525,8 @@ public class WandsClientMod implements ClientModInitializer {
 			BlockState bs = world.getBlockState(pos.offset(dir, i + 1));
 			if (bs != null) {
 				if (!bs.equals(block_state)) {
-					boolean is_water = bs.getFluidState().isIn(FluidTags.WATER);
-					if (bs.isAir() || is_water) {
+					//boolean is_fluid = bs.getFluidState().isIn(FluidTags.WATER)||bs.getFluidState().isIn(FluidTags.LAVA);
+					if (bs.isAir() || WandsMod.is_fluid(bs)) {
 						return pos.offset(dir, i + 1);
 					} else {
 						return null;

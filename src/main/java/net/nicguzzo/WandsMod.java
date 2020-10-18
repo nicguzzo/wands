@@ -10,6 +10,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.FenceBlock;
 import net.minecraft.block.PaneBlock;
 import net.minecraft.block.SlabBlock;
+import net.minecraft.block.SnowBlock;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,14 +23,13 @@ import net.minecraft.util.Identifier;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.registry.Registry;
 
-import java.util.Random;
+//import java.util.Random;
 import java.util.Vector;
 import java.util.function.Consumer;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.RandomRandomFeature;
+//import net.minecraft.world.gen.feature.RandomRandomFeature;
 
 import java.io.File;
 import java.io.FileReader;
@@ -51,6 +51,8 @@ public class WandsMod implements ModInitializer {
 	public static final WandItem DIAMOND_WAND_ITEM   = new WandItem(ToolMaterials.DIAMOND,27, 1561);
 	public static final WandItem IRON_WAND_ITEM      = new WandItem(ToolMaterials.IRON,17, 250);
 	public static final WandItem STONE_WAND_ITEM     = new WandItem(ToolMaterials.STONE, 7, 131);
+	private static boolean is_netherite_wand=false;
+	public static final PaletteItem PALETTE_ITEM = new PaletteItem();
 	
 	@Override
 	public void onInitialize() {
@@ -60,6 +62,7 @@ public class WandsMod implements ModInitializer {
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "stone_wand"), STONE_WAND_ITEM);
+		Registry.register(Registry.ITEM, new Identifier("wands", "palette"), PALETTE_ITEM);
 		
 		ServerSidePacketRegistry.INSTANCE.register(WANDCONF_PACKET_ID, (packetContext, attachedData) -> {			
 			packetContext.getTaskQueue().execute(() -> {
@@ -74,13 +77,30 @@ public class WandsMod implements ModInitializer {
 			final BlockPos pos_state = attachedData.readBlockPos();
 			final BlockPos pos0 = attachedData.readBlockPos();
 			final BlockPos pos1 = attachedData.readBlockPos();
-			final boolean randomize = attachedData.readBoolean();
+			final int p = attachedData.readInt();
+			final WandItem.PaletteMode palatte_mode=WandItem.PaletteMode.values()[p];
 			packetContext.getTaskQueue().execute(() -> {				
 				if (!World.isHeightInvalid(pos_state) && !World.isHeightInvalid(pos0)) {
 					final PlayerEntity player = packetContext.getPlayer();
+					Item item=player.getMainHandStack().getItem();
+					if (item instanceof WandItem){
+						WandItem wand=(WandItem)item;
+						if(wand==NETHERITE_WAND_ITEM){
+							is_netherite_wand=true;
+						}
+					}else{
+						return;
+					}
 					BlockState state = player.world.getBlockState(pos_state);
+					/*int layers=-1;					
+					if((state.getBlock() instanceof  SnowBlock)){
+						layers=state.get(SnowBlock.LAYERS);
+						System.out.println("layers: "+layers);
+						System.out.println("block "+state.getBlock());
+					}*/
+
 					if(pos0.equals(pos1)){
-						place(player,state,pos0);
+						place(player,state,pos0,palatte_mode);
 					}else{
 						int xs,ys,zs,xe,ye,ze;
 						if(pos0.getX()>=pos1.getX()){
@@ -104,52 +124,92 @@ public class WandsMod implements ModInitializer {
 							zs=pos0.getZ();
 							ze=pos1.getZ();							
 						}
-						System.out.println("from "+pos0);
+						/*System.out.println("from "+pos0);
 						System.out.println("to   "+pos1);
 						System.out.println("xs="+xs);
 						System.out.println("xe="+xe);
 						System.out.println("ys="+ys);
 						System.out.println("ye="+ye);
 						System.out.println("zs="+zs);
-						System.out.println("ze="+ze);
-						int count=0;
+						System.out.println("ze="+ze);*/
+						//int count=0;
 						
 						Vector<Block> slots=new Vector<Block>();
-						if(randomize){
+						if(	palatte_mode==WandItem.PaletteMode.RANDOM || 
+							palatte_mode==WandItem.PaletteMode.ROUND_ROBIN)
+						{
+							//ItemStack offStack=player.getOffHandStack();							
 							for (int i = 0; i < player.inventory.main.size(); ++i) {							
 								final ItemStack stack2 = (ItemStack) player.inventory.main.get(i);
 								Block blk=Block.getBlockFromItem(stack2.getItem());						
-								if(blk != Blocks.AIR){
+								if(blk!=null && blk != Blocks.AIR){
 									slots.add(blk);
 								}				
 							}
 						}
-						
+						int last_slot=0;
 						for(int z=zs;z<ze;z++){
 							for(int y=ys;y<ye;y++){
 								for(int x=xs;x<xe;x++){
 									BlockPos pos=new BlockPos(x,y,z);
-									if(randomize){
-										if(slots.size()>0){										
-											int random_slot = player.world.random.nextInt(slots.size());
-											state=slots.get(random_slot).getDefaultState();
-											state=state.rotate(BlockRotation.random(player.world.random));
-										}
-										/*Direction dir=Direction.random(player.world.random);						
-										BlockRotation rot=BlockRotation.NONE;
-										rot.rotate(dir);
-										System.out.println("dir "+dir);
-										System.out.println("rot "+rot);
-										state=state.rotate(rot);*/
+									Block blk=null;
+									if(palatte_mode==WandItem.PaletteMode.RANDOM){
+										int random_slot = player.world.random.nextInt(slots.size());
+										blk=slots.get(random_slot);										
+										state=state.rotate(BlockRotation.random(player.world.random));
+									}else if (palatte_mode==WandItem.PaletteMode.ROUND_ROBIN){
+										blk=slots.get(last_slot);										
+										last_slot=(last_slot+1)% slots.size();										
 									}
-									if(place(player,state,pos)){
-										count++;
+									if(blk!=null){
+										if((blk instanceof  SnowBlock)){
+											//disabled for now
+										}else{
+											state=blk.getDefaultState();
+										}
+									}
+									//if(palatte_mode==WandItem.PaletteMode.RANDOM){
+									//	if(slots.size()>0){										
+									//		int random_slot = player.world.random.nextInt(slots.size());
+									//		Block blk=slots.get(random_slot);
+									//		/*if(layers!=-1){
+									//			int layers2=-1;
+									//			if((blk instanceof  SnowBlock)){
+									//				layers2=state.get(SnowBlock.LAYERS);
+									//			}
+									//			if(layers2==1){
+									//				state=blk.getDefaultState().with(SnowBlock.LAYERS, layers);
+									//			}
+									//		}else{*/
+									//			if((blk instanceof  SnowBlock)){
+									//				//System.out.println("block "+blk.getTranslationKey());
+									//				//System.out.println("block "+blk.getDefaultState());
+									//				//state=blk.getDefaultState().with(SnowBlock.LAYERS, layers);
+									//			}else{
+									//				state=blk.getDefaultState();
+									//			}
+									//				
+									//		/*}*/
+									//		//state=blk;
+									//		state=state.rotate(BlockRotation.random(player.world.random));
+									//	}
+									//	/*Direction dir=Direction.random(player.world.random);						
+									//	BlockRotation rot=BlockRotation.NONE;
+									//	rot.rotate(dir);
+									//	System.out.println("dir "+dir);
+									//	System.out.println("rot "+rot);
+									//	state=state.rotate(rot);*/
+									//}
+									
+									if(place(player,state,pos,palatte_mode)){
+										//count++;
 									}
 									//System.out.println("pos "+pos);
 								}
 							}
 						}
-						System.out.println("Placed "+count+" blocks.");
+						//System.out.println("Placed "+count+" blocks.");
+						//System.out.println("Block: "+state);
 					}
 				}
 			});
@@ -169,15 +229,21 @@ public class WandsMod implements ModInitializer {
 			});
 		});
 	}
-	private boolean place(PlayerEntity player,BlockState state,BlockPos pos){
+	static public boolean is_fluid(BlockState state){
+		if(is_netherite_wand)
+			return state.getFluidState().isIn(FluidTags.WATER)||state.getFluidState().isIn(FluidTags.LAVA);
+		else
+			return state.getFluidState().isIn(FluidTags.WATER);
+	}
+	private boolean place(PlayerEntity player,BlockState state,BlockPos pos,WandItem.PaletteMode palatte_mode){
 		boolean placed = false;				
 		float BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
 		
 		Block block=state.getBlock();		
 		BlockState state2=player.world.getBlockState(pos);
-		int d=1;
-		boolean is_water = state2.getFluidState().isIn(FluidTags.WATER);
-		if (state2.isAir() || is_water) {
+		int d=1;		
+		
+		if (state2.isAir() || WandsMod.is_fluid(state2)) {
 			int slot = -1;
 			/*
 			
@@ -199,6 +265,10 @@ public class WandsMod implements ModInitializer {
 				if(state.get(SlabBlock.TYPE)==SlabType.DOUBLE){
 					d=2;//should consume 2 if its a double slab
 				}
+			}
+			if(palatte_mode==WandItem.PaletteMode.RANDOM && (block instanceof  SnowBlock)){
+				d = player.world.random.nextInt(7)+1;
+				state=block.getDefaultState().with(SnowBlock.LAYERS,d);
 			}
 		
 			if (player.abilities.creativeMode) {
@@ -319,7 +389,7 @@ public class WandsMod implements ModInitializer {
 	}
 
 	private void load_config(){
-		File configFile = new File(FabricLoader.getInstance().getConfigDirectory(), "wands.json");
+		File configFile = new File(FabricLoader.getInstance().getConfigDir().toFile(), "wands.json");
 		try (FileReader reader = new FileReader(configFile)) {
 			config = new Gson().fromJson(reader, WandsConfig.class);
 			try (FileWriter writer = new FileWriter(configFile)) {
