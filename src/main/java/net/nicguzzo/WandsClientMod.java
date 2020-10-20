@@ -16,6 +16,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.render.Camera;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -52,7 +53,7 @@ public class WandsClientMod implements ClientModInitializer {
 	public static float BLOCKS_PER_XP = 0;
 	public static boolean conf = false;
 	public static BlockPos fill_pos1=null;
-
+	
 	@Override
 	public void onInitializeClient() {
 
@@ -123,7 +124,7 @@ public class WandsClientMod implements ClientModInitializer {
 		ItemStack item = player.inventory.getMainHandStack();	
 		return (item.getItem() instanceof WandItem);
 	}
-	public static void render(float partialTicks, MatrixStack matrixStack) {
+	public static void render(float partialTicks, MatrixStack matrixStack,Camera camera) {
 
 		MinecraftClient client = MinecraftClient.getInstance();
 		ClientPlayerEntity player = client.player;
@@ -139,23 +140,19 @@ public class WandsClientMod implements ClientModInitializer {
 				BlockPos pos = block_hit.getBlockPos();
 				BlockState block_state = client.world.getBlockState(pos);
 				Box bb = player.getBoundingBox();
-				Matrix4f matrix4f = matrixStack.peek().getModel();
-				RenderSystem.pushMatrix();
-				RenderSystem.multMatrix(matrix4f);
-				Entity cplayer = MinecraftClient.getInstance().getCameraEntity();
-				double cameraX = cplayer.lastRenderX + (cplayer.getX() - cplayer.lastRenderX) * (double) partialTicks;
-				double cameraY = cplayer.lastRenderY + (cplayer.getY() - cplayer.lastRenderY) * (double) partialTicks
-						+ cplayer.getEyeHeight(cplayer.getPose());
-				double cameraZ = cplayer.lastRenderZ + (cplayer.getZ() - cplayer.lastRenderZ) * (double) partialTicks;
-				RenderSystem.translated(-cameraX, -cameraY, -cameraZ);
-				RenderSystem.disableTexture();
-				RenderSystem.disableBlend();
-				RenderSystem.lineWidth(1.0f);
-				RenderSystem.enableAlphaTest();
-				Tessellator tessellator = Tessellator.getInstance();
-				BufferBuilder bufferBuilder = tessellator.getBuffer();
-				bufferBuilder.begin(GL11.GL_LINES, VertexFormats.POSITION_COLOR);
-				GlStateManager.lineWidth(3.0f);
+				RenderSystem.pushMatrix();				
+				RenderSystem.translated(-camera.getPos().x, -camera.getPos().y, -camera.getPos().z);
+				RenderSystem.enableDepthTest();
+				RenderSystem.enableBlend();
+      			RenderSystem.defaultBlendFunc();
+                RenderSystem.disableTexture();
+				//RenderSystem.enableBlend();
+				//RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+				//RenderSystem.disableBlend();
+				
+				GL11.glLineWidth(3.0f);
+                GL11.glBegin(GL11.GL_LINES);
+				
 				Block block = block_state.getBlock();
 				SlabBlock slab = null;
 				boolean is_slab = false;
@@ -215,11 +212,11 @@ public class WandsClientMod implements ClientModInitializer {
 									WandItem.valid = false;
 									break;
 								}
-								mode0(pos, y0, h, side, bufferBuilder, block_hit, client.world, block_state, bb, lim);
+								mode0(pos, y0, h, side, block_hit, client.world, block_state, bb, lim);
 							}
 								break;
 							case 1: {
-								mode1(pos, y0, h, side, bufferBuilder, block_hit, client.world, block_state, bb, player, lim,
+								mode1(pos, y0, h, side, block_hit, client.world, block_state, bb, player, lim,
 										max_xp_blocks, item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves));
 							}
 								break;
@@ -257,7 +254,7 @@ public class WandsClientMod implements ClientModInitializer {
 																		
 									if(Math.abs(x2-x1)<=lim && Math.abs(y2-y1)<=lim && Math.abs(z2-z1)<=lim){
 										//System.out.println("z2-z1: "+Math.abs(z2-z1));
-										preview(bufferBuilder, x1,y1,z1,x2,y2,z2);
+										preview(x1,y1,z1,x2,y2,z2);
 									}else{
 										//fill_pos1=null;
 									}
@@ -272,9 +269,10 @@ public class WandsClientMod implements ClientModInitializer {
 				} else {
 					WandItem.valid = false;
 				}
-				tessellator.draw();
-				RenderSystem.translated(0, 0, 0);
-				RenderSystem.lineWidth(1.0f);
+				//tessellator.draw();
+				GL11.glEnd();
+				//RenderSystem.translated(0, 0, 0);
+				//RenderSystem.lineWidth(1.0f);
 				RenderSystem.enableBlend();
 				RenderSystem.enableTexture();
 				RenderSystem.popMatrix();
@@ -284,7 +282,7 @@ public class WandsClientMod implements ClientModInitializer {
 		}
 	}
 
-	private static void mode0(BlockPos pos, float y0, float h, Direction side, BufferBuilder bufferBuilder,
+	private static void mode0(BlockPos pos, float y0, float h, Direction side, 
 			BlockHitResult block_hit, World world, BlockState block_state, Box bb, int lim) {
 		float x = pos.getX();
 		float y = pos.getY();
@@ -311,7 +309,7 @@ public class WandsClientMod implements ClientModInitializer {
 				break;
 		}
 
-		grid(side, x, y + y0, z, bufferBuilder, h);
+		grid(side, x, y + y0, z,  h);
 		Direction dirs[] = getDirectionMode0(block_hit.getPos(), side, y0, h);
 		Direction d1 = dirs[0];
 		Direction d2 = dirs[1];
@@ -343,7 +341,7 @@ public class WandsClientMod implements ClientModInitializer {
 					WandItem.y2 = y2;
 					WandItem.z2 = z2;
 					float oo = +0.0001f;
-					preview(bufferBuilder, x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
+					preview( x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
 				}
 			} else {
 				WandItem.valid = false;
@@ -351,7 +349,7 @@ public class WandsClientMod implements ClientModInitializer {
 		}
 	}
 
-	private static void mode1(BlockPos pos, float y0, float h, Direction side, BufferBuilder bufferBuilder,
+	private static void mode1(BlockPos pos, float y0, float h, Direction side,
 			BlockHitResult block_hit, World world, BlockState block_state, Box bb, ClientPlayerEntity player, int lim,
 			int max_xp_blocks, ItemStack item_stack, boolean dont_check_state) {
 		Direction dir = Direction.EAST;
@@ -492,7 +490,7 @@ public class WandsClientMod implements ClientModInitializer {
 				WandItem.y2 = y2 + offy;
 				WandItem.z2 = z2 + offz;
 				float oo = +0.0001f;
-				preview(bufferBuilder, x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
+				preview( x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
 			}
 		} else {
 			WandItem.valid = false;
@@ -695,216 +693,228 @@ public class WandsClientMod implements ClientModInitializer {
 		return ret;
 	}
 
-	private static void preview(BufferBuilder b, float fx1, float fy1, float fz1, float fx2, float fy2, float fz2) {
-
-		b.vertex(fx1, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz1).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx1, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy1, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-		b.vertex(fx2, fy2, fz2).color(1.0f, 1.0f, 1.0f, 1.0f).next();
+	private static void preview(float fx1, float fy1, float fz1, float fx2, float fy2, float fz2) {
+		//GL11.glVertex3d
+		RenderSystem.color4f( 255f, 255f, 255f, 255f);
+		GL11.glVertex3d(fx1, fy1, fz1);
+		GL11.glVertex3d(fx2, fy1, fz1);
+		GL11.glVertex3d(fx1, fy1, fz1);
+		GL11.glVertex3d(fx1, fy1, fz2);
+		GL11.glVertex3d(fx1, fy1, fz2);
+		GL11.glVertex3d(fx2, fy1, fz2);
+		GL11.glVertex3d(fx2, fy1, fz1);
+		GL11.glVertex3d(fx2, fy1, fz2);
+		GL11.glVertex3d(fx1, fy2, fz1);
+		GL11.glVertex3d(fx2, fy2, fz1);
+		GL11.glVertex3d(fx1, fy2, fz1);
+		GL11.glVertex3d(fx1, fy2, fz2);
+		GL11.glVertex3d(fx1, fy2, fz2);
+		GL11.glVertex3d(fx2, fy2, fz2);
+		GL11.glVertex3d(fx2, fy2, fz1);
+		GL11.glVertex3d(fx2, fy2, fz2);
+		GL11.glVertex3d(fx1, fy1, fz1);
+		GL11.glVertex3d(fx1, fy2, fz1);
+		GL11.glVertex3d(fx2, fy1, fz1);
+		GL11.glVertex3d(fx2, fy2, fz1);
+		GL11.glVertex3d(fx1, fy1, fz2);
+		GL11.glVertex3d(fx1, fy2, fz2);
+		GL11.glVertex3d(fx2, fy1, fz2);
+		GL11.glVertex3d(fx2, fy2, fz2);
 	}
 
-	private static void grid(Direction side, float x, float y, float z, BufferBuilder b, float h) {
+	private static void grid(Direction side, float x, float y, float z, float h) {
 		switch (side) {
 			case UP:
 			case DOWN: {
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 0.25f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z + 0.25f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 0.75f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z + 0.75f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.25f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.25f, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.75f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.75f, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y, z + 0.20f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.05f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y, z + 0.20f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.05f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y, z + 0.80f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.95f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y, z + 0.80f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.95f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y, z + 0.40f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.05f, y, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y, z + 0.60f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.05f, y, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y, z + 0.40f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.95f, y, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y, z + 0.60f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.95f, y, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.40f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.60f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.60f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y, z + 0.40f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-
-				b.vertex(x + 0.10f, y, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y, z + 0.14f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.14f, y, z + 0.20f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y, z + 0.86f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.86f, y, z + 0.80f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y, z + 0.14f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.86f, y, z + 0.20f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y, z + 0.86f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.14f, y, z + 0.80f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				RenderSystem.color4f( 255f, 255f, 255f, 255f);//w
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x + 1.00f, y, z);
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x, y, z + 1.00f);
+				GL11.glVertex3d(x + 1.00f, y, z);
+				GL11.glVertex3d(x + 1.00f, y, z + 1.00f);
+				GL11.glVertex3d(x, y, z + 1.00f);
+				GL11.glVertex3d(x + 1.00f, y, z + 1.00f);
+				GL11.glVertex3d(x, y, z + 0.25f);
+				GL11.glVertex3d(x + 1.00f, y, z + 0.25f);
+				GL11.glVertex3d(x, y, z + 0.75f);
+				GL11.glVertex3d(x + 1.00f, y, z + 0.75f);
+				GL11.glVertex3d(x + 0.25f, y, z);
+				GL11.glVertex3d(x + 0.25f, y, z + 1.00f);
+				GL11.glVertex3d(x + 0.75f, y, z);
+				GL11.glVertex3d(x + 0.75f, y, z + 1.00f);
+				RenderSystem.color4f( 178f, 0f, 0f, 255f);//r
+				GL11.glVertex3d(x + 0.40f, y, z + 0.20f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.05f);
+				GL11.glVertex3d(x + 0.60f, y, z + 0.20f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.05f);
+				GL11.glVertex3d(x + 0.40f, y, z + 0.80f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.95f);
+				GL11.glVertex3d(x + 0.60f, y, z + 0.80f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.95f);
+				GL11.glVertex3d(x + 0.20f, y, z + 0.40f);
+				GL11.glVertex3d(x + 0.05f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.20f, y, z + 0.60f);
+				GL11.glVertex3d(x + 0.05f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.80f, y, z + 0.40f);
+				GL11.glVertex3d(x + 0.95f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.80f, y, z + 0.60f);
+				GL11.glVertex3d(x + 0.95f, y, z + 0.50f);
+				RenderSystem.color4f( 0f,178f,  0f, 255f);//g
+				GL11.glVertex3d(x + 0.40f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.40f);
+				GL11.glVertex3d(x + 0.40f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.60f);
+				GL11.glVertex3d(x + 0.60f, y, z + 0.50f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.60f);
+				GL11.glVertex3d(x + 0.50f, y, z + 0.40f);
+				GL11.glVertex3d(x + 0.60f, y, z + 0.50f);
+				RenderSystem.color4f( 0f, 0f,178f, 255f);//b
+				GL11.glVertex3d(x + 0.10f, y, z + 0.10f);
+				GL11.glVertex3d(x + 0.20f, y, z + 0.14f);
+				GL11.glVertex3d(x + 0.10f, y, z + 0.10f);
+				GL11.glVertex3d(x + 0.14f, y, z + 0.20f);
+				GL11.glVertex3d(x + 0.90f, y, z + 0.90f);
+				GL11.glVertex3d(x + 0.80f, y, z + 0.86f);
+				GL11.glVertex3d(x + 0.90f, y, z + 0.90f);
+				GL11.glVertex3d(x + 0.86f, y, z + 0.80f);
+				GL11.glVertex3d(x + 0.90f, y, z + 0.10f);
+				GL11.glVertex3d(x + 0.80f, y, z + 0.14f);
+				GL11.glVertex3d(x + 0.90f, y, z + 0.10f);
+				GL11.glVertex3d(x + 0.86f, y, z + 0.20f);
+				GL11.glVertex3d(x + 0.10f, y, z + 0.90f);
+				GL11.glVertex3d(x + 0.20f, y, z + 0.86f);
+				GL11.glVertex3d(x + 0.10f, y, z + 0.90f);
+				GL11.glVertex3d(x + 0.14f, y, z + 0.80f);
 
 			}
 				break;
 			case NORTH:
 			case SOUTH: {
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.25f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y + 0.25f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.75f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 1.00f, y + 0.75f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.25f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.25f, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.75f, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.75f, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y + 0.20f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.05f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y + 0.20f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.05f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y + 0.80f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.95f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y + 0.80f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.95f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y + 0.40f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.05f, y + 0.50f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y + 0.60f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.05f, y + 0.50f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y + 0.40f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.95f, y + 0.50f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y + 0.60f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.95f, y + 0.50f * h, z).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y + 0.50f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.40f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.40f, y + 0.50f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.60f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y + 0.50f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.60f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.50f, y + 0.40f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.60f, y + 0.50f * h, z).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y + 0.10f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y + 0.14f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y + 0.10f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.14f, y + 0.20f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y + 0.90f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y + 0.86f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y + 0.90f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.86f, y + 0.80f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y + 0.10f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.80f, y + 0.14f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.90f, y + 0.10f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.86f, y + 0.20f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y + 0.90f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.20f, y + 0.86f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.10f, y + 0.90f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x + 0.14f, y + 0.80f * h, z).color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				RenderSystem.color4f( 255f, 255f, 255f, 255f);//w
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x + 1.00f, y, z);
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x, y + 1.00f * h, z);
+				GL11.glVertex3d(x + 1.00f, y, z);
+				GL11.glVertex3d(x + 1.00f, y + 1.00f * h, z);
+				GL11.glVertex3d(x, y + 1.00f * h, z);
+				GL11.glVertex3d(x + 1.00f, y + 1.00f * h, z);
+				GL11.glVertex3d(x, y + 0.25f * h, z);
+				GL11.glVertex3d(x + 1.00f, y + 0.25f * h, z);
+				GL11.glVertex3d(x, y + 0.75f * h, z);
+				GL11.glVertex3d(x + 1.00f, y + 0.75f * h, z);
+				GL11.glVertex3d(x + 0.25f, y, z);
+				GL11.glVertex3d(x + 0.25f, y + 1.00f * h, z);
+				GL11.glVertex3d(x + 0.75f, y, z);
+				GL11.glVertex3d(x + 0.75f, y + 1.00f * h, z);
+				RenderSystem.color4f( 178f, 0, 0, 255f);//r
+				GL11.glVertex3d(x + 0.40f, y + 0.20f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.05f * h, z);
+				GL11.glVertex3d(x + 0.60f, y + 0.20f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.05f * h, z);
+				GL11.glVertex3d(x + 0.40f, y + 0.80f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.95f * h, z);
+				GL11.glVertex3d(x + 0.60f, y + 0.80f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.95f * h, z);
+				GL11.glVertex3d(x + 0.20f, y + 0.40f * h, z);
+				GL11.glVertex3d(x + 0.05f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.20f, y + 0.60f * h, z);
+				GL11.glVertex3d(x + 0.05f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.80f, y + 0.40f * h, z);
+				GL11.glVertex3d(x + 0.95f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.80f, y + 0.60f * h, z);
+				GL11.glVertex3d(x + 0.95f, y + 0.50f * h, z);
+				RenderSystem.color4f( 0f,178f,  0.0f, 255f);//g
+				GL11.glVertex3d(x + 0.40f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.40f * h, z);
+				GL11.glVertex3d(x + 0.40f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.60f * h, z);
+				GL11.glVertex3d(x + 0.60f, y + 0.50f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.60f * h, z);
+				GL11.glVertex3d(x + 0.50f, y + 0.40f * h, z);
+				GL11.glVertex3d(x + 0.60f, y + 0.50f * h, z);
+				RenderSystem.color4f( 0, 0,255f, 255f);//b
+				GL11.glVertex3d(x + 0.10f, y + 0.10f * h, z);
+				GL11.glVertex3d(x + 0.20f, y + 0.14f * h, z);
+				GL11.glVertex3d(x + 0.10f, y + 0.10f * h, z);
+				GL11.glVertex3d(x + 0.14f, y + 0.20f * h, z);
+				GL11.glVertex3d(x + 0.90f, y + 0.90f * h, z);
+				GL11.glVertex3d(x + 0.80f, y + 0.86f * h, z);
+				GL11.glVertex3d(x + 0.90f, y + 0.90f * h, z);
+				GL11.glVertex3d(x + 0.86f, y + 0.80f * h, z);
+				GL11.glVertex3d(x + 0.90f, y + 0.10f * h, z);
+				GL11.glVertex3d(x + 0.80f, y + 0.14f * h, z);
+				GL11.glVertex3d(x + 0.90f, y + 0.10f * h, z);
+				GL11.glVertex3d(x + 0.86f, y + 0.20f * h, z);
+				GL11.glVertex3d(x + 0.10f, y + 0.90f * h, z);
+				GL11.glVertex3d(x + 0.20f, y + 0.86f * h, z);
+				GL11.glVertex3d(x + 0.10f, y + 0.90f * h, z);
+				GL11.glVertex3d(x + 0.14f, y + 0.80f * h, z);
 			}
 				break;
 			case EAST:
 			case WEST: {
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 0.25f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z + 0.25f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y, z + 0.75f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 1.00f * h, z + 0.75f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.25f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.25f * h, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.75f * h, z).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.75f * h, z + 1.00f).color(1.0f, 1.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.40f * h, z + 0.20f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.05f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.60f * h, z + 0.20f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.05f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.40f * h, z + 0.80f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.95f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.60f * h, z + 0.80f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.95f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.20f * h, z + 0.40f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.05f * h, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.20f * h, z + 0.60f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.05f * h, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.80f * h, z + 0.40f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.95f * h, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.80f * h, z + 0.60f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.95f * h, z + 0.50f).color(0.7f, 0.0f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.40f * h, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.40f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.40f * h, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.60f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.60f * h, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.60f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.50f * h, z + 0.40f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.60f * h, z + 0.50f).color(0.0f, 0.7f, 0.0f, 1.0f).next();
-				b.vertex(x, y + 0.10f * h, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.20f * h, z + 0.14f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.10f * h, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.14f * h, z + 0.20f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.90f * h, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.80f * h, z + 0.86f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.90f * h, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.86f * h, z + 0.80f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.90f * h, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.80f * h, z + 0.14f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.90f * h, z + 0.10f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.86f * h, z + 0.20f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.10f * h, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.20f * h, z + 0.86f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.10f * h, z + 0.90f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
-				b.vertex(x, y + 0.14f * h, z + 0.80f).color(0.0f, 0.0f, 1.0f, 1.0f).next();
+				RenderSystem.color4f( 255f, 255f, 255f, 255f);//w
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x, y + 1.00f * h, z);
+				GL11.glVertex3d(x, y, z);
+				GL11.glVertex3d(x, y, z + 1.00f);
+				GL11.glVertex3d(x, y + 1.00f * h, z);
+				GL11.glVertex3d(x, y + 1.00f * h, z + 1.00f);
+				GL11.glVertex3d(x, y, z + 1.00f);
+				GL11.glVertex3d(x, y + 1.00f * h, z + 1.00f);
+				GL11.glVertex3d(x, y, z + 0.25f);
+				GL11.glVertex3d(x, y + 1.00f * h, z + 0.25f);
+				GL11.glVertex3d(x, y, z + 0.75f);
+				GL11.glVertex3d(x, y + 1.00f * h, z + 0.75f);
+				GL11.glVertex3d(x, y + 0.25f * h, z);
+				GL11.glVertex3d(x, y + 0.25f * h, z + 1.00f);
+				GL11.glVertex3d(x, y + 0.75f * h, z);
+				GL11.glVertex3d(x, y + 0.75f * h, z + 1.00f);
+				RenderSystem.color4f( 178f, 0, 0, 255f);//b
+				GL11.glVertex3d(x, y + 0.40f * h, z + 0.20f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.05f);
+				GL11.glVertex3d(x, y + 0.60f * h, z + 0.20f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.05f);
+				GL11.glVertex3d(x, y + 0.40f * h, z + 0.80f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.95f);
+				GL11.glVertex3d(x, y + 0.60f * h, z + 0.80f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.95f);
+				GL11.glVertex3d(x, y + 0.20f * h, z + 0.40f);
+				GL11.glVertex3d(x, y + 0.05f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.20f * h, z + 0.60f);
+				GL11.glVertex3d(x, y + 0.05f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.80f * h, z + 0.40f);
+				GL11.glVertex3d(x, y + 0.95f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.80f * h, z + 0.60f);
+				GL11.glVertex3d(x, y + 0.95f * h, z + 0.50f);
+				RenderSystem.color4f( 178f, 255f, 255f, 255f);//g
+				GL11.glVertex3d(x, y + 0.40f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.40f);
+				GL11.glVertex3d(x, y + 0.40f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.60f);
+				GL11.glVertex3d(x, y + 0.60f * h, z + 0.50f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.60f);
+				GL11.glVertex3d(x, y + 0.50f * h, z + 0.40f);
+				GL11.glVertex3d(x, y + 0.60f * h, z + 0.50f);
+				RenderSystem.color4f( 0, 0,255f, 255f);//b
+				GL11.glVertex3d(x, y + 0.10f * h, z + 0.10f);
+				GL11.glVertex3d(x, y + 0.20f * h, z + 0.14f);
+				GL11.glVertex3d(x, y + 0.10f * h, z + 0.10f);
+				GL11.glVertex3d(x, y + 0.14f * h, z + 0.20f);
+				GL11.glVertex3d(x, y + 0.90f * h, z + 0.90f);
+				GL11.glVertex3d(x, y + 0.80f * h, z + 0.86f);
+				GL11.glVertex3d(x, y + 0.90f * h, z + 0.90f);
+				GL11.glVertex3d(x, y + 0.86f * h, z + 0.80f);
+				GL11.glVertex3d(x, y + 0.90f * h, z + 0.10f);
+				GL11.glVertex3d(x, y + 0.80f * h, z + 0.14f);
+				GL11.glVertex3d(x, y + 0.90f * h, z + 0.10f);
+				GL11.glVertex3d(x, y + 0.86f * h, z + 0.20f);
+				GL11.glVertex3d(x, y + 0.10f * h, z + 0.90f);
+				GL11.glVertex3d(x, y + 0.20f * h, z + 0.86f);
+				GL11.glVertex3d(x, y + 0.10f * h, z + 0.90f);
+				GL11.glVertex3d(x, y + 0.14f * h, z + 0.80f);
 
 			}
 				break;
