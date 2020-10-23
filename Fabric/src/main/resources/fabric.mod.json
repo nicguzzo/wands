@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "wands",
+  "version": "${version}",
+
+  "name": "Wands Mod",
+  "description": "Wands for builders",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/building-wands",
+    "sources": "https://github.com/nicguzzo/wands"
+  },
+
+  "license": "GPL3",
+  "icon": "assets/wands/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.nicguzzo.WandsMod"
+    ],
+    "client": [
+      "net.nicguzzo.WandsClientMod"
+    ]
+  },
+  "mixins": [
+    "wands.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.10.0",
+    "fabric": "*",
+    "minecraft": "1.16.3"
+  }
+
+}

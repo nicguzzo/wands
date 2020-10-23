@@ -1,0 +1,12 @@
+{
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "required": true,
+  "package": "net.nicguzzo.mixin",
+  "refmap": "wands.refmap.json",
+  "mixins": [],
+  "client": ["RenderWorldMixin"] ,
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

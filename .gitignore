@@ -23,3 +23,6 @@ bin/
 # fabric
 
 run/
+
+Forge/src/main/resources/assets
+Forge/src/main/resources/data
