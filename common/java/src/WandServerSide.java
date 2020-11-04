@@ -56,8 +56,8 @@ public class WandServerSide {
             if(	palatte_mode==WandItem.PaletteMode.RANDOM || 
                 palatte_mode==WandItem.PaletteMode.ROUND_ROBIN)
             {                							
-                for (int i = 0; i < WandsMod.get_main_inventory_size(player.inventory); ++i) {
-                    ItemStack stack2 =WandsMod.get_player_main_stack(player.inventory,i);
+                for (int i = 0; i < WandsMod.compat.get_main_inventory_size(player.inventory); ++i) {
+                    ItemStack stack2 =WandsMod.compat.get_player_main_stack(player.inventory,i);
                     Block blk=Block.getBlockFromItem(stack2.getItem());						
                     if(blk!=null && blk != Blocks.AIR){
                         slots.add(blk);
@@ -71,9 +71,9 @@ public class WandServerSide {
                         BlockPos pos=new BlockPos(x,y,z);
                         Block blk=null;
                         if(palatte_mode==WandItem.PaletteMode.RANDOM){
-                            int random_slot = WandsMod.get_next_int_random(player,slots.size());
+                            int random_slot = WandsMod.compat.get_next_int_random(player,slots.size());
                             blk=slots.get(random_slot);                            				
-                            state=WandsMod.random_rotate(state,player.world);
+                            state=WandsMod.compat.random_rotate(state,player.world);
                             
                         }else if (palatte_mode==WandItem.PaletteMode.ROUND_ROBIN){
                             blk=slots.get(last_slot);										
@@ -106,19 +106,19 @@ public class WandServerSide {
 		Block block=state.getBlock();		
 		BlockState state2=player.world.getBlockState(pos);
 		int d=1;		
-		
-		if (state2.isAir() || WandsMod.is_fluid(state2)) {
+		WandItem wand=WandsMod.compat.get_player_wand(player);
+		if (state2.isAir() || WandsMod.compat.is_fluid(state2,wand)) {
 			int slot = -1;
 
 			if((block instanceof  PaneBlock) || (block instanceof  FenceBlock)){
 				state=state.getBlock().getDefaultState();
 			}else if(block instanceof SlabBlock){
-				if(WandsMod.is_double_slab(state)){
+				if(WandsMod.compat.is_double_slab(state)){
 					d=2;//should consume 2 if its a double slab
 				}
 			}
 			if(palatte_mode==WandItem.PaletteMode.RANDOM && (block instanceof  SnowBlock)){
-				d = WandsMod.get_next_int_random(player,7)+1;
+				d = WandsMod.compat.get_next_int_random(player,7)+1;
 				state=block.getDefaultState().with(SnowBlock.LAYERS,d);
 			}
 		
@@ -133,22 +133,22 @@ public class WandServerSide {
 				if (BLOCKS_PER_XP == 0 ||  (xp - dec) > 0) {
 					
 					ItemStack item_stack = new ItemStack(state.getBlock());
-					ItemStack off_hand_stack = WandsMod.get_player_offhand_stack(player.inventory);
+					ItemStack off_hand_stack = WandsMod.compat.get_player_offhand_stack(player.inventory);
 					if (!off_hand_stack.isEmpty() && item_stack.getItem() == off_hand_stack.getItem()
-							&& WandsMod.item_stacks_equal(item_stack, off_hand_stack)
+							&& WandsMod.compat.item_stacks_equal(item_stack, off_hand_stack)
 							&& off_hand_stack.getCount()>=d
 						) {
 											
 						placed = player.world.setBlockState(pos, state);
 						if(placed)
-                            WandsMod.player_offhand_stack_dec(player.inventory,d);
+                            WandsMod.compat.player_offhand_stack_dec(player.inventory,d);
 					} else {
 						
-						for (int i = 0; i < WandsMod.get_main_inventory_size(player.inventory); ++i) {
-							ItemStack stack2 = WandsMod.get_player_main_stack(player.inventory, i);
+						for (int i = 0; i < WandsMod.compat.get_main_inventory_size(player.inventory); ++i) {
+							ItemStack stack2 = WandsMod.compat.get_player_main_stack(player.inventory, i);
 							if (!stack2.isEmpty() &&
 								item_stack.getItem() == stack2.getItem() && 
-								WandsMod.item_stacks_equal(item_stack, stack2) && 
+								WandsMod.compat.item_stacks_equal(item_stack, stack2) && 
 								stack2.getCount()>=d) {
 								slot = i;
 							}
@@ -157,13 +157,13 @@ public class WandServerSide {
 							placed = player.world.setBlockState(pos, state);
 							//placed = true;
 							if(placed){
-                                WandsMod.player_stack_dec(player.inventory,slot,d);								
+                                WandsMod.compat.player_stack_dec(player.inventory,slot,d);								
 							}
 						}
                     }
                     LOGGER.info("placed"+placed);
 					if (placed) {
-                        WandsMod.inc_wand_damage(player,wand_stack,1);
+                        WandsMod.compat.inc_wand_damage(player,wand_stack,1);
 						/*ItemStack wand_item = ;
 						wand_item.damage(1, (LivingEntity)player, 
 							(Consumer)((p) -> {
@@ -201,7 +201,7 @@ public class WandServerSide {
 							final PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
 							passedData.writeInt(player.experienceLevel);
 							passedData.writeFloat(player.experienceProgress);
-							ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, WandsMod.WANDXP_PACKET_ID,
+							ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, WandsMod.compat.WANDXP_PACKET_ID,
 									passedData);*/
 						}
 					}

@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
 import net.nicguzzo.common.WandItem;
 import net.nicguzzo.common.WandsBaseRenderer;
-import net.nicguzzo.common.WandsBaseRenderer.MyDir;
+import net.nicguzzo.common.MyDir;
 
 import org.lwjgl.glfw.GLFW;
 import net.minecraft.block.BlockState;

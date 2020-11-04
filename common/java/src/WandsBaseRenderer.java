@@ -15,28 +15,13 @@ import net.minecraft.block.StairsBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
-
 import net.nicguzzo.WandsMod;
 
 public class WandsBaseRenderer{
-	public enum MyDir{
-		DOWN(0,1),
-   		UP(1,0),
-   		NORTH(2,3),
-   		SOUTH(3,2),
-   		WEST(4,5),
-		EAST(5,4);
-		private final int id;
-		private final int idOpposite;
-		private MyDir(int id, int idOpposite) {
-			this.id = id;
-			this.idOpposite = idOpposite;
-		}
-		public MyDir getOpposite(){
-			return MyDir.values()[idOpposite];
-		}
-	}
+	
+	public static float p_o = +0.0001f;//preview offset
 	public static float BLOCKS_PER_XP = 0;	
+	
 	public static void render(World world,PlayerEntity player, BlockPos pos,BlockState block_state,double camX, double camY, double camZ,int lim,
 	boolean isCreative,
 	boolean isDoubleSlab,boolean isSlabTop,
@@ -45,6 +30,11 @@ public class WandsBaseRenderer{
 	boolean isFullCube,
 	double hit_x,double hit_y,double hit_z)
 	{
+		WandItem wand=WandsMod.compat.get_player_wand(player);
+		if(wand==null){
+			return;
+		}
+		
 		RenderSystem.pushMatrix();				
 		RenderSystem.translated(-camX, -camY, -camZ);
 		RenderSystem.enableDepthTest();
@@ -116,11 +106,11 @@ public class WandsBaseRenderer{
 							WandItem.valid = false;
 							break;
 						}
-						mode0(pos, y0, h, side, world, block_state, player,lim,hit_x,hit_y,hit_z);
+						mode0(wand,pos, y0, h, side, world, block_state, player,lim,hit_x,hit_y,hit_z);
 					}
 						break;
 					case 1: {
-						mode1(pos, y0, h, side, hit_x,hit_y,hit_z, world, block_state,player, lim,
+						mode1(wand,pos, y0, h, side, hit_x,hit_y,hit_z, world, block_state,player, lim,
 								max_xp_blocks, item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves),isCreative);
 					}
 						break;
@@ -161,6 +151,9 @@ public class WandsBaseRenderer{
 							}
 						}
 					}break;
+					case 3:{
+						mode3(wand,pos,block_state,world,side);
+					}break;
 					default: {
 						WandItem.valid = false;
 					}
@@ -178,7 +171,7 @@ public class WandsBaseRenderer{
 		
 	}
 
-	private static void mode0(BlockPos pos, float y0, float h, MyDir side, 
+	private static void mode0(WandItem wand,BlockPos pos, float y0, float h, MyDir side, 
 		World world, BlockState block_state, PlayerEntity player, int lim,double hit_x,double hit_y,double hit_z) {
 		
 		float x = pos.getX();
@@ -214,9 +207,9 @@ public class WandsBaseRenderer{
 		if (d1 != null) {
 			BlockPos pv = null;
 			if (d2 != null) {
-				pv = find_next_diag(world, block_state, d1, d2, pos, lim);
+				pv = find_next_diag(world, block_state, d1, d2, pos, wand);
 			} else {
-				pv = find_next_pos(world, block_state, d1, pos, lim);
+				pv = find_next_pos(world, block_state, d1, pos, wand);
 			}
 			if (pv != null) {
 				int x1 = pv.getX();
@@ -226,7 +219,7 @@ public class WandsBaseRenderer{
 				int y2 = y1 + 1;
 				int z2 = z1 + 1;
 
-				if ( WandsMod.interescts_player_bb(player,x1, y1, z1, x2, y2, z2)) {
+				if ( WandsMod.compat.interescts_player_bb(player,x1, y1, z1, x2, y2, z2)) {
 					WandItem.valid = false;
 				} else {
 					WandItem.valid = true;
@@ -237,8 +230,8 @@ public class WandsBaseRenderer{
 					WandItem.x2 = x2;
 					WandItem.y2 = y2;
 					WandItem.z2 = z2;
-					float oo = +0.0001f;
-					preview( x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
+					
+					preview( x1 + p_o, y1 + p_o, z1 + p_o, x2 - p_o, y2 - p_o, z2 - p_o);
 				}
 			} else {
 				WandItem.valid = false;
@@ -246,14 +239,14 @@ public class WandsBaseRenderer{
 		}
 	}
 
-	private static void mode1(BlockPos pos, float y0, float h, MyDir side,double hit_x,double hit_y,double hit_z,
+	private static void mode1(WandItem wand,BlockPos pos, float y0, float h, MyDir side,double hit_x,double hit_y,double hit_z,
 			World world, BlockState block_state, PlayerEntity player, int lim,
 			int max_xp_blocks, ItemStack item_stack, boolean dont_check_state,boolean isCreative) {
 		MyDir dir = MyDir.EAST;
-		BlockPos pos_m = WandsMod.pos_offset(pos,side,1);
+		BlockPos pos_m = WandsMod.compat.pos_offset(pos,side,1);
 		BlockState state=world.getBlockState(pos_m);
 		
-		if (state.isAir() ||WandsMod.is_fluid(state)) {
+		if (state.isAir() ||WandsMod.compat.is_fluid(state,wand)) {
 			BlockPos pos0 = pos;
 			BlockPos pos1 = pos_m;
 			BlockPos pos2 = pos;
@@ -322,44 +315,44 @@ public class WandsBaseRenderer{
 			boolean eq = false;
 			while (k < 81 && i > 0) {
 				if (!stop1 && i > 0) {
-					BlockState bs0 = world.getBlockState( WandsMod.pos_offset(pos0,dir,1));
-					BlockState bs1 = world.getBlockState(WandsMod.pos_offset(pos1,dir,1));
+					BlockState bs0 = world.getBlockState( WandsMod.compat.pos_offset(pos0,dir,1));
+					BlockState bs1 = world.getBlockState(WandsMod.compat.pos_offset(pos1,dir,1));
 					if (dont_check_state) {
 						eq = bs0.getBlock().equals(block_state.getBlock());
 					} else {
 						eq = bs0.equals(block_state);
 					}
 					//is_fluid = bs1.getFluidState().isIn(FluidTags.WATER)||bs1.getFluidState().isIn(FluidTags.LAVA);
-					if (eq && (bs1.isAir() || WandsMod.is_fluid(bs1))) {
-						pos0 =WandsMod.pos_offset(pos0,dir,1);
-						pos1 =WandsMod.pos_offset(pos1,dir,1);
+					if (eq && (bs1.isAir() || WandsMod.compat.is_fluid(bs1,wand))) {
+						pos0 =WandsMod.compat.pos_offset(pos0,dir,1);
+						pos1 =WandsMod.compat.pos_offset(pos1,dir,1);
 						i--;
 					} else {
 						stop1 = true;
 					}
 				}
 				if (!stop2 && i > 0) {
-					BlockState bs2 = world.getBlockState(WandsMod.pos_offset(pos2,op,1));
-					BlockState bs3 = world.getBlockState(WandsMod.pos_offset(pos3,op,1));
+					BlockState bs2 = world.getBlockState(WandsMod.compat.pos_offset(pos2,op,1));
+					BlockState bs3 = world.getBlockState(WandsMod.compat.pos_offset(pos3,op,1));
 					if (dont_check_state) {
 						eq = bs2.getBlock().equals(block_state.getBlock());
 					} else {
 						eq = bs2.equals(block_state);
 					}
 					//is_fluid = bs3.getFluidState().isIn(FluidTags.WATER)||bs3.getFluidState().isIn(FluidTags.LAVA);
-					if (eq && (bs3.isAir() || WandsMod.is_fluid(bs3))) {
-						pos2 = WandsMod.pos_offset(pos2,op,1);
-						pos3 = WandsMod.pos_offset(pos3,op,1);
+					if (eq && (bs3.isAir() || WandsMod.compat.is_fluid(bs3,wand))) {
+						pos2 = WandsMod.compat.pos_offset(pos2,op,1);
+						pos3 = WandsMod.compat.pos_offset(pos3,op,1);
 						i--;
 					} else {
 						stop2 = true;
 					}
 				}
-				if (WandsMod.interescts_player_bb(player,pos1.getX(), pos1.getY(), pos1.getZ(), pos1.getX() + 1, pos1.getY() + 1, pos1.getZ() + 1)) {
+				if (WandsMod.compat.interescts_player_bb(player,pos1.getX(), pos1.getY(), pos1.getZ(), pos1.getX() + 1, pos1.getY() + 1, pos1.getZ() + 1)) {
 					intersects = true;
 					break;
 				}
-				if (WandsMod.interescts_player_bb(player,pos3.getX(), pos3.getY(), pos3.getZ(), pos3.getX() + 1, pos3.getY() + 1, pos3.getZ() + 1)) {
+				if (WandsMod.compat.interescts_player_bb(player,pos3.getX(), pos3.getY(), pos3.getZ(), pos3.getX() + 1, pos3.getY() + 1, pos3.getZ() + 1)) {
 					intersects = true;
 					break;
 				}
@@ -386,45 +379,166 @@ public class WandsBaseRenderer{
 				WandItem.x2 = x2 + offx;
 				WandItem.y2 = y2 + offy;
 				WandItem.z2 = z2 + offz;
-				float oo = +0.0001f;
-				preview( x1 + oo, y1 + oo, z1 + oo, x2 - oo, y2 - oo, z2 - oo);
+				
+				preview( x1 + p_o, y1 + p_o, z1 + p_o, x2 - p_o, y2 - p_o, z2 - p_o);
 			}
 		} else {
 			WandItem.valid = false;
 		}
 	}
 
+	static private void mode3(WandItem wand,BlockPos pos,BlockState block_state,World world,MyDir side){
+		
+		wand.block_buffer_length=0;
+		add_neighbour(wand, pos, block_state, world, side);
+		int i=0;
+		while(i<wand.getLimit()){
+			if(i<wand.block_buffer_length){
+				BlockPos p=WandsMod.compat.pos_offset(wand.block_buffer[i],side,-1);
+				find_neighbours(wand, p, block_state, world, side);
+			}
+			i++;
+		}
+		for(int a=0;a<wand.block_buffer_length;a++){
+			int x1=wand.block_buffer[a].getX();
+			int y1=wand.block_buffer[a].getY();
+			int z1=wand.block_buffer[a].getZ();
+
+			preview( x1 + p_o, y1 + p_o, z1 + p_o, x1+1 - p_o, y1+1 - p_o, z1+1 - p_o);
+		}
+		WandItem.valid =(wand.block_buffer_length>0) ;
+	}
+	static private void find_neighbours(WandItem wand,BlockPos pos,BlockState block_state,World world,MyDir side){
+		
+		if(side==MyDir.UP||side==MyDir.DOWN){			
+			BlockPos p0=WandsMod.compat.pos_offset(pos,MyDir.EAST,1);
+			add_neighbour(wand, p0, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.EAST,1);
+			BlockPos p1=WandsMod.compat.pos_offset(p0,MyDir.NORTH,1);
+			add_neighbour(wand, p1, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.NORTH,1);
+			add_neighbour(wand, p0, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.NORTH,1);
+			p1=WandsMod.compat.pos_offset(p0,MyDir.WEST,1);
+			add_neighbour(wand, p1, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.WEST,1);
+			add_neighbour(wand, p0, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+			p1=WandsMod.compat.pos_offset(p0,MyDir.WEST,1);
+			add_neighbour(wand, p1, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+			add_neighbour(wand, p0, block_state, world, side);
+
+			p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+			p1=WandsMod.compat.pos_offset(p0,MyDir.EAST,1);
+			add_neighbour(wand, p1, block_state, world, side);
+			
+		}else{
+			if(side==MyDir.EAST||side==MyDir.WEST){			
+				BlockPos p0=WandsMod.compat.pos_offset(pos,MyDir.UP,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.UP,1);
+				BlockPos p1=WandsMod.compat.pos_offset(p0,MyDir.NORTH,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.NORTH,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.NORTH,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.DOWN,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.DOWN,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.DOWN,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.SOUTH,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.UP,1);
+				add_neighbour(wand, p1, block_state, world, side);
+				
+			}else if(side==MyDir.NORTH||side==MyDir.SOUTH){			
+				BlockPos p0=WandsMod.compat.pos_offset(pos,MyDir.EAST,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.EAST,1);
+				BlockPos p1=WandsMod.compat.pos_offset(p0,MyDir.UP,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.UP,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.UP,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.WEST,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.WEST,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.DOWN,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.WEST,1);
+				add_neighbour(wand, p1, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.DOWN,1);
+				add_neighbour(wand, p0, block_state, world, side);
+	
+				p0=WandsMod.compat.pos_offset(pos,MyDir.DOWN,1);
+				p1=WandsMod.compat.pos_offset(p0,MyDir.EAST,1);
+				add_neighbour(wand, p1, block_state, world, side);
+				
+			}
+		}
+		
+	}
+	
+	static private void add_neighbour(WandItem wand,BlockPos pos,BlockState block_state,World world,MyDir side){
+		BlockPos pos2=WandsMod.compat.pos_offset(pos,side,1);
+		if(!wand.in_buffer(pos2)){
+			BlockState bs1 = world.getBlockState(pos);
+			BlockState bs2 = world.getBlockState(pos2);
+			if((bs1.equals(block_state) && (bs2.isAir() || WandsMod.compat.is_fluid(bs2,wand)))){
+				wand.add_buffer(pos2);
+			}
+		}
+	}
 	static public BlockPos find_next_diag(World world, BlockState block_state, MyDir dir1, MyDir dir2,
-			BlockPos pos, int limit) {
-		// BlockPos ret=null;
-		for (int i = 0; i < limit; i++) {
-			//pos = pos.offset(dir1, 1).offset(dir2, 1);
-			BlockPos p1=WandsMod.pos_offset(pos,dir1,1);
-			pos=WandsMod.pos_offset(p1,dir2,1);
+		BlockPos pos, WandItem wand) {
+		
+		for (int i = 0; i < wand.getLimit(); i++) {
+			BlockPos p1=WandsMod.compat.pos_offset(pos,dir1,1);
+			pos=WandsMod.compat.pos_offset(p1,dir2,1);
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
-				// if(!bs.equals(block_state)){
-				//boolean is_fluid = bs.getFluidState().isIn(FluidTags.WATER)||bs.getFluidState().isIn(FluidTags.LAVA);
-				if (bs.isAir() || WandsMod.is_fluid(bs)) {
+				if (bs.isAir() || WandsMod.compat.is_fluid(bs,wand)) {
 					return pos;
 				} else {
 					if (!bs.equals(block_state))
 						return null;
 				}
-				// }
 			}
 		}
 		return null;
 	}
 
-	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, int limit) {
-		for (int i = 0; i < limit; i++) {
-			BlockState bs = world.getBlockState(WandsMod.pos_offset(pos,dir, i + 1));
+	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand) {
+		for (int i = 0; i < wand.getLimit(); i++) {
+			BlockState bs = world.getBlockState(WandsMod.compat.pos_offset(pos,dir, i + 1));
 			if (bs != null) {
 				if (!bs.equals(block_state)) {
-					//boolean is_fluid = bs.getFluidState().isIn(FluidTags.WATER)||bs.getFluidState().isIn(FluidTags.LAVA);
-					if (bs.isAir() || WandsMod.is_fluid(bs)) {
-						return WandsMod.pos_offset(pos,dir, i + 1);
+					if (bs.isAir() || WandsMod.compat.is_fluid(bs,wand)) {
+						return WandsMod.compat.pos_offset(pos,dir, i + 1);
 					} else {
 						return null;
 					}

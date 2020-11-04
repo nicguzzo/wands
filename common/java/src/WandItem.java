@@ -26,15 +26,20 @@ abstract public class WandItem  {
         public ArrayList<BlockPos> undo_buffer = new ArrayList<BlockPos>();
         public Block undo_block = null;
     }
-
+    
+    public BlockPos[] block_buffer;
+    public int block_buffer_length=0;
     public static Deque<Undo> undos = new LinkedList<>();
     //private int MAX_UNDO = 32;
-    private int limit = 32;
+    private int limit = 0;
+    public int limit2 = 0;
+    public int x0=0;
     private static BlockState fill1_state=null;
     private static int mode = 0;
     private static PaletteMode palette_mode = PaletteMode.SAME;
     private static boolean invert = false;
-
+    public boolean removes_water;
+    public boolean removes_lava;
     private static Orientation orientation = Orientation.HORIZONTAL;
     public static int x1;
     public static int y1;
@@ -45,8 +50,13 @@ abstract public class WandItem  {
     public static BlockPos fill_pos1;
     public static boolean valid = false;
 
-    public WandItem(int lim) {
+    public WandItem(int lim,boolean removes_water,boolean removes_lava) {
         limit = lim;
+        limit2 = (int)Math.floor(Math.sqrt(lim));
+        x0=limit2/2;        
+        this.removes_water=removes_water;
+        this.removes_lava=removes_lava;
+        block_buffer=new BlockPos[limit];
     }
 
     static public int getMode() {
@@ -66,7 +76,7 @@ abstract public class WandItem  {
         if (invert) {
             state = "on";
         }
-        WandsMod.send_message_to_player("Wand inverted " + state);
+        WandsMod.compat.send_message_to_player("Wand inverted " + state);
     }
 
     static public void cyclePalleteMode() {
@@ -85,7 +95,7 @@ abstract public class WandItem  {
                 state="same";
                 break;
         }
-        WandsMod.send_message_to_player("Wand palette mode "+state);
+        WandsMod.compat.send_message_to_player("Wand palette mode "+state);
     }
 
     public int getLimit() {
@@ -102,12 +112,27 @@ abstract public class WandItem  {
         orientation = Orientation.values()[o];
         // String s="Wand orientation: "+orientation;
         // sendMessage(s);
-        WandsMod.send_message_to_player("Wand orientation: "+orientation);
+        WandsMod.compat.send_message_to_player("Wand orientation: "+orientation);
     }
 
     static public void cycleMode() {
-        mode = (mode + 1) % 3;        
-        WandsMod.send_message_to_player("Wand mode: "+mode);
+        mode = (mode + 1) % 4;        
+        WandsMod.compat.send_message_to_player("Wand mode: "+mode);
+    }
+
+    boolean in_buffer(BlockPos p){
+        for(int i=0;i<block_buffer_length && i<limit;i++){
+            if(p.equals(block_buffer[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+    void add_buffer(BlockPos p){
+        if(block_buffer_length<limit){
+            block_buffer[block_buffer_length]=p;
+            block_buffer_length++;
+        }
     }
 
     static public void undo() {
@@ -115,7 +140,7 @@ abstract public class WandItem  {
          * if(!undos.isEmpty()){ Undo u=undos.pollLast(); for (BlockPos i :
          * u.undo_buffer) { //System.out.println("undo: "+i); PacketByteBuf passedData =
          * new PacketByteBuf(Unpooled.buffer()); passedData.writeBlockPos(i);
-         * ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_UNDO_PACKET_ID,
+         * ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.compat.mNDO_PACKET_ID,
          * passedData); } u.undo_buffer.clear(); }
          * System.out.println("undo: "+undos.size());
          */
@@ -128,7 +153,7 @@ abstract public class WandItem  {
          passedData.writeBlockPos(pos1); if(WandItem.mode==2){
          passedData.writeInt(WandItem.palette_mode.ordinal()); }else{
          passedData.writeInt(PaletteMode.SAME.ordinal()); }
-         ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID,
+         ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.compat.mACKET_ID,
          passedData);
          
          return true;
@@ -187,7 +212,7 @@ abstract public class WandItem  {
                         x1=pos_state.getX();
                         y1=pos_state.getY();
                         z1=pos_state.getZ();
-                        WandsMod.send_message_to_player("from "+pos_state);
+                        WandsMod.compat.send_message_to_player("from "+pos_state);
                         //player.sendMessage(new LiteralText("from "+pos_state),true);
                         //System.out.println("state "+block_state.getBlock());
                     }else{                        
@@ -215,12 +240,22 @@ abstract public class WandItem  {
                             if(fill1_state!=null){
                                 playSound(player,fill1_state,WandItem.fill_pos1); 
                             }
-                            WandsMod.send_message_to_player("fill from "+WandItem.fill_pos1+" to "+fill_pos2);
+                            WandsMod.compat.send_message_to_player("fill from "+WandItem.fill_pos1+" to "+fill_pos2);
                             //player.sendMessage(new LiteralText("fill from "+WandItem.fill_pos1+" to "+fill_pos2),true);
                         }
                         WandItem.fill_pos1=null;
-                    }
+                    }                    
+                break;
+                case 3:{
                     
+                    for(int i=0;i<block_buffer_length && i<getLimit();i++){
+                        placeBlock(pos_state,block_buffer[i],block_buffer[i]);
+                    }
+                    if(block_buffer_length>0)
+                        playSound(player,block_state,block_buffer[0]); 
+
+                    System.out.println("block_buffer_length: "+block_buffer_length);
+                }
                 break;
             }
         }
