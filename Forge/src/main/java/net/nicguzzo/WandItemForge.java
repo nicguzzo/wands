@@ -22,8 +22,8 @@ public class  WandItemForge extends Item
     
     class WandItemImpl extends WandItem{
 
-        public WandItemImpl(int lim) {
-            super(lim);
+        public WandItemImpl(int lim,boolean removes_water,boolean removes_lava) {
+            super(lim,removes_water,removes_lava);
         }
 
         @Override
@@ -63,10 +63,10 @@ public class  WandItemForge extends Item
         }
     }
     public WandItemImpl wand=null;
-    public WandItemForge(int lim,Item.Properties prop)
+    public WandItemForge(int lim,boolean removes_water,boolean removes_lava,Item.Properties prop)
     {   
         super(prop);
-        wand=new WandItemImpl(lim);
+        wand=new WandItemImpl(lim,removes_water,removes_lava);
     }
     @Override
     public void onUse(World worldIn, LivingEntity livingEntityIn, ItemStack stack, int count){

@@ -1,7 +1,7 @@
 package net.nicguzzo;
 
 import net.nicguzzo.common.WandsBaseRenderer;
-import net.nicguzzo.common.WandsBaseRenderer.MyDir;
+import net.nicguzzo.common.MyDir;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 

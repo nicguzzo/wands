@@ -24,16 +24,20 @@ public class WandsMod implements ModInitializer {
 	public static final Identifier WANDCONF_PACKET_ID  = new Identifier("wands", "wandconf");
 	public static final Identifier WAND_UNDO_PACKET_ID = new Identifier("wands", "wandundo");
 	
-	public static final WandItemFabric NETHERITE_WAND_ITEM = new WandItemFabric(ToolMaterials.NETHERITE,81, 2031, true,true);
-	public static final WandItemFabric DIAMOND_WAND_ITEM   = new WandItemFabric(ToolMaterials.DIAMOND  ,49, 1561, true,false);
-	public static final WandItemFabric IRON_WAND_ITEM      = new WandItemFabric(ToolMaterials.IRON     ,25,  250, true,false);
-	public static final WandItemFabric STONE_WAND_ITEM     = new WandItemFabric(ToolMaterials.STONE    , 9,  131,false,false);
+	public static WandItemFabric NETHERITE_WAND_ITEM = null;
+	public static WandItemFabric DIAMOND_WAND_ITEM   = null;
+	public static WandItemFabric IRON_WAND_ITEM      = null;
+	public static WandItemFabric STONE_WAND_ITEM     = null;
 	
 	public static final PaletteItem PALETTE_ITEM = new PaletteItem();
 	
 	@Override
 	public void onInitialize() {
 		config=WandsConfig.load_config(FabricLoader.getInstance().getConfigDir());
+		NETHERITE_WAND_ITEM = new WandItemFabric(ToolMaterials.NETHERITE, WandsMod.config.netherite_wand_limit, 2031,  true, true);
+		DIAMOND_WAND_ITEM   = new WandItemFabric(ToolMaterials.DIAMOND  , WandsMod.config.diamond_wand_limit  , 1561,  true, false);
+		IRON_WAND_ITEM      = new WandItemFabric(ToolMaterials.IRON     , WandsMod.config.iron_wand_limit     ,  250,  true, false);
+		STONE_WAND_ITEM     = new WandItemFabric(ToolMaterials.STONE    , WandsMod.config.stone_wand_limit    ,  131, false, false);
 		Registry.register(Registry.ITEM, new Identifier("wands", "netherite_wand"), NETHERITE_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);

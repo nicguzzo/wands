@@ -1,21 +1,5 @@
 package net.nicguzzo;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.properties.SlabType;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Rotation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -25,12 +9,9 @@ import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLConfig;
-import net.minecraftforge.fml.loading.FMLPaths;
+
 import net.nicguzzo.common.WandsConfig;
-import net.nicguzzo.common.WandsBaseRenderer.MyDir;
-import java.nio.file.Path;
-import java.util.function.Consumer;
+
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,6 +24,7 @@ public class WandsMod
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "wands";
     public static WandsConfig config=null;
+    public static ICompatModImpl compat=new ICompatModImpl();
     public WandsMod() {
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
@@ -65,9 +47,7 @@ public class WandsMod
         // some preinit code
         //LOGGER.info("HELLO FROM PREINIT");
         //LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-        Path path= FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
-        LOGGER.info("config path:" + path);
-        config=WandsConfig.load_config(path);
+        
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
@@ -112,76 +92,5 @@ public class WandsMod
             event.enqueueWork(WandsPacketHandler::registerMessage);
         }        
     }   
-    static public boolean is_fluid(BlockState state){
-		/*if(is_netherite_wand)
-			return state.getFluidState().isIn(FluidTags.WATER)||state.getFluidState().isIn(FluidTags.LAVA);
-		else*/
-		return state.getFluidState().isTagged(FluidTags.WATER);
-    }
-    static public boolean is_double_slab(BlockState state){
-        //if(state.getBlock() instanceof SlabBlock){
-            return state.get(SlabBlock.TYPE)==SlabType.DOUBLE;
-        //}
-        //return false;
-    }
-    static public BlockPos pos_offset(BlockPos pos,MyDir dir,int o)
-    {
-        Direction dir1=Direction.values()[dir.ordinal()];
-        return pos.offset(dir1, o);
-    }
-    static public int get_next_int_random(PlayerEntity player,int b){
-        return player.world.rand.nextInt(b);
-    }
-    static public BlockState random_rotate(BlockState state,World world){        
-        return state.rotate(Rotation.randomRotation(world.rand));
-    }
-    static public int get_main_inventory_size(PlayerInventory inv){
-        return inv.mainInventory.size();
-    }
-    static public ItemStack get_player_main_stack(PlayerInventory inv,int i){
-        return inv.mainInventory.get(i);
-    }
-    static public ItemStack get_player_offhand_stack(PlayerInventory inv){
-        return inv.offHandInventory.get(0);
-    }
-    static public void player_offhand_stack_inc(PlayerInventory inv,int i){
-        inv.offHandInventory.get(0).grow(i);
-    }
-    static public void player_offhand_stack_dec(PlayerInventory inv,int i){
-        inv.offHandInventory.get(0).shrink(i);
-    }
-    static public void player_stack_inc(PlayerInventory inv,int slot,int i){
-        inv.mainInventory.get(slot).grow(i);
-    }
-    static public void player_stack_dec(PlayerInventory inv,int slot,int i){
-        inv.mainInventory.get(slot).shrink(i);
-    }
-    static public void set_player_xp(PlayerEntity player,float xp){
-        player.experience=xp;
-    }
-    static public boolean item_stacks_equal(ItemStack i1,ItemStack i2){
-        return ItemStack.areItemStackTagsEqual(i1,i2);
-    }
-    static public boolean is_player_holding_wand(PlayerEntity player){
-        return player.inventory.mainInventory.get(player.inventory.currentItem).getItem() instanceof WandItemForge;
-    }
-    static public void inc_wand_damage(PlayerEntity player,ItemStack stack,int damage){
-
-        stack.damageItem(damage, (LivingEntity)player, 
-						(Consumer<LivingEntity>)((p) -> {
-								((LivingEntity)p).sendBreakAnimation(Hand.MAIN_HAND);
-							}
-						)
-					);
-        
-    }
-    static public boolean interescts_player_bb(PlayerEntity player,double x1,double y1,double z1,double x2,double y2,double z2){
-        AxisAlignedBB bb=player.getBoundingBox();
-        return bb.intersects(x1,y1,z1,x2,y2,z2);
-    }
-    static public void send_message_to_player(String msg){
-        assert Minecraft.getInstance().player != null;
-        Minecraft instance=Minecraft.getInstance();
-        instance.player.sendStatusMessage(new TranslationTextComponent(msg), true);
-    }
+    
 }

@@ -23,8 +23,9 @@ bin/
 # fabric
 
 run/
-
+Forge/src/main/java/net/nicguzzo/common
 Forge/src/main/resources/assets
 Forge/src/main/resources/data
+Fabric/src/main/java/net/nicguzzo/common
 Fabric/src/main/resources/assets
 Fabric/src/main/resources/data
