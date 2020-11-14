@@ -60,7 +60,7 @@ public class WandsMod implements ModInitializer {
 			final int p = attachedData.readInt();
 			
 			packetContext.getTaskQueue().execute(() -> {				
-				if (!World.isHeightInvalid(state_pos) && !World.isHeightInvalid(pos1) && !World.isHeightInvalid(pos2)) {
+				if (World.isInBuildLimit(state_pos) && World.isInBuildLimit(pos1) && World.isInBuildLimit(pos2)) {
 					final PlayerEntity player = packetContext.getPlayer();
 					ItemStack stack=player.getMainHandStack();					
 					if (stack.getItem() instanceof WandItemFabric) {
@@ -72,7 +72,7 @@ public class WandsMod implements ModInitializer {
 	/*	ServerSidePacketRegistry.INSTANCE.register(WAND_UNDO_PACKET_ID, (packetContext, attachedData) -> {
 			final BlockPos pos0 = attachedData.readBlockPos();
 			packetContext.getTaskQueue().execute(() -> {
-				if (!World.isHeightInvalid(pos0)) {
+				if (World.isInBuildLimit(pos0)) {
 					final PlayerEntity player = packetContext.getPlayer();
 					final BlockState state = player.world.getBlockState(pos0);
 					if(!state.isAir()){
