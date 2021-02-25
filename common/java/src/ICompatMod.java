@@ -27,4 +27,5 @@ public interface ICompatMod {
     public void inc_wand_damage(PlayerEntity player,ItemStack stack,int damage);
     public boolean interescts_player_bb(PlayerEntity player,double x1,double y1,double z1,double x2,double y2,double z2);
     public void send_message_to_player(String msg);
+    public boolean is_plant(BlockState state);
 }

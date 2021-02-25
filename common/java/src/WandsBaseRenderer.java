@@ -10,6 +10,7 @@ import net.minecraft.block.FenceBlock;
 import net.minecraft.block.FenceGateBlock;
 import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.PaneBlock;
+
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.StairsBlock;
 import net.minecraft.entity.player.PlayerEntity;
@@ -502,13 +503,17 @@ public class WandsBaseRenderer{
 		}
 		
 	}
+	static public boolean can_place(BlockState state,WandItem wand,World world, BlockPos pos){		
+		
+		return (state.isAir() || WandsMod.compat.is_fluid(state,wand) || WandsMod.compat.is_plant(state));
+	}
 	
 	static private void add_neighbour(WandItem wand,BlockPos pos,BlockState block_state,World world,MyDir side){
 		BlockPos pos2=WandsMod.compat.pos_offset(pos,side,1);
 		if(!wand.in_buffer(pos2)){
 			BlockState bs1 = world.getBlockState(pos);
 			BlockState bs2 = world.getBlockState(pos2);
-			if((bs1.equals(block_state) && (bs2.isAir() || WandsMod.compat.is_fluid(bs2,wand)))){
+			if( bs1.equals(block_state) && can_place(bs2, wand,world,pos2) ){
 				wand.add_buffer(pos2);
 			}
 		}
@@ -521,7 +526,7 @@ public class WandsBaseRenderer{
 			pos=WandsMod.compat.pos_offset(p1,dir2,1);
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
-				if (bs.isAir() || WandsMod.compat.is_fluid(bs,wand)) {
+				if ( can_place(bs, wand,world,pos) ) {
 					return pos;
 				} else {
 					if (!bs.equals(block_state))
@@ -534,11 +539,12 @@ public class WandsBaseRenderer{
 
 	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand) {
 		for (int i = 0; i < wand.getLimit(); i++) {
-			BlockState bs = world.getBlockState(WandsMod.compat.pos_offset(pos,dir, i + 1));
+			BlockPos pos2=WandsMod.compat.pos_offset(pos,dir, i + 1);
+			BlockState bs = world.getBlockState(pos2);
 			if (bs != null) {
 				if (!bs.equals(block_state)) {
-					if (bs.isAir() || WandsMod.compat.is_fluid(bs,wand)) {
-						return WandsMod.compat.pos_offset(pos,dir, i + 1);
+					if ( can_place(bs, wand,world,pos2) ) {
+						return pos2;
 					} else {
 						return null;
 					}

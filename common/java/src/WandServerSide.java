@@ -107,7 +107,7 @@ public class WandServerSide {
 		BlockState state2=player.world.getBlockState(pos);
 		int d=1;		
 		WandItem wand=WandsMod.compat.get_player_wand(player);
-		if (state2.isAir() || WandsMod.compat.is_fluid(state2,wand)) {
+		if (WandsBaseRenderer.can_place(state2, wand,player.world,pos)) {
 			int slot = -1;
 
 			if((block instanceof  PaneBlock) || (block instanceof  FenceBlock)){
@@ -127,6 +127,8 @@ public class WandServerSide {
 			} else {						
 				float xp=WandItem.calc_xp(player.experienceLevel,experienceProgress);		
 				float dec=0.0f;
+				//System.out.println("BLOCKS_PER_XP "+BLOCKS_PER_XP);
+				//LOGGER.info("BLOCKS_PER_XP "+BLOCKS_PER_XP);
 				if(BLOCKS_PER_XP!=0){
 					dec=  (1.0f/BLOCKS_PER_XP);
 				}
@@ -140,28 +142,34 @@ public class WandServerSide {
 						) {
 											
 						placed = player.world.setBlockState(pos, state);
+						//LOGGER.info("placed "+placed);
 						if(placed)
                             WandsMod.compat.player_offhand_stack_dec(player.inventory,d);
 					} else {
-						
+						//LOGGER.info("inv size "+WandsMod.compat.get_main_inventory_size(player.inventory));		
+						//LOGGER.info("item_stack "+item_stack);
 						for (int i = 0; i < WandsMod.compat.get_main_inventory_size(player.inventory); ++i) {
 							ItemStack stack2 = WandsMod.compat.get_player_main_stack(player.inventory, i);
+							//LOGGER.info("stack2 "+stack2);
 							if (!stack2.isEmpty() &&
-								item_stack.getItem() == stack2.getItem() && 
-								WandsMod.compat.item_stacks_equal(item_stack, stack2) && 
+								item_stack.getItem() == stack2.getItem() /*&& 
+								WandsMod.compat.item_stacks_equal(item_stack, stack2)*/ && 
 								stack2.getCount()>=d) {
 								slot = i;
 							}
-						}						
+						}				
+						//LOGGER.info("slot "+slot);		
 						if (slot > -1) {
+
 							placed = player.world.setBlockState(pos, state);
+							//LOGGER.info("placed "+placed);
 							//placed = true;
 							if(placed){
                                 WandsMod.compat.player_stack_dec(player.inventory,slot,d);								
 							}
 						}
                     }
-                    LOGGER.info("placed"+placed);
+                    //LOGGER.info("placed"+placed);
 					if (placed) {
                         WandsMod.compat.inc_wand_damage(player,wand_stack,1);
 						/*ItemStack wand_item = ;

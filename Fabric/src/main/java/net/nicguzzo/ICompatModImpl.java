@@ -1,7 +1,7 @@
 package net.nicguzzo;
 
 import java.util.function.Consumer;
-
+import net.minecraft.block.PlantBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.SlabType;
@@ -103,4 +103,10 @@ public class ICompatModImpl implements ICompatMod{
         MinecraftClient instance=MinecraftClient.getInstance();
         instance.player.sendMessage(new LiteralText(msg), true);
     }
+
+    @Override
+    public boolean is_plant(BlockState state) {
+        return (state.getBlock() instanceof PlantBlock);        
+    }
+    
 }
