@@ -1,6 +1,6 @@
 package net.nicguzzo;
 
-import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -16,18 +16,29 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
-
-import io.netty.buffer.Unpooled;
 import net.minecraft.world.World;
+import io.netty.buffer.Unpooled;
+
 import net.nicguzzo.common.WandItem;
 
 public class  WandItemFabric extends ToolItem
 {
+    static public void undo(int n) {
+        PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+        passedData.writeInt(n);
+        ClientPlayNetworking.send(WandsMod.WAND_UNDO_PACKET_ID, passedData);
+    }
+    static public void redo(int n) {
+        PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+        passedData.writeInt(n);
+        ClientPlayNetworking.send(WandsMod.WAND_REDO_PACKET_ID, passedData);
+    }
     class WandItemImpl extends WandItem{
         public WandItemImpl(int lim,boolean removes_water,boolean removes_lava) {
             super(lim,removes_water,removes_lava);
         }
-
+        
+        
         @Override
         public boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1) {
             //LOGGER.info("placeBlock");
@@ -35,13 +46,16 @@ public class  WandItemFabric extends ToolItem
             PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
             passedData.writeBlockPos(block_state);
             passedData.writeBlockPos(pos0);
-            passedData.writeBlockPos(pos1);
+            passedData.writeBlockPos(pos1);            
             if(WandItem.getMode()==2){
                 passedData.writeInt(WandItem.getPaletteMode().ordinal());
             }else{
                 passedData.writeInt(PaletteMode.SAME.ordinal());
             }
-            ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
+            passedData.writeInt(WandItem.getMode());
+            passedData.writeInt(WandItem.getPlane().ordinal());
+            //ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);
+            ClientPlayNetworking.send(WandsMod.WAND_PACKET_ID, passedData);
             return true;
         }
 

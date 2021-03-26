@@ -146,14 +146,57 @@ public class WandsBaseRenderer{
 								y2=y1+1;
 								z2=z1+1;
 							}
-																
-							if(Math.abs(x2-x1)<=lim && Math.abs(y2-y1)<=lim && Math.abs(z2-z1)<=lim){								
+							if(Math.abs(x2-x1)<=lim && Math.abs(y2-y1)<=lim && Math.abs(z2-z1)<=lim){
 								preview(x1,y1,z1,x2,y2,z2);
 							}
 						}
 					}break;
 					case 3:{
 						mode3(wand,pos,block_state,world,side);
+					}break;
+					case 4:{
+						WandItem.valid = true;
+						if(WandItem.fill_pos1!=null){
+							float x1=WandItem.fill_pos1.getX();
+							float y1=WandItem.fill_pos1.getY();
+							float z1=WandItem.fill_pos1.getZ();
+							float x2=pos.getX();
+							float y2=pos.getY();
+							float z2=pos.getZ();
+							float xx=x2-x1;
+							float yy=y2-y1;
+							float zz=z2-z1;
+							if(!isCreative && Math.sqrt(xx*xx+yy*yy+zz*zz)>lim){
+								WandItem.valid = false;
+							}else{
+								RenderSystem.color4f( 255f, 255f, 255f, 255f);
+								GL11.glVertex3d(x1+0.5, y1+0.5, z1+0.5);
+								GL11.glVertex3d(x2+0.5, y2+0.5, z2+0.5);
+								line(WandItem.fill_pos1, pos);
+							}
+						}
+					}break;
+					case 5:{
+						WandItem.valid = true;
+						if(WandItem.fill_pos1!=null){
+							float x1=WandItem.fill_pos1.getX();
+							float y1=WandItem.fill_pos1.getY();
+							float z1=WandItem.fill_pos1.getZ();
+							float x2=pos.getX();
+							float y2=y1;//pos.getY();
+							float z2=pos.getZ();
+							float xx=x2-x1;
+							float yy=y2-y1;
+							float zz=z2-z1;
+							if(!isCreative &&  Math.PI*Math.sqrt(xx*xx+yy*yy+zz*zz) >lim){
+								WandItem.valid = false;
+							}else{
+								RenderSystem.color4f( 255f, 255f, 255f, 255f);
+								GL11.glVertex3d(x1+0.5, y1+0.5, z1+0.5);
+								GL11.glVertex3d(x2+0.5, y2+0.5, z2+0.5);
+								circle(WandItem.fill_pos1, pos,WandItem.getPlane().ordinal());
+							}
+						}
 					}break;
 					default: {
 						WandItem.valid = false;
@@ -939,5 +982,190 @@ public class WandsBaseRenderer{
 				break;
 		}
 	}
+	
+	static private void prev_drawCircle(int xc, int yc,int zc, int x, int y,int z,int plane)
+	{
+		switch(plane){
+			case 0://XZ
+				preview( xc+x, yc, zc+z,    xc+x+1, yc+1, zc+z+1 );
+				preview( xc-x, yc, zc+z,    xc-x+1, yc+1, zc+z+1 );
+				preview( xc+x, yc, zc-z,    xc+x+1, yc+1, zc-z+1 );
+				preview( xc-x, yc, zc-z,    xc-x+1, yc+1, zc-z+1 );
+				preview( xc+z, yc, zc+x,    xc+z+1, yc+1, zc+x+1 );
+				preview( xc-z, yc, zc+x,    xc-z+1, yc+1, zc+x+1 );
+				preview( xc+z, yc, zc-x,    xc+z+1, yc+1, zc-x+1 );
+				preview( xc-z, yc, zc-x,    xc-z+1, yc+1, zc-x+1 );		
+			break;
+			case 1://XY
+				preview( xc+x, yc+y, zc,    xc+x+1, yc+y+1, zc+1 );
+				preview( xc-x, yc+y, zc,    xc-x+1, yc+y+1, zc+1 );
+				preview( xc+x, yc-y, zc,    xc+x+1, yc-y+1, zc+1 );
+				preview( xc-x, yc-y, zc,    xc-x+1, yc-y+1, zc+1 );
+				preview( xc+y, yc+x, zc,    xc+y+1, yc+x+1, zc+1 );
+				preview( xc-y, yc+x, zc,    xc-y+1, yc+x+1, zc+1 );
+				preview( xc+y, yc-x, zc,    xc+y+1, yc-x+1, zc+1 );
+				preview( xc-y, yc-x, zc,    xc-y+1, yc-x+1, zc+1 );
+			break;
+			case 2://YZ
+				preview( xc, yc+y, zc+z,     xc+1, yc+y+1, zc+z+1  );
+				preview( xc, yc-y, zc+z,     xc+1, yc-y+1, zc+z+1  );
+				preview( xc, yc+y, zc-z,     xc+1, yc+y+1, zc-z+1  );
+				preview( xc, yc-y, zc-z,     xc+1, yc-y+1, zc-z+1  );
+				preview( xc, yc+z, zc+y,     xc+1, yc+z+1, zc+y+1  );
+				preview( xc, yc-z, zc+y,     xc+1, yc-z+1, zc+y+1  );
+				preview( xc, yc+z, zc-y,     xc+1, yc+z+1, zc-y+1  );
+				preview( xc, yc-z, zc-y,     xc+1, yc-z+1, zc-y+1  );		
+			break;
+		}
+	}
+	private static void circle(BlockPos pos0,BlockPos pos1,int plane){
+	
+		int r =1;
+		int xc=pos0.getX();
+		int yc=pos0.getY();
+		int zc=pos0.getZ();
+		int px=pos1.getX()-pos0.getX();
+		int py=pos1.getY()-pos0.getY();
+		int pz=pos1.getZ()-pos0.getZ();
+		r=(int)Math.sqrt(px*px+py*py+pz*pz );
+		
+		if(plane==0){//XZ;
+			int x = 0, y=0, z = r;
+			int d = 3 - 2 * r;
+			prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			while (z >= x)
+			{
+				x++; 
+				if (d > 0)
+				{
+					z--; 
+					d = d + 4 * (x - z) + 10;
+				}
+				else
+					d = d + 4 * x + 6;
+				prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			}
+		}else if(plane==1){//XY;
+			int x = 0, y = r, z=0;
+			int d = 3 - 2 * r;
+			prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			while (y >= x)
+			{
+				x++; 
+				if (d > 0)
+				{
+					y--; 
+					d = d + 4 * (x - y) + 10;
+				}
+				else
+					d = d + 4 * x + 6;
+				prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			}
+		}else if(plane==2){//YZ;
+			int x = 0, y = 0, z=r;
+			int d = 3 - 2 * r;
+			prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			while (z >= y)
+			{
+				y++; 
+				if (d > 0)
+				{
+					z--; 
+					d = d + 4 * (y - z) + 10;
+				}
+				else
+					d = d + 4 * y + 6;
+				prev_drawCircle(xc, yc, zc, x, y, z, plane);
+			}
+		}
+	
+	}
 
+	private static void line(BlockPos pos0,BlockPos pos1)  
+    {  
+		
+		int x1=pos0.getX();
+		int y1=pos0.getY();
+		int z1=pos0.getZ();
+		int x2=pos1.getX();
+		int y2=pos1.getY();
+		int z2=pos1.getZ();
+		int dx,dy,dz,xs,ys,zs,p1,p2;
+		dx = Math.abs(x2 - x1);
+		dy = Math.abs(y2 - y1); 
+		dz = Math.abs(z2 - z1); 
+		if (x2 > x1){
+			xs = 1;
+		}else{
+			xs = -1;
+		}
+		if (y2 > y1){
+			ys = 1;
+		}else{
+			ys = -1;
+		}
+		if (z2 > z1){
+			zs = 1;
+		}else{
+			zs = -1;
+		}
+	  
+		//X
+		if (dx >= dy && dx >= dz){
+			p1 = 2 * dy - dx ;
+			p2 = 2 * dz - dx ;
+			while (x1 != x2){
+				x1 += xs ;
+				if (p1 >= 0){
+					y1 += ys ;
+					p1 -= 2 * dx ;
+				}
+				if (p2 >= 0){
+					z1 += zs ;
+					p2 -= 2 * dx ;
+				}
+				p1 += 2 * dy ;
+				p2 += 2 * dz ;
+				
+				preview(x1, y1, z1,x1+1,y1+1,z1+1);
+				//LOGGER.info("line pos " +pos);
+				
+			}
+		}else if (dy >= dx && dy >= dz){
+			p1 = 2 * dx - dy ;
+			p2 = 2 * dz - dy ;
+			while (y1 != y2){
+				y1 += ys ;
+				if (p1 >= 0){
+					x1 += xs ;
+					p1 -= 2 * dy ;
+				}
+				if (p2 >= 0){
+					z1 += zs ;
+					p2 -= 2 * dy ;
+				}
+				p1 += 2 * dx ;
+				p2 += 2 * dz ;
+				preview(x1, y1, z1,x1+1,y1+1,z1+1);
+				
+			}
+		}else{
+			p1 = 2 * dy - dz ;
+			p2 = 2 * dx - dz ;
+			while (z1 != z2){ 
+				z1 += zs ;
+				if (p1 >= 0){ 
+					y1 += ys ;
+					p1 -= 2 * dz ;
+				}
+				if (p2 >= 0){
+					x1 += xs ;
+					p2 -= 2 * dz ;
+				}
+				p1 += 2 * dy ;
+				p2 += 2 * dx ;				
+				preview(x1, y1, z1,x1+1,y1+1,z1+1);
+			}
+		}
+    }  
 }

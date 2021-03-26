@@ -3,6 +3,7 @@ package net.nicguzzo;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.client.util.InputUtil;
 import net.nicguzzo.common.WandItem;
@@ -14,6 +15,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,7 +32,7 @@ public class WandsClientMod implements ClientModInitializer {
 	private static KeyBinding modeKB;
 	private static KeyBinding orientationKB;
 	private static KeyBinding invertKB;
-	//private static KeyBinding undoKB;
+	private static KeyBinding undoKB;
 	private static KeyBinding palKB;
 	public static float BLOCKS_PER_XP = 0;
 	public static boolean conf = false;
@@ -38,9 +40,7 @@ public class WandsClientMod implements ClientModInitializer {
 	
 	@Override
 	public void onInitializeClient() {
-
-		ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDXP_PACKET_ID, (packetContext, attachedData) -> {
-
+		/*ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDXP_PACKET_ID, (packetContext, attachedData) -> {
 			int xp_l = attachedData.readInt();
 			float xp_p = attachedData.readFloat();
 			packetContext.getTaskQueue().execute(() -> {
@@ -53,10 +53,28 @@ public class WandsClientMod implements ClientModInitializer {
 			});
 		});
 		ClientSidePacketRegistry.INSTANCE.register(WandsMod.WANDCONF_PACKET_ID, (packetContext, attachedData) -> {
-
 			float bpxp = attachedData.readFloat();
-
 			packetContext.getTaskQueue().execute(() -> {
+				WandsClientMod.BLOCKS_PER_XP = bpxp;
+				System.out.println("got BLOCKS_PER_XP from server " + BLOCKS_PER_XP);
+			});
+		});*/
+
+		ClientPlayNetworking.registerGlobalReceiver(WandsMod.WANDXP_PACKET_ID, (client, handler, buf, responseSender) -> {
+			int xp_l = buf.readInt();
+			float xp_p = buf.readFloat();
+			client.execute(() -> {
+				ClientPlayerEntity player = client.player;
+				player.experienceLevel = xp_l;
+				player.experienceProgress = xp_p;
+				// System.out.println("update xp!");
+				// System.out.println("xp prog: "+ player.experienceProgress);
+			});
+		});
+
+		ClientPlayNetworking.registerGlobalReceiver(WandsMod.WANDCONF_PACKET_ID, (client, handler, buf, responseSender) -> {
+			float bpxp = buf.readFloat();
+			client.execute(() -> {
 				WandsClientMod.BLOCKS_PER_XP = bpxp;
 				System.out.println("got BLOCKS_PER_XP from server " + BLOCKS_PER_XP);
 			});
@@ -66,8 +84,8 @@ public class WandsClientMod implements ClientModInitializer {
 		KeyBindingHelper.registerKeyBinding(modeKB);
 		orientationKB = new KeyBinding("key.wands.wand_orientation", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_X, "category.wands");
 		KeyBindingHelper.registerKeyBinding(orientationKB);
-		//undoKB        = new KeyBinding("key.wands.wand_undo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.wands" );
-		//KeyBindingHelper.registerKeyBinding(undoKB);
+		undoKB        = new KeyBinding("key.wands.wand_undo", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_U, "category.wands" );
+		KeyBindingHelper.registerKeyBinding(undoKB);
 		invertKB      = new KeyBinding("key.wands.wand_invert", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_I, "category.wands" );
 		KeyBindingHelper.registerKeyBinding(invertKB);
 		palKB      = new KeyBinding("key.wands.wand_palette_mode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_R, "category.wands" );
@@ -81,9 +99,18 @@ public class WandsClientMod implements ClientModInitializer {
 			if (orientationKB.wasPressed()) {
 				if(hasWandOnHand(e.player)) WandItem.cycleOrientation();
 			}
-			//if (undoKB.wasPressed()) {
-			//	WandItem.undo();
-			//}
+			if (undoKB.wasPressed()) {
+				if(hasWandOnHand(e.player)){
+					int n=1;
+					if(Screen.hasAltDown())
+						n=10;
+					if(Screen.hasShiftDown()){
+						WandItemFabric.redo(n);	
+					}else{
+					 	WandItemFabric.undo(n);
+					}
+				}
+			}
 			if (invertKB.wasPressed()) {
 				if(hasWandOnHand(e.player)) WandItem.toggleInvert();
 			}

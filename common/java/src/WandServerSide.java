@@ -1,7 +1,6 @@
 package net.nicguzzo.common;
 
 import java.util.Vector;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -17,15 +16,23 @@ import net.nicguzzo.WandsMod;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
+
+
 public class WandServerSide {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static void placeBlock(PlayerEntity player,BlockPos pos_state,BlockPos pos0,BlockPos pos1,int pm,boolean isCreative,float experienceProgress,ItemStack wand_stack){
+	private static final int MAX_UNDO=2048;
+
+	private static HashMap<Integer,CircularBuffer> player_undo=new  HashMap<Integer,CircularBuffer>();
+
+    public static void placeBlock(PlayerEntity player,BlockPos pos_state,BlockPos pos0,BlockPos pos1,int pm,boolean isCreative,float experienceProgress,ItemStack wand_stack,int mode,int plane){
         World world=player.world;
-            
-        WandItem.PaletteMode palatte_mode=WandItem.PaletteMode.values()[pm];
+
+		WandItem.PaletteMode palatte_mode=WandItem.PaletteMode.values()[pm];
         BlockState state = world.getBlockState(pos_state);
-            
-        if(pos0.equals(pos1)){
+        
+		LOGGER.info("mode " +mode);
+		if(pos0.equals(pos1)){
             place(player,state,pos0,palatte_mode,isCreative,experienceProgress,wand_stack);
         }else{
             int xs,ys,zs,xe,ye,ze;
@@ -64,40 +71,73 @@ public class WandServerSide {
                     }				
                 }
             }
-            int last_slot=0;
-            for(int z=zs;z<ze;z++){
-                for(int y=ys;y<ye;y++){
-                    for(int x=xs;x<xe;x++){
-                        BlockPos pos=new BlockPos(x,y,z);
-                        Block blk=null;
-                        if(palatte_mode==WandItem.PaletteMode.RANDOM){
-                            int random_slot = WandsMod.compat.get_next_int_random(player,slots.size());
-                            blk=slots.get(random_slot);                            				
-                            state=WandsMod.compat.random_rotate(state,player.world);
-                            
-                        }else if (palatte_mode==WandItem.PaletteMode.ROUND_ROBIN){
-                            blk=slots.get(last_slot);										
-                            last_slot=(last_slot+1)% slots.size();										
-                        }
-                        if(blk!=null){
-                            if((blk instanceof  SnowBlock)){
-                                //disabled for now
-                            }else{
-                                state=blk.getDefaultState();
-                            }
-                        }
-                        
-                        if(place(player,state,pos,palatte_mode,isCreative,experienceProgress,wand_stack)){
-                            //count++;
-                        }
-                        //System.out.println("pos "+pos);
-                    }
-                }
-            }
+			if(mode==4){//line
+				System.out.println("Line! pos0 "+pos0+" pos1 "+pos1);
+				WandServerSide.line(pos0,pos1,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}else if(mode==5){//circle
+				System.out.println("circle! pos0 "+pos0+" pos1 "+pos1);
+				WandServerSide.circle(pos0,pos1,player,state,palatte_mode,isCreative,experienceProgress,wand_stack,plane);
+			}else{
+				int last_slot=0;
+				for(int z=zs;z<ze;z++){
+					for(int y=ys;y<ye;y++){
+						for(int x=xs;x<xe;x++){
+							BlockPos pos=new BlockPos(x,y,z);
+							Block blk=null;
+							if(palatte_mode==WandItem.PaletteMode.RANDOM){
+								int random_slot = WandsMod.compat.get_next_int_random(player,slots.size());
+								blk=slots.get(random_slot);
+								state=WandsMod.compat.random_rotate(state,player.world);
+							}else if (palatte_mode==WandItem.PaletteMode.ROUND_ROBIN){
+								blk=slots.get(last_slot);										
+								last_slot=(last_slot+1)% slots.size();										
+							}
+							if(blk!=null){
+								if((blk instanceof  SnowBlock)){
+									//disabled for now
+								}else{
+									state=blk.getDefaultState();
+								}
+							}
+							if(place(player,state,pos,palatte_mode,isCreative,experienceProgress,wand_stack)){
+								//count++;
+							}
+							//System.out.println("pos "+pos);
+						}
+					}
+				}
+			}
             //System.out.println("Placed "+count+" blocks.");
             //System.out.println("Block: "+state);
         }
     }
+	static public void undo(PlayerEntity player,int n){
+		CircularBuffer u=player_undo.get(player.getEntityId());
+		if(u!=null){
+			for(int i=0;i<n && i<u.size();i++){
+				BlockPos p=u.pop();
+				if(p!=null){					
+					player.world.setBlockState(p, Blocks.AIR.getDefaultState());					
+				}
+			}
+			//u.print();
+		}
+	}
+	static public void redo(PlayerEntity player,int n){
+		CircularBuffer u=player_undo.get(player.getEntityId());
+		if(u!=null){
+			//System.out.println("redo");
+			for(int i=0;i<n && u.can_go_forward();i++){
+				//System.out.println("redo "+i);
+				u.forward();
+				CircularBuffer.P p=u.peek();
+				if(p!=null && p.pos!=null && p.state!=null){					
+					player.world.setBlockState(p.pos, p.state);					
+				}
+			}
+			//u.print();
+		}
+	}
     static private boolean place(PlayerEntity player,BlockState state,BlockPos pos,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack){
 		boolean placed = false;				
         float BLOCKS_PER_XP=WandsMod.config.blocks_per_xp;
@@ -123,6 +163,13 @@ public class WandServerSide {
 			}
 		
 			if (isCreative) {
+				int id=player.getEntityId();
+				if(player_undo.get(id)==null){
+					player_undo.put(id,new CircularBuffer(MAX_UNDO));
+				}
+				CircularBuffer u=player_undo.get(id);
+				u.put(pos,state);
+				//u.print();
 				player.world.setBlockState(pos, state);
 			} else {						
 				float xp=WandItem.calc_xp(player.experienceLevel,experienceProgress);		
@@ -217,5 +264,206 @@ public class WandServerSide {
 			}
 		}
 		return placed;
+	}
+	// bresenham 3d from https://www.geeksforgeeks.org/bresenhams-algorithm-for-3-d-line-drawing/
+	private static void line(BlockPos pos0,BlockPos pos1,PlayerEntity player,BlockState state,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack)  
+    {  
+		
+		int x1=pos0.getX();
+		int y1=pos0.getY();
+		int z1=pos0.getZ();
+		int x2=pos1.getX();
+		int y2=pos1.getY();
+		int z2=pos1.getZ();
+		int dx,dy,dz,xs,ys,zs,p1,p2;
+		dx = Math.abs(x2 - x1);
+		dy = Math.abs(y2 - y1); 
+		dz = Math.abs(z2 - z1); 
+		if (x2 > x1){
+			xs = 1;
+		}else{
+			xs = -1;
+		}
+		if (y2 > y1){
+			ys = 1;
+		}else{
+			ys = -1;
+		}
+		if (z2 > z1){
+			zs = 1;
+		}else{
+			zs = -1;
+		}
+	  
+		//X
+		if (dx >= dy && dx >= dz){
+			p1 = 2 * dy - dx ;
+			p2 = 2 * dz - dx ;
+			while (x1 != x2){
+				x1 += xs ;
+				if (p1 >= 0){
+					y1 += ys ;
+					p1 -= 2 * dx ;
+				}
+				if (p2 >= 0){
+					z1 += zs ;
+					p2 -= 2 * dx ;
+				}
+				p1 += 2 * dy ;
+				p2 += 2 * dz ;
+				BlockPos pos=new BlockPos(x1,y1,z1);
+				//LOGGER.info("line pos " +pos);
+				place(player,state,pos,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}else if (dy >= dx && dy >= dz){
+			p1 = 2 * dx - dy ;
+			p2 = 2 * dz - dy ;
+			while (y1 != y2){
+				y1 += ys ;
+				if (p1 >= 0){
+					x1 += xs ;
+					p1 -= 2 * dy ;
+				}
+				if (p2 >= 0){
+					z1 += zs ;
+					p2 -= 2 * dy ;
+				}
+				p1 += 2 * dx ;
+				p2 += 2 * dz ;
+				BlockPos pos=new BlockPos(x1,y1,z1);
+				//LOGGER.info("line pos " +pos);
+				place(player,state,pos,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}else{
+			p1 = 2 * dy - dz ;
+			p2 = 2 * dx - dz ;
+			while (z1 != z2){ 
+				z1 += zs ;
+				if (p1 >= 0){ 
+					y1 += ys ;
+					p1 -= 2 * dz ;
+				}
+				if (p2 >= 0){
+					x1 += xs ;
+					p2 -= 2 * dz ;
+				}
+				p1 += 2 * dy ;
+				p2 += 2 * dx ;				
+				place(player,state,new BlockPos(x1,y1,z1),palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}
+    }  
+
+	static private void drawCircleXY(int xc, int yc,int zc, int x, int y,int z,PlayerEntity player,BlockState state,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack)
+	{
+		place(player,state,new BlockPos(xc+x, yc+y,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-x, yc+y,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+x, yc-y,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-x, yc-y,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+y, yc+x,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-y, yc+x,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+y, yc-x,zc),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-y, yc-x,zc),palatte_mode,isCreative,experienceProgress,wand_stack);		
+	}
+	static private void drawCircleXZ(int xc, int yc,int zc, int x, int y,int z,PlayerEntity player,BlockState state,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack)
+	{
+		place(player,state,new BlockPos(xc+x, yc,zc+z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-x, yc,zc+z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+x, yc,zc-z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-x, yc,zc-z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+z, yc,zc+x),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-z, yc,zc+x),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc+z, yc,zc-x),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc-z, yc,zc-x),palatte_mode,isCreative,experienceProgress,wand_stack);		
+	}
+	static private void drawCircleYZ(int xc, int yc,int zc, int x, int y,int z,PlayerEntity player,BlockState state,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack)
+	{
+		place(player,state,new BlockPos(xc, yc-y, zc+z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc+y, zc+z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc+y, zc-z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc-y, zc-z),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc+z, zc+y),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc-z, zc+y),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc+z, zc-y),palatte_mode,isCreative,experienceProgress,wand_stack);
+		place(player,state,new BlockPos(xc, yc-z, zc-y),palatte_mode,isCreative,experienceProgress,wand_stack);		
+	}
+	private static void circle(BlockPos pos0,BlockPos pos1,PlayerEntity player,BlockState state,WandItem.PaletteMode palatte_mode,boolean isCreative,float experienceProgress,ItemStack wand_stack,int plane)
+	{
+		int r =1;
+		int xc=pos0.getX();
+		int yc=pos0.getY();
+		int zc=pos0.getZ();
+		int px=pos1.getX()-pos0.getX();
+		int py=pos1.getY()-pos0.getY();
+		int pz=pos1.getZ()-pos0.getZ();
+		r=(int)Math.sqrt(px*px+py*py+pz*pz );
+		/*int x = 0, z = r;
+		int y=0;
+		int d = 3 - 2 * r;
+		drawCircleXZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+		while (z >= x)
+		{
+			x++; 
+			if (d > 0)
+			{
+				z--; 
+				d = d + 4 * (x - z) + 10;
+			}
+			else
+				d = d + 4 * x + 6;
+			drawCircleXZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			//drawCircle(xc, yc, x, y);
+			
+		}*/
+
+		if(plane==0){//XZ;
+			int x = 0, y=0, z = r;
+			int d = 3 - 2 * r;
+			drawCircleXZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			while (z >= x)
+			{
+				x++; 
+				if (d > 0)
+				{
+					z--; 
+					d = d + 4 * (x - z) + 10;
+				}
+				else
+					d = d + 4 * x + 6;
+					drawCircleXZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}else if(plane==1){//XY;
+			int x = 0, y = r, z=0;
+			int d = 3 - 2 * r;
+			drawCircleXY(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			while (y >= x)
+			{
+				x++; 
+				if (d > 0)
+				{
+					y--; 
+					d = d + 4 * (x - y) + 10;
+				}
+				else
+					d = d + 4 * x + 6;
+					drawCircleXY(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}else if(plane==2){//YZ;
+			int x = 0, y = 0, z=r;
+			int d = 3 - 2 * r;
+			drawCircleYZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			while (z >= y)
+			{
+				y++; 
+				if (d > 0)
+				{
+					z--; 
+					d = d + 4 * (y - z) + 10;
+				}
+				else
+					d = d + 4 * y + 6;
+					drawCircleYZ(xc, yc,zc, x, y,z,player,state,palatte_mode,isCreative,experienceProgress,wand_stack);
+			}
+		}
 	}
 }

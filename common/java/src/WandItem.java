@@ -1,36 +1,26 @@
 package net.nicguzzo.common;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
-
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
-//import io.netty.buffer.Unpooled;
 import net.minecraft.world.World;
 import net.nicguzzo.WandsMod;
 
 abstract public class WandItem  {
-    enum Orientation {
+    public enum Orientation {
         HORIZONTAL, VERTICAL
+    }
+    public enum Plane {
+        XZ,XY,YZ
     }
 
     public enum PaletteMode {
         SAME, RANDOM, ROUND_ROBIN
     }
 
-    class Undo {
-        public ArrayList<BlockPos> undo_buffer = new ArrayList<BlockPos>();
-        public Block undo_block = null;
-    }
-    
     public BlockPos[] block_buffer;
     public int block_buffer_length=0;
-    public static Deque<Undo> undos = new LinkedList<>();
-    //private int MAX_UNDO = 32;
     private int limit = 0;
     public int limit2 = 0;
     public int x0=0;
@@ -41,6 +31,7 @@ abstract public class WandItem  {
     public boolean removes_water;
     public boolean removes_lava;
     private static Orientation orientation = Orientation.HORIZONTAL;
+    private static Plane plane = Plane.XZ;
     public static int x1;
     public static int y1;
     public static int z1;
@@ -106,18 +97,44 @@ abstract public class WandItem  {
         return orientation;
     }
 
-    static public void cycleOrientation() {
+    static public Plane getPlane() {
+        return plane;
+    }
 
-        int o = (orientation.ordinal() + 1) % 2;
-        orientation = Orientation.values()[o];
-        // String s="Wand orientation: "+orientation;
-        // sendMessage(s);
-        WandsMod.compat.send_message_to_player("Wand orientation: "+orientation);
+    static public void cycleOrientation() {
+        if(mode==5){
+            int p = (plane.ordinal() + 1) % 3;
+            plane = Plane.values()[p];
+            WandsMod.compat.send_message_to_player("Wand circle plane: "+plane);
+        }else{
+            int o = (orientation.ordinal() + 1) % 2;
+            orientation = Orientation.values()[o];
+            WandsMod.compat.send_message_to_player("Wand orientation: "+orientation);
+        }
     }
 
     static public void cycleMode() {
-        mode = (mode + 1) % 4;        
-        WandsMod.compat.send_message_to_player("Wand mode: "+mode);
+        mode = (mode + 1) % 6;
+        switch(mode){
+            case 0:
+                WandsMod.compat.send_message_to_player("Wand mode 0 - Direccion from block");
+            break;
+            case 1:
+                WandsMod.compat.send_message_to_player("Wand mode 1 - Row/Column");
+            break;
+            case 2:
+                WandsMod.compat.send_message_to_player("Wand mode 2 - Fill between corners");
+            break;
+            case 3:
+                WandsMod.compat.send_message_to_player("Wand mode 3 - Fill Area");
+            break;
+            case 4:
+                WandsMod.compat.send_message_to_player("Wand mode 4 - Line");
+            break;
+            case 5:
+                WandsMod.compat.send_message_to_player("Wand mode 5 - Circle");
+            break;
+        }
     }
 
     boolean in_buffer(BlockPos p){
@@ -134,31 +151,7 @@ abstract public class WandItem  {
             block_buffer_length++;
         }
     }
-
-    static public void undo() {
-        /*
-         * if(!undos.isEmpty()){ Undo u=undos.pollLast(); for (BlockPos i :
-         * u.undo_buffer) { //System.out.println("undo: "+i); PacketByteBuf passedData =
-         * new PacketByteBuf(Unpooled.buffer()); passedData.writeBlockPos(i);
-         * ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.compat.mNDO_PACKET_ID,
-         * passedData); } u.undo_buffer.clear(); }
-         * System.out.println("undo: "+undos.size());
-         */
-    }
-
-    /*private boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1) {
-        
-         PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
-         passedData.writeBlockPos(block_state); passedData.writeBlockPos(pos0);
-         passedData.writeBlockPos(pos1); if(WandItem.mode==2){
-         passedData.writeInt(WandItem.palette_mode.ordinal()); }else{
-         passedData.writeInt(PaletteMode.SAME.ordinal()); }
-         ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.compat.mACKET_ID,
-         passedData);
-         
-         return true;
-        
-    }*/
+    
     abstract public boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1);
     abstract public boolean isCreative(PlayerEntity player);
     abstract public boolean isClient(World world);
@@ -168,6 +161,7 @@ abstract public class WandItem  {
     public void left_click_use(World world) {
         if(isClient(world)){
             WandItem.fill_pos1=null;
+            System.out.println("pos1 null");
         }
     }
 
@@ -255,6 +249,30 @@ abstract public class WandItem  {
                         playSound(player,block_state,block_buffer[0]); 
 
                     System.out.println("block_buffer_length: "+block_buffer_length);
+                }break;
+                case 4:{ //line
+                    if(WandItem.fill_pos1==null){
+                        WandItem.fill_pos1=pos_state;                                 
+                        fill1_state=block_state;
+                        WandsMod.compat.send_message_to_player("line from "+pos_state);
+                    }else{
+                        placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
+                        playSound(player,fill1_state,WandItem.fill_pos1);                         
+                        WandsMod.compat.send_message_to_player("line from "+WandItem.fill_pos1+" to "+pos_state);
+                        WandItem.fill_pos1=null;
+                    }
+                }break;
+                case 5:{ //circle
+                    if(WandItem.fill_pos1==null){
+                        WandItem.fill_pos1=pos_state; 
+                        fill1_state=block_state;
+                        WandsMod.compat.send_message_to_player("circle from "+pos_state);
+                    }else{
+                        placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
+                        playSound(player,fill1_state,WandItem.fill_pos1);                         
+                        WandsMod.compat.send_message_to_player("circle from "+WandItem.fill_pos1+" to "+pos_state);
+                        WandItem.fill_pos1=null;
+                    }
                 }
                 break;
             }
@@ -291,4 +309,5 @@ abstract public class WandItem  {
 		}
 		return xp;
 	}
+    
 }
