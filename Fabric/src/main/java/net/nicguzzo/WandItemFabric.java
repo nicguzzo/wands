@@ -47,11 +47,11 @@ public class  WandItemFabric extends ToolItem
             passedData.writeBlockPos(block_state);
             passedData.writeBlockPos(pos0);
             passedData.writeBlockPos(pos1);            
-            if(WandItem.getMode()==2){
+            //if(WandItem.getMode()==2){
                 passedData.writeInt(WandItem.getPaletteMode().ordinal());
-            }else{
-                passedData.writeInt(PaletteMode.SAME.ordinal());
-            }
+            //}else{
+                //passedData.writeInt(PaletteMode.SAME.ordinal());
+            //}
             passedData.writeInt(WandItem.getMode());
             passedData.writeInt(WandItem.getPlane().ordinal());
             //ClientSidePacketRegistry.INSTANCE.sendToServer(WandsMod.WAND_PACKET_ID, passedData);

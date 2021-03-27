@@ -36,7 +36,7 @@ class CircularBuffer {
     }
 
     public void put(BlockPos p,BlockState s){
-        System.out.println("block: "+p+" state: "+s);
+        //System.out.println("block: "+p+" state: "+s);
 
         forward();
         if(elem[top]==null)

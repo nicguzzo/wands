@@ -14,7 +14,10 @@ import net.minecraft.block.PaneBlock;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.StairsBlock;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.util.math.BlockPos;
 import net.nicguzzo.WandsMod;
 
@@ -59,10 +62,42 @@ public class WandsBaseRenderer{
 				d = 2;
 			}
 		}
-		ItemStack item_stack = new ItemStack(block);				
+		ItemStack item_stack = new ItemStack(block);
+
+		ItemStack shulker=null;
+		ListTag shulker_items=null;
+		ItemStack offhand=WandsMod.compat.get_player_offhand_stack(player.inventory);
+		if(offhand!=null && offhand.getItem().getTranslationKey().endsWith("shulker_box")){
+			shulker=offhand;
+		}
+		int in_shulker=0;
+		if(shulker!=null){
+			
+			CompoundTag entity_tag =shulker.getSubTag("BlockEntityTag");
+			shulker_items = entity_tag.getList("Items", 10);		
+			if(shulker_items!=null){
+				for (int i = 0, len = shulker_items.size(); i < len; ++i) {
+					CompoundTag itemTag = shulker_items.getCompound(i);
+					ItemStack s = ItemStack.fromTag(itemTag);
+					if(WandItem.fill_pos1!=null){
+						Item it=Item.fromBlock(world.getBlockState(WandItem.fill_pos1).getBlock());
+						if( s.getItem()== it){
+							in_shulker+=s.getCount();
+						}
+					}else{
+						if( s.getItem()== item_stack.getItem()){
+							in_shulker+=s.getCount();
+						}
+					}							
+				}
+				//System.out.println("shulker "+in_shulker);
+			}
+		}
+		
 		if (player.inventory.count(item_stack.getItem()) >= d 
 			|| isCreative
 			|| WandItem.getMode()==2
+			|| in_shulker >=d
 		) {
 			boolean is_pane = false;					
 			boolean is_fence = false;
