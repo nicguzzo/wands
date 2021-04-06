@@ -1,0 +1,11 @@
+{
+  "blocks_per_xp": 0.0,
+  "stone_wand_limit": 9,
+  "iron_wand_limit": 27,
+  "diamond_wand_limit": 49,
+  "netherite_wand_limit": 81,
+  "stone_wand_durability": 131,
+  "iron_wand__durability": 250,
+  "diamond_wand__durability": 1561,
+  "netherite_wand_durability": 2031
+}

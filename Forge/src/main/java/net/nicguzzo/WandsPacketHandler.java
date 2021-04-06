@@ -18,10 +18,17 @@ public class WandsPacketHandler
         );
         INSTANCE.registerMessage(
                 nextID(),
-                SendPack.class,
-                SendPack::toBytes,
-                SendPack::new,
-                SendPack::handler
+                SendPlace.class,
+                SendPlace::toBytes,
+                SendPlace::new,
+                SendPlace::handler
+        );
+        INSTANCE.registerMessage(
+                nextID(),
+                SendUndo.class,
+                SendUndo::toBytes,
+                SendUndo::new,
+                SendUndo::handler
         );
     }
     public static int nextID() {

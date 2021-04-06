@@ -18,7 +18,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import io.netty.buffer.Unpooled;
-
+import net.nicguzzo.WandItemFabric.WandItemImpl;
 import net.nicguzzo.common.WandItem;
 
 public class  WandItemFabric extends ToolItem
@@ -79,7 +79,6 @@ public class  WandItemFabric extends ToolItem
         public boolean playerInvContains(PlayerEntity player, ItemStack item) {
             return player.inventory.contains(item);
         }
-        
     }
     public WandItemImpl wand=null;
     

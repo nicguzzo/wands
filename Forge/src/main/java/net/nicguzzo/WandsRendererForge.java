@@ -30,7 +30,7 @@ public class WandsRendererForge {
 	private static final Logger LOGGER = LogManager.getLogger();
 	
 	public boolean hasWandOnHand(PlayerEntity player){				
-		ItemStack item =player.inventory.getCurrentItem();
+		ItemStack item =player.inventory.getSelected();
 		return (item.getItem() instanceof WandItemForge);
 	}
 	
@@ -38,32 +38,33 @@ public class WandsRendererForge {
 		
 		Minecraft client = Minecraft.getInstance();
 		ClientPlayerEntity player = client.player;
-		ItemStack item = player.inventory.getCurrentItem();
-		//LOGGER.info("wand render mixin!!!");
-		if (item.getItem() instanceof WandItemForge && client.objectMouseOver instanceof BlockRayTraceResult) {
-			BlockRayTraceResult ray_result=(BlockRayTraceResult)client.objectMouseOver;
+		ItemStack item = player.inventory.getSelected();
+		//LOGGER.info("wand render mixin!!! "+item );
+		if (item.getItem() instanceof WandItemForge && client.hitResult instanceof BlockRayTraceResult) {
+			BlockRayTraceResult ray_result=(BlockRayTraceResult)client.hitResult;
+			//LOGGER.info("ray_result!!! "+ray_result);
 			if(ray_result!=null && ray_result.getType() == RayTraceResult.Type.BLOCK){
 				//LOGGER.info("wand hit block!!!");
-				BlockState block_state=client.world.getBlockState(ray_result.getPos());
+				BlockState block_state=client.level.getBlockState(ray_result.getBlockPos());
 				WandItemForge wnd=(WandItemForge)item.getItem();
 				boolean is_double_slab=false;
 				boolean is_slab_top=false;
-				if (block_state.getBlock() instanceof SlabBlock) {
-					is_double_slab=block_state.get(SlabBlock.TYPE) == SlabType.DOUBLE;
-					is_slab_top=block_state.get(SlabBlock.TYPE) == SlabType.TOP;
+				if (block_state.getBlock() instanceof SlabBlock) {					
+					is_double_slab=block_state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE;
+					is_slab_top=block_state.getValue(SlabBlock.TYPE) == SlabType.TOP;
 				}
-				MyDir dir=MyDir.values()[ray_result.getFace().getIndex()];
-				VoxelShape shape=block_state.getShape(client.world, ray_result.getPos());
+				MyDir dir=MyDir.values()[ray_result.getDirection().ordinal()];
+				VoxelShape shape=block_state.getShape(client.level, ray_result.getBlockPos());
 				
-				boolean is_full_cube=Block.isOpaque(shape);
+				boolean is_full_cube=Block.isShapeFullBlock(shape);
 				
-				WandsBaseRenderer.render(client.world,player,ray_result.getPos(), block_state, camX, camY, camZ, 
+				WandsBaseRenderer.render(client.level,player,ray_result.getBlockPos(), block_state, camX, camY, camZ, 
 					wnd.wand.getLimit(),wnd.wand.isCreative(player),
 					is_double_slab,is_slab_top,
-					player.experience,
+					player.experienceProgress,
 					dir,
 					is_full_cube,
-					ray_result.getHitVec().x,ray_result.getHitVec().y,ray_result.getHitVec().z
+					ray_result.getLocation().x,ray_result.getLocation().y,ray_result.getLocation().z
 				);
 			}
 		}

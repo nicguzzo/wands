@@ -15,25 +15,32 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
-public class SendPack {
+public class SendPlace {
     private final BlockPos state_pos ;
     private final BlockPos pos1;
     private final BlockPos pos2;
     private final int palette_mode;
+    private final int mode;
+	private final int plane;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public SendPack(PacketBuffer buffer) {        
+    public SendPlace(PacketBuffer buffer) {        
         state_pos=buffer.readBlockPos();
         pos1=buffer.readBlockPos();
         pos2=buffer.readBlockPos();
         palette_mode=buffer.readInt();
+        mode=buffer.readInt();
+        plane=buffer.readInt();
+
     }
 
-    public SendPack(BlockPos s,BlockPos p1, BlockPos p2,int m) {
+    public SendPlace(BlockPos s,BlockPos p1, BlockPos p2,int pm,int m,int p) {
         state_pos=s;
         pos1=p1;
         pos2=p2;
-        palette_mode=m;
+        palette_mode=pm;
+        mode=m;
+        plane=p;
     }
 
     public void toBytes(PacketBuffer buf) {        
@@ -41,32 +48,26 @@ public class SendPack {
         buf.writeBlockPos(pos1);
         buf.writeBlockPos(pos2);
         buf.writeInt(palette_mode);
+        buf.writeInt(mode);
+        buf.writeInt(plane);
     }
 
     public void handler(Supplier<NetworkEvent.Context> ctx) {
-        Context c=ctx.get();
+        Context c=ctx.get();        
         ctx.get().enqueueWork(() -> {
-            /*LOGGER.info("state_pos: "+this.state_pos);
-            LOGGER.info("pos1: "+this.pos1);
-            LOGGER.info("pos2: "+this.pos2);
-            LOGGER.info("mode: "+this.mode);        */
             PlayerEntity player=c.getSender();
 
-            //Item item=player.getActiveItemStack().getItem();
-            ItemStack item=player.getHeldItem(Hand.MAIN_HAND);
-            //LOGGER.info("item: "+ item);        
+            ItemStack item=player.getItemInHand(Hand.MAIN_HAND);
             if (item.getItem() instanceof WandItemForge){
-                //LOGGER.info("wand!");        
-                //WandItemForge wand=(WandItemForge)item;
-                /*if(wand==NETHERITE_WAND_ITEM){
-                    is_netherite_wand=true;
-                }*/
-                //LOGGER.info("isCreativeMode! "+player.abilities.isCreativeMode);        
-                if( World.isValid(state_pos) &&
-                    World.isValid(pos1) &&
-                    World.isValid(pos2) )
+                if( World.isInWorldBounds(state_pos) &&
+                    World.isInWorldBounds(pos1) &&
+                    World.isInWorldBounds(pos2) )
                 {                        
-                    WandServerSide.placeBlock(player,state_pos,pos1,pos2,palette_mode,player.abilities.isCreativeMode,player.experience,item);
+                    WandServerSide srv = new WandServerSide(player.level,player, state_pos, pos1, pos2, palette_mode,
+                            player.isCreative(), player.experienceProgress, item, mode, plane);
+                    srv.placeBlock();
+                    srv = null;
+                    //WandServerSide.placeBlock(player,state_pos,pos1,pos2,palette_mode,player.isCreative(),player.experienceProgress,item);
                 }        
             }
             
