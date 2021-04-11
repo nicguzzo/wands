@@ -23,6 +23,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.World;
 import net.minecraft.client.util.math.MatrixStack;
 
 public class WandsClientMod implements ClientModInitializer {
@@ -54,9 +55,37 @@ public class WandsClientMod implements ClientModInitializer {
 					float bpxp = buf.readFloat();
 					client.execute(() -> {
 						WandsBaseRenderer.BLOCKS_PER_XP = bpxp;
-						System.out.println("got BLOCKS_PER_XP from server " + WandsBaseRenderer.BLOCKS_PER_XP);
+						//System.out.println("got BLOCKS_PER_XP from server " + WandsBaseRenderer.BLOCKS_PER_XP);
 					});
 				});
+
+		ClientPlayNetworking.registerGlobalReceiver(WandsMod.WAND_CLICK_PACKET_ID,
+		(client, handler, buf, responseSender) -> {					
+			boolean b = buf.readBoolean();					
+			BlockPos pos=buf.readBlockPos();
+			client.execute(() -> {
+				World world=handler.getWorld();
+				ClientPlayerEntity player= client.player;
+				WandItem wand=WandsMod.compat.get_player_wand(player);
+				if(b ){
+					if(pos!=null)
+						wand.right_click_use_on_block(player ,world, pos);
+				}else{
+					wand.right_click_use(world);
+				}
+			});
+		});
+		ClientPlayNetworking.registerGlobalReceiver(WandsMod.WAND_PLACED_PACKET_ID,
+		(client, handler, buf, responseSender) -> {					
+			BlockPos pos=buf.readBlockPos();
+			boolean destroy = buf.readBoolean();
+			client.execute(() -> {
+				ClientPlayerEntity player= client.player;
+				//System.out.println("last_state "+WandItem.last_state + " destroy: " +destroy+ " pos:" +pos);
+				if(WandItem.last_state!=null)
+					WandsMod.compat.playBlockSound(player,WandItem.last_state,pos,destroy);				
+			});
+		});	
 
 		modeKB = new KeyBinding("key.wands.wand_mode", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, "category.wands");
 		KeyBindingHelper.registerKeyBinding(modeKB);

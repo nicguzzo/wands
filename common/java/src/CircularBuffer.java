@@ -7,6 +7,7 @@ class CircularBuffer {
     class P{
         BlockPos pos=null;
         BlockState state=null;
+        boolean destroyed=false;
     };
     private int size;
     private P[] elem;
@@ -35,7 +36,7 @@ class CircularBuffer {
         }        
     }
 
-    public void put(BlockPos p,BlockState s){
+    public void put(BlockPos p,BlockState s,boolean d){
         //System.out.println("block: "+p+" state: "+s);
 
         forward();
@@ -43,6 +44,7 @@ class CircularBuffer {
             elem[top]=new P();
         elem[top].pos=p;
         elem[top].state=s;
+        elem[top].destroyed=d;
         
     }
 
@@ -68,12 +70,12 @@ class CircularBuffer {
         }
     }
 
-    public BlockPos pop(){
-        BlockPos e;
+    public P pop(){
+        P e;
         if (size==0) {
             return null;
         }else {
-            e = elem[top].pos;
+            e = elem[top];
             //elem[top] = null;
             if(size==1){
                 top=-1;

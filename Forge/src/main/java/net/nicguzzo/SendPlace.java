@@ -10,8 +10,8 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 import net.nicguzzo.common.WandServerSide;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
@@ -22,7 +22,7 @@ public class SendPlace {
     private final int palette_mode;
     private final int mode;
 	private final int plane;
-    private static final Logger LOGGER = LogManager.getLogger();
+    //private static final Logger LOGGER = LogManager.getLogger();
 
     public SendPlace(PacketBuffer buffer) {        
         state_pos=buffer.readBlockPos();

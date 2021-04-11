@@ -17,23 +17,25 @@ import net.nicguzzo.common.WandsConfig;
 public class WandsMod implements ModInitializer {
 
 	public static WandsConfig config = null;
-	public static ICompatModImpl compat = new ICompatModImpl();
+	public static final ICompatModImpl compat = new ICompatModImpl();
 	public static final Identifier WAND_PACKET_ID = new Identifier("wands", "wand");
 	public static final Identifier WANDXP_PACKET_ID = new Identifier("wands", "wandxp");
 	public static final Identifier WANDCONF_PACKET_ID = new Identifier("wands", "wandconf");
 	public static final Identifier WAND_UNDO_PACKET_ID = new Identifier("wands", "wandundo");
 	public static final Identifier WAND_REDO_PACKET_ID = new Identifier("wands", "wandredo");
+	public static final Identifier WAND_CLICK_PACKET_ID = new Identifier("wands", "click");
+	public static final Identifier WAND_PLACED_PACKET_ID = new Identifier("wands", "placed");
 
 	public static WandItemFabric NETHERITE_WAND_ITEM = null;
 	public static WandItemFabric DIAMOND_WAND_ITEM = null;
 	public static WandItemFabric IRON_WAND_ITEM = null;
 	public static WandItemFabric STONE_WAND_ITEM = null;
 
-	public static final PaletteItem PALETTE_ITEM = new PaletteItem();
 
 	@Override
 	public void onInitialize() {
 		config = WandsConfig.load_config(FabricLoader.getInstance().getConfigDir());
+		config.generate_lists();
 		NETHERITE_WAND_ITEM = new WandItemFabric(ToolMaterials.NETHERITE, WandsMod.config.netherite_wand_limit,
 				WandsMod.config.netherite_wand_durability, true, true);
 		DIAMOND_WAND_ITEM = new WandItemFabric(ToolMaterials.DIAMOND, WandsMod.config.diamond_wand_limit,
@@ -46,7 +48,7 @@ public class WandsMod implements ModInitializer {
 		Registry.register(Registry.ITEM, new Identifier("wands", "diamond_wand"), DIAMOND_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "iron_wand"), IRON_WAND_ITEM);
 		Registry.register(Registry.ITEM, new Identifier("wands", "stone_wand"), STONE_WAND_ITEM);
-		Registry.register(Registry.ITEM, new Identifier("wands", "palette"), PALETTE_ITEM);
+		
 
 		ServerPlayNetworking.registerGlobalReceiver(WAND_PACKET_ID, (server, player, handler, buf, responseSender) -> {
 			final BlockPos state_pos = buf.readBlockPos();
@@ -91,5 +93,5 @@ public class WandsMod implements ModInitializer {
 					});
 				});
 	}
-
+	
 }

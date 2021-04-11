@@ -49,7 +49,8 @@ public class KeyBoardInput {
             WandItem.cycleOrientation();
         }
         if (WAND_UNDO_MODE_KEY.isDown()) {
-            if (Minecraft.getInstance().player != null && WandsMod.compat.is_player_holding_wand(Minecraft.getInstance().player)) {
+            Minecraft client=Minecraft.getInstance();
+            if (client.player != null && WandsMod.compat.is_player_holding_wand(client.player)) {
                 int n = 1;
                 if (Screen.hasAltDown())
                     n = 10;

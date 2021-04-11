@@ -1,17 +1,17 @@
 package net.nicguzzo;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SoundType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkDirection;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,7 +35,7 @@ public class  WandItemForge extends Item
                 pm=WandItem.getPaletteMode().ordinal();
             }else{
                 pm=WandItem.PaletteMode.SAME.ordinal();
-            }
+            }            
             WandsPacketHandler.INSTANCE.sendToServer(new SendPlace(block_state,pos0,pos1,pm,WandItem.getMode(),WandItem.getPlane().ordinal()));
             return true;
         }
@@ -51,12 +51,12 @@ public class  WandItemForge extends Item
             return world.isClientSide;
         }
 
-        @Override
+        /*@Override
         public void playSound(PlayerEntity player,BlockState block_state,BlockPos pos) {
             //LOGGER.info("playSound");
             SoundType sounttype = block_state.getSoundType();            
             player.level.playSound(player, pos,sounttype.getPlaceSound(), SoundCategory.BLOCKS, (sounttype.getVolume() + 1.0F) / 2.0F, sounttype.getPitch() * 0.8F);
-        }
+        }*/
 
         @Override
         public boolean playerInvContains(PlayerEntity player, ItemStack item) {
@@ -72,16 +72,26 @@ public class  WandItemForge extends Item
     @Override
     public ActionResult<ItemStack> use(World worldIn, PlayerEntity player, Hand hand){
         //LOGGER.info("Use");        
-        wand.left_click_use(worldIn);
+        //wand.left_click_use(worldIn);
+        if(!worldIn.isClientSide()){
+            ServerPlayerEntity srvplayer=(ServerPlayerEntity)player;
+            WandsPacketHandler.INSTANCE.sendTo(new SendSrvClick( new BlockPos(0,0,0),false), srvplayer.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+        }
         return ActionResult.pass(player.getItemInHand(hand));
     }
     @Override
     public ActionResultType useOn(ItemUseContext context) {
-        //LOGGER.info("onItemUse");        
-        if(!wand.right_click_use_on_block(context.getPlayer() , context.getLevel(), context.getClickedPos())){
-            return ActionResultType.FAIL;
-        }        
-        return ActionResultType.FAIL;
+        LOGGER.info("onItemUse player: "+context.getPlayer().getName().getString() +" isClientSide: "+context.getLevel().isClientSide());        
+
+        if(!context.getLevel().isClientSide()){
+            ServerPlayerEntity player=(ServerPlayerEntity)context.getPlayer();
+            WandsPacketHandler.INSTANCE.sendTo(new SendSrvClick(context.getClickedPos(),true), player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+            
+        }
+        /*if(!wand.right_click_use_on_block(context.getPlayer() , context.getLevel(), context.getClickedPos())){
+            return ActionResultType.SUCCESS;
+        } */       
+        return ActionResultType.SUCCESS;
     }
 
 }

@@ -18,8 +18,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.shapes.VoxelShape;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 public class WandsRendererForge {
 	
@@ -27,7 +27,7 @@ public class WandsRendererForge {
 	public static boolean conf = false;
 	public static BlockPos fill_pos1=null;	
 	
-	private static final Logger LOGGER = LogManager.getLogger();
+	//private static final Logger LOGGER = LogManager.getLogger();
 	
 	public boolean hasWandOnHand(PlayerEntity player){				
 		ItemStack item =player.inventory.getSelected();

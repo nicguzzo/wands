@@ -1,7 +1,7 @@
 package net.nicguzzo;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.block.BlockState;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
@@ -9,12 +9,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.item.ToolItem;
 import net.minecraft.item.ToolMaterial;
-import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import io.netty.buffer.Unpooled;
@@ -69,11 +68,11 @@ public class  WandItemFabric extends ToolItem
             return world.isClient;
         }
 
-        @Override
+        /*@Override
         public void playSound(PlayerEntity player,BlockState block_state,BlockPos pos) {
             BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
             player.world.playSound(player, pos,blockSoundGroup.getPlaceSound(), SoundCategory.BLOCKS, (blockSoundGroup.getVolume() + 1.0F) / 2.0F, blockSoundGroup.getPitch() * 0.8F);
-        }
+        }*/
 
         @Override
         public boolean playerInvContains(PlayerEntity player, ItemStack item) {
@@ -91,15 +90,32 @@ public class  WandItemFabric extends ToolItem
   
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {        
-        wand.left_click_use(world);        
+        
+        if(!world.isClient){
+            //wand.left_click_use(world);        
+            PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+            passedData.writeBoolean(false);            
+            passedData.writeBlockPos(new BlockPos(0,0,0));
+            ServerPlayNetworking.send((ServerPlayerEntity)user, WandsMod.WAND_CLICK_PACKET_ID, passedData);
+        }
         return TypedActionResult.pass(user.getStackInHand(hand));
     }
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
+        World world=context.getWorld();
+        if(!world.isClient){
+            //System.out.println("useOnBlock srv");
+            //wand.left_click_use(world);        
+            PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+            passedData.writeBoolean(true);
+            passedData.writeBlockPos(context.getBlockPos());            
+            ServerPlayNetworking.send((ServerPlayerEntity)context.getPlayer(), WandsMod.WAND_CLICK_PACKET_ID, passedData);
+        }
+/*
         if(!wand.right_click_use_on_block(context.getPlayer() , context.getWorld(), context.getBlockPos())){
             return ActionResult.SUCCESS;
-        }
-        return ActionResult.FAIL;        
+        }*/
+        return ActionResult.SUCCESS;        
     }
     
 }

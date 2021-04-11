@@ -25,6 +25,7 @@ abstract public class WandItem  {
     public int limit2 = 0;
     public int x0=0;
     public static BlockState fill1_state=null;
+    public static BlockState last_state=null;
     private static int mode = 0;
     private static PaletteMode palette_mode = PaletteMode.SAME;
     private static boolean invert = false;
@@ -155,11 +156,11 @@ abstract public class WandItem  {
     abstract public boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1);
     abstract public boolean isCreative(PlayerEntity player);
     abstract public boolean isClient(World world);
-    abstract public void playSound(PlayerEntity player,BlockState block_state,BlockPos pos);
+    //abstract public void playSound(PlayerEntity player,BlockState block_state,BlockPos pos);
     abstract public boolean playerInvContains(PlayerEntity player,ItemStack item);
     
 
-    public void left_click_use(World world) {
+    public void right_click_use(World world) {
         if(isClient(world)){
             WandItem.fill_pos1=null;
             WandItem.fill1_state=null;
@@ -179,7 +180,9 @@ abstract public class WandItem  {
             WandItem.fill1_state=null; 
             return false;
         }
+        
         BlockState block_state=world.getBlockState(pos_state);
+        last_state=block_state;
         ItemStack item_stack=null;
 
         if((mode==4 || mode==5) && fill1_state!=null){
@@ -187,10 +190,14 @@ abstract public class WandItem  {
         }else{
             item_stack=new ItemStack(block_state.getBlock());
         }
+        
+        ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
+        boolean destroy =WandsMod.compat.can_destroy(block_state, offhand, isCreative(player));
+
         boolean mm = palette_mode!=WandItem.PaletteMode.SAME && (mode == 2 || mode == 4|| mode == 5);
 		int in_shulker=WandsMod.compat.in_shulker(player, item_stack);
                 
-        if(playerInvContains(player,item_stack) || isCreative(player) || mm || in_shulker>0 ||fill_pos1 != null){
+        if(playerInvContains(player,item_stack) || isCreative(player) || mm || in_shulker>0 ||fill_pos1 != null||destroy){
             switch (mode) {
                 case 0:
                     WandItem.fill_pos1=null;
@@ -199,7 +206,7 @@ abstract public class WandItem  {
                    // WandItem.undo_buffer.clear();
                     if(placeBlock(pos_state,pos0,pos1)){
                         //WandItem.undo_buffer.add(new Vec3i(pos1.getX(),pos1.getY(),pos1.getZ()));
-                        playSound(player,block_state,pos_state);
+                        //playSound(player,block_state,pos_state);
                     }
                 break;
                 case 1:
@@ -208,7 +215,7 @@ abstract public class WandItem  {
                    
                     placeBlock(pos_state,new BlockPos(x1, y1, z1),new BlockPos(x2, y2, z2));
                     //if(placed>0){                        
-                        playSound(player,block_state,pos_state);                        
+                        //playSound(player,block_state,pos_state);                        
                     //}
                 break;
                 case 2:                    
@@ -243,9 +250,9 @@ abstract public class WandItem  {
                             }
                             BlockPos fill_pos2=new BlockPos(x2,y2,z2);
                             placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,fill_pos2);
-                            if(fill1_state!=null){
-                                playSound(player,fill1_state,WandItem.fill_pos1); 
-                            }
+                            //if(fill1_state!=null){
+                                //playSound(player,fill1_state,WandItem.fill_pos1); 
+                            //}
                             WandsMod.compat.send_message_to_player("filled from "+WandItem.fill_pos1+" to "+fill_pos2);
                             //player.sendMessage(new LiteralText("fill from "+WandItem.fill_pos1+" to "+fill_pos2),true);
                         }
@@ -257,8 +264,8 @@ abstract public class WandItem  {
                     for(int i=0;i<block_buffer_length && i<getLimit();i++){
                         placeBlock(pos_state,block_buffer[i],block_buffer[i]);
                     }
-                    if(block_buffer_length>0)
-                        playSound(player,block_state,block_buffer[0]); 
+                    //if(block_buffer_length>0)
+                        //playSound(player,block_state,block_buffer[0]); 
 
                     //System.out.println("block_buffer_length: "+block_buffer_length);
                 }break;
@@ -269,7 +276,7 @@ abstract public class WandItem  {
                         WandsMod.compat.send_message_to_player("line from "+pos_state);
                     }else{
                         placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
-                        playSound(player,fill1_state,WandItem.fill_pos1);                         
+                        //playSound(player,fill1_state,WandItem.fill_pos1);                         
                         WandsMod.compat.send_message_to_player("line from "+WandItem.fill_pos1+" to "+pos_state);
                         WandItem.fill_pos1=null;
                     }
@@ -281,7 +288,7 @@ abstract public class WandItem  {
                         WandsMod.compat.send_message_to_player("circle from "+pos_state);
                     }else{
                         placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
-                        playSound(player,fill1_state,WandItem.fill_pos1);                         
+                        //playSound(player,fill1_state,WandItem.fill_pos1);                         
                         WandsMod.compat.send_message_to_player("circle from "+WandItem.fill_pos1+" to "+pos_state);
                         WandItem.fill_pos1=null;
                     }
@@ -321,5 +328,13 @@ abstract public class WandItem  {
 		}
 		return xp;
 	}
-    
+    /*static public boolean can_destroy(BlockState block_state,ItemStack offhand,boolean isCreative){
+        boolean destroy=false;
+        boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
+		if(offhand.getItem() instanceof MiningToolItem){
+			MiningToolItem mt=(MiningToolItem)offhand.getItem();
+			destroy= isCreative|| mt.getMiningSpeedMultiplier(null, block_state) > 1.0f|is_glass;			
+		}
+        return destroy;
+    }   */
 }

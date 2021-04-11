@@ -5,6 +5,8 @@ import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FenceBlock;
@@ -21,7 +23,8 @@ import net.nicguzzo.WandsMod;
 
 public class WandsBaseRenderer {
 
-	public static float p_o = +0.0001f;// preview offset
+	
+	public static final float p_o = -0.001f;// preview offset
 	public static float BLOCKS_PER_XP = 0;
 	private static long t0 = 0;
 	private static long t1 = 0;
@@ -64,19 +67,32 @@ public class WandsBaseRenderer {
 			item_stack = new ItemStack(block);
 		}
 
+		ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
+
+		boolean destroy =WandsMod.compat.can_destroy(block_state, offhand, isCreative);
+		
+		if (prnt) {
+			//System.out.println("destroy: "+destroy + " offhand "+offhand+" block_state: "+block_state+" block: "+block);
+			//WandsMod.compat.send_message_to_player("destroy");
+		}
+
 		it_count = WandsMod.compat.in_inventory(player,item_stack);
 		
-		int in_shulker =WandsMod.compat.in_shulker(player, item_stack);
+		int in_shulker=0;
+
+		if(!destroy){
+			in_shulker =WandsMod.compat.in_shulker(player, item_stack);
+		}
 		
 		boolean mm = WandItem.getPaletteMode()!=WandItem.PaletteMode.SAME && (WandItem.getMode() == 2 || WandItem.getMode() == 4|| WandItem.getMode() == 5 );
 
-		if (!mm && !isCreative && it_count < d && in_shulker<d && WandItem.fill_pos1 == null) {
+		if (!destroy && !mm && !isCreative && it_count < d && in_shulker<d && WandItem.fill_pos1 == null) {
 			if (prnt) {
 				WandsMod.compat.send_message_to_player("no blocks");
 			}
 		}
 		boolean notags=WandsMod.compat.has_tag(item_stack);
-		if (it_count >= d || isCreative || mm || in_shulker >= d||WandItem.fill_pos1 != null || notags) {
+		if (it_count >= d || isCreative || mm || in_shulker >= d||WandItem.fill_pos1 != null || notags ||destroy) {
 			boolean is_pane = false;
 			boolean is_fence = false;
 			boolean is_fence_gate = false;
@@ -110,8 +126,19 @@ public class WandsBaseRenderer {
 				}
 			}
 			
-			if ((max_xp_blocks > 0 || BLOCKS_PER_XP == 0 || isCreative)
-					&& (isFullCube || is_slab || is_pane || is_fence || is_fence_gate || is_stairs||mm)) {
+			boolean allowed=false;
+			boolean denied=false;
+			
+			if(WandsConfig.allowed.contains(block)){
+				allowed=true;
+			}
+			if(WandsConfig.denied.contains(block)){
+				denied=true;
+			}
+
+
+			if (!denied && (max_xp_blocks > 0 || BLOCKS_PER_XP == 0 || isCreative)
+					&& (isFullCube || is_slab || is_pane || is_fence || is_fence_gate || is_stairs||mm || allowed ||destroy)) {
 				float h = 1.0f;
 				float y0 = 0.0f;
 				if (slab != null) {
@@ -122,12 +149,15 @@ public class WandsBaseRenderer {
 						h = 0.5f;
 					}
 				}
+				//if (prnt) {
+				//	System.out.println("2");
+				//}
 				RenderSystem.pushMatrix();
 				RenderSystem.translated(-camX, -camY, -camZ);
-				// RenderSystem.enableDepthTest();
-				RenderSystem.disableDepthTest();
-				RenderSystem.enableBlend();
-				RenderSystem.defaultBlendFunc();
+				RenderSystem.enableDepthTest();
+				//RenderSystem.disableDepthTest();
+				//RenderSystem.enableBlend();
+				//RenderSystem.defaultBlendFunc();
 				RenderSystem.disableTexture();
 
 				GL11.glLineWidth(3.0f);
@@ -138,16 +168,15 @@ public class WandsBaseRenderer {
 						WandItem.valid = false;
 						break;
 					}
-					mode0(wand, pos, y0, h, side, world, block_state, player, lim, hit_x, hit_y, hit_z);
+					mode0(wand, pos, y0, h, side, world, block_state, player, lim, hit_x, hit_y, hit_z,destroy);
 				}
 					break;
 				case 1: {
 					mode1(wand, pos, y0, h, side, hit_x, hit_y, hit_z, world, block_state, player, lim, max_xp_blocks,
-							item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves), isCreative);
+							item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves), isCreative,destroy);
 				}
 					break;
-				case 2: {
-					// player.sendMessage(new LiteralText("m use 2"),true);
+				case 2: {					
 					WandItem.valid = true;
 					if (WandItem.fill_pos1 != null) {
 						float x1 = WandItem.fill_pos1.getX();
@@ -184,7 +213,7 @@ public class WandsBaseRenderer {
 				}
 					break;
 				case 3: {
-					mode3(wand, pos, block_state, world, side);
+					mode3(wand, pos, block_state, world, side,destroy);
 				}
 					break;
 				case 4: {
@@ -263,7 +292,7 @@ public class WandsBaseRenderer {
 	}
 
 	private static void mode0(WandItem wand, BlockPos pos, float y0, float h, MyDir side, World world,
-			BlockState block_state, PlayerEntity player, int lim, double hit_x, double hit_y, double hit_z) {
+			BlockState block_state, PlayerEntity player, int lim, double hit_x, double hit_y, double hit_z,boolean destroy) {
 
 		float x = pos.getX();
 		float y = pos.getY();
@@ -298,9 +327,9 @@ public class WandsBaseRenderer {
 		if (d1 != null) {
 			BlockPos pv = null;
 			if (d2 != null) {
-				pv = find_next_diag(world, block_state, d1, d2, pos, wand);
+				pv = find_next_diag(world, block_state, d1, d2, pos, wand,destroy);
 			} else {
-				pv = find_next_pos(world, block_state, d1, pos, wand);
+				pv = find_next_pos(world, block_state, d1, pos, wand,destroy);
 			}
 			if (pv != null) {
 				int x1 = pv.getX();
@@ -322,7 +351,7 @@ public class WandsBaseRenderer {
 					WandItem.y2 = y2;
 					WandItem.z2 = z2;
 
-					preview(x1 + p_o, y1 + p_o, z1 + p_o, x2 - p_o, y2 - p_o, z2 - p_o);
+					preview(x1 , y1 , z1 , x2 , y2 , z2 );
 				}
 			} else {
 				WandItem.valid = false;
@@ -332,7 +361,7 @@ public class WandsBaseRenderer {
 
 	private static void mode1(WandItem wand, BlockPos pos, float y0, float h, MyDir side, double hit_x, double hit_y,
 			double hit_z, World world, BlockState block_state, PlayerEntity player, int lim, int max_xp_blocks,
-			ItemStack item_stack, boolean dont_check_state, boolean isCreative) {
+			ItemStack item_stack, boolean dont_check_state, boolean isCreative,boolean destroy) {
 		MyDir dir = MyDir.EAST;
 		BlockPos pos_m = WandsMod.compat.pos_offset(pos, side, 1);
 		BlockState state = world.getBlockState(pos_m);
@@ -441,21 +470,30 @@ public class WandsBaseRenderer {
 						stop2 = true;
 					}
 				}
-				if (WandsMod.compat.interescts_player_bb(player, pos1.getX(), pos1.getY(), pos1.getZ(), pos1.getX() + 1,
-						pos1.getY() + 1, pos1.getZ() + 1)) {
-					intersects = true;
-					break;
-				}
-				if (WandsMod.compat.interescts_player_bb(player, pos3.getX(), pos3.getY(), pos3.getZ(), pos3.getX() + 1,
-						pos3.getY() + 1, pos3.getZ() + 1)) {
-					intersects = true;
-					break;
+				if(!destroy){
+					if (WandsMod.compat.interescts_player_bb(player, pos1.getX(), pos1.getY(), pos1.getZ(), pos1.getX() + 1,
+							pos1.getY() + 1, pos1.getZ() + 1)) {
+						intersects = true;
+						break;
+					}
+					if (WandsMod.compat.interescts_player_bb(player, pos3.getX(), pos3.getY(), pos3.getZ(), pos3.getX() + 1,
+							pos3.getY() + 1, pos3.getZ() + 1)) {
+						intersects = true;
+						break;
+					}
 				}
 				k++;
 				if (stop1 && stop2) {
 					k = 1000;
 				}
 			}
+
+			
+			if(destroy){
+				pos1=WandsMod.compat.pos_offset(pos1, side.getOpposite(), 1);
+				pos3=WandsMod.compat.pos_offset(pos3, side.getOpposite(), 1);
+			}
+
 			int x1 = pos1.getX() - offx;
 			int y1 = pos1.getY() - offy;
 			int z1 = pos1.getZ() - offz;
@@ -475,18 +513,19 @@ public class WandsBaseRenderer {
 				WandItem.y2 = y2 + offy;
 				WandItem.z2 = z2 + offz;
 
-				preview(x1 + p_o, y1 + p_o, z1 + p_o, x2 - p_o, y2 - p_o, z2 - p_o);
+				preview(x1 , y1 , z1 , x2 , y2 , z2 );
 			}
 		} else {
 			WandItem.valid = false;
 		}
 	}
 
-	static private void mode3(WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side) {
+	static private void mode3(WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side,boolean destroy) {
 
 		wand.block_buffer_length = 0;
 		add_neighbour(wand, pos, block_state, world, side);
-		int i = 0;
+		int i = 0;		
+		
 		while (i < wand.getLimit()) {
 			if (i < wand.block_buffer_length) {
 				BlockPos p = WandsMod.compat.pos_offset(wand.block_buffer[i], side, -1);
@@ -494,12 +533,17 @@ public class WandsBaseRenderer {
 			}
 			i++;
 		}
-		for (int a = 0; a < wand.block_buffer_length; a++) {
-			int x1 = wand.block_buffer[a].getX();
-			int y1 = wand.block_buffer[a].getY();
-			int z1 = wand.block_buffer[a].getZ();
+		for (int a = 0; a < wand.block_buffer_length; a++) {			
+			BlockPos p=wand.block_buffer[a];
+			if(destroy){
+				wand.block_buffer[a]=WandsMod.compat.pos_offset(wand.block_buffer[a], side, -1);
+				p=wand.block_buffer[a];
+			}
+			int x1 = p.getX();
+			int y1 = p.getY();
+			int z1 = p.getZ();
 
-			preview(x1 + p_o, y1 + p_o, z1 + p_o, x1 + 1 - p_o, y1 + 1 - p_o, z1 + 1 - p_o);
+			preview(x1 , y1 , z1 , x1 + 1 , y1 + 1 , z1 + 1 );
 		}
 		WandItem.valid = (wand.block_buffer_length > 0);
 	}
@@ -616,34 +660,45 @@ public class WandsBaseRenderer {
 	}
 
 	static public BlockPos find_next_diag(World world, BlockState block_state, MyDir dir1, MyDir dir2, BlockPos pos,
-			WandItem wand) {
-
+			WandItem wand,boolean destroy) {
+		BlockPos p0=pos;
 		for (int i = 0; i < wand.getLimit(); i++) {
 			BlockPos p1 = WandsMod.compat.pos_offset(pos, dir1, 1);
 			pos = WandsMod.compat.pos_offset(p1, dir2, 1);
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
-				if (can_place(bs, wand, world, pos)) {
-					return pos;
-				} else {
-					if (!bs.equals(block_state))
-						return null;
+				if(destroy){
+					if (!bs.equals(block_state) && p0!=null)
+						return p0;
+				}else{
+					if (can_place(bs, wand, world, pos)) {
+						return pos;
+					} else {
+						if (!bs.equals(block_state))
+							return null;
+					}
 				}
 			}
+			p0=pos;
 		}
 		return null;
 	}
 
-	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand) {
+	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand,boolean destroy) {
 		for (int i = 0; i < wand.getLimit(); i++) {
 			BlockPos pos2 = WandsMod.compat.pos_offset(pos, dir, i + 1);
 			BlockState bs = world.getBlockState(pos2);
+			
 			if (bs != null) {
 				if (!bs.equals(block_state)) {
-					if (can_place(bs, wand, world, pos2)) {
-						return pos2;
-					} else {
-						return null;
+					if(destroy){
+						return WandsMod.compat.pos_offset(pos, dir, i);
+					}else{
+						if (can_place(bs, wand, world, pos2)) {
+							return pos2;
+						} else {
+							return null;
+						}
 					}
 				}
 			}
@@ -811,6 +866,12 @@ public class WandsBaseRenderer {
 
 	private static void preview(float fx1, float fy1, float fz1, float fx2, float fy2, float fz2) {
 		// GL11.glVertex3d
+		fx1 += p_o;
+		fy1 += p_o;
+		fz1 += p_o;
+		fx2 -= p_o;
+		fy2 -= p_o;
+		fz2 -= p_o;
 		RenderSystem.color4f(255f, 255f, 255f, 255f);
 		GL11.glVertex3d(fx1, fy1, fz1);
 		GL11.glVertex3d(fx2, fy1, fz1);
@@ -1153,7 +1214,7 @@ public class WandsBaseRenderer {
 		} else {
 			zs = -1;
 		}
-
+		preview(x1, y1, z1, x1 + 1, y1 + 1, z1 + 1);
 		// X
 		if (dx >= dy && dx >= dz) {
 			p1 = 2 * dy - dx;

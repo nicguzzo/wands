@@ -30,6 +30,20 @@ public class WandsPacketHandler
                 SendUndo::new,
                 SendUndo::handler
         );
+        INSTANCE.registerMessage(
+                nextID(),
+                SendSrvClick.class,
+                SendSrvClick::toBytes,
+                SendSrvClick::new,
+                SendSrvClick::handler
+        );
+        INSTANCE.registerMessage(
+                nextID(),
+                SendBlockPlaced.class,
+                SendBlockPlaced::toBytes,
+                SendBlockPlaced::new,
+                SendBlockPlaced::handler
+        );
     }
     public static int nextID() {
         return ID++;

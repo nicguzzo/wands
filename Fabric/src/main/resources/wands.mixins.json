@@ -7,6 +7,9 @@
     "RenderWorldMixin",
     "GameMixin"
   ],
+  "server":[
+    "ServerWorldMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

@@ -5,6 +5,7 @@
   "package": "net.nicguzzo.mixin",
   "refmap": "wands.refmap.json",
   "mixins": [],
+  "server": [] ,
   "client": ["RenderWorldMixin"] ,
   "injectors": {
     "defaultRequire": 1

@@ -7,34 +7,50 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.block.PlantBlock;
 import net.minecraft.block.ShulkerBoxBlock;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.block.AbstractGlassBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.SnowBlock;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.MiningToolItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.tag.FluidTags;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.nicguzzo.common.ICompatMod;
 import net.nicguzzo.common.MyDir;
 import net.nicguzzo.common.WandItem;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ICompatModImpl implements ICompatMod{
+    @Environment(EnvType.CLIENT)
+    public PlayerEntity get_player(){
+        assert MinecraftClient.getInstance().player != null;
+        MinecraftClient instance=MinecraftClient.getInstance();
+        return instance.player;
+    }
     public boolean is_fluid(BlockState state,WandItem wand){
         if(wand!=null){
             if(wand.removes_water && wand.removes_lava){
@@ -59,26 +75,26 @@ public class ICompatModImpl implements ICompatMod{
     public BlockState random_rotate(BlockState state,World world){        
         return state.rotate(BlockRotation.random(world.random));
     }
-    public int get_main_inventory_size(PlayerInventory inv){
-        return inv.main.size();
+    public int get_main_inventory_size(PlayerEntity player){
+        return player.inventory.main.size();
     }
-    public ItemStack get_player_main_stack(PlayerInventory inv,int i){
-        return inv.main.get(i);
+    public ItemStack get_player_main_stack(PlayerEntity player,int i){
+        return player.inventory.main.get(i);
     }
-    public ItemStack get_player_offhand_stack(PlayerInventory inv){
-        return inv.offHand.get(0);
+    public ItemStack get_player_offhand_stack(PlayerEntity player){
+        return player.inventory.offHand.get(0);
     }
-    public void player_offhand_stack_inc(PlayerInventory inv,int i){
-        inv.offHand.get(0).increment(i);
+    public void player_offhand_stack_inc(PlayerEntity player,int i){
+        player.inventory.offHand.get(0).increment(i);
     }
-    public void player_offhand_stack_dec(PlayerInventory inv,int i){
-        inv.offHand.get(0).decrement(i);
+    public void player_offhand_stack_dec(PlayerEntity player,int i){
+        player.inventory.offHand.get(0).decrement(i);
     }
-    public void player_stack_inc(PlayerInventory inv,int slot,int i){
-        inv.main.get(slot).increment(i);
+    public void player_stack_inc(PlayerEntity player,int slot,int i){
+        player.inventory.main.get(slot).increment(i);
     }
-    public void player_stack_dec(PlayerInventory inv,int slot,int i){
-        inv.main.get(slot).decrement(i);
+    public void player_stack_dec(PlayerEntity player,int slot,int i){
+        player.inventory.main.get(slot).decrement(i);
     }
     public void set_player_xp(PlayerEntity player,float xp){
         player.experienceProgress=xp;
@@ -110,6 +126,8 @@ public class ICompatModImpl implements ICompatMod{
         Box bb=player.getBoundingBox();
         return bb.intersects(x1,y1,z1,x2,y2,z2);
     }
+    
+    @Environment(EnvType.CLIENT)
     public void send_message_to_player(String msg){
         assert MinecraftClient.getInstance().player != null;
         MinecraftClient instance=MinecraftClient.getInstance();
@@ -122,7 +140,7 @@ public class ICompatModImpl implements ICompatMod{
     }
     @Override
     public boolean is_shulker(PlayerEntity player,ItemStack item_stack){        
-        ItemStack offhand = get_player_offhand_stack(player.inventory);
+        ItemStack offhand = get_player_offhand_stack(player);
         Block blk = block_from_item(offhand.getItem());        
 		return offhand != null && blk instanceof ShulkerBoxBlock ;
     }
@@ -131,7 +149,7 @@ public class ICompatModImpl implements ICompatMod{
         ListTag shulker_items=null;
         int in_shulker=0;        
         if(is_shulker(player, item_stack)){
-            ItemStack shulker = WandsMod.compat.get_player_offhand_stack(player.inventory);
+            ItemStack shulker = WandsMod.compat.get_player_offhand_stack(player);
             CompoundTag entity_tag =shulker.getSubTag("BlockEntityTag");
             if(entity_tag!=null){
                 shulker_items = entity_tag.getList("Items", 10);		
@@ -210,6 +228,7 @@ public class ICompatModImpl implements ICompatMod{
 		    shulker_items.set(slot, stack_item.toTag(itemTag));
         }
     }
+    //@Environment(EnvType.SERVER)
     @Override
     public void send_xp_to_player(PlayerEntity player){
         PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
@@ -245,5 +264,65 @@ public class ICompatModImpl implements ICompatMod{
     public boolean has_tag(ItemStack item_stack)
     {
         return item_stack.hasTag();
+    }
+    @Environment(EnvType.CLIENT)
+    @Override
+    public void playBlockSound(PlayerEntity player,BlockState block_state,BlockPos pos,boolean destroy) {
+        BlockSoundGroup blockSoundGroup = block_state.getSoundGroup();
+        SoundEvent sound=null;
+        if(destroy){
+            sound=blockSoundGroup.getBreakSound();
+        }else{
+            sound=blockSoundGroup.getPlaceSound();
+        }
+        //System.out.println("sound "+sound);
+        player.world.playSound(player, pos,sound, SoundCategory.BLOCKS, blockSoundGroup.getVolume(), blockSoundGroup.getPitch());
+
+    }
+    @Override
+    public boolean can_destroy(BlockState block_state,ItemStack offhand,boolean isCreative){
+        boolean destroy=false;
+        boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
+		if(offhand.getItem() instanceof MiningToolItem){
+			MiningToolItem mt=(MiningToolItem)offhand.getItem();
+			destroy= isCreative|| mt.getMiningSpeedMultiplier(null, block_state) > 1.0f|is_glass;			
+		}
+        return destroy;
+    }
+    @Override
+    public String get_player_uuid(PlayerEntity player) {        
+        return player.getUuidAsString();
+    } 
+    @Override
+    public boolean destroy_block(World world,BlockPos pos,boolean drop){
+        return world.breakBlock(pos, drop);
+    }
+    @Override
+    public int get_silk_touch_level(ItemStack item) {        
+        return EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, item);
+    }
+    @Override
+    public int get_fortune_level(ItemStack item) {
+        return EnchantmentHelper.getLevel(Enchantments.FORTUNE, item);
+    }
+    @Override
+    public void dropStacks(BlockState state, World world, BlockPos pos) {
+        Block.dropStacks(state,world, pos);        
+    }
+    @Override
+    public void dropStack(World world, BlockPos pos, ItemStack item_stack) {
+        Block.dropStack(world, pos,item_stack);        
+    }
+    @Override
+    public Block block_from_id(String id) {        
+        return Registry.BLOCK.get(Identifier.tryParse(id));
+    }
+    //@Environment(EnvType.SERVER)
+    @Override
+    public void send_block_placed(PlayerEntity player,BlockPos pos,boolean destroy){
+        PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
+		passedData.writeBlockPos(pos);
+        passedData.writeBoolean(destroy);        
+		ServerPlayNetworking.send((ServerPlayerEntity)player, WandsMod.WAND_PLACED_PACKET_ID, passedData);
     }
 }

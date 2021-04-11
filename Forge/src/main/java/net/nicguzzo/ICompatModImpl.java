@@ -4,25 +4,38 @@ import java.util.Vector;
 import java.util.function.Consumer;
 import net.minecraft.block.BushBlock;
 import net.minecraft.block.ShulkerBoxBlock;
+import net.minecraft.block.AbstractGlassBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.SnowBlock;
+import net.minecraft.block.SoundType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.item.ToolItem;
 import net.minecraft.state.properties.SlabType;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.CompoundNBT;
 import net.nicguzzo.common.ICompatMod;
@@ -30,6 +43,12 @@ import net.nicguzzo.common.MyDir;
 import net.nicguzzo.common.WandItem;
 
 public class ICompatModImpl implements ICompatMod{
+    @OnlyIn(Dist.CLIENT)
+    public PlayerEntity get_player(){
+        assert Minecraft.getInstance().player != null;
+        Minecraft instance=Minecraft.getInstance();
+        return instance.player;
+    }
     public boolean is_fluid(BlockState state,WandItem wand){
         if(wand!=null){
             if(wand.removes_water && wand.removes_lava){                
@@ -49,39 +68,36 @@ public class ICompatModImpl implements ICompatMod{
     }
     public BlockPos pos_offset(BlockPos pos,MyDir dir,int o)
     {
-        Direction dir1=Direction.values()[dir.ordinal()];        
-        //return BlockPos.offset(o,dir1);
-
+        Direction dir1=Direction.values()[dir.ordinal()];                
         return new BlockPos(pos.getX() + dir1.getStepX()* o, pos.getY() + dir1.getStepY()*o, pos.getZ() + dir1.getStepZ()*o);
     }
     public int get_next_int_random(PlayerEntity player,int b){
-        
         return player.level.random.nextInt(b);
     }
-    public BlockState random_rotate(BlockState state,World world){        
-        return state.rotate(Rotation.getRandom(world.random));
+    public BlockState random_rotate(BlockState state,World world){
+        return state.rotate(world, null,Rotation.getRandom(world.random));
     }
-    public int get_main_inventory_size(PlayerInventory inv){
+    public int get_main_inventory_size(PlayerEntity player){
         
-        return inv.items.size();
+        return player.inventory.items.size();
     }
-    public ItemStack get_player_main_stack(PlayerInventory inv,int i){
-        return inv.items.get(i);
+    public ItemStack get_player_main_stack(PlayerEntity player,int i){
+        return player.inventory.items.get(i);
     }
-    public ItemStack get_player_offhand_stack(PlayerInventory inv){
-        return inv.offhand.get(0);
+    public ItemStack get_player_offhand_stack(PlayerEntity player){
+        return player.inventory.offhand.get(0);
     }
-    public void player_offhand_stack_inc(PlayerInventory inv,int i){
-        inv.offhand.get(0).grow(i);
+    public void player_offhand_stack_inc(PlayerEntity player,int i){
+        player.inventory.offhand.get(0).grow(i);
     }
-    public void player_offhand_stack_dec(PlayerInventory inv,int i){
-        inv.offhand.get(0).shrink(i);
+    public void player_offhand_stack_dec(PlayerEntity player,int i){
+        player.inventory.offhand.get(0).shrink(i);
     }
-    public void player_stack_inc(PlayerInventory inv,int slot,int i){
-        inv.items.get(slot).grow(i);
+    public void player_stack_inc(PlayerEntity player,int slot,int i){
+        player.inventory.items.get(slot).grow(i);
     }
-    public void player_stack_dec(PlayerInventory inv,int slot,int i){
-        inv.items.get(slot).shrink(i);
+    public void player_stack_dec(PlayerEntity player,int slot,int i){
+        player.inventory.items.get(slot).shrink(i);
     }
     public void set_player_xp(PlayerEntity player,float xp){
         player.experienceProgress=xp;
@@ -116,6 +132,7 @@ public class ICompatModImpl implements ICompatMod{
         AxisAlignedBB bb=player.getBoundingBox();
         return bb.intersects(x1,y1,z1,x2,y2,z2);
     }
+    @OnlyIn(Dist.CLIENT)
     public void send_message_to_player(String msg){
         assert Minecraft.getInstance().player != null;
         Minecraft instance=Minecraft.getInstance();
@@ -127,7 +144,7 @@ public class ICompatModImpl implements ICompatMod{
     }
     @Override
     public boolean is_shulker(PlayerEntity player,ItemStack item_stack){
-        ItemStack offhand = get_player_offhand_stack(player.inventory);
+        ItemStack offhand = get_player_offhand_stack(player);
         Block blk = block_from_item(offhand.getItem());        
 		return offhand != null && blk instanceof ShulkerBoxBlock ;
     }
@@ -136,7 +153,7 @@ public class ICompatModImpl implements ICompatMod{
         ListNBT shulker_items=null;
         int in_shulker=0;        
         if(is_shulker(player, item_stack)){
-            ItemStack shulker = WandsMod.compat.get_player_offhand_stack(player.inventory);
+            ItemStack shulker = WandsMod.compat.get_player_offhand_stack(player);
             CompoundNBT entity_tag =shulker.getTagElement("BlockEntityTag");
             if(entity_tag!=null){
                 shulker_items = entity_tag.getList("Items", 10);		
@@ -145,7 +162,8 @@ public class ICompatModImpl implements ICompatMod{
                         CompoundNBT itemTag = shulker_items.getCompound(i);
                         ItemStack s = ItemStack.of(itemTag);
                         if(WandItem.fill_pos1!=null){
-                            Item it=Item.byBlock(player.level.getBlockState(WandItem.fill_pos1).getBlock());
+                            Item it=Item.BY_BLOCK.getOrDefault(WandItem.fill_pos1, Items.AIR);
+                            //Item it=Item.byBlock(player.level.getBlockState(WandItem.fill_pos1).getBlock());
                             if( s.getItem()== it){
                                 in_shulker+=s.getCount();
                             }
@@ -249,5 +267,60 @@ public class ICompatModImpl implements ICompatMod{
     @Override
     public boolean has_tag(ItemStack item_stack){
         return item_stack.getTag()!=null;
+    }
+    @Override
+    public boolean can_destroy(BlockState block_state,ItemStack offhand,boolean isCreative){
+        boolean destroy=false;
+        boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
+		if(offhand.getItem() instanceof ToolItem){
+			ToolItem mt=(ToolItem)offhand.getItem();
+			destroy= isCreative|| mt.getDestroySpeed(null, block_state) > 1.0f|is_glass;			
+		}
+        return destroy;
+    } 
+    @Override
+    public String get_player_uuid(PlayerEntity player) {        
+        return player.getStringUUID();
+    } 
+    @Override
+    public boolean destroy_block(World world,BlockPos pos,boolean drop){
+        return world.destroyBlock(pos, drop);
+    }
+    @Override
+    public int get_silk_touch_level(ItemStack item) {        
+        return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH, item);
+    }
+    @Override
+    public int get_fortune_level(ItemStack item) {
+        return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE, item);
+    }
+    @Override
+    public void dropStacks(BlockState state, World world, BlockPos pos) {
+        Block.dropResources(state,world, pos);        
+    }
+    @Override
+    public void dropStack(World world, BlockPos pos, ItemStack item_stack) {
+        Block.popResource(world, pos,item_stack);        
+    }
+    @Override
+    public void playBlockSound(PlayerEntity player, BlockState block_state, BlockPos pos, boolean destroy) {
+        player=get_player();        
+        SoundType soundtype = block_state.getSoundType();
+        SoundEvent sound=null;
+        if(destroy){
+            sound=soundtype.getBreakSound();
+        }else{
+            sound=soundtype.getPlaceSound();
+        }
+        player.level.playSound(player, pos,sound, SoundCategory.BLOCKS, soundtype.getVolume() , soundtype.getPitch());
+    }
+    @Override
+    public Block block_from_id(String id) {        
+        return ForgeRegistries.BLOCKS.getValue(ResourceLocation.tryParse(id));
+        //return Registry.BLOCK.get(ResourceLocation.tryParse(id));
+    }
+    @Override
+    public void send_block_placed(PlayerEntity player, BlockPos pos, boolean destroy) {        
+        WandsPacketHandler.INSTANCE.sendTo(new SendBlockPlaced(pos,destroy), ((ServerPlayerEntity)player).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
     }
 }

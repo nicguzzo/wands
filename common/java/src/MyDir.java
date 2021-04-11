@@ -1,16 +1,14 @@
 package net.nicguzzo.common;
 
 public enum MyDir{
-    DOWN(0,1),
-       UP(1,0),
-       NORTH(2,3),
-       SOUTH(3,2),
-       WEST(4,5),
-    EAST(5,4);
-    private final int id;
+    DOWN(1),
+    UP(0),
+    NORTH(3),
+    SOUTH(2),
+    WEST(5),
+    EAST(4);
     private final int idOpposite;
-    private MyDir(int id, int idOpposite) {
-        this.id = id;
+    private MyDir(int idOpposite) {
         this.idOpposite = idOpposite;
     }
     public MyDir getOpposite(){

@@ -21,10 +21,11 @@ import org.apache.logging.log4j.Logger;
 public class WandsMod
 {
     // Directly reference a log4j logger.
+    public static final ICompatModImpl compat=new ICompatModImpl(); 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String MODID = "wands";
     public static WandsConfig config=null;
-    public static ICompatModImpl compat=new ICompatModImpl();
+    
     public WandsMod() {
         // Register the setup method for modloading
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
@@ -47,7 +48,9 @@ public class WandsMod
         // some preinit code
         //LOGGER.info("HELLO FROM PREINIT");
         //LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-        
+        if(config!=null){
+            config.generate_lists();
+        }
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
