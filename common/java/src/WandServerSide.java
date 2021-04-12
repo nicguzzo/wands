@@ -391,7 +391,7 @@ public class WandServerSide {
 		} else {
 			zs = -1;
 		}
-		placed=placed || place(new BlockPos(x1, y1, z1));
+		placed=place(new BlockPos(x1, y1, z1));
 		// X
 		if (dx >= dy && dx >= dz) {
 			p1 = 2 * dy - dx;
@@ -409,7 +409,7 @@ public class WandServerSide {
 				p1 += 2 * dy;
 				p2 += 2 * dz;
 
-				placed=placed ||place(new BlockPos(x1, y1, z1));
+				placed=place(new BlockPos(x1, y1, z1)) ||placed ;
 			}
 		} else if (dy >= dx && dy >= dz) {
 			p1 = 2 * dx - dy;
@@ -426,7 +426,7 @@ public class WandServerSide {
 				}
 				p1 += 2 * dx;
 				p2 += 2 * dz;
-				placed=placed ||place(new BlockPos(x1, y1, z1));
+				placed=place(new BlockPos(x1, y1, z1))||placed ;
 			}
 		} else {
 			p1 = 2 * dy - dz;
@@ -443,7 +443,7 @@ public class WandServerSide {
 				}
 				p1 += 2 * dy;
 				p2 += 2 * dx;
-				placed=placed ||place(new BlockPos(x1, y1, z1));
+				placed=place(new BlockPos(x1, y1, z1))||placed ;
 			}
 		}
 		return placed;
@@ -453,35 +453,35 @@ public class WandServerSide {
 		boolean placed=false;
 		switch (plane) {
 		case 0:
-			placed=placed ||place(new BlockPos(xc + x, yc, zc + z));
-			placed=placed ||place(new BlockPos(xc - x, yc, zc + z));
-			placed=placed ||place(new BlockPos(xc + x, yc, zc - z));
-			placed=placed ||place(new BlockPos(xc - x, yc, zc - z));
-			placed=placed ||place(new BlockPos(xc + z, yc, zc + x));
-			placed=placed ||place(new BlockPos(xc - z, yc, zc + x));
-			placed=placed ||place(new BlockPos(xc + z, yc, zc - x));
-			placed=placed ||place(new BlockPos(xc - z, yc, zc - x));
+			placed=place(new BlockPos(xc + x, yc, zc + z))||placed ;
+			placed=place(new BlockPos(xc - x, yc, zc + z))||placed ;
+			placed=place(new BlockPos(xc + x, yc, zc - z))||placed ;
+			placed=place(new BlockPos(xc - x, yc, zc - z))||placed ;
+			placed=place(new BlockPos(xc + z, yc, zc + x))||placed ;
+			placed=place(new BlockPos(xc - z, yc, zc + x))||placed ;
+			placed=place(new BlockPos(xc + z, yc, zc - x))||placed ;
+			placed=place(new BlockPos(xc - z, yc, zc - x))||placed ;
 
 			break;
 		case 1:
-			placed=placed ||place(new BlockPos(xc + x, yc + y, zc));
-			placed=placed ||place(new BlockPos(xc - x, yc + y, zc));
-			placed=placed ||place(new BlockPos(xc + x, yc - y, zc));
-			placed=placed ||place(new BlockPos(xc - x, yc - y, zc));
-			placed=placed ||place(new BlockPos(xc + y, yc + x, zc));
-			placed=placed ||place(new BlockPos(xc - y, yc + x, zc));
-			placed=placed ||place(new BlockPos(xc + y, yc - x, zc));
-			placed=placed ||place(new BlockPos(xc - y, yc - x, zc));
+			placed=place(new BlockPos(xc + x, yc + y, zc))||placed ;
+			placed=place(new BlockPos(xc - x, yc + y, zc))||placed ;
+			placed=place(new BlockPos(xc + x, yc - y, zc))||placed ;
+			placed=place(new BlockPos(xc - x, yc - y, zc))||placed ;
+			placed=place(new BlockPos(xc + y, yc + x, zc))||placed ;
+			placed=place(new BlockPos(xc - y, yc + x, zc))||placed ;
+			placed=place(new BlockPos(xc + y, yc - x, zc))||placed ;
+			placed=place(new BlockPos(xc - y, yc - x, zc))||placed ;
 			break;
 		case 2:
-			placed=placed ||place(new BlockPos(xc, yc - y, zc + z));
-			placed=placed ||place(new BlockPos(xc, yc + y, zc + z));
-			placed=placed ||place(new BlockPos(xc, yc + y, zc - z));
-			placed=placed ||place(new BlockPos(xc, yc - y, zc - z));
-			placed=placed ||place(new BlockPos(xc, yc + z, zc + y));
-			placed=placed ||place(new BlockPos(xc, yc - z, zc + y));
-			placed=placed ||place(new BlockPos(xc, yc + z, zc - y));
-			placed=placed ||place(new BlockPos(xc, yc - z, zc - y));
+			placed=place(new BlockPos(xc, yc - y, zc + z))||placed ;
+			placed=place(new BlockPos(xc, yc + y, zc + z))||placed ;
+			placed=place(new BlockPos(xc, yc + y, zc - z))||placed ;
+			placed=place(new BlockPos(xc, yc - y, zc - z))||placed ;
+			placed=place(new BlockPos(xc, yc + z, zc + y))||placed ;
+			placed=place(new BlockPos(xc, yc - z, zc + y))||placed ;
+			placed=place(new BlockPos(xc, yc + z, zc - y))||placed ;
+			placed=place(new BlockPos(xc, yc - z, zc - y))||placed ;
 			break;
 		}
 		return placed;
@@ -500,7 +500,7 @@ public class WandServerSide {
 		if (plane == 0) {// XZ;
 			int x = 0, y = 0, z = r;
 			int d = 3 - 2 * r;
-			placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+			placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			while (z >= x) {
 				x++;
 				if (d > 0) {
@@ -508,12 +508,12 @@ public class WandServerSide {
 					d = d + 4 * (x - z) + 10;
 				} else
 					d = d + 4 * x + 6;
-					placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+					placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			}
 		} else if (plane == 1) {// XY;
 			int x = 0, y = r, z = 0;
 			int d = 3 - 2 * r;
-			placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+			placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			while (y >= x) {
 				x++;
 				if (d > 0) {
@@ -521,12 +521,12 @@ public class WandServerSide {
 					d = d + 4 * (x - y) + 10;
 				} else
 					d = d + 4 * x + 6;
-				placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+				placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			}
 		} else if (plane == 2) {// YZ;
 			int x = 0, y = 0, z = r;
 			int d = 3 - 2 * r;
-			placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+			placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			while (z >= y) {
 				y++;
 				if (d > 0) {
@@ -534,7 +534,7 @@ public class WandServerSide {
 					d = d + 4 * (y - z) + 10;
 				} else
 					d = d + 4 * y + 6;
-				placed=placed ||drawCircle(xc, yc, zc, x, y, z);
+				placed=drawCircle(xc, yc, zc, x, y, z)||placed ;
 			}
 		}
 		return placed;

@@ -169,7 +169,7 @@ abstract public class WandItem  {
         }
         
         BlockState block_state=world.getBlockState(pos_state);
-        last_state=block_state;
+        
         ItemStack item_stack=null;
 
         if((mode==4 || mode==5) && fill1_state!=null){
@@ -190,10 +190,12 @@ abstract public class WandItem  {
             switch (mode) {
                 case 0:
                     WandItem.fill_pos1=null;                    
+                    last_state=block_state;
                     placeBlock(pos_state,pos0,pos1);                    
                 break;
                 case 1:
                     WandItem.fill_pos1=null;
+                    last_state=block_state;
                     //int placed=0;
                    
                     placeBlock(pos_state,new BlockPos(x1, y1, z1),new BlockPos(x2, y2, z2));
@@ -203,6 +205,7 @@ abstract public class WandItem  {
                 break;
                 case 2:                    
                     if(WandItem.fill_pos1==null){
+                        last_state=block_state;
                         WandItem.fill_pos1=pos_state;         
                         fill1_state=block_state;
                         x1=pos_state.getX();
@@ -243,6 +246,7 @@ abstract public class WandItem  {
                     }                    
                 break;
                 case 3:{
+                    last_state=block_state;
                     placeBlock(pos_state,pos0,pos0);
                     /*System.out.println("block_buffer_length: "+block_buffer_length);
                     for(int i=0;i<block_buffer_length && i<getLimit();i++){
@@ -258,6 +262,7 @@ abstract public class WandItem  {
                     if(WandItem.fill_pos1==null){
                         WandItem.fill_pos1=pos_state;                                 
                         fill1_state=block_state;
+                        last_state=block_state;
                         WandsMod.compat.send_message_to_player("line from "+pos_state);
                     }else{
                         placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
@@ -268,6 +273,7 @@ abstract public class WandItem  {
                 }break;
                 case 5:{ //circle
                     if(WandItem.fill_pos1==null){
+                        last_state=block_state;
                         WandItem.fill_pos1=pos_state; 
                         fill1_state=block_state;
                         WandsMod.compat.send_message_to_player("circle from "+pos_state);
