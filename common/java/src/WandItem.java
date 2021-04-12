@@ -19,8 +19,7 @@ abstract public class WandItem  {
         SAME, RANDOM, ROUND_ROBIN
     }
 
-    public BlockPos[] block_buffer;
-    public int block_buffer_length=0;
+    
     private int limit = 0;
     public int limit2 = 0;
     public int x0=0;
@@ -41,6 +40,7 @@ abstract public class WandItem  {
     public static int z2;
     public static BlockPos fill_pos1;
     public static boolean valid = false;
+    public static MyDir side;
 
     public WandItem(int lim,boolean removes_water,boolean removes_lava) {
         limit = lim;
@@ -48,7 +48,7 @@ abstract public class WandItem  {
         x0=limit2/2;        
         this.removes_water=removes_water;
         this.removes_lava=removes_lava;
-        block_buffer=new BlockPos[limit];
+        
     }
 
     static public int getMode() {
@@ -138,20 +138,7 @@ abstract public class WandItem  {
         }
     }
 
-    boolean in_buffer(BlockPos p){
-        for(int i=0;i<block_buffer_length && i<limit;i++){
-            if(p.equals(block_buffer[i])){
-                return true;
-            }
-        }
-        return false;
-    }
-    void add_buffer(BlockPos p){
-        if(block_buffer_length<limit){
-            block_buffer[block_buffer_length]=p;
-            block_buffer_length++;
-        }
-    }
+    
     
     abstract public boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1);
     abstract public boolean isCreative(PlayerEntity player);
@@ -198,16 +185,12 @@ abstract public class WandItem  {
 		int in_shulker=WandsMod.compat.in_shulker(player, item_stack);
                 
         if(playerInvContains(player,item_stack) || isCreative(player) || mm || in_shulker>0 ||fill_pos1 != null||destroy){
+            BlockPos pos0=new BlockPos(x1, y1, z1);
+            BlockPos pos1=new BlockPos(x1, y1, z1);
             switch (mode) {
                 case 0:
-                    WandItem.fill_pos1=null;
-                    BlockPos pos0=new BlockPos(x1, y1, z1);
-                    BlockPos pos1=new BlockPos(x1, y1, z1);
-                   // WandItem.undo_buffer.clear();
-                    if(placeBlock(pos_state,pos0,pos1)){
-                        //WandItem.undo_buffer.add(new Vec3i(pos1.getX(),pos1.getY(),pos1.getZ()));
-                        //playSound(player,block_state,pos_state);
-                    }
+                    WandItem.fill_pos1=null;                    
+                    placeBlock(pos_state,pos0,pos1);                    
                 break;
                 case 1:
                     WandItem.fill_pos1=null;
@@ -260,14 +243,16 @@ abstract public class WandItem  {
                     }                    
                 break;
                 case 3:{
-                    
+                    placeBlock(pos_state,pos0,pos0);
+                    /*System.out.println("block_buffer_length: "+block_buffer_length);
                     for(int i=0;i<block_buffer_length && i<getLimit();i++){
+                        System.out.println("i: "+i);
                         placeBlock(pos_state,block_buffer[i],block_buffer[i]);
-                    }
+                    }*/
                     //if(block_buffer_length>0)
                         //playSound(player,block_state,block_buffer[0]); 
 
-                    //System.out.println("block_buffer_length: "+block_buffer_length);
+                    
                 }break;
                 case 4:{ //line
                     if(WandItem.fill_pos1==null){

@@ -29,14 +29,42 @@ public class WandsBaseRenderer {
 	private static long t0 = 0;
 	private static long t1 = 0;
 	private static boolean prnt = false;
+	static public class BlockBuffer{
+		public  BlockPos[] buffer=null;
+		public  int max=0;
+    	public  int length=0;
+		public BlockBuffer(int n){
+			max=n;
+			buffer=new BlockPos[max];
+		}
+		boolean in_buffer(BlockPos p){
+			for(int i=0;i<length && i<max;i++){
+				if(p.equals(buffer[i])){
+					return true;
+				}
+			}
+			return false;
+		}
+		void add_buffer(BlockPos p){
+			if(length<max){
+				buffer[length]=p;
+				length++;
+			}
+		}
+	}
+	static BlockBuffer r_block_buffer=null;
 
 	public static void render(World world, PlayerEntity player, BlockPos pos, BlockState block_state, double camX,
 			double camY, double camZ, int lim, boolean isCreative, boolean isDoubleSlab, boolean isSlabTop,
 			float experienceProgress, MyDir side, boolean isFullCube, double hit_x, double hit_y, double hit_z) {
 		WandItem wand = WandsMod.compat.get_player_wand(player);		
+		if(r_block_buffer==null){			
+			r_block_buffer=new BlockBuffer(WandsMod.config.netherite_wand_limit);
+		}
 		if (wand == null) {
 			return;
 		}
+		WandItem.side=side;
 		prnt = false;
 		t1 = System.currentTimeMillis();
 		if (t1 - t0 > 1000) {
@@ -213,7 +241,14 @@ public class WandsBaseRenderer {
 				}
 					break;
 				case 3: {
-					mode3(wand, pos, block_state, world, side,destroy);
+					mode3(r_block_buffer,wand, pos, block_state, world, side,destroy);
+					for (int a = 0; a < r_block_buffer.length; a++) {			
+						BlockPos p=r_block_buffer.buffer[a];
+						int m3_x1 = p.getX();
+						int m3_y1 = p.getY();
+						int m3_z1 = p.getZ();			
+						preview(m3_x1 , m3_y1 , m3_z1 , m3_x1 + 1 , m3_y1 + 1 , m3_z1 + 1 );
+					}
 				}
 					break;
 				case 4: {
@@ -520,123 +555,116 @@ public class WandsBaseRenderer {
 		}
 	}
 
-	static private void mode3(WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side,boolean destroy) {
+	static public void mode3(BlockBuffer block_buffer,WandItem wand,BlockPos pos, BlockState block_state, World world, MyDir side,boolean destroy) {
 
-		wand.block_buffer_length = 0;
-		add_neighbour(wand, pos, block_state, world, side);
+		block_buffer.length = 0;
+		add_neighbour(block_buffer,wand, pos, block_state, world, side);
 		int i = 0;		
 		
 		while (i < wand.getLimit()) {
-			if (i < wand.block_buffer_length) {
-				BlockPos p = WandsMod.compat.pos_offset(wand.block_buffer[i], side, -1);
-				find_neighbours(wand, p, block_state, world, side);
+			if (i < block_buffer.length) {
+				BlockPos p = WandsMod.compat.pos_offset(block_buffer.buffer[i], side, -1);
+				find_neighbours(block_buffer,wand, p, block_state, world, side);
 			}
 			i++;
 		}
-		for (int a = 0; a < wand.block_buffer_length; a++) {			
-			BlockPos p=wand.block_buffer[a];
-			if(destroy){
-				wand.block_buffer[a]=WandsMod.compat.pos_offset(wand.block_buffer[a], side, -1);
-				p=wand.block_buffer[a];
+		if(destroy){
+			for (int a = 0; a < block_buffer.length; a++) {			
+				block_buffer.buffer[a]=WandsMod.compat.pos_offset(block_buffer.buffer[a], side, -1);				
 			}
-			int x1 = p.getX();
-			int y1 = p.getY();
-			int z1 = p.getZ();
-
-			preview(x1 , y1 , z1 , x1 + 1 , y1 + 1 , z1 + 1 );
 		}
-		WandItem.valid = (wand.block_buffer_length > 0);
+		WandItem.valid = (block_buffer.length > 0);
 	}
 
-	static private void find_neighbours(WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side) {
+	static private void find_neighbours(BlockBuffer block_buffer,WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side) {
 
 		if (side == MyDir.UP || side == MyDir.DOWN) {
 			BlockPos p0 = WandsMod.compat.pos_offset(pos, MyDir.EAST, 1);
-			add_neighbour(wand, p0, block_state, world, side);
+			add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.EAST, 1);
 			BlockPos p1 = WandsMod.compat.pos_offset(p0, MyDir.NORTH, 1);
-			add_neighbour(wand, p1, block_state, world, side);
+			add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.NORTH, 1);
-			add_neighbour(wand, p0, block_state, world, side);
+			add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.NORTH, 1);
 			p1 = WandsMod.compat.pos_offset(p0, MyDir.WEST, 1);
-			add_neighbour(wand, p1, block_state, world, side);
+			add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.WEST, 1);
-			add_neighbour(wand, p0, block_state, world, side);
+			add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
 			p1 = WandsMod.compat.pos_offset(p0, MyDir.WEST, 1);
-			add_neighbour(wand, p1, block_state, world, side);
+			add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
-			add_neighbour(wand, p0, block_state, world, side);
+			add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 			p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
 			p1 = WandsMod.compat.pos_offset(p0, MyDir.EAST, 1);
-			add_neighbour(wand, p1, block_state, world, side);
+			add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 		} else {
 			if (side == MyDir.EAST || side == MyDir.WEST) {
 				BlockPos p0 = WandsMod.compat.pos_offset(pos, MyDir.UP, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.UP, 1);
 				BlockPos p1 = WandsMod.compat.pos_offset(p0, MyDir.NORTH, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.NORTH, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.NORTH, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.DOWN, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.DOWN, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.DOWN, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.SOUTH, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.UP, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 			} else if (side == MyDir.NORTH || side == MyDir.SOUTH) {
 				BlockPos p0 = WandsMod.compat.pos_offset(pos, MyDir.EAST, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.EAST, 1);
 				BlockPos p1 = WandsMod.compat.pos_offset(p0, MyDir.UP, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.UP, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.UP, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.WEST, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.WEST, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.DOWN, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.WEST, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.DOWN, 1);
-				add_neighbour(wand, p0, block_state, world, side);
+				add_neighbour(block_buffer,wand, p0, block_state, world, side);
 
 				p0 = WandsMod.compat.pos_offset(pos, MyDir.DOWN, 1);
 				p1 = WandsMod.compat.pos_offset(p0, MyDir.EAST, 1);
-				add_neighbour(wand, p1, block_state, world, side);
+				add_neighbour(block_buffer,wand, p1, block_state, world, side);
 
 			}
 		}
@@ -648,13 +676,14 @@ public class WandsBaseRenderer {
 		return (state.isAir() || WandsMod.compat.is_fluid(state, wand) || WandsMod.compat.is_plant(state));
 	}
 
-	static private void add_neighbour(WandItem wand, BlockPos pos, BlockState block_state, World world, MyDir side) {
+	
+	static private void add_neighbour(BlockBuffer block_buffer,WandItem wand,BlockPos pos, BlockState block_state, World world, MyDir side) {
 		BlockPos pos2 = WandsMod.compat.pos_offset(pos, side, 1);
-		if (!wand.in_buffer(pos2)) {
+		if (!block_buffer.in_buffer(pos2)) {
 			BlockState bs1 = world.getBlockState(pos);
 			BlockState bs2 = world.getBlockState(pos2);
 			if (bs1.equals(block_state) && can_place(bs2, wand, world, pos2)) {
-				wand.add_buffer(pos2);
+				block_buffer.add_buffer(pos2);
 			}
 		}
 	}

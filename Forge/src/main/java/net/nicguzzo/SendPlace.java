@@ -8,6 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
+import net.nicguzzo.common.MyDir;
 import net.nicguzzo.common.WandServerSide;
 
 //import org.apache.logging.log4j.LogManager;
@@ -22,6 +23,7 @@ public class SendPlace {
     private final int palette_mode;
     private final int mode;
 	private final int plane;
+    private final int side;
     //private static final Logger LOGGER = LogManager.getLogger();
 
     public SendPlace(PacketBuffer buffer) {        
@@ -31,16 +33,17 @@ public class SendPlace {
         palette_mode=buffer.readInt();
         mode=buffer.readInt();
         plane=buffer.readInt();
-
+        side=buffer.readInt();
     }
 
-    public SendPlace(BlockPos s,BlockPos p1, BlockPos p2,int pm,int m,int p) {
+    public SendPlace(BlockPos s,BlockPos p1, BlockPos p2,int pm,int m,int p,int sd) {
         state_pos=s;
         pos1=p1;
         pos2=p2;
         palette_mode=pm;
         mode=m;
         plane=p;
+        side=sd;
     }
 
     public void toBytes(PacketBuffer buf) {        
@@ -50,6 +53,7 @@ public class SendPlace {
         buf.writeInt(palette_mode);
         buf.writeInt(mode);
         buf.writeInt(plane);
+        buf.writeInt(side);
     }
 
     public void handler(Supplier<NetworkEvent.Context> ctx) {
@@ -64,7 +68,7 @@ public class SendPlace {
                     World.isInWorldBounds(pos2) )
                 {                        
                     WandServerSide srv = new WandServerSide(player.level,player, state_pos, pos1, pos2, palette_mode,
-                            player.isCreative(), player.experienceProgress, item, mode, plane);
+                            player.isCreative(), player.experienceProgress, item, mode, plane,MyDir.values()[side]);
                     srv.placeBlock();
                     srv = null;
                     //WandServerSide.placeBlock(player,state_pos,pos1,pos2,palette_mode,player.isCreative(),player.experienceProgress,item);

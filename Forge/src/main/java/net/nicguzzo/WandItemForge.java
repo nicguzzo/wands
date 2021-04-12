@@ -36,7 +36,7 @@ public class  WandItemForge extends Item
             }else{
                 pm=WandItem.PaletteMode.SAME.ordinal();
             }            
-            WandsPacketHandler.INSTANCE.sendToServer(new SendPlace(block_state,pos0,pos1,pm,WandItem.getMode(),WandItem.getPlane().ordinal()));
+            WandsPacketHandler.INSTANCE.sendToServer(new SendPlace(block_state,pos0,pos1,pm,WandItem.getMode(),WandItem.getPlane().ordinal(),WandItem.side.ordinal()));
             return true;
         }
 

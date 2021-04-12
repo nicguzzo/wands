@@ -15,6 +15,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.nicguzzo.WandsMod;
+import net.nicguzzo.common.WandsBaseRenderer.BlockBuffer;
+
 import java.util.HashMap;
 
 public class WandServerSide {
@@ -27,6 +29,7 @@ public class WandServerSide {
 	public PlayerEntity player;
 	public Vector<Integer> slots;
 	public BlockState state;
+	public BlockPos pos_state;
 	public BlockPos pos0;
 	public BlockPos pos1;
 	public WandItem.PaletteMode palatte_mode;
@@ -38,11 +41,12 @@ public class WandServerSide {
 	public int mode;
 	public int plane;
 	public World world;
+	public MyDir side;
 	ItemStack offhand;
 	float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
 
 	public WandServerSide(World world,PlayerEntity player, BlockPos pos_state, BlockPos pos0, BlockPos pos1, int palatte_mode,
-			boolean isCreative, float experienceProgress, ItemStack wand_stack, int mode, int plane) {
+			boolean isCreative, float experienceProgress, ItemStack wand_stack, int mode, int plane,MyDir side) {
 		this.slots = new Vector<Integer>();
 		this.player = player;
 		this.world = world;
@@ -55,8 +59,9 @@ public class WandServerSide {
 		this.wand_stack = wand_stack;
 		this.mode = mode;
 		this.plane = plane;
-		
-
+		this.side=side;
+		this.pos_state=pos_state;
+		System.out.println("state " + state);
 		offhand = WandsMod.compat.get_player_offhand_stack(player);
 		
 
@@ -91,11 +96,23 @@ public class WandServerSide {
 	}
 
 	public void placeBlock() {
-		//System.out.println("placeBlock");
+		System.out.println("placeBlock");
+		System.out.println("pos_state "+pos_state);
+		System.out.println("pos0 "+pos0);
+		System.out.println("pos1 "+pos1);
 		boolean placed=false;
-		if (pos0.equals(pos1)) {
+		if (mode==0 && pos0.equals(pos1)) {
 			placed=place(pos0);
-		} else {
+		}else if (mode == 3) {
+			WandItem wand=WandsMod.compat.get_player_wand(player);
+			BlockBuffer bb=new BlockBuffer(wand.getLimit());			
+			WandsBaseRenderer.mode3(bb,wand,pos_state, state, world, side,destroy);
+			System.out.println("length "+bb.length);
+			for (int a = 0; a < bb.length; a++) {			
+				BlockPos p=bb.buffer[a];
+				placed= place(p)|| placed;
+			}
+		}else {
 			int xs, ys, zs, xe, ye, ze;
 			if (pos0.getX() >= pos1.getX()) {
 				xs = pos1.getX() + 1;
@@ -136,7 +153,7 @@ public class WandServerSide {
 		}
 		slots = null;
 		if(placed){
-			WandsMod.compat.send_block_placed(player,pos0,destroy);
+			WandsMod.compat.send_block_placed(player,pos_state,destroy);
 			//WandsMod.compat.playBlockSound(player,state,pos,destroy);
 		}
 	}
@@ -212,7 +229,7 @@ public class WandServerSide {
 			state = WandsMod.compat.random_rotate(WandsMod.compat.getDefaultBlockState(blk), world);				
 		}
 		//System.out.println("state " + state);
-		//System.out.println("destroy " + destroy);
+		System.out.println("destroy " + destroy);
 
 		Block block = state.getBlock();
 		BlockState state2 = world.getBlockState(pos);
