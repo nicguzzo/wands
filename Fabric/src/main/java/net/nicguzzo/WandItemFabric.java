@@ -40,7 +40,7 @@ public class  WandItemFabric extends ToolItem
         
         @Override
         public boolean placeBlock(BlockPos block_state, BlockPos pos0, BlockPos pos1) {
-            System.out.println("send placeBlock");
+            //System.out.println("send placeBlock");
             //WandsPacketHandler.INSTANCE.sendToServer(new SendPack(block_state,pos0,pos1,WandItem.getMode()));            
             PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
             passedData.writeBlockPos(block_state);

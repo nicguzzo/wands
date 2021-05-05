@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
-
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FenceBlock;
@@ -29,6 +29,7 @@ public class WandsBaseRenderer {
 	private static long t0 = 0;
 	private static long t1 = 0;
 	private static boolean prnt = false;
+	public static BlockState offhand_state=null;
 	static public class BlockBuffer{
 		public  BlockPos[] buffer=null;
 		public  int max=0;
@@ -64,6 +65,7 @@ public class WandsBaseRenderer {
 		if (wand == null) {
 			return;
 		}
+		offhand_state=null;
 		WandItem.side=side;
 		prnt = false;
 		t1 = System.currentTimeMillis();
@@ -104,14 +106,25 @@ public class WandsBaseRenderer {
 			//WandsMod.compat.send_message_to_player("destroy");
 		}
 
-		it_count = WandsMod.compat.in_inventory(player,item_stack);
+		//it_count = WandsMod.compat.in_inventory(player,item_stack);
 		
 		int in_shulker=0;
 
 		if(!destroy){
 			in_shulker =WandsMod.compat.in_shulker(player, item_stack);
 		}
-		
+		if(WandItem.getMode() == 3){
+			Block bbb=Block.getBlockFromItem(offhand.getItem());
+			if(bbb!=null && !(bbb instanceof AirBlock)){
+				offhand_state=bbb.getDefaultState();					
+			}
+		}
+		if(offhand_state==null){
+			it_count = WandsMod.compat.in_inventory(player,item_stack);
+		}else{
+			it_count = WandsMod.compat.in_inventory(player,offhand);
+		}
+
 		boolean mm = WandItem.getPaletteMode()!=WandItem.PaletteMode.SAME && (WandItem.getMode() == 2 || WandItem.getMode() == 4|| WandItem.getMode() == 5 );
 
 		if (!destroy && !mm && !isCreative && it_count < d && in_shulker<d && WandItem.fill_pos1 == null) {
@@ -532,23 +545,29 @@ public class WandsBaseRenderer {
 			int x1 = pos1.getX() - offx;
 			int y1 = pos1.getY() - offy;
 			int z1 = pos1.getZ() - offz;
-			int x2 = pos3.getX() + 1 + offx;
-			int y2 = pos3.getY() + 1 + offy;
-			int z2 = pos3.getZ() + 1 + offz;
+			int x2 = pos3.getX() + offx;
+			int y2 = pos3.getY() + offy;
+			int z2 = pos3.getZ() + offz;
 
 			if (intersects) {
 				WandItem.valid = false;
 			} else {
 				WandItem.valid = true;
 				// WandItem.mode2_dir = dir.getOpposite();
-				WandItem.x1 = x1 + offx;
+				/*WandItem.x1 = x1 + offx;
 				WandItem.y1 = y1 + offy;
 				WandItem.z1 = z1 + offz;
 				WandItem.x2 = x2 + offx;
 				WandItem.y2 = y2 + offy;
-				WandItem.z2 = z2 + offz;
+				WandItem.z2 = z2 + offz;*/
+				WandItem.x1 = pos1.getX();
+				WandItem.y1 = pos1.getY();
+				WandItem.z1 = pos1.getZ();
+				WandItem.x2 = pos3.getX();
+				WandItem.y2 = pos3.getY();
+				WandItem.z2 = pos3.getZ();
 
-				preview(x1 , y1 , z1 , x2 , y2 , z2 );
+				preview(x1 , y1 , z1 , x2 +1, y2+1 , z2+1 );
 			}
 		} else {
 			WandItem.valid = false;
@@ -569,7 +588,7 @@ public class WandsBaseRenderer {
 			i++;
 		}
 		if(destroy){
-			for (int a = 0; a < block_buffer.length; a++) {			
+			for (int a = 0; a < block_buffer.length; a++) {
 				block_buffer.buffer[a]=WandsMod.compat.pos_offset(block_buffer.buffer[a], side, -1);				
 			}
 		}

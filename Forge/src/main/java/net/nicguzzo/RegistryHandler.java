@@ -21,6 +21,7 @@ public class RegistryHandler {
         Path path= FMLPaths.GAMEDIR.get().resolve("config");
         //LOGGER.info("config path:" + path);
         WandsMod.config=WandsConfig.load_config(path);
+       
         ITEMS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
     public static final RegistryObject<Item> STONE_WAND = ITEMS.register("stone_wand", () ->

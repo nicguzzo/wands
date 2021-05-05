@@ -1,5 +1,7 @@
 package net.nicguzzo.common;
 
+import net.minecraft.block.AirBlock;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -41,6 +43,7 @@ abstract public class WandItem  {
     public static BlockPos fill_pos1;
     public static boolean valid = false;
     public static MyDir side;
+    public static BlockState offhand_state=null;
 
     public WandItem(int lim,boolean removes_water,boolean removes_lava) {
         limit = lim;
@@ -171,14 +174,23 @@ abstract public class WandItem  {
         BlockState block_state=world.getBlockState(pos_state);
         
         ItemStack item_stack=null;
+        ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
 
         if((mode==4 || mode==5) && fill1_state!=null){
             item_stack=new ItemStack(WandItem.fill1_state.getBlock());
         }else{
+            if(mode==3){
+                Block bbb=Block.getBlockFromItem(offhand.getItem());
+                if(bbb!=null && !(bbb instanceof AirBlock)){
+                    offhand_state=bbb.getDefaultState();					
+                    item_stack=offhand;
+                }                
+            }
+        }
+        if(item_stack==null){
             item_stack=new ItemStack(block_state.getBlock());
         }
         
-        ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
         boolean destroy =WandsMod.compat.can_destroy(block_state, offhand, isCreative(player));
 
         boolean mm = palette_mode!=WandItem.PaletteMode.SAME && (mode == 2 || mode == 4|| mode == 5);
@@ -216,7 +228,7 @@ abstract public class WandItem  {
                         //System.out.println("state "+block_state.getBlock());
                     }else{                        
                         if(WandItem.fill_pos1!=pos_state){
-                            x2=pos_state.getX();
+                            /*x2=pos_state.getX();
                             y2=pos_state.getY();
                             z2=pos_state.getZ();
                             if(x1<x2){
@@ -227,15 +239,17 @@ abstract public class WandItem  {
                             if(y1<y2){
                                 y2+=1;											
                             }else{
-                                y2-=1;
+                                if(y2>0)
+                                    y2-=1;
                             }
                             if(z1<z2){
                                 z2+=1;
                             }else{
                                 z2-=1;											
-                            }
+                            }*/
                             BlockPos fill_pos2=new BlockPos(x2,y2,z2);
-                            placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,fill_pos2);
+                            //placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,fill_pos2);
+                            placeBlock(WandItem.fill_pos1,WandItem.fill_pos1,pos_state);
                             //if(fill1_state!=null){
                                 //playSound(player,fill1_state,WandItem.fill_pos1); 
                             //}
@@ -246,7 +260,11 @@ abstract public class WandItem  {
                     }                    
                 break;
                 case 3:{
-                    last_state=block_state;
+                    if(offhand_state!=null){
+                        last_state=offhand_state;
+                    }else{
+                        last_state=block_state;
+                    }
                     placeBlock(pos_state,pos0,pos0);
                     /*System.out.println("block_buffer_length: "+block_buffer_length);
                     for(int i=0;i<block_buffer_length && i<getLimit();i++){

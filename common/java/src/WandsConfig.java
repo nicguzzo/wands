@@ -13,7 +13,7 @@ import net.minecraft.block.Block;
 import net.nicguzzo.WandsMod;
 
 public class WandsConfig {
-	final public static String[] default_allowed={"minecraft:soul_sand"};
+	final public static String[] default_allowed={"minecraft:soul_sand","minecraft:grass_path"};
 	final public static String[] default_denied={};
 	public float blocks_per_xp = 0.0f;
 	public int stone_wand_limit = 9;
@@ -124,6 +124,9 @@ public class WandsConfig {
 			System.out.println("No config found, generating!");		
 			save_conf(new WandsConfig(),configFile);
 		}
+		if(config==null){
+            config=new WandsConfig();
+        }
 		return config;
 	}
 }
