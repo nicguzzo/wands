@@ -54,6 +54,7 @@ public interface ICompatMod {
     public int get_fortune_level(ItemStack item);
     public void dropStacks(BlockState state,World world,BlockPos pos);
     public void dropStack(World world,BlockPos pos,ItemStack item_stack);
-    public Block block_from_id(String id);
+    public Block block_from_id(String id);    
     public void send_block_placed(PlayerEntity player,BlockPos pos,boolean destroy);
+    public void block_after_break(Block block,World world, PlayerEntity player, BlockPos pos, BlockState state,ItemStack stack);
 }

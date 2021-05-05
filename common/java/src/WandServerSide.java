@@ -74,13 +74,13 @@ public class WandServerSide {
 				shulker = offhand;
 			}
 			if(shulker==null && this.mode==3 ){
-				Block bbb=Block.getBlockFromItem(offhand.getItem());
+				Block bbb=WandsMod.compat.block_from_item(offhand.getItem());
 				//System.out.println("offhand "+offhand);
 				//System.out.println("bbb "+bbb);
 				if(bbb!=null && !(bbb instanceof AirBlock)){
-					offhand_state=bbb.getDefaultState();					
+					offhand_state=WandsMod.compat.getDefaultBlockState(bbb);
 				}
-				System.out.println("offhand_state "+offhand_state);
+				//System.out.println("offhand_state "+offhand_state);
 			}
 			if (this.mode<2 || this.palatte_mode == WandItem.PaletteMode.SAME) {
 				if (shulker != null) {
@@ -343,8 +343,8 @@ public class WandServerSide {
 								int silk_touch = WandsMod.compat.get_silk_touch_level(offhand);
 								int fortune = WandsMod.compat.get_fortune_level(offhand);
 								if(fortune>0 || silk_touch>0){
-									System.out.println("drop state "+st);
-									st.getBlock().afterBreak(world, player, pos, state, null, offhand);
+									//System.out.println("drop state "+st);
+									WandsMod.compat.block_after_break(st.getBlock(),world, player, pos, state, offhand);
 								}
 								/*if(fortune==3){
 									WandsMod.compat.dropStacks(state,world, pos);

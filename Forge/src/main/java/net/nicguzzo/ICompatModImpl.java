@@ -323,4 +323,10 @@ public class ICompatModImpl implements ICompatMod{
     public void send_block_placed(PlayerEntity player, BlockPos pos, boolean destroy) {        
         WandsPacketHandler.INSTANCE.sendTo(new SendBlockPlaced(pos,destroy), ((ServerPlayerEntity)player).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
     }
+    @Override
+    public void block_after_break(Block block, World world, PlayerEntity player, BlockPos pos, BlockState state,
+            ItemStack stack) {        
+            block.playerDestroy(world, player, pos, state, null, stack);
+    }
+    
 }

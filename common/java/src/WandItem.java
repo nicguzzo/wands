@@ -180,9 +180,10 @@ abstract public class WandItem  {
             item_stack=new ItemStack(WandItem.fill1_state.getBlock());
         }else{
             if(mode==3){
-                Block bbb=Block.getBlockFromItem(offhand.getItem());
+                Block bbb=WandsMod.compat.block_from_item(offhand.getItem());
+                
                 if(bbb!=null && !(bbb instanceof AirBlock)){
-                    offhand_state=bbb.getDefaultState();					
+                    offhand_state=WandsMod.compat.getDefaultBlockState(bbb);
                     item_stack=offhand;
                 }                
             }

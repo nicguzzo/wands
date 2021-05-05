@@ -114,9 +114,9 @@ public class WandsBaseRenderer {
 			in_shulker =WandsMod.compat.in_shulker(player, item_stack);
 		}
 		if(WandItem.getMode() == 3){
-			Block bbb=Block.getBlockFromItem(offhand.getItem());
+			Block bbb=WandsMod.compat.block_from_item(offhand.getItem());                
 			if(bbb!=null && !(bbb instanceof AirBlock)){
-				offhand_state=bbb.getDefaultState();					
+				offhand_state=WandsMod.compat.getDefaultBlockState(bbb);
 			}
 		}
 		if(offhand_state==null){

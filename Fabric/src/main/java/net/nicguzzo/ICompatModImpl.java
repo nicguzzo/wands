@@ -325,4 +325,10 @@ public class ICompatModImpl implements ICompatMod{
         passedData.writeBoolean(destroy);        
 		ServerPlayNetworking.send((ServerPlayerEntity)player, WandsMod.WAND_PLACED_PACKET_ID, passedData);
     }
+    @Override
+    public void block_after_break(Block block, World world, PlayerEntity player, BlockPos pos, BlockState state,
+            ItemStack stack) {
+        block.afterBreak(world, player, pos, state, null, stack);
+        
+    }
 }
