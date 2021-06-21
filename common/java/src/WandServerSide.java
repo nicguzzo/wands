@@ -112,10 +112,11 @@ public class WandServerSide {
 		//System.out.println("pos0 "+pos0);
 		//System.out.println("pos1 "+pos1);
 		boolean placed=false;
+		WandItem wand=WandsMod.compat.get_player_wand(player);
 		if (mode==0 && pos0.equals(pos1)) {
 			placed=place(pos0);
 		}else if (mode == 3) {
-			WandItem wand=WandsMod.compat.get_player_wand(player);
+			
 			BlockBuffer bb=new BlockBuffer(wand.getLimit());			
 			WandsBaseRenderer.mode3(bb,wand,pos_state, state, world, side,destroy);
 			//System.out.println("length "+bb.length);
@@ -134,9 +135,6 @@ public class WandServerSide {
 			} else {// box
 				int xs, ys, zs, xe, ye, ze;
 			
-				System.out.println("---");
-				System.out.println("pos0 "+pos0);
-				System.out.println("pos1 "+pos1);
 				if (pos0.getX() >= pos1.getX()) {
 					xs = pos1.getX();
 					xe = pos0.getX();
@@ -158,46 +156,24 @@ public class WandServerSide {
 					zs = pos0.getZ();
 					ze = pos1.getZ();
 				}
-				/*
-				}else{
-					if (pos0.getX() >= pos1.getX()) {
-						xs = pos1.getX() + 1;
-						xe = pos0.getX() + 1;
-					} else {
-						xs = pos0.getX();
-						xe = pos1.getX();
-					}
-					if (pos0.getY() >= pos1.getY()) {
-						ys = pos1.getY() + 1;
-						ye = pos0.getY() + 1;
-					} else {
-						ys = pos0.getY();
-						ye = pos1.getY();
-					}
-					if (pos0.getZ() >= pos1.getZ()) {
-						zs = pos1.getZ() + 1;
-						ze = pos0.getZ() + 1;
-					} else {
-						zs = pos0.getZ();
-						ze = pos1.getZ();
-					}
-				}*/
 				
-				//System.out.println("xs "+ xs);
-				//System.out.println("xe "+ xe);					
-				//System.out.println("ys "+ ys);
-				//System.out.println("ye "+ ye);
-				//System.out.println("zs "+ zs);
-				//System.out.println("ze "+ ze);
-				for (int z = zs; z <= ze; z++) {					
-					for (int y = ys; y <= ye; y++) {						
-						for (int x = xs; x <= xe; x++) {
-							//System.out.println("x "+ x);
-							//System.out.println("y "+ y);
-							//System.out.println("z "+ z);
-							placed=place(new BlockPos(x, y, z));
+				int limit=32768;
+				if(!isCreative){
+					limit=wand.getLimit();
+				}
+				
+				int ll=((xe-xs)+1)*((ye-ys)+1)*((ze-zs)+1);
+				
+				if(ll < limit){
+					for (int z = zs; z <= ze; z++) {					
+						for (int y = ys; y <= ye; y++) {						
+							for (int x = xs; x <= xe; x++) {
+								placed=place(new BlockPos(x, y, z));
+							}
 						}
 					}
+				}else{
+					System.out.println("limit reached ");
 				}
 			}
 		}

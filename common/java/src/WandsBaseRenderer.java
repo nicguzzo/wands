@@ -247,8 +247,17 @@ public class WandsBaseRenderer {
 							y2 = y1 + 1;
 							z2 = z1 + 1;
 						}
-						if (Math.abs(x2 - x1) <= lim && Math.abs(y2 - y1) <= lim && Math.abs(z2 - z1) <= lim) {
+						
+						int preview_limit=32768;
+						if(!isCreative){
+							preview_limit=(int)(Math.abs(x2 - x1)*Math.abs(y2 - y1)*Math.abs(z2 - z1));
+						}
+						if ( preview_limit  <= lim) {
 							preview(x1, y1, z1, x2, y2, z2);
+						}else{
+							if (prnt) {
+								WandsMod.compat.send_message_to_player("wand limit reached");
+							}
 						}
 					}
 				}
