@@ -283,11 +283,13 @@ public class ICompatModImpl implements ICompatMod{
     @Override
     public boolean can_destroy(BlockState block_state,ItemStack offhand,boolean isCreative){
         boolean destroy=false;
+        
         boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
-		if(offhand.getItem() instanceof MiningToolItem){
-			MiningToolItem mt=(MiningToolItem)offhand.getItem();
-			destroy= isCreative|| mt.getMiningSpeedMultiplier(null, block_state) > 1.0f|is_glass;			
-		}
+        if(offhand.getItem() instanceof MiningToolItem){
+            MiningToolItem mt=(MiningToolItem)offhand.getItem();
+            destroy= isCreative|| mt.getMiningSpeedMultiplier(null, block_state) > 1.0f|is_glass;			
+        }
+        
         return destroy;
     }
     @Override

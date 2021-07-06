@@ -99,7 +99,10 @@ public class WandsBaseRenderer {
 
 		ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
 
-		boolean destroy =WandsMod.compat.can_destroy(block_state, offhand, isCreative);
+		boolean destroy =false;
+		if(offhand!=null && block_state!=null){
+			destroy=WandsMod.compat.can_destroy(block_state, offhand, isCreative);
+		}
 		
 		if (prnt) {
 			//System.out.println("destroy: "+destroy + " offhand "+offhand+" block_state: "+block_state+" block: "+block);
