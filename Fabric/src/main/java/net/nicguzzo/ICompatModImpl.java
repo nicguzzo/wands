@@ -112,16 +112,17 @@ public class ICompatModImpl implements ICompatMod{
         else
             return null;
     }
-    public void inc_wand_damage(PlayerEntity player,ItemStack stack,int damage){
+    public void inc_damage(PlayerEntity player,ItemStack stack,int damage,boolean main_hand){
         
 		stack.damage(damage, (LivingEntity)player, 
-						(Consumer<LivingEntity>)((p) -> {
-								((LivingEntity)p).sendToolBreakStatus(Hand.MAIN_HAND);
+						(Consumer<LivingEntity>)((p) -> {                                
+								((LivingEntity)p).sendToolBreakStatus((main_hand?Hand.MAIN_HAND:Hand.OFF_HAND));
 							}
 						)
 					);
         
     }
+
     public boolean interescts_player_bb(PlayerEntity player,double x1,double y1,double z1,double x2,double y2,double z2){
         Box bb=player.getBoundingBox();
         return bb.intersects(x1,y1,z1,x2,y2,z2);

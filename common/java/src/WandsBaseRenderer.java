@@ -113,7 +113,8 @@ public class WandsBaseRenderer {
 		if(!destroy){
 			in_shulker =WandsMod.compat.in_shulker(player, item_stack);
 		}
-		if(WandItem.getMode() == 3){
+		//if(WandItem.getMode() == 3)
+		{
 			Block bbb=WandsMod.compat.block_from_item(offhand.getItem());                
 			if(bbb!=null && !(bbb instanceof AirBlock)){
 				offhand_state=WandsMod.compat.getDefaultBlockState(bbb);
@@ -209,12 +210,12 @@ public class WandsBaseRenderer {
 						WandItem.valid = false;
 						break;
 					}
-					mode0(wand, pos, y0, h, side, world, block_state, player, lim, hit_x, hit_y, hit_z,destroy);
+					mode0(wand, pos, y0, h, side, world, block_state, player, lim, hit_x, hit_y, hit_z,destroy,offhand_state);
 				}
 					break;
 				case 1: {
 					mode1(wand, pos, y0, h, side, hit_x, hit_y, hit_z, world, block_state, player, lim, max_xp_blocks,
-							item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves), isCreative,destroy);
+							item_stack, (is_pane || is_fence || is_fence_gate || is_stairs || is_leaves), isCreative,destroy,offhand);
 				}
 					break;
 				case 2: {					
@@ -248,15 +249,20 @@ public class WandsBaseRenderer {
 							z2 = z1 + 1;
 						}
 						
-						int preview_limit=32768;
-						if(!isCreative){
-							preview_limit=(int)(Math.abs(x2 - x1)*Math.abs(y2 - y1)*Math.abs(z2 - z1));
-						}
-						if ( preview_limit  <= lim) {
+						int max_limit=32768;
+						int volume=0;
+						
+						volume=(int)(Math.abs(x2 - x1)*Math.abs(y2 - y1)*Math.abs(z2 - z1));
+						
+						if ( (isCreative || volume <= lim) && volume < max_limit) {
 							preview(x1, y1, z1, x2, y2, z2);
-						}else{
 							if (prnt) {
-								WandsMod.compat.send_message_to_player("wand limit reached");
+								WandsMod.compat.send_message_to_player("volume: "+volume);
+							}
+						}else{
+							WandItem.valid = false;
+							if (prnt) {
+								WandsMod.compat.send_message_to_player("wand limit reached, volume: "+volume);
 							}
 						}
 					}
@@ -349,7 +355,7 @@ public class WandsBaseRenderer {
 	}
 
 	private static void mode0(WandItem wand, BlockPos pos, float y0, float h, MyDir side, World world,
-			BlockState block_state, PlayerEntity player, int lim, double hit_x, double hit_y, double hit_z,boolean destroy) {
+			BlockState block_state, PlayerEntity player, int lim, double hit_x, double hit_y, double hit_z,boolean destroy,BlockState offhand_state) {
 
 		float x = pos.getX();
 		float y = pos.getY();
@@ -384,9 +390,9 @@ public class WandsBaseRenderer {
 		if (d1 != null) {
 			BlockPos pv = null;
 			if (d2 != null) {
-				pv = find_next_diag(world, block_state, d1, d2, pos, wand,destroy);
+				pv = find_next_diag(world, block_state, d1, d2, pos, wand,destroy,offhand_state);
 			} else {
-				pv = find_next_pos(world, block_state, d1, pos, wand,destroy);
+				pv = find_next_pos(world, block_state, d1, pos, wand,destroy,offhand_state);
 			}
 			if (pv != null) {
 				int x1 = pv.getX();
@@ -418,12 +424,12 @@ public class WandsBaseRenderer {
 
 	private static void mode1(WandItem wand, BlockPos pos, float y0, float h, MyDir side, double hit_x, double hit_y,
 			double hit_z, World world, BlockState block_state, PlayerEntity player, int lim, int max_xp_blocks,
-			ItemStack item_stack, boolean dont_check_state, boolean isCreative,boolean destroy) {
+			ItemStack item_stack, boolean dont_check_state, boolean isCreative,boolean destroy,ItemStack offhand) {
 		MyDir dir = MyDir.EAST;
 		BlockPos pos_m = WandsMod.compat.pos_offset(pos, side, 1);
 		BlockState state = world.getBlockState(pos_m);
 
-		if (state.isAir() || WandsMod.compat.is_fluid(state, wand)) {
+		if (state.isAir() || WandsMod.compat.is_fluid(state, wand) ||destroy) {
 			BlockPos pos0 = pos;
 			BlockPos pos1 = pos_m;
 			BlockPos pos2 = pos;
@@ -479,8 +485,13 @@ public class WandsBaseRenderer {
 			boolean stop1 = false;
 			boolean stop2 = false;
 			boolean intersects = false;
-			if (!isCreative) {
-				int n = WandsMod.compat.in_inventory(player,item_stack);
+			if (!isCreative && !destroy) {
+				int n=0;
+				if(!offhand.isEmpty() )
+					n = WandsMod.compat.in_inventory(player,offhand);
+				else{
+					n = WandsMod.compat.in_inventory(player,item_stack);
+				}
 				if (n < i) {
 					i = n - 1;
 				}
@@ -488,9 +499,13 @@ public class WandsBaseRenderer {
 					i = max_xp_blocks - 1;
 				}
 			}
-			// boolean is_fluid;
+			if (prnt) {
+				System.out.println("offhand: "+offhand);
+				System.out.println("i: "+i);
+			}
+			
 			boolean eq = false;
-			while (k < 81 && i > 0) {
+			while (k < lim && i > 0) {
 				if (!stop1 && i > 0) {
 					BlockState bs0 = world.getBlockState(WandsMod.compat.pos_offset(pos0, dir, 1));
 					BlockState bs1 = world.getBlockState(WandsMod.compat.pos_offset(pos1, dir, 1));
@@ -541,7 +556,7 @@ public class WandsBaseRenderer {
 				}
 				k++;
 				if (stop1 && stop2) {
-					k = 1000;
+					k = 1000000;
 				}
 			}
 
@@ -717,7 +732,7 @@ public class WandsBaseRenderer {
 	}
 
 	static public BlockPos find_next_diag(World world, BlockState block_state, MyDir dir1, MyDir dir2, BlockPos pos,
-			WandItem wand,boolean destroy) {
+			WandItem wand,boolean destroy,BlockState offhand_state) {
 		BlockPos p0=pos;
 		for (int i = 0; i < wand.getLimit(); i++) {
 			BlockPos p1 = WandsMod.compat.pos_offset(pos, dir1, 1);
@@ -725,13 +740,13 @@ public class WandsBaseRenderer {
 			BlockState bs = world.getBlockState(pos);
 			if (bs != null) {
 				if(destroy){
-					if (!bs.equals(block_state) && p0!=null)
+					if (!(bs.equals(block_state) ||bs.equals(offhand_state))&& p0!=null)
 						return p0;
 				}else{
 					if (can_place(bs, wand, world, pos)) {
 						return pos;
 					} else {
-						if (!bs.equals(block_state))
+						if (!(bs.equals(block_state)||bs.equals(offhand_state)))
 							return null;
 					}
 				}
@@ -741,13 +756,13 @@ public class WandsBaseRenderer {
 		return null;
 	}
 
-	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand,boolean destroy) {
+	static public BlockPos find_next_pos(World world, BlockState block_state, MyDir dir, BlockPos pos, WandItem wand,boolean destroy,BlockState offhand_state) {
 		for (int i = 0; i < wand.getLimit(); i++) {
 			BlockPos pos2 = WandsMod.compat.pos_offset(pos, dir, i + 1);
 			BlockState bs = world.getBlockState(pos2);
 			
 			if (bs != null) {
-				if (!bs.equals(block_state)) {
+				if (!(bs.equals(block_state)||bs.equals(offhand_state))) {
 					if(destroy){
 						return WandsMod.compat.pos_offset(pos, dir, i);
 					}else{

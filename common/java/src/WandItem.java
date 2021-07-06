@@ -176,21 +176,22 @@ abstract public class WandItem  {
         ItemStack item_stack=null;
         ItemStack offhand = WandsMod.compat.get_player_offhand_stack(player);
 
-        if((mode==4 || mode==5) && fill1_state!=null){
+        /*if(fill1_state!=null){
             item_stack=new ItemStack(WandItem.fill1_state.getBlock());
-        }else{
-            if(mode==3){
-                Block bbb=WandsMod.compat.block_from_item(offhand.getItem());
-                
+        }else{*/            
+            if(offhand!=null){
+                Block bbb=WandsMod.compat.block_from_item(offhand.getItem());            
                 if(bbb!=null && !(bbb instanceof AirBlock)){
                     offhand_state=WandsMod.compat.getDefaultBlockState(bbb);
                     item_stack=offhand;
-                }                
+                }                            
             }
-        }
+        //}
         if(item_stack==null){
             item_stack=new ItemStack(block_state.getBlock());
         }
+
+        System.out.println("wand item_stack " + item_stack);
         
         boolean destroy =WandsMod.compat.can_destroy(block_state, offhand, isCreative(player));
 
