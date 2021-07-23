@@ -1,31 +1,20 @@
-# gradle
-
-.gradle/
 build/
-out/
-classes/
-
-# idea
-
-.idea/
-*.iml
 *.ipr
+run/
 *.iws
-*.log
-# vscode
-
-.settings/
-.vscode/
+out/
+*.iml
+.gradle/
+output/
 bin/
+libs/
+logs/
+.architectury-transformer
 .classpath
 .project
-
-# fabric
-
-run/
-Forge/src/main/java/net/nicguzzo/common
-Forge/src/main/resources/assets
-Forge/src/main/resources/data
-Fabric/src/main/java/net/nicguzzo/common
-Fabric/src/main/resources/assets
-Fabric/src/main/resources/data
+.idea/
+classes/
+.metadata
+.vscode
+.settings
+*.launch
