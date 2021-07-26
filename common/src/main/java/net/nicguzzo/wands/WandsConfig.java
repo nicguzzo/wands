@@ -28,6 +28,8 @@ public class WandsConfig {
 	public int diamond_wand_durability = 1561;
 	public int netherite_wand_durability = 2031;
 	public boolean destroy_in_survival_drop=true;
+	public boolean allow_wand_to_break=false;
+	public boolean allow_offhand_to_break=false;
 
 	public String[] str_allowed=default_allowed;
 	public String[] str_denied=default_denied;
@@ -51,7 +53,6 @@ public class WandsConfig {
 				denied.add(blk);
 		}
 	}
-
 	public static void load_config() {
 		INSTANCE = new WandsConfig();
 		Gson gson=new Gson();

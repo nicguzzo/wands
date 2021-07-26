@@ -2,6 +2,7 @@ package net.nicguzzo.wands;
 
 
 import java.util.List;
+import java.util.Random;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -35,16 +36,16 @@ public class PaletteItem extends Item{
     public PaletteItem(Properties properties) {
         super(properties);        
     }
-    
+    static private final int max_mode=PaletteMode.values().length;
     @Environment(EnvType.CLIENT)
     @Override    
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
-        ListTag inventory = stack.getOrCreateTag().getList("Inventory",  NbtType.COMPOUND);//10 COMPOUND
+        ListTag inventory = stack.getOrCreateTag().getList("Palette",  NbtType.COMPOUND);//10 COMPOUND
         int s =inventory.size();
         for(int i=0;i<s;i++){
             // formatted red text
             CompoundTag stackTag = (CompoundTag) inventory.get(i);
-            ItemStack stack2 = ItemStack.of(stackTag.getCompound("Stack"));
+            ItemStack stack2 = ItemStack.of(stackTag.getCompound("Block"));
             if(!stack2.isEmpty()){
                 list.add( new TranslatableComponent(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
             }
@@ -53,23 +54,61 @@ public class PaletteItem extends Item{
         list.add( new TranslatableComponent("wands.palette") );
         
     }
-    static public ItemStack get_item(ItemStack palette,int slot){
-        //System.out.println("get_item "+palette);
-        ListTag inventory = palette.getOrCreateTag().getList("Inventory", NbtType.COMPOUND);
-        //System.out.println("inventory "+inventory);
-        int s =inventory.size();
+    static public PaletteMode getMode(ItemStack stack) {
+        int mode=stack.getOrCreateTag().getInt("mode");
+        if(mode<PaletteMode.values().length)
+            return PaletteMode.values()[mode];
+        else
+            return PaletteMode.RANDOM;
+    }
+    static public void nextMode(ItemStack stack) {
+        CompoundTag tag=stack.getOrCreateTag();
+        int mode=(tag.getInt("mode")+1) % (max_mode+1);
+        //LOGGER.info("next mode: "+mode);
+        tag.putInt("mode", mode);
+        //LOGGER.info("wand tag: ("+tag+")");
+    }
+    static public ItemStack get_item(ItemStack palette,PlayerWandInfo s_info,Player player){
+        if(s_info==null){
+            return ItemStack.EMPTY;
+        }
+        s_info.slots.clear();
+        PaletteMode palatte_mode=PaletteItem.getMode(palette);
+        ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
+        //WandsMod.LOGGER.info("palette_inv: "+palette_inv);
+        int s =palette_inv.size();
         for(int i=0;i<s;i++){
-        
-            CompoundTag stackTag = (CompoundTag) inventory.get(i);
-            int slot2 = stackTag.getInt("Slot");
-            if(slot==slot2){
-                ItemStack stack = ItemStack.of(stackTag.getCompound("Stack"));
-                //if(stack!=ItemStack.EMPTY)
+            CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
+            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
+            if(!stack.isEmpty()){
+                if(player.abilities.instabuild){
+                    s_info.slots.add(i);
+                }else{
+                    int[] count=WandUtils.count_in_player(player, stack);
+                    if(count[0]+count[1]>0){
+                        s_info.slots.add(i);
+                    }
+                }
+            }
+        }
+        //WandsMod.LOGGER.info("slots: "+s_info.slots);
+        if(s_info.slots.size()>0){
+            nextSlot(s_info, palatte_mode, player.level.random,s_info.slots.size());
+            CompoundTag stackTag = (CompoundTag) palette_inv.get(s_info.slots.get(s_info.slot));
+            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
+            if(stack!=ItemStack.EMPTY){
                 return stack;
             }
-        };   
+        }
         return ItemStack.EMPTY;
     }
+    static void nextSlot(PlayerWandInfo s_info,PaletteMode palatte_mode,Random random,int bound) {
+		if (palatte_mode == PaletteMode.RANDOM) {
+			s_info.slot = random.nextInt(bound);
+		} else if (palatte_mode == PaletteMode.ROUND_ROBIN) {
+			s_info.slot = (s_info.slot + 1) % bound;
+		}
+	}
     @Override
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
         

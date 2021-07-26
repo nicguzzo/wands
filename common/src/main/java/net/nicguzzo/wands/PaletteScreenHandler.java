@@ -1,11 +1,9 @@
 package net.nicguzzo.wands;
 
 import me.shedaniel.architectury.utils.NbtType;
-import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -37,11 +35,11 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
         super(WandsMod.PALETTE_SCREEN_HANDLER.get(), syncId);
         this.palette=palette;
         this.playerInventory=playerInventory;
-        ListTag tag = palette.getOrCreateTag().getList("Inventory", NbtType.COMPOUND);
+        ListTag tag = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
         this.simplecontainer= new SimpleContainer(27){
             @Override
             public void setChanged() {
-                palette.getOrCreateTag().put("Inventory", toTag(this));
+                palette.getOrCreateTag().put("Palette", toTag(this));
                 super.setChanged();
             }
         };
@@ -65,6 +63,13 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
         } else {
             Player player = playerInventory.player;
             this.removed(player);
+        }
+    }
+    @Override
+    public void removed(Player player) {
+        Inventory inventory = player.inventory;
+        if (!inventory.getCarried().isEmpty()) {           
+           inventory.setCarried(ItemStack.EMPTY);
         }
     }
     @Override
@@ -186,7 +191,7 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
         for(int i = 0; i < inventory.getContainerSize(); i++) {
             CompoundTag stackTag = new CompoundTag();
             stackTag.putInt("Slot", i);
-            stackTag.put("Stack", inventory.getItem(i).save(new CompoundTag()));
+            stackTag.put("Block", inventory.getItem(i).save(new CompoundTag()));
             tag.add(stackTag);
         }
 
@@ -198,7 +203,7 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
         tag.forEach(element -> {
             CompoundTag stackTag = (CompoundTag) element;
             int slot = stackTag.getInt("Slot");
-            ItemStack stack = ItemStack.of(stackTag.getCompound("Stack"));
+            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
             inventory.setItem(slot, stack);
         });
     }

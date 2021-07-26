@@ -1,12 +1,13 @@
 package net.nicguzzo.wands;
 
 
+import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.CreativeTabs;
 import me.shedaniel.architectury.registry.DeferredRegister;
 import me.shedaniel.architectury.registry.MenuRegistry;
 import me.shedaniel.architectury.registry.Registries;
 import me.shedaniel.architectury.registry.RegistrySupplier;
-import me.shedaniel.architectury.registry.MenuRegistry.ExtendedMenuTypeFactory;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.LazyLoadedValue;
@@ -18,9 +19,15 @@ import net.minecraft.world.item.ItemStack;
 import java.util.HashMap;
 import java.util.function.Supplier;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
+
 public class WandsMod {
     public static WandsConfig config=WandsConfig.get_instance();
     public static final String MOD_ID = "wands";
+    
+    public static final Logger LOGGER = LogManager.getLogger();
     // We can use this if we don't want to use DeferredRegister
     public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
     // Registering a new creative tab
@@ -53,8 +60,9 @@ public class WandsMod {
 
     public static final RegistrySupplier<MenuType<PaletteScreenHandler>> PALETTE_SCREEN_HANDLER=MENUES.register("palette_menu",()-> MenuRegistry.ofExtended(PaletteScreenHandler::new));
 
+    static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key");
     
-    private static final int MAX_UNDO = 2048;
+    
 
 	public static HashMap<String, CircularBuffer> player_undo = new HashMap<String, CircularBuffer>();
     public static void init() {
@@ -62,5 +70,20 @@ public class WandsMod {
         ITEMS.register();
         MENUES.register();
         System.out.println(WandsExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
+        //NetworkReceiver
+        NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
+            int key=packet.readInt();
+            LOGGER.info("key from client: "+key);
+            context.queue(()->{
+                ItemStack item_stack=context.getPlayer().getMainHandItem();
+                if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
+                    switch(key){
+                        case GLFW.GLFW_KEY_V:
+                            WandItem.nextMode(item_stack);
+                        break;
+                    }
+                }
+            });
+        });
     }
 }

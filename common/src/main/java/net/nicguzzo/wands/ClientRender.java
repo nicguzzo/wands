@@ -6,6 +6,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Camera;
@@ -20,41 +22,43 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-
 public class ClientRender {
     public static final float p_o = -0.001f;// preview_block offset
-    private static long t0 = 0;
-	private static long t1 = 0;
-	private static boolean prnt = false;
+    //private static long t0 = 0;
+	//private static long t1 = 0;
+	//private static boolean prnt = false;
     public static Vec3 c=new Vec3(0,0,0);
+    public static BlockBuffer block_buffer=null;
+
+    //private static final Logger LOGGER = LogManager.getLogger();
 
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         ItemStack stack = player.getMainHandItem();
-        prnt = false;
-		t1 = System.currentTimeMillis();
-		if (t1 - t0 > 1000) {
-			t0 = System.currentTimeMillis();
-			prnt = true;			
-            
-		}
+        //prnt = false;
+        		
         if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-            WandItem wand = (WandItem) stack.getItem();
+            if(block_buffer==null){
+                block_buffer=new BlockBuffer(PlayerWandInfo.MAX_LIMIT);
+            }
+            //t1 = System.currentTimeMillis();
+            //if (t1 - t0 > 1000) {
+            //    t0 = System.currentTimeMillis();
+            //    prnt = true;
+            //}
+            //WandItem wand = (WandItem) stack.getItem();
             HitResult hitResult=client.hitResult;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
-                if(wand.do_or_preview(player.level,block_state,pos,side,block_hit.getLocation(),stack,true)){
-                    if(prnt){
-                        System.out.println("render");
-                    }
-                    preview_mode(WandItem.getMode(stack));
-                }
-            } else {
-                WandsModClient.valid = false;
+                WandItem.do_or_preview(player,player.level,block_state,pos,side,block_hit.getLocation(),stack,block_buffer,null);
+                //if(prnt){
+                //    LOGGER.info("render");
+                //}
+                preview_mode(WandItem.getMode(stack));                
             }
         }
     }
@@ -77,23 +81,45 @@ public class ClientRender {
             bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
             switch (mode){
                 case 0:
-                    preview_mode0(bufferBuilder);
-                    break;
+                    grid(bufferBuilder,WandItem.PreviewInfo.side,
+                        c.x + WandItem.PreviewInfo.x,
+                        c.y + WandItem.PreviewInfo.y + WandItem.PreviewInfo.y0,
+                        c.z + WandItem.PreviewInfo.z
+                    );
+                    if(WandItem.PreviewInfo.valid){
+                        preview_block(bufferBuilder,
+                            c.x+WandItem.PreviewInfo.x1 , c.y+(WandItem.PreviewInfo.y1+WandItem.PreviewInfo.y0), c.z+WandItem.PreviewInfo.z1 , 
+                            c.x+WandItem.PreviewInfo.x2 , c.y+(WandItem.PreviewInfo.y1+WandItem.PreviewInfo.y0+WandItem.PreviewInfo.h), c.z+ WandItem.PreviewInfo.z2 );
+                    }
+                break;
+                case 1:
+                case 2:
+                    //preview_mode1(bufferBuilder);
+                    if(WandItem.PreviewInfo.valid){
+                        preview_block(bufferBuilder,
+                            c.x+WandItem.PreviewInfo.x1 , c.y+WandItem.PreviewInfo.y1 , c.z+WandItem.PreviewInfo.z1 , 
+                            c.x+WandItem.PreviewInfo.x2 , c.y+WandItem.PreviewInfo.y2 ,c.z+ WandItem.PreviewInfo.z2 );
+                    }
+                break;
+                case 3:
+                    if(WandItem.PreviewInfo.valid && block_buffer!=null){
+                        BlockPos p=null;
+                        for (int a = 0; a < block_buffer.length && a< PlayerWandInfo.MAX_LIMIT; a++) {			
+							p=block_buffer.buffer[a];
+							preview_block(bufferBuilder,
+                                c.x+p.getX()  , c.y+p.getY()  , c.z+p.getZ(), 
+                                c.x+p.getX()+1, c.y+p.getY()+1, c.z+p.getZ()+1
+                            );
+						}
+                    }
+                break;
             }
-
             tesselator.end();
 
             RenderSystem.enableBlend();
             RenderSystem.enableTexture();            
             RenderSystem.shadeModel(7424);
         }
-    }
-    private static void preview_mode0(BufferBuilder bufferBuilder){
-        grid(bufferBuilder,WandItem.PreviewInfo.side,
-                c.x + WandItem.PreviewInfo.x,
-                c.y + WandItem.PreviewInfo.y + WandItem.PreviewInfo.y0,
-                c.z + WandItem.PreviewInfo.z
-        );
     }
 
     private static void preview_block(BufferBuilder bufferBuilder,double fx1, double fy1, double fz1, double fx2, double fy2, double fz2) {
@@ -103,6 +129,7 @@ public class ClientRender {
         fx2 -= p_o;
         fy2 -= p_o;
         fz2 -= p_o;
+        //TODO: optimize with line strip
         bufferBuilder.vertex(fx1, fy1, fz1).color(255,255,255,255).endVertex();
         bufferBuilder.vertex(fx2, fy1, fz1).color(255,255,255,255).endVertex();
         bufferBuilder.vertex(fx1, fy1, fz1).color(255,255,255,255).endVertex();
@@ -363,7 +390,7 @@ public class ClientRender {
                 break;
         }
     }
-    private static void circle(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1,int plane){
+    public static void circle(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1,int plane){
 
         int r =1;
         int xc=pos0.getX();
@@ -423,7 +450,7 @@ public class ClientRender {
 
     }
 
-    private static void line(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1)
+    public static void line(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1)
     {
 
         int x1=pos0.getX();
