@@ -4,6 +4,8 @@
     "item.wands.diamond_wand": "Diamond Wand",
     "item.wands.netherite_wand": "Netherite Wand",
     "item.wands.palette": "Palette",
+    "item.wands.random": "Random",
+    "item.wands.round_robin": "Sequential",
     "key.wands.wand_mode": "Mode",
     "key.wands.wand_orientation": "Orientation",
     "key.wands.wand_invert": "Invert",

@@ -65,8 +65,8 @@ public class PaletteItem extends Item{
     static public void nextMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int mode=(tag.getInt("mode")+1) % (max_mode+1);
-            //LOGGER.info("next mode: "+mode);
+            int mode=(tag.getInt("mode")+1) % (2);
+            WandsMod.LOGGER.info("palette next mode: "+mode);
             tag.putInt("mode", mode);
             //LOGGER.info("wand tag: ("+tag+")");
         }

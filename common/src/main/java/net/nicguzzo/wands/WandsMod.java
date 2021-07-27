@@ -79,7 +79,7 @@ public class WandsMod {
         //NetworkReceiver
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
-            LOGGER.info("key from client: "+key);
+            //LOGGER.info("key from client: "+key);
             context.queue(()->{
                 process_keys(context.getPlayer(), key);
             });
@@ -87,35 +87,43 @@ public class WandsMod {
     }
     public static void process_keys(Player player,int key){
         ItemStack item_stack=player.getMainHandItem();
-            if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){                    
-                switch(key){
-                    case wand_mode_key:
-                        WandItem.nextMode(item_stack);
-                    break;
-                    case wand_orientation_key:
-                        int mode=WandItem.getMode(item_stack);
-                        if(mode==5){
-                            WandItem.nextPlane(item_stack);
-                        }else{
-                            WandItem.nextOrientation(item_stack);
-                        }
-                    break;
-                    case wand_invert_key:
-                        WandItem.invert(item_stack);
-                    break;
-                    case wand_fill_circle_key:
-                        WandItem.toggleCircleFill(item_stack);
-                    break;
-                    case palette_mode_key:
-                        ItemStack offhand_stack=player.getOffhandItem();
-                        if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
-                            PaletteItem.nextMode(offhand_stack);
-                            LOGGER.info("palette tag: "+ offhand_stack.getTag());
-                        }
-                    break;
-                }
-                LOGGER.info("wand tag: "+ item_stack.getTag());
-
+        if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){               
+            
+            switch(key){
+                case wand_mode_key:
+                    WandItem.nextMode(item_stack);
+                break;
+                case wand_orientation_key:
+                    int mode=WandItem.getMode(item_stack);
+                    if(mode==5){
+                        WandItem.nextPlane(item_stack);
+                    }else{
+                        WandItem.nextOrientation(item_stack);
+                    }
+                break;
+                case wand_invert_key:
+                    WandItem.invert(item_stack);
+                break;
+                case wand_fill_circle_key:
+                    WandItem.toggleCircleFill(item_stack);
+                break;
+                case palette_mode_key:
+                    ItemStack offhand_stack=player.getOffhandItem();
+                    if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
+                        PaletteItem.nextMode(offhand_stack);
+                        //LOGGER.info("1 palette tag: "+ offhand_stack.getTag());
+                    }
+                break;
             }
+            //LOGGER.info("wand tag: "+ item_stack.getTag());
+        }
+        if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){       
+            switch(key){
+                case palette_mode_key:
+                    PaletteItem.nextMode(item_stack);
+                    //LOGGER.info("2 palette tag: "+ item_stack.getTag());
+                break;
+            }
+        }
     }
 }

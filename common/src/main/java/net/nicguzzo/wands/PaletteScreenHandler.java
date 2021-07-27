@@ -22,7 +22,7 @@ import net.minecraft.world.level.block.Blocks;
 
 public class PaletteScreenHandler extends AbstractContainerMenu {
     
-    private ItemStack palette;
+    public ItemStack palette;
     private final SimpleContainer simplecontainer;
     public final Inventory playerInventory;
 

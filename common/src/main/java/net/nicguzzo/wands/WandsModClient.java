@@ -59,7 +59,7 @@ public class WandsModClient {
             });
         });
     }
-    static void send_key(int key){
+    public static void send_key(int key){
         Minecraft client=Minecraft.getInstance();
         ItemStack item_stack=client.player.getMainHandItem();
         if(item_stack.getItem() instanceof WandItem){
