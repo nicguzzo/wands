@@ -21,8 +21,8 @@ public class WandsConfig {
 	public float blocks_per_xp = 0.0f;
 	public int stone_wand_limit = 9;
 	public int iron_wand_limit = 49;
-	public int diamond_wand_limit = 256;
-	public int netherite_wand_limit = 1024;
+	public int diamond_wand_limit = 64;
+	public int netherite_wand_limit = 128;
 	public int stone_wand_durability = 131;
 	public int iron_wand_durability = 250;
 	public int diamond_wand_durability = 1561;

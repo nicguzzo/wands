@@ -29,7 +29,6 @@ public class ClientRender {
 	//private static boolean prnt = false;
     public static Vec3 c=new Vec3(0,0,0);
     public static BlockBuffer block_buffer=null;
-
     //private static final Logger LOGGER = LogManager.getLogger();
 
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
@@ -48,9 +47,11 @@ public class ClientRender {
             //    prnt = true;
             //}
             //WandItem wand = (WandItem) stack.getItem();
+            
             HitResult hitResult=client.hitResult;
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {                
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
+                //int mode=WandItem.getMode(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
@@ -59,6 +60,7 @@ public class ClientRender {
                 //    LOGGER.info("render");
                 //}
                 preview_mode(WandItem.getMode(stack));                
+                
             }
         }
     }
@@ -102,13 +104,16 @@ public class ClientRender {
                     }
                 break;
                 case 3:
+                case 4:
+                case 5:
                     if(WandItem.PreviewInfo.valid && block_buffer!=null){
-                        BlockPos p=null;
                         for (int a = 0; a < block_buffer.length && a< PlayerWandInfo.MAX_LIMIT; a++) {			
-							p=block_buffer.buffer[a];
+							int x=block_buffer.buffer_x[a];
+                            int y=block_buffer.buffer_y[a];
+                            int z=block_buffer.buffer_z[a];
 							preview_block(bufferBuilder,
-                                c.x+p.getX()  , c.y+p.getY()  , c.z+p.getZ(), 
-                                c.x+p.getX()+1, c.y+p.getY()+1, c.z+p.getZ()+1
+                                c.x+x  , c.y+y  , c.z+z, 
+                                c.x+x+1, c.y+y+1, c.z+z+1
                             );
 						}
                     }
@@ -355,187 +360,7 @@ public class ClientRender {
         }
     }
 
-    static private void prev_drawCircle(BufferBuilder bufferBuilder,Vec3 c,int xc, int yc,int zc, int x, int y,int z,int plane)
-    {
-        switch(plane){
-            case 0://XZ
-                preview_block(bufferBuilder, c.x+ xc+x, c.y+ yc, c.z+ zc+z,   c.x+ xc+x+1, c.y+ yc+1, c.z+ zc+z+1 );
-                preview_block(bufferBuilder, c.x+ xc-x, c.y+ yc, c.z+ zc+z,   c.x+ xc-x+1, c.y+ yc+1, c.z+ zc+z+1 );
-                preview_block(bufferBuilder, c.x+ xc+x, c.y+ yc, c.z+ zc-z,   c.x+ xc+x+1, c.y+ yc+1, c.z+ zc-z+1 );
-                preview_block(bufferBuilder, c.x+ xc-x, c.y+ yc, c.z+ zc-z,   c.x+ xc-x+1, c.y+ yc+1, c.z+ zc-z+1 );
-                preview_block(bufferBuilder, c.x+ xc+z, c.y+ yc, c.z+ zc+x,   c.x+ xc+z+1, c.y+ yc+1, c.z+ zc+x+1 );
-                preview_block(bufferBuilder, c.x+ xc-z, c.y+ yc, c.z+ zc+x,   c.x+ xc-z+1, c.y+ yc+1, c.z+ zc+x+1 );
-                preview_block(bufferBuilder, c.x+ xc+z, c.y+ yc, c.z+ zc-x,   c.x+ xc+z+1, c.y+ yc+1, c.z+ zc-x+1 );
-                preview_block(bufferBuilder, c.x+ xc-z, c.y+ yc, c.z+ zc-x,   c.x+ xc-z+1, c.y+ yc+1, c.z+ zc-x+1 );
-                break;
-            case 1://XY
-                preview_block(bufferBuilder, c.x+ xc+x, c.y+ yc+y, c.z+ zc,   c.x+  xc+x+1,c.y+  yc+y+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc-x, c.y+ yc+y, c.z+ zc,   c.x+  xc-x+1,c.y+  yc+y+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc+x, c.y+ yc-y, c.z+ zc,   c.x+  xc+x+1,c.y+  yc-y+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc-x, c.y+ yc-y, c.z+ zc,   c.x+  xc-x+1,c.y+  yc-y+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc+y, c.y+ yc+x, c.z+ zc,   c.x+  xc+y+1,c.y+  yc+x+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc-y, c.y+ yc+x, c.z+ zc,   c.x+  xc-y+1,c.y+  yc+x+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc+y, c.y+ yc-x, c.z+ zc,   c.x+  xc+y+1,c.y+  yc-x+1,c.z+  zc+1 );
-                preview_block(bufferBuilder, c.x+ xc-y, c.y+ yc-x, c.z+ zc,   c.x+  xc-y+1,c.y+  yc-x+1,c.z+  zc+1 );
-                break;
-            case 2://YZ
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc+y,c.z+  zc+z,   c.x+  xc+1, c.y+ yc+y+1, c.z+ zc+z+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc-y,c.z+  zc+z,   c.x+  xc+1, c.y+ yc-y+1, c.z+ zc+z+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc+y,c.z+  zc-z,   c.x+  xc+1, c.y+ yc+y+1, c.z+ zc-z+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc-y,c.z+  zc-z,   c.x+  xc+1, c.y+ yc-y+1, c.z+ zc-z+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc+z,c.z+  zc+y,   c.x+  xc+1, c.y+ yc+z+1, c.z+ zc+y+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc-z,c.z+  zc+y,   c.x+  xc+1, c.y+ yc-z+1, c.z+ zc+y+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc+z,c.z+  zc-y,   c.x+  xc+1, c.y+ yc+z+1, c.z+ zc-y+1  );
-                preview_block(bufferBuilder, c.x+ xc, c.y+ yc-z,c.z+  zc-y,   c.x+  xc+1, c.y+ yc-z+1, c.z+ zc-y+1  );
-                break;
-        }
-    }
-    public static void circle(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1,int plane){
-
-        int r =1;
-        int xc=pos0.getX();
-        int yc=pos0.getY();
-        int zc=pos0.getZ();
-        int px=pos1.getX()-pos0.getX();
-        int py=pos1.getY()-pos0.getY();
-        int pz=pos1.getZ()-pos0.getZ();
-        r=(int)Math.sqrt(px*px+py*py+pz*pz );
-
-        if(plane==0){//XZ;
-            int x = 0, y=0, z = r;
-            int d = 3 - 2 * r;
-            prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            while (z >= x)
-            {
-                x++;
-                if (d > 0)
-                {
-                    z--;
-                    d = d + 4 * (x - z) + 10;
-                } else
-                    d = d + 4 * x + 6;
-                prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            }
-        } else if (plane == 1) {// XY;
-            int x = 0, y = r, z = 0;
-            int d = 3 - 2 * r;
-            prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            while (y >= x)
-            {
-                x++;
-                if (d > 0)
-                {
-                    y--;
-                    d = d + 4 * (x - y) + 10;
-                } else
-                    d = d + 4 * x + 6;
-                prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            }
-        } else if (plane == 2) {// YZ;
-            int x = 0, y = 0, z = r;
-            int d = 3 - 2 * r;
-            prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            while (z >= y)
-            {
-                y++;
-                if (d > 0)
-                {
-                    z--;
-                    d = d + 4 * (y - z) + 10;
-                } else
-                    d = d + 4 * y + 6;
-                prev_drawCircle(bufferBuilder,c,xc, yc, zc, x, y, z, plane);
-            }
-        }
-
-    }
-
-    public static void line(BufferBuilder bufferBuilder,Vec3 c,BlockPos pos0,BlockPos pos1)
-    {
-
-        int x1=pos0.getX();
-        int y1=pos0.getY();
-        int z1=pos0.getZ();
-        int x2=pos1.getX();
-        int y2=pos1.getY();
-        int z2=pos1.getZ();
-        int dx,dy,dz,xs,ys,zs,p1,p2;
-        dx = Math.abs(x2 - x1);
-        dy = Math.abs(y2 - y1);
-        dz = Math.abs(z2 - z1);
-        if (x2 > x1) {
-            xs = 1;
-        } else {
-            xs = -1;
-        }
-        if (y2 > y1) {
-            ys = 1;
-        } else {
-            ys = -1;
-        }
-        if (z2 > z1) {
-            zs = 1;
-        } else {
-            zs = -1;
-        }
-        preview_block(bufferBuilder,c.x+x1, c.y+y1, c.z+z1,c.x+x1+1,c.y+y1+1,c.z+z1+1);
-        // X
-        if (dx >= dy && dx >= dz) {
-            p1 = 2 * dy - dx;
-            p2 = 2 * dz - dx;
-            while (x1 != x2) {
-                x1 += xs;
-                if (p1 >= 0) {
-                    y1 += ys;
-                    p1 -= 2 * dx;
-                }
-                if (p2 >= 0) {
-                    z1 += zs;
-                    p2 -= 2 * dx;
-                }
-                p1 += 2 * dy ;
-                p2 += 2 * dz ;
-
-                preview_block(bufferBuilder,c.x+x1, c.y+y1, c.z+z1,c.x+x1+1,c.y+y1+1,c.z+z1+1);
-                //LOGGER.info("line pos " +pos);
-
-            }
-        } else if (dy >= dx && dy >= dz) {
-            p1 = 2 * dx - dy;
-            p2 = 2 * dz - dy;
-            while (y1 != y2) {
-                y1 += ys;
-                if (p1 >= 0) {
-                    x1 += xs;
-                    p1 -= 2 * dy;
-                }
-                if (p2 >= 0) {
-                    z1 += zs;
-                    p2 -= 2 * dy;
-                }
-                p1 += 2 * dx ;
-                p2 += 2 * dz ;
-                preview_block(bufferBuilder,c.x+x1, c.y+y1, c.z+z1,c.x+x1+1,c.y+y1+1,c.z+z1+1);
-
-            }
-        } else {
-            p1 = 2 * dy - dz;
-            p2 = 2 * dx - dz;
-            while (z1 != z2) {
-                z1 += zs;
-                if (p1 >= 0) {
-                    y1 += ys;
-                    p1 -= 2 * dz;
-                }
-                if (p2 >= 0) {
-                    x1 += xs;
-                    p2 -= 2 * dz;
-                }
-                p1 += 2 * dy ;
-                p2 += 2 * dx ;
-                preview_block(bufferBuilder,c.x+x1, c.y+y1, c.z+z1,c.x+x1+1,c.y+y1+1,c.z+z1+1);
-            }
-        }
-    }
+    
+    
 }
 

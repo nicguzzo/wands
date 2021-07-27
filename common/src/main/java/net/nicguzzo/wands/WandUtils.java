@@ -101,9 +101,11 @@ class WandUtils{
         ItemStack offand_item=player.getOffhandItem();
         
         boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
-        if(offand_item.getItem() instanceof DiggerItem){
+        if(offand_item!=null && !offand_item.isEmpty() &&offand_item.getItem() instanceof DiggerItem){
             DiggerItem mt=(DiggerItem)offand_item.getItem();
-            return  player.abilities.instabuild|| mt.getDestroySpeed(null, block_state) > 1.0f||is_glass;
+            if(mt!=null){
+                return  player.abilities.instabuild|| mt.getDestroySpeed(null, block_state) > 1.0f||is_glass;
+            }
         }        
         return false;
     }
@@ -133,7 +135,7 @@ class WandUtils{
             BlockState bs1 = world.getBlockState(pos);
             BlockState bs2 = world.getBlockState(pos2);
             if (bs1.equals(block_state) && can_place(bs2,wand.removes_water,wand.removes_lava)) {
-                block_buffer.add_buffer(pos2);
+                block_buffer.add(pos2);
             }
         }
     }

@@ -8,20 +8,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.Game;
+import net.nicguzzo.wands.WandsMod;
 
 @Mixin(Game.class)
 public abstract class GameMixin {
 
 	@Inject(at = @At("HEAD"), method = "onStartGameSession()V")
 	private void onStartGameSession(CallbackInfo info) {
-		System.out.println("onStartGameSession!");
-		System.out.println("request config: ");
+		WandsMod.LOGGER.info("onStartGameSession!");
+		//WandsMod.LOGGER.info("request config: ");
 		//PacketByteBuf passedData = new PacketByteBuf(Unpooled.buffer());
 		//ClientPlayNetworking.send(WandsMod.WANDCONF_PACKET_ID, passedData);
 	}
 	@Inject(at = @At("HEAD"), method = "onLeaveGameSession()V")
 	public void onLeaveGameSession(CallbackInfo info) {
-		System.out.println("onLeaveGameSession!");		
+		WandsMod.LOGGER.info("onLeaveGameSession!");		
 	}
 
 }

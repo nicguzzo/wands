@@ -1,10 +1,13 @@
 package net.nicguzzo.wands;
 import java.util.function.Consumer;
+
+import io.netty.buffer.Unpooled;
+import me.shedaniel.architectury.networking.NetworkManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -20,8 +23,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SlabBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.phys.Vec3;
@@ -46,7 +50,7 @@ public class WandItem extends Item{
         static public void clear(){
             p1=null;
             p2=null;
-            p1_state=null;
+            //p1_state=null;
             valid=false;
             h = 1.0f;
             y0 = 0.0f;
@@ -77,29 +81,74 @@ public class WandItem extends Item{
         this.removes_water=removes_water;
     }
     static public int getMode(ItemStack stack) {
-        int mode=stack.getOrCreateTag().getInt("mode");
-        return mode;
-    }
+        if(stack!=null && !stack.isEmpty())
+            return stack.getOrCreateTag().getInt("mode");
+        return -1;
+    }   
+    
     static public void nextMode(ItemStack stack) {
-        CompoundTag tag=stack.getOrCreateTag();
-        int mode=(tag.getInt("mode")+1) % (max_mode+1);
-        WandsMod.LOGGER.info("next mode: "+mode);
-        tag.putInt("mode", mode);
-        WandsMod.LOGGER.info("wand tag: ("+tag+")");
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int mode=(tag.getInt("mode")+1) % (max_mode+1);        
+            tag.putInt("mode", mode);
+        }
+    }
+    
+    static public boolean isInverted(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty())
+            return stack.getOrCreateTag().getBoolean("inverted");
+        return false;
+    }
+    static public void invert(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            boolean inverted=tag.getBoolean("inverted");
+            tag.putBoolean("inverted", !inverted);
+        }
     }
     static public Orientation getOrientation(ItemStack stack) {
-        int o=stack.getOrCreateTag().getInt("orientation");
-        Orientation orientation=Orientation.values()[o];
-        return orientation;
+        if(stack!=null && !stack.isEmpty()){
+            int o=stack.getOrCreateTag().getInt("orientation");
+            return Orientation.values()[o];
+        }
+        return Orientation.HORIZONTAL;
+    }
+    static public void nextOrientation(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int o=(tag.getInt("orientation")+1) %2;
+            tag.putInt("orientation", o);
+        }
     }
     static public Plane getPlane(ItemStack stack) {
-        int p=stack.getOrCreateTag().getInt("plane");
-        Plane plane=Plane.values()[p];
+        Plane plane=Plane.XZ;
+        if(stack!=null && !stack.isEmpty()){
+            int p=stack.getOrCreateTag().getInt("plane");
+            if(p>=0 && p< Plane.values().length)
+                plane=Plane.values()[p];
+        }
         return plane;
     }
-    static public boolean isInverted(ItemStack stack) {
-        int i=stack.getOrCreateTag().getInt("invert");        
-        return i!=0;
+    static public void nextPlane(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int plane=(tag.getInt("plane")+1) % 3;
+            tag.putInt("plane", plane);
+        }
+    }
+    static public void toggleCircleFill(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            boolean cfill=tag.getBoolean("cfill");
+            tag.putBoolean("cfill", !cfill);
+        }
+    }
+    //TODO: send feedback to player
+    static public boolean isCircleFill(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            return stack.getOrCreateTag().getBoolean("cfill");
+        }
+        return false;
     }
  
     @Override
@@ -126,7 +175,7 @@ public class WandItem extends Item{
         }else{
             ItemStack stack = context.getPlayer().getMainHandItem();
             int mode=getMode(stack);
-            if(mode==2){
+            if(mode==2||mode==4||mode==5){
                 if(PreviewInfo.p1==null){
                     PreviewInfo.clear();
                     PreviewInfo.p1=context.getClickedPos();
@@ -137,8 +186,7 @@ public class WandItem extends Item{
                     PreviewInfo.z1=PreviewInfo.p1.getZ();
                     WandsMod.LOGGER.info("cli pos1 "+PreviewInfo.p1);
                 }else{
-                    PreviewInfo.p1=null;
-                    PreviewInfo.p1_state=null;
+                    PreviewInfo.p1=null;                    
                     PreviewInfo.p2=null;
                     PreviewInfo.valid = false;
                 }
@@ -150,12 +198,27 @@ public class WandItem extends Item{
     @Override
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {   
         WandsMod.LOGGER.info("use");     
-        PreviewInfo.clear();
+        
+        if(!world.isClientSide){
+            PlayerWandInfo s_info=PlayerWandInfo.get(player);
+            if(s_info==null){
+                PlayerWandInfo.add_player(player);
+                s_info=PlayerWandInfo.get(player);
+            }
+            s_info.p1=null;
+            s_info.p2=null;
+            s_info.p1_state=null;
+
+        }else{
+            PreviewInfo.clear();
+        }
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
 
-    static public void do_or_preview(Player player,Level world,BlockState block_state,BlockPos pos,Direction side,Vec3 hit,ItemStack wand_stack,BlockBuffer block_buffer,PlayerWandInfo s_info){
+    static public void do_or_preview(Player player,Level world,BlockState block_state,BlockPos pos,Direction side,
+                                     Vec3 hit,ItemStack wand_stack,BlockBuffer block_buffer,PlayerWandInfo s_info){
         boolean preview=player.level.isClientSide();
+        
         //BlockState offhand_state=null;
         float y0 = 0.0f;
         float block_height=1.0f;        
@@ -176,6 +239,7 @@ public class WandItem extends Item{
                 }
             }
         }
+        //TODO: check snow...
         if(is_slab_top || is_slab_bottom){
             block_height=0.5f;
             if(is_slab_top){
@@ -240,17 +304,31 @@ public class WandItem extends Item{
             case 3:
                 placed+=mode3(player, block_buffer, wand, pos, block_state, side, destroy,s_info);
             break;
+            case 4:
+                placed+=mode4(player, block_state, pos, block_buffer, preview, destroy, s_info);
+            break;
+            case 5:
+                int plane=WandItem.getPlane(wand_stack).ordinal();
+                boolean fill=WandItem.isCircleFill(wand_stack);
+                placed+=mode5(player, block_state, pos, block_buffer, preview, destroy,plane,fill ,s_info);
+            break;
         }
-        
+        PreviewInfo.p1_state=block_state;
         if(!preview && placed>0){
             WandsMod.LOGGER.info("placed: "+placed);
             
             if(s_info!=null && s_info.sound_block_state!=null){
                 block_state=s_info.sound_block_state;
             }
-            SoundType sound_type = block_state.getBlock().getSoundType(block_state);
-            SoundEvent sound=sound_type.getPlaceSound();
-            player.level.playSound(null,pos,sound,SoundSource.BLOCKS, 1.0f, 1.0f);            
+            
+            FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
+            packet.writeBlockPos(pos);
+            packet.writeBoolean(destroy);
+            NetworkManager.sendToPlayer((ServerPlayer)player, WandsMod.SND_PACKET, packet);
+            //NetworkManager.sendToC(WandsMod.SND_PACKET, packet);
+            //SoundType sound_type = block_state.getBlock().getSoundType(block_state);
+            //SoundEvent sound=sound_type.getPlaceSound();
+            //player.level.playSound(null,pos,sound,SoundSource.BLOCKS, 1.0f, 1.0f);            
         }
     }
 
@@ -511,7 +589,6 @@ public class WandItem extends Item{
                     WandsMod.LOGGER.info("fill!");
                     int placed= fill(player, s_info.p1_state, s_info.p1, s_info.p2, wand,destroy,s_info);                
                     s_info.p1=null;
-                    s_info.p1_state=null;
                     s_info.p2=null;
                     return placed;
                 }
@@ -527,29 +604,32 @@ public class WandItem extends Item{
 		int placed=0;
 		while (i < wand.limit && i < PlayerWandInfo.MAX_LIMIT) {
 			if (i < block_buffer.length) {
-				BlockPos p = block_buffer.buffer[i].relative(side,-1);
+				BlockPos p = block_buffer.get(i).relative(side,-1);
 				WandUtils.find_neighbours(block_buffer,wand, p, block_state, player.level, side);
 			}
 			i++;
 		}
 		if(destroy){
 			for (int a = 0; a < block_buffer.length; a++) {
-				block_buffer.buffer[a]=block_buffer.buffer[a].relative(side,-1);
+				block_buffer.set(a,block_buffer.get(i).relative(side,-1));
 			}
 		}
+        placed=from_buffer(player, block_state, block_buffer, preview, destroy, s_info);
+        return placed;
+	}
+    static public int from_buffer(Player player,BlockState block_state,BlockBuffer block_buffer,boolean preview,boolean destroy,PlayerWandInfo s_info){
+        int placed=0;
         if(preview){
             PreviewInfo.valid = (block_buffer.length > 0);
-		    //WandItem.valid = (block_buffer.length > 0);
         }else{
-            for (int a = 0; a < block_buffer.length && a< PlayerWandInfo.MAX_LIMIT; a++) {			                
-                if(place_block(player, block_state,block_buffer.buffer[a],destroy,s_info)){
+            for (int a = 0; a < block_buffer.length && a< PlayerWandInfo.MAX_LIMIT; a++) {
+                if(place_block(player, block_state,block_buffer.get(a),destroy,s_info)){
                     placed++;
                 }
-
             }
         }
         return placed;
-	}
+    }
     static public int fill(Player player,BlockState block_state,BlockPos from,BlockPos to,WandItem wand,boolean destroy,PlayerWandInfo s_info){
         int placed=0;
         int xs, ys, zs, xe, ye, ze;
@@ -613,6 +693,14 @@ public class WandItem extends Item{
             item_stack=PaletteItem.get_item(s_info.palette, s_info,player);
             if(!item_stack.isEmpty()){
                 block_state=Block.byItem(item_stack.getItem()).defaultBlockState();
+                PaletteItem.PaletteMode palatte_mode=PaletteItem.getMode(s_info.palette);            
+                if (palatte_mode == PaletteItem.PaletteMode.RANDOM ){
+                    if (block_state.getBlock() instanceof SnowLayerBlock) {
+                        n = player.level.random.nextInt(7) + 1;
+                        block_state=block_state.setValue(SnowLayerBlock.LAYERS, n);
+                    }
+                    block_state.rotate(Rotation.getRandom(level.random));
+                }	
             }else{
                 if(!creative){
                     return false;
@@ -625,8 +713,9 @@ public class WandItem extends Item{
             if(offhand_block != Blocks.AIR){
                 block_state=offhand_block.defaultBlockState();
                 item_stack=offhand;
-            }
+            }		
         }
+        
         if(!creative && !destroy){
             
             if (item_stack == null){
@@ -651,6 +740,10 @@ public class WandItem extends Item{
         }
         
         if(creative){
+            //TODO: undo keybinding
+            if(s_info!=null && s_info.undo_buffer!=null){
+                s_info.undo_buffer.put(pos, block_state,destroy);
+            }
             if(destroy){
                 if(level.destroyBlock(pos, false)){
                     return true;
@@ -942,4 +1035,345 @@ public class WandItem extends Item{
         }
         return ret;
     }
+    //line
+    public static int mode4(Player player,BlockState block_state,BlockPos pos,BlockBuffer block_buffer,boolean preview,boolean destroy,PlayerWandInfo s_info)
+    {        
+        block_buffer.length=0;
+        int x1=0;
+        int y1=0;
+        int z1=0;
+        int x2=0;
+        int y2=0;
+        int z2=0;
+        if(preview ){
+            if(PreviewInfo.p1!=null){     
+                x1=PreviewInfo.p1.getX();
+                y1=PreviewInfo.p1.getY();
+                z1=PreviewInfo.p1.getZ();
+                x2=pos.getX();
+                y2=pos.getY();
+                z2=pos.getZ();
+                PreviewInfo.valid=true;
+            }else{
+                return 0;
+            }
+        }else{
+            if(s_info!=null){
+                if(s_info.p1==null){
+                    s_info.p1=pos;
+                    x1=pos.getX();
+                    y1=pos.getY();
+                    z1=pos.getZ();
+                    s_info.p1_state=block_state;
+                    return 0;
+                }else{
+                    x1=s_info.p1.getX();
+                    y1=s_info.p1.getY();
+                    z1=s_info.p1.getZ();
+                    x2=pos.getX();
+                    y2=pos.getY();
+                    z2=pos.getZ();
+                    s_info.p1=null;
+                }
+            }else{
+                return 0;
+            }
+        }
+        
+        int dx,dy,dz,xs,ys,zs,p1,p2;
+        dx = Math.abs(x2 - x1);
+        dy = Math.abs(y2 - y1);
+        dz = Math.abs(z2 - z1);
+        if (x2 > x1) {
+            xs = 1;
+        } else {
+            xs = -1;
+        }
+        if (y2 > y1) {
+            ys = 1;
+        } else {
+            ys = -1;
+        }
+        if (z2 > z1) {
+            zs = 1;
+        } else {
+            zs = -1;
+        }
+        block_buffer.add(x1,y1,z1);
+        // X
+        if (dx >= dy && dx >= dz) {
+            p1 = 2 * dy - dx;
+            p2 = 2 * dz - dx;
+            while (x1 != x2) {
+                x1 += xs;
+                if (p1 >= 0) {
+                    y1 += ys;
+                    p1 -= 2 * dx;
+                }
+                if (p2 >= 0) {
+                    z1 += zs;
+                    p2 -= 2 * dx;
+                }
+                p1 += 2 * dy ;
+                p2 += 2 * dz ;
+                block_buffer.add(x1,y1,z1);
+            }
+        } else if (dy >= dx && dy >= dz) {
+            p1 = 2 * dx - dy;
+            p2 = 2 * dz - dy;
+            while (y1 != y2) {
+                y1 += ys;
+                if (p1 >= 0) {
+                    x1 += xs;
+                    p1 -= 2 * dy;
+                }
+                if (p2 >= 0) {
+                    z1 += zs;
+                    p2 -= 2 * dy;
+                }
+                p1 += 2 * dx ;
+                p2 += 2 * dz ;
+                block_buffer.add(x1,y1,z1);
+            }
+        } else {
+            p1 = 2 * dy - dz;
+            p2 = 2 * dx - dz;
+            while (z1 != z2) {
+                z1 += zs;
+                if (p1 >= 0) {
+                    y1 += ys;
+                    p1 -= 2 * dz;
+                }
+                if (p2 >= 0) {
+                    x1 += xs;
+                    p2 -= 2 * dz;
+                }
+                p1 += 2 * dy ;
+                p2 += 2 * dx ;
+                block_buffer.add(x1,y1,z1);
+            }
+        }
+        BlockState bs=(preview? PreviewInfo.p1_state: s_info.p1_state);
+        return from_buffer(player, bs, block_buffer, preview, destroy, s_info);
+    }
+    public static int mode5(Player player,BlockState block_state,BlockPos pos,BlockBuffer block_buffer,boolean preview,boolean destroy,int plane,boolean fill,PlayerWandInfo s_info){
+        block_buffer.length=0;
+        
+        int xc=0; //pos0.getX();
+        int yc=0; //pos0.getY();
+        int zc=0; //pos0.getZ();
+        int px=0; //pos1.getX()-pos0.getX();
+        int py=0; //pos1.getY()-pos0.getY();
+        int pz=0; //pos1.getZ()-pos0.getZ();
+        if(preview ){
+            if(PreviewInfo.p1!=null){     
+                xc=PreviewInfo.p1.getX();
+                yc=PreviewInfo.p1.getY();
+                zc=PreviewInfo.p1.getZ();
+                px=pos.getX()-xc;
+                py=pos.getY()-yc;
+                pz=pos.getZ()-zc;
+                PreviewInfo.valid=true;
+            }else{
+                return 0;
+            }
+            //WandsMod.LOGGER.info("circle  plane:"+plane+ " fill: "+fill);
+        }else{
+            if(s_info!=null){
+                if(s_info.p1==null){
+                    s_info.p1=pos;
+                    xc=pos.getX();
+                    yc=pos.getY();
+                    zc=pos.getZ();
+                    s_info.p1_state=block_state;
+                    return 0;
+                }else{
+                    xc=s_info.p1.getX();
+                    yc=s_info.p1.getY();
+                    zc=s_info.p1.getZ();
+                    px=pos.getX()-xc;
+                    py=pos.getY()-yc;
+                    pz=pos.getZ()-zc;
+                    s_info.p1=null;
+                }
+                WandsMod.LOGGER.info("circle  plane:"+plane+ " fill: "+fill);
+            }else{
+                return 0;
+            }
+        }
+        int r =(int)Math.sqrt(px*px+py*py+pz*pz);
+        block_buffer.length=0;
+        
+        if(plane==0){//XZ;
+            int x = 0, y=0, z = r;
+            int d = 3 - 2 * r;
+            drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            
+            while (z >= x)
+            {
+                x++;
+                if (d > 0)
+                {
+                    z--;
+                    d = d + 4 * (x - z) + 10;
+                } else
+                    d = d + 4 * x + 6;
+                    drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            }
+            if(fill){
+				int r2=r*r;
+				//BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
+                if(!preview ){
+                    WandsMod.LOGGER.info("xc: "+xc);
+                    WandsMod.LOGGER.info("yc: "+yc);
+                    WandsMod.LOGGER.info("zc: "+zc);
+                    WandsMod.LOGGER.info("r: "+r);
+                    WandsMod.LOGGER.info("r2: "+r2);
+                }
+				for (z = -r; z <= r; z++){
+					for (x = -r; x <= r; x++){
+                        int det=(x * x) + (z * z);
+                        if(!preview ){
+                            //WandsMod.LOGGER.info("x:"+x +" z:"+z+" x*x+x*x:"+ ((x * x) + (z * z))+ " r2: "+r2);
+                        }
+						if (det <= r2){
+                            //bp.set(xc+x, yc, zc + z);
+                            //if(!preview ){
+                                //WandsMod.LOGGER.info("in circle "+bp);
+                            //}
+                            block_buffer.add( xc+x, yc, zc+z);
+						}
+					}
+				}			
+			}
+        } else if (plane == 1) {// XY;
+            int x = 0, y = r, z = 0;
+            int d = 3 - 2 * r;
+            drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            while (y >= x)
+            {
+                x++;
+                if (d > 0)
+                {
+                    y--;
+                    d = d + 4 * (x - y) + 10;
+                } else
+                    d = d + 4 * x + 6;
+                    drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            }
+            if(fill){
+				int r2=r*r;
+				BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
+				for (y = -r; y <= r; y++){
+					for (x = -r; x <= r; x++){
+						if ((x * x) + (y * y) <= r2){
+                            block_buffer.add(bp.set(xc+x, yc+y, zc));
+						}
+					}
+				}			
+			}
+        } else if (plane == 2) {// YZ;
+            int x = 0, y = 0, z = r;
+            int d = 3 - 2 * r;
+            drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            while (z >= y)
+            {
+                y++;
+                if (d > 0)
+                {
+                    z--;
+                    d = d + 4 * (y - z) + 10;
+                } else
+                    d = d + 4 * y + 6;
+                drawCircle(block_buffer,xc, yc, zc, x, y, z, plane);
+            }
+            if(fill){
+				int r2=r*r;
+				BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
+				for (z = -r; z <= r; z++){
+					for (y = -r; y <= r; y++){
+						if ((y * y) + (z * z) <= r2){
+                            block_buffer.add(bp.set(xc, yc+y, zc + z));
+						}
+					}
+				}			
+			}
+        }
+        BlockState bs=(preview? PreviewInfo.p1_state: s_info.p1_state);
+        return from_buffer(player,bs, block_buffer, preview, destroy, s_info);
+    }    
+
+    static private void drawCircle(BlockBuffer block_buffer,int xc, int yc,int zc, int x, int y,int z,int plane)
+    {
+        switch(plane){
+            case 0://XZ
+                block_buffer.add(  xc+x, yc, zc+z);
+                block_buffer.add(  xc-x, yc, zc+z);
+                block_buffer.add(  xc+x, yc, zc-z);
+                block_buffer.add(  xc-x, yc, zc-z);
+                block_buffer.add(  xc+z, yc, zc+x);
+                block_buffer.add(  xc-z, yc, zc+x);
+                block_buffer.add(  xc+z, yc, zc-x);
+                block_buffer.add(  xc-z, yc, zc-x);
+                break;
+            case 1://XY
+                block_buffer.add(xc+x, yc+y, zc);
+                block_buffer.add(xc-x, yc+y, zc);
+                block_buffer.add(xc+x, yc-y, zc);
+                block_buffer.add(xc-x, yc-y, zc);
+                block_buffer.add(xc+y, yc+x, zc);
+                block_buffer.add(xc-y, yc+x, zc);
+                block_buffer.add(xc+y, yc-x, zc);
+                block_buffer.add(xc-y, yc-x, zc);
+                break;
+            case 2://YZ
+                block_buffer.add(xc, yc+y, zc+z);
+                block_buffer.add(xc, yc-y, zc+z);
+                block_buffer.add(xc, yc+y, zc-z);
+                block_buffer.add(xc, yc-y, zc-z);
+                block_buffer.add(xc, yc+z, zc+y);
+                block_buffer.add(xc, yc-z, zc+y);
+                block_buffer.add(xc, yc+z, zc-y);
+                block_buffer.add(xc, yc-z, zc-y);
+                break;
+        }
+    }
+    static public void undo(PlayerWandInfo s_info, Level level, int n) {		
+        if(s_info!=null){
+            CircularBuffer u = s_info.undo_buffer;
+            if (u != null) {
+                for (int i = 0; i < n && i < u.size(); i++) {
+                    CircularBuffer.P p = u.pop();
+                    if (p != null) {
+                        if(!p.destroyed){
+                            level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState());
+                        }else{
+                            level.setBlockAndUpdate(p.pos, p.state);
+                        }
+                    }
+                }
+                // u.print();
+            }
+        }
+	}
+
+	static public void redo(PlayerWandInfo s_info, Level level, int n) {
+		if(s_info!=null){
+            CircularBuffer u = s_info.undo_buffer;
+            if (u != null) {
+                for (int i = 0; i < n && u.can_go_forward(); i++) {
+                    u.forward();
+                    CircularBuffer.P p = u.peek();
+                    if (p != null && p.pos != null && p.state != null) {
+                        if(!p.destroyed){						
+                            level.setBlockAndUpdate(p.pos, p.state);
+                        }else{
+                            level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState());
+                        }
+                    }
+                }
+                // u.print();
+            }
+        }
+	}
 }

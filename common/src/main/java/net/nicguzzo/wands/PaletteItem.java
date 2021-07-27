@@ -51,25 +51,28 @@ public class PaletteItem extends Item{
             }
         }
         // default white text        
-        list.add( new TranslatableComponent("wands.palette") );
+        //list.add( new TranslatableComponent("wands.palette") );
         
     }
     static public PaletteMode getMode(ItemStack stack) {
-        int mode=stack.getOrCreateTag().getInt("mode");
-        if(mode<PaletteMode.values().length)
-            return PaletteMode.values()[mode];
-        else
-            return PaletteMode.RANDOM;
+        if(stack!=null && !stack.isEmpty()){
+            int mode=stack.getOrCreateTag().getInt("mode");
+            if(mode<PaletteMode.values().length)
+                return PaletteMode.values()[mode];
+        }
+        return PaletteMode.RANDOM;
     }
     static public void nextMode(ItemStack stack) {
-        CompoundTag tag=stack.getOrCreateTag();
-        int mode=(tag.getInt("mode")+1) % (max_mode+1);
-        //LOGGER.info("next mode: "+mode);
-        tag.putInt("mode", mode);
-        //LOGGER.info("wand tag: ("+tag+")");
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int mode=(tag.getInt("mode")+1) % (max_mode+1);
+            //LOGGER.info("next mode: "+mode);
+            tag.putInt("mode", mode);
+            //LOGGER.info("wand tag: ("+tag+")");
+        }
     }
     static public ItemStack get_item(ItemStack palette,PlayerWandInfo s_info,Player player){
-        if(s_info==null){
+        if(s_info==null || palette==null){
             return ItemStack.EMPTY;
         }
         s_info.slots.clear();
@@ -128,7 +131,6 @@ public class PaletteItem extends Item{
                     return new PaletteScreenHandler(syncId, inv, paletteItemStack);
                 }                
             });
-         
         }
         return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
         //return super.use(world, player, hand);

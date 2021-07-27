@@ -11,6 +11,7 @@ import me.shedaniel.architectury.registry.RegistrySupplier;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.LazyLoadedValue;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -40,7 +41,7 @@ public class WandsMod {
     
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registry.ITEM_REGISTRY);
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
-    
+
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
             return new WandItem(config.stone_wand_limit,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
     });
@@ -60,9 +61,14 @@ public class WandsMod {
 
     public static final RegistrySupplier<MenuType<PaletteScreenHandler>> PALETTE_SCREEN_HANDLER=MENUES.register("palette_menu",()-> MenuRegistry.ofExtended(PaletteScreenHandler::new));
 
-    static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key");
+    static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
+    static public ResourceLocation SND_PACKET= new ResourceLocation(MOD_ID, "sound_packet");
     
-    
+    static final public int wand_mode_key        = GLFW.GLFW_KEY_V;
+    static final public int wand_orientation_key = GLFW.GLFW_KEY_X;
+    static final public int wand_invert_key      = GLFW.GLFW_KEY_I;
+    static final public int wand_fill_circle_key = GLFW.GLFW_KEY_K;
+    static final public int palette_mode_key     = GLFW.GLFW_KEY_R;
 
 	public static HashMap<String, CircularBuffer> player_undo = new HashMap<String, CircularBuffer>();
     public static void init() {
@@ -75,15 +81,41 @@ public class WandsMod {
             int key=packet.readInt();
             LOGGER.info("key from client: "+key);
             context.queue(()->{
-                ItemStack item_stack=context.getPlayer().getMainHandItem();
-                if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
-                    switch(key){
-                        case GLFW.GLFW_KEY_V:
-                            WandItem.nextMode(item_stack);
-                        break;
-                    }
-                }
+                process_keys(context.getPlayer(), key);
             });
         });
+    }
+    public static void process_keys(Player player,int key){
+        ItemStack item_stack=player.getMainHandItem();
+            if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){                    
+                switch(key){
+                    case wand_mode_key:
+                        WandItem.nextMode(item_stack);
+                    break;
+                    case wand_orientation_key:
+                        int mode=WandItem.getMode(item_stack);
+                        if(mode==5){
+                            WandItem.nextPlane(item_stack);
+                        }else{
+                            WandItem.nextOrientation(item_stack);
+                        }
+                    break;
+                    case wand_invert_key:
+                        WandItem.invert(item_stack);
+                    break;
+                    case wand_fill_circle_key:
+                        WandItem.toggleCircleFill(item_stack);
+                    break;
+                    case palette_mode_key:
+                        ItemStack offhand_stack=player.getOffhandItem();
+                        if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
+                            PaletteItem.nextMode(offhand_stack);
+                            LOGGER.info("palette tag: "+ offhand_stack.getTag());
+                        }
+                    break;
+                }
+                LOGGER.info("wand tag: "+ item_stack.getTag());
+
+            }
     }
 }
