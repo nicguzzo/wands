@@ -1,6 +1,7 @@
 package net.nicguzzo.wands;
 
 import net.minecraft.core.BlockPos;
+//import net.minecraft.world.level.block.state.BlockState;
 
 public class BlockBuffer{
     
@@ -9,12 +10,14 @@ public class BlockBuffer{
     public  int[] buffer_x=null;
     public  int[] buffer_y=null;
     public  int[] buffer_z=null;
+    //public  BlockState[] state=null;
 
     public BlockBuffer(int n){
         max=n;
         buffer_x=new int[max];
         buffer_y=new int[max];
         buffer_z=new int[max];
+        //state=new BlockState[max];
     }
     public boolean in_buffer(BlockPos p){
         for(int i=0;i<length && i<max;i++){

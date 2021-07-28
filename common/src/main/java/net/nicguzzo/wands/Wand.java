@@ -72,12 +72,27 @@ public class Wand {
     public Vector<Integer> slots= new Vector<Integer>();    
     public BlockBuffer block_buffer=new BlockBuffer(MAX_LIMIT);
     public CircularBuffer undo_buffer = new CircularBuffer(MAX_UNDO);
+
+    int MAX_COPY_VOL=20*20*20;
+    class CopyPasteBuffer{
+        public BlockPos pos=null;
+        public BlockState state=null;
+        public CopyPasteBuffer(BlockPos pos,BlockState state){
+            this.pos=pos;
+            this.state=state;
+        }
+    }
+    Vector<CopyPasteBuffer> copy_paste_buffer=new Vector<CopyPasteBuffer>();
+    public BlockPos copy_pos1=null;
+    public BlockPos copy_pos2=null;
+    //public boolean  copied=false;
     boolean preview;
     public int mode;
     boolean prnt=false;
     private void log(String s){
         WandsMod.log(s,prnt);
     }
+
     public void clear() {
         p1 = null;
         p1_state=null;
@@ -85,6 +100,10 @@ public class Wand {
         block_height = 1.0f;
         y0 = 0.0f;
         //log("wand cleared");
+        copy_pos1=null;
+        copy_pos2=null;
+        //copied=false;
+        copy_paste_buffer.clear();
     }
 
     public void do_or_preview(
@@ -113,6 +132,7 @@ public class Wand {
         if(block_state==null || pos==null || side==null || level==null || player==null || hit==null|| wand_stack==null){
             return;
         }
+        //TODO: show wand mode on screen when using wand
         //TODO: copy/paste mode
         //TODO: show preview only if there's enough items
         //TODO: add water source if water bucket on offhand
@@ -135,7 +155,6 @@ public class Wand {
                     return;
                 }
             }else{
-                
                 // TODO: make snow add layers if there's snow already
                 if (block_state.getBlock() instanceof SnowLayerBlock) {
                     //SnowLayerBlock snow=(SnowLayerBlock)block_state.getBlock();
@@ -218,6 +237,10 @@ public class Wand {
                 boolean fill = WandItem.isCircleFill(wand_stack);
                 placed += mode5(plane, fill);
                 break;
+            case 6:
+                placed += mode6();
+                break;
+
         }
         
         if (!preview && placed > 0) {
@@ -412,6 +435,7 @@ public class Wand {
                     }
                 }
                 if (!destroy) {
+                    //TODO: check player intersections
                     // if (WandsMod.compat.interescts_player_bb(player, pos1.getX(), pos1.getY(),
                     // pos1.getZ(), pos1.getX() + 1,
                     // pos1.getY() + 1, pos1.getZ() + 1)) {
@@ -625,26 +649,11 @@ public class Wand {
                 }
                 if (fill) {
                     int r2 = r * r;
-                    // BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
-                    if (!preview) {
-                        //log("xc: " + xc);
-                        //log("yc: " + yc);
-                        //log("zc: " + zc);
-                        //log("r: " + r);
-                        //log("r2: " + r2);
-                    }
+                    
                     for (z = -r; z <= r; z++) {
                         for (x = -r; x <= r; x++) {
                             int det = (x * x) + (z * z);
-                            if (!preview) {
-                                // log("x:"+x +" z:"+z+" x*x+x*x:"+ ((x * x) + (z * z))+ " r2:
-                                // "+r2);
-                            }
                             if (det <= r2) {
-                                // bp.set(xc+x, yc, zc + z);
-                                // if(!preview ){
-                                // log("in circle "+bp);
-                                // }
                                 block_buffer.add(xc + x, yc, zc + z);
                             }
                         }
@@ -700,7 +709,111 @@ public class Wand {
         }
         return from_buffer();
     }
+    public int mode6(){
+        int placed=0;
+        if(!preview){
+            WandsMod.log("mode6 copy_pos1: "+copy_pos1+" copy_pos2: "+copy_pos2 + " copy_paste_buffer: "+copy_paste_buffer.size(),prnt);
+        }
+        if (copy_pos1 != null  &&  preview) {
+            
+            valid = true;
+            x1 = copy_pos1.getX();
+            y1 = copy_pos1.getY();
+            z1 = copy_pos1.getZ();
+            if(copy_pos2==null){
+                x2 = pos.getX();
+                y2 = pos.getY();
+                z2 = pos.getZ();
+            }else{
+                x2 = copy_pos2.getX();
+                y2 = copy_pos2.getY();
+                z2 = copy_pos2.getZ();
+            }
+            if (!copy_pos1.equals(pos)) {
+                if (x1 >= x2) {
+                    x1 += 1;
+                } else {
+                    x2 += 1;
+                }
+                if (y1 >= y2) {
+                    y1 += 1;
+                } else {
+                    y2 += 1;
+                }
+                if (z1 >= z2) {
+                    z1 += 1;
+                } else {
+                    z2 += 1;
+                }
+            } else {
+                x2 = x1 + 1;
+                y2 = y1 + 1;
+                z2 = z1 + 1;
+            }
+        }
+        /*if (copy_pos1 != null  &&  copy_pos2!=null && !preview ) {
+            if(copy_paste_buffer.size()==0){ //copy
+                int xs, ys, zs, xe, ye, ze;
 
+                if (copy_pos1.getX() >= copy_pos2.getX()) {
+                    xs = copy_pos2.getX();
+                    xe = copy_pos1.getX();
+                } else {
+                    xs = copy_pos1.getX();
+                    xe = copy_pos2.getX();
+                }
+                if (copy_pos1.getY() >= copy_pos2.getY()) {
+                    ys = copy_pos2.getY();
+                    ye = copy_pos1.getY();
+                } else {
+                    ys = copy_pos1.getY();
+                    ye = copy_pos2.getY();
+                }
+                if (copy_pos1.getZ() >= copy_pos2.getZ()) {
+                    zs = copy_pos2.getZ();
+                    ze = copy_pos1.getZ();
+                } else {
+                    zs = copy_pos1.getZ();
+                    ze = copy_pos2.getZ();
+                }
+            
+                WandsMod.log("mode6 copy",true);
+                int ll = ((xe - xs) + 1) * ((ye - ys) + 1) * ((ze - zs) + 1);
+                if (ll <= MAX_COPY_VOL) {
+                    BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
+                    for (int z = zs; z <= ze; z++) {
+                        for (int y = ys; y <= ye; y++) {
+                            for (int x = xs; x <= xe; x++) {
+                                bp.set(x, y, z);
+                                BlockState bs=level.getBlockState(bp);
+                                copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x,y,z),bs) );
+                                //if () {
+                                    //(bp.set(x, y, z)) 
+                                    //placed++;
+                                //}
+                            }
+                        }
+                    }
+                    //copied=true;
+                }
+            }else{//paste
+                WandsMod.log("mode6 paste",true);
+                BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
+                for (CopyPasteBuffer b: copy_paste_buffer) {
+                    block_state=b.state;
+                    bp.set(
+                        pos.getX()+(pos.getX()-b.pos.getX()), 
+                        pos.getY()+(pos.getY()-b.pos.getY()), 
+                        pos.getZ()+(pos.getZ()-b.pos.getZ())
+                    );
+                    if (place_block(bp)) {
+                        placed++;
+                    }
+                }
+            }
+        }*/
+        return placed;
+    }
     private void drawCircle( int xc, int yc, int zc, int x, int y, int z, int plane) {
         switch (plane) {
             case 0:// XZ

@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.nicguzzo.wands.Wand.CopyPasteBuffer;
 
 public class ClientRender {
     public static final float p_o = -0.001f;// preview_block offset
@@ -55,7 +56,8 @@ public class ClientRender {
                 //if(prnt){
                 //    WandsMod.LOGGER.info("render block_state "+block_state);
                 //}
-                if(last_pos==null || !pos.equals(last_pos) || !side.equals(last_side) || mode==0 || mode!=last_mode || last_valid!=wand.valid){
+                if(last_pos==null || !pos.equals(last_pos) || !side.equals(last_side) || mode==0 || mode==6 || mode!=last_mode || last_valid!=wand.valid){
+                    WandsMod.LOGGER.info("wand.do_or_preview");
                     last_pos=pos;
                     last_side=side;
                     last_mode=mode;
@@ -63,7 +65,7 @@ public class ClientRender {
                     //if(prnt){
                     //    WandsMod.LOGGER.info("render "+wand.block_height);
                     //}
-                    wand.do_or_preview(player,player.level,block_state,pos,side,block_hit.getLocation(),stack,false);
+                    wand.do_or_preview(player,player.level,block_state,pos,side,block_hit.getLocation(),stack,prnt);
                 }
                
                 preview_mode(wand.mode);
@@ -102,7 +104,7 @@ public class ClientRender {
                     }
                 break;
                 case 1:
-                case 2:
+                case 2:                
                     //preview_mode1(bufferBuilder);
                     if(wand.valid){
                         preview_block(bufferBuilder,
@@ -123,6 +125,24 @@ public class ClientRender {
                                 c.x+x+1, c.y+y+1, c.z+z+1
                             );
 						}
+                    }
+                break;
+                case 6:
+                    if(wand.copy_paste_buffer.size()>0){
+                        for (CopyPasteBuffer b: wand.copy_paste_buffer) {
+                            int x=last_pos.getX()+(last_pos.getX()-b.pos.getX());
+                            int y=last_pos.getY()+(last_pos.getY()-b.pos.getY());
+                            int z=last_pos.getZ()+(last_pos.getZ()-b.pos.getZ());
+                            preview_block(bufferBuilder,
+                                c.x+x  , c.y+y  , c.z+z, 
+                                c.x+x+1, c.y+y+1, c.z+z+1
+                            );
+                        }
+                    }
+                    if(wand.valid){
+                        preview_block(bufferBuilder,
+                            c.x+wand.x1 , c.y+wand.y1 , c.z+wand.z1 , 
+                            c.x+wand.x2 , c.y+wand.y2 ,c.z+ wand.z2 );
                     }
                 break;
             }

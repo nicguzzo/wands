@@ -24,7 +24,7 @@ public class WandItem extends Item{
     public int limit = 0;
     public boolean removes_water;
     public boolean removes_lava;
-    static private final int max_mode=5;
+    static private final int max_mode=6;
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
         super(properties);
@@ -127,7 +127,8 @@ public class WandItem extends Item{
             Direction side = context.getClickedFace();
             BlockState block_state = world.getBlockState(pos);
             int mode = WandItem.getMode(stack);
-            if(mode==2||mode==4||mode==5){
+            WandsMod.log("mode "+mode,true);
+            if(mode==2||mode==4||mode==5||mode==6){
                 if(wand.p1==null){
                     //clear();
                     wand.p1_state=block_state;
@@ -136,9 +137,14 @@ public class WandItem extends Item{
                     wand.x1=pos.getX();
                     wand.y1=pos.getY();
                     wand.z1=pos.getZ();
+                    wand.copy_pos1=pos;                    
                     WandsMod.log("pos1 "+pos,true);
                     return InteractionResult.SUCCESS;
                 }else{
+                    if(wand.copy_pos2==null){
+                        wand.copy_pos2=pos;
+                    }
+                    WandsMod.log("pos2 "+pos,true);
                     block_state=wand.p1_state;
                     wand.p2=true;
                 }
