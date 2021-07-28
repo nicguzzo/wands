@@ -7,7 +7,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -17,59 +16,60 @@ import net.nicguzzo.wands.PaletteItem.PaletteMode;
 public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler> {
     
     private static final ResourceLocation TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/shulker_box.png");
-    private Button btn;
+    private Button btn_mode;
+    private Button btn_rotate;
     
-    static private Component mode_val_random=new TranslatableComponent("item.wands.random");
-    static private Component mode_val_rr=new TranslatableComponent("item.wands.round_robin");
+    
     Component mode_val;
+    Component rot_on =new TextComponent("rotate: on");
+    Component rot_off=new TextComponent("rotate: off");
     
     public PaletteScreen(PaletteScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
-        
-        //mode_val_random=new TranslatableComponent("item.wands.random");
-        //mode_val_rr=new TranslatableComponent("item.wands.random");
-    }
+    }    
     @Override
     public void init(){
         super.init();
-        //update_palette_info(this.menu.palette);
-        WandsMod.LOGGER.info("width: "+width+ " height: "+height);
-        btn = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, new TextComponent("mode"), (button) -> {
+        btn_mode = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, new TextComponent("mode"), (button) -> {
             if(this.menu.palette!=null){
-                
                 PaletteItem.nextMode(this.menu.palette);
-                WandsModClient.send_key(WandsMod.palette_mode_key);
+                WandsModClient.send_palette(true,false);
             }
         });
-        this.addButton(btn);
+        btn_rotate = new Button((width/2)+(imageWidth/2),(height/2)-60 , 40, 20, new TextComponent("rotate"), (button) -> {
+            if(this.menu.palette!=null){
+                PaletteItem.toggleRotate(this.menu.palette);
+                WandsModClient.send_palette(false,true);
+            }
+        });
+        this.addButton(btn_mode);
+        this.addButton(btn_rotate);
     }
-    //static public void update_palette_info(ItemStack palette){
-    //    WandsMod.LOGGER.info("update_palette_info "+palette);
-    //    if(palette!=null){
-    //        PaletteMode mode=PaletteItem.getMode(palette);
-    //        //WandsMod.LOGGER.info("mode"+mode);
-    //    }
-    //}
+
     @Override 
     public void render(PoseStack poseStack, int mouseX, int mouseY, float delta){
         super.render(poseStack, mouseX, mouseY, delta);
         
-        this.btn.render(poseStack, mouseX, mouseY, delta);
+        this.btn_mode.render(poseStack, mouseX, mouseY, delta);
+        this.btn_rotate.render(poseStack, mouseX, mouseY, delta);
         
         if(this.menu.palette!=null){
             PaletteMode mode=PaletteItem.getMode(this.menu.palette);            
             switch(mode){
                 case RANDOM:
-                    mode_val= mode_val_random;
+                    mode_val= PaletteItem.mode_val_random;
                 break;
                 case ROUND_ROBIN:
-                    mode_val=mode_val_rr;
+                    mode_val=PaletteItem.mode_val_rr;
                 break;
                 default:
-                    mode_val= mode_val_random;
+                    mode_val= PaletteItem.mode_val_random;
                 break;
             };
-            this.font.draw(poseStack,mode_val , width/2, (height/2)-76, 4210752);
+            boolean rot=this.menu.palette.getOrCreateTag().getBoolean("rotate");
+            this.font.draw(poseStack,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77, 4210752);
+            
+            this.font.draw(poseStack,mode_val , (width/2)+30, (height/2)-77, 4210752);
         }
     }
     @Override
@@ -84,10 +84,10 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
         blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
     }
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        btn.mouseClicked(mouseX, mouseY, button);
+        btn_mode.mouseClicked(mouseX, mouseY, button);
+        btn_rotate.mouseClicked(mouseX, mouseY, button);
         Slot slot = this.findSlot(mouseX, mouseY);
-        if(slot!=null){
-            //System.out.println("mouseClicked "+button);
+        if(slot!=null){            
             switch(button){
                 case 0:
                     if (hasShiftDown()) {

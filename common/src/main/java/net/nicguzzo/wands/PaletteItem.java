@@ -2,7 +2,6 @@ package net.nicguzzo.wands;
 
 
 import java.util.List;
-import java.util.Random;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -32,15 +32,17 @@ public class PaletteItem extends Item{
     public enum PaletteMode {
         RANDOM, ROUND_ROBIN
     }
-
+    static public Component mode_val_random=new TranslatableComponent("item.wands.random");
+    static public Component mode_val_rr=new TranslatableComponent("item.wands.round_robin");
     public PaletteItem(Properties properties) {
         super(properties);        
     }
-    static private final int max_mode=PaletteMode.values().length;
+    //static private final int max_mode=PaletteMode.values().length;
     @Environment(EnvType.CLIENT)
     @Override    
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
-        ListTag inventory = stack.getOrCreateTag().getList("Palette",  NbtType.COMPOUND);//10 COMPOUND
+        CompoundTag tag=stack.getOrCreateTag();
+        ListTag inventory = tag.getList("Palette",  NbtType.COMPOUND);//10 COMPOUND
         int s =inventory.size();
         for(int i=0;i<s;i++){
             // formatted red text
@@ -50,72 +52,68 @@ public class PaletteItem extends Item{
                 list.add( new TranslatableComponent(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
             }
         }
+        PaletteMode mode=PaletteItem.getMode(stack);            
+        Component mode_val=new TextComponent("mode: ");
+        if(mode==PaletteMode.ROUND_ROBIN){
+                mode_val=new TextComponent("mode: "+PaletteItem.mode_val_rr.getString());
+        }else{
+            mode_val=new TextComponent("mode: "+PaletteItem.mode_val_random.getString());
+        }
         // default white text        
-        //list.add( new TranslatableComponent("wands.palette") );
+        list.add( mode_val);
+        list.add(new TextComponent("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
         
     }
     static public PaletteMode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
-            int mode=stack.getOrCreateTag().getInt("mode");
-            if(mode<PaletteMode.values().length)
-                return PaletteMode.values()[mode];
+            CompoundTag tag=stack.getOrCreateTag();
+            //if(!tag.contains("mode")){
+            //tag.putInt("mode", 0);
+            //}else{
+                int mode=tag.getInt("mode");
+                if(mode<PaletteMode.values().length)
+                    return PaletteMode.values()[mode];
+            //}
         }
         return PaletteMode.RANDOM;
+    }
+    static public boolean getRotate(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            //if(!tag.contains("rotate"))
+                return tag.getBoolean("rotate");
+            //else
+                //tag.putBoolean("rotate", false);
+
+        }
+        return false;
+    }
+    static public void toggleRotate(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            boolean rotate=tag.getBoolean("rotate");
+            WandsMod.LOGGER.info("toggleRotate: "+ !rotate);
+            tag.putBoolean("rotate", !rotate);
+            
+        }
     }
     static public void nextMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int mode=(tag.getInt("mode")+1) % (2);
-            WandsMod.LOGGER.info("palette next mode: "+mode);
+            WandsMod.LOGGER.info("nextMode: "+mode);
             tag.putInt("mode", mode);
+            
             //LOGGER.info("wand tag: ("+tag+")");
         }
     }
-    static public ItemStack get_item(ItemStack palette,PlayerWandInfo s_info,Player player){
-        if(s_info==null || palette==null){
-            return ItemStack.EMPTY;
-        }
-        s_info.slots.clear();
-        PaletteMode palatte_mode=PaletteItem.getMode(palette);
-        ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
-        //WandsMod.LOGGER.info("palette_inv: "+palette_inv);
-        int s =palette_inv.size();
-        for(int i=0;i<s;i++){
-            CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
-            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
-            if(!stack.isEmpty()){
-                if(player.abilities.instabuild){
-                    s_info.slots.add(i);
-                }else{
-                    int[] count=WandUtils.count_in_player(player, stack);
-                    if(count[0]+count[1]>0){
-                        s_info.slots.add(i);
-                    }
-                }
-            }
-        }
-        //WandsMod.LOGGER.info("slots: "+s_info.slots);
-        if(s_info.slots.size()>0){
-            nextSlot(s_info, palatte_mode, player.level.random,s_info.slots.size());
-            CompoundTag stackTag = (CompoundTag) palette_inv.get(s_info.slots.get(s_info.slot));
-            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
-            if(stack!=ItemStack.EMPTY){
-                return stack;
-            }
-        }
-        return ItemStack.EMPTY;
-    }
-    static void nextSlot(PlayerWandInfo s_info,PaletteMode palatte_mode,Random random,int bound) {
-		if (palatte_mode == PaletteMode.RANDOM) {
-			s_info.slot = random.nextInt(bound);
-		} else if (palatte_mode == PaletteMode.ROUND_ROBIN) {
-			s_info.slot = (s_info.slot + 1) % bound;
-		}
-	}
+    
+   
     @Override
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
         
         ItemStack paletteItemStack =player.getItemInHand(interactionHand);
+        WandsMod.LOGGER.info("paletteItemStack "+paletteItemStack.getTag());
         if(!world.isClientSide()) {
             MenuRegistry.openExtendedMenu((ServerPlayer)player, new ExtendedMenuProvider(){
                 @Override                

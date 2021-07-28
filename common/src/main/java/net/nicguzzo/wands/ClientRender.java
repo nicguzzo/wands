@@ -6,8 +6,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Camera;
@@ -24,42 +22,51 @@ import net.minecraft.world.phys.Vec3;
 
 public class ClientRender {
     public static final float p_o = -0.001f;// preview_block offset
-    //private static long t0 = 0;
-	//private static long t1 = 0;
-	//private static boolean prnt = false;
+    private static long t0 = 0;
+	private static long t1 = 0;
+	private static boolean prnt;
     public static Vec3 c=new Vec3(0,0,0);
-    public static BlockBuffer block_buffer=null;
-    //private static final Logger LOGGER = LogManager.getLogger();
-
+    static BlockPos last_pos=null;
+    static Direction last_side=null;
+    static int last_mode=-1;
+    private static boolean last_valid =false;
+    public static Wand wand=new Wand();
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         ItemStack stack = player.getMainHandItem();
-        //prnt = false;
+        prnt = false;
         		
         if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-            if(block_buffer==null){
-                block_buffer=new BlockBuffer(PlayerWandInfo.MAX_LIMIT);
-            }
-            //t1 = System.currentTimeMillis();
-            //if (t1 - t0 > 1000) {
-            //    t0 = System.currentTimeMillis();
-            //    prnt = true;
-            //}
-            //WandItem wand = (WandItem) stack.getItem();
             
+            t1 = System.currentTimeMillis();
+            if (t1 - t0 > 1000) {
+                t0 = System.currentTimeMillis();
+                prnt = true;
+            }
+                        
             HitResult hitResult=client.hitResult;
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {                
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
-                //int mode=WandItem.getMode(stack);
+                int mode=WandItem.getMode(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
-                WandItem.do_or_preview(player,player.level,block_state,pos,side,block_hit.getLocation(),stack,block_buffer,null);
                 //if(prnt){
-                //    LOGGER.info("render");
+                //    WandsMod.LOGGER.info("render block_state "+block_state);
                 //}
-                preview_mode(WandItem.getMode(stack));                
+                if(last_pos==null || !pos.equals(last_pos) || !side.equals(last_side) || mode==0 || mode!=last_mode || last_valid!=wand.valid){
+                    last_pos=pos;
+                    last_side=side;
+                    last_mode=mode;
+                    last_valid=wand.valid;
+                    //if(prnt){
+                    //    WandsMod.LOGGER.info("render "+wand.block_height);
+                    //}
+                    wand.do_or_preview(player,player.level,block_state,pos,side,block_hit.getLocation(),stack,false);
+                }
+               
+                preview_mode(wand.mode);
                 
             }
         }
@@ -83,34 +90,34 @@ public class ClientRender {
             bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
             switch (mode){
                 case 0:
-                    grid(bufferBuilder,WandItem.PreviewInfo.side,
-                        c.x + WandItem.PreviewInfo.x,
-                        c.y + WandItem.PreviewInfo.y + WandItem.PreviewInfo.y0,
-                        c.z + WandItem.PreviewInfo.z
+                    grid(bufferBuilder,wand.side,
+                        c.x + wand.x,
+                        c.y + wand.y + wand.y0,
+                        c.z + wand.z
                     );
-                    if(WandItem.PreviewInfo.valid){
+                    if(wand.valid){
                         preview_block(bufferBuilder,
-                            c.x+WandItem.PreviewInfo.x1 , c.y+(WandItem.PreviewInfo.y1+WandItem.PreviewInfo.y0), c.z+WandItem.PreviewInfo.z1 , 
-                            c.x+WandItem.PreviewInfo.x2 , c.y+(WandItem.PreviewInfo.y1+WandItem.PreviewInfo.y0+WandItem.PreviewInfo.h), c.z+ WandItem.PreviewInfo.z2 );
+                            c.x+wand.x1 , c.y+(wand.y1+wand.y0), c.z+wand.z1 , 
+                            c.x+wand.x2 , c.y+(wand.y1+wand.y0+wand.block_height), c.z+ wand.z2 );
                     }
                 break;
                 case 1:
                 case 2:
                     //preview_mode1(bufferBuilder);
-                    if(WandItem.PreviewInfo.valid){
+                    if(wand.valid){
                         preview_block(bufferBuilder,
-                            c.x+WandItem.PreviewInfo.x1 , c.y+WandItem.PreviewInfo.y1 , c.z+WandItem.PreviewInfo.z1 , 
-                            c.x+WandItem.PreviewInfo.x2 , c.y+WandItem.PreviewInfo.y2 ,c.z+ WandItem.PreviewInfo.z2 );
+                            c.x+wand.x1 , c.y+wand.y1 , c.z+wand.z1 , 
+                            c.x+wand.x2 , c.y+wand.y2 ,c.z+ wand.z2 );
                     }
                 break;
                 case 3:
                 case 4:
                 case 5:
-                    if(WandItem.PreviewInfo.valid && block_buffer!=null){
-                        for (int a = 0; a < block_buffer.length && a< PlayerWandInfo.MAX_LIMIT; a++) {			
-							int x=block_buffer.buffer_x[a];
-                            int y=block_buffer.buffer_y[a];
-                            int z=block_buffer.buffer_z[a];
+                    if(wand.valid && wand.block_buffer!=null){
+                        for (int a = 0; a < wand.block_buffer.length && a< Wand.MAX_LIMIT; a++) {			
+							int x=wand.block_buffer.buffer_x[a];
+                            int y=wand.block_buffer.buffer_y[a];
+                            int z=wand.block_buffer.buffer_z[a];
 							preview_block(bufferBuilder,
                                 c.x+x  , c.y+y  , c.z+z, 
                                 c.x+x+1, c.y+y+1, c.z+z+1
@@ -162,7 +169,7 @@ public class ClientRender {
     }
 
     private static void grid(BufferBuilder bufferBuilder,Direction side, double x, double y, double z) {
-        float h=WandItem.PreviewInfo.h;
+        float h=wand.block_height;
         switch (side) {
             case UP:
             case DOWN: {

@@ -16,8 +16,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-
-import java.util.HashMap;
 import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
@@ -63,14 +61,15 @@ public class WandsMod {
 
     static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
     static public ResourceLocation SND_PACKET= new ResourceLocation(MOD_ID, "sound_packet");
+    static public ResourceLocation PALETTE_PACKET= new ResourceLocation(MOD_ID, "palette_packet");
     
     static final public int wand_mode_key        = GLFW.GLFW_KEY_V;
     static final public int wand_orientation_key = GLFW.GLFW_KEY_X;
     static final public int wand_invert_key      = GLFW.GLFW_KEY_I;
     static final public int wand_fill_circle_key = GLFW.GLFW_KEY_K;
     static final public int palette_mode_key     = GLFW.GLFW_KEY_R;
-
-	public static HashMap<String, CircularBuffer> player_undo = new HashMap<String, CircularBuffer>();
+    static final public int wand_undo            = GLFW.GLFW_KEY_U;
+	
     public static void init() {
         
         ITEMS.register();
@@ -79,13 +78,42 @@ public class WandsMod {
         //NetworkReceiver
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
-            //LOGGER.info("key from client: "+key);
+            boolean shift=packet.readBoolean();
+            boolean alt=packet.readBoolean();
+            LOGGER.info("key from client: "+key);
             context.queue(()->{
-                process_keys(context.getPlayer(), key);
+                process_keys(context.getPlayer(), key,shift,alt);
+            });
+        });
+        NetworkManager.registerReceiver(Side.C2S, PALETTE_PACKET, (packet,context)->{
+            boolean mode=packet.readBoolean();
+            boolean rotate=packet.readBoolean();
+            LOGGER.info("PALETTE_PACKET");
+            context.queue(()->{
+                Player player=context.getPlayer();
+                ItemStack item_stack=player.getMainHandItem();
+                ItemStack palette=null;
+                if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){
+                    palette=item_stack;
+                }else{
+                    ItemStack offhand_stack=player.getOffhandItem();
+                    if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
+                        palette=offhand_stack;
+                    }
+                }
+                if(palette!=null){
+                    if(mode){
+                        PaletteItem.nextMode(palette);
+                    }
+                    if(rotate){
+                        PaletteItem.toggleRotate(palette);
+                    }
+                }
             });
         });
     }
-    public static void process_keys(Player player,int key){
+    
+    public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
         if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){               
             
@@ -114,16 +142,38 @@ public class WandsMod {
                         //LOGGER.info("1 palette tag: "+ offhand_stack.getTag());
                     }
                 break;
+                case wand_undo:
+                    if(player.abilities.instabuild==true && !player.level.isClientSide()){
+                        Wand wand=PlayerWand.get(player);
+                        if(wand!=null){
+                            int n=1;
+                            if(alt){
+                                n=10;
+                            }
+                            if(shift){
+                                wand.redo(n);
+                            }else{
+                                wand.undo(n);
+                            }
+                        }
+                    }
+                    //WandItem.nextMode(item_stack);
+                break;
             }
             //LOGGER.info("wand tag: "+ item_stack.getTag());
         }
-        if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){       
+        if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){
             switch(key){
                 case palette_mode_key:
                     PaletteItem.nextMode(item_stack);
                     //LOGGER.info("2 palette tag: "+ item_stack.getTag());
                 break;
             }
+        }
+    }
+    public static void log(String s,boolean b){
+        if(b){
+            LOGGER.info(s);
         }
     }
 }
