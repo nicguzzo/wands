@@ -80,7 +80,7 @@ public class WandsMod {
             int key=packet.readInt();
             boolean shift=packet.readBoolean();
             boolean alt=packet.readBoolean();
-            LOGGER.info("key from client: "+key);
+            //LOGGER.info("key from client: "+key);
             context.queue(()->{
                 process_keys(context.getPlayer(), key,shift,alt);
             });
@@ -88,7 +88,7 @@ public class WandsMod {
         NetworkManager.registerReceiver(Side.C2S, PALETTE_PACKET, (packet,context)->{
             boolean mode=packet.readBoolean();
             boolean rotate=packet.readBoolean();
-            LOGGER.info("PALETTE_PACKET");
+            //LOGGER.info("PALETTE_PACKET");
             context.queue(()->{
                 Player player=context.getPlayer();
                 ItemStack item_stack=player.getMainHandItem();

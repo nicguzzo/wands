@@ -36,7 +36,7 @@ public class WandsModClient {
         ClientTickEvent.CLIENT_PRE.register(e -> {
             for(KeyMapping k: km){
                 if (k.consumeClick()) {
-                    WandsMod.LOGGER.info("key binding: "+k.getDefaultKey().getValue());
+                    //WandsMod.LOGGER.info("key binding: "+k.getDefaultKey().getValue());
                     //Minecraft client=Minecraft.getInstance();
                     //WandsMod.process_keys(client.player, k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());                    
                     send_key(k.getDefaultKey().getValue());
@@ -53,7 +53,7 @@ public class WandsModClient {
             boolean destroy=packet.readBoolean();
             ItemStack item_stack=packet.readItem();
             context.queue(()->{
-                WandsMod.LOGGER.info("got sound msg "+item_stack);
+                //WandsMod.LOGGER.info("got sound msg "+item_stack);
                 if(!item_stack.isEmpty()){
                     Block block=Block.byItem(item_stack.getItem());
                     SoundType sound_type = block.getSoundType(block.defaultBlockState());
@@ -64,16 +64,12 @@ public class WandsModClient {
         });
     }
     public static void send_key(int key){
-        Minecraft client=Minecraft.getInstance();
-        ItemStack item_stack=client.player.getMainHandItem();
-        //if(item_stack.getItem() instanceof WandItem)
-        //{
-            FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
-            packet.writeInt(key);
-            packet.writeBoolean(Screen.hasShiftDown());
-            packet.writeBoolean(Screen.hasAltDown());
-            NetworkManager.sendToServer(WandsMod.KB_PACKET, packet);
-        //}                
+
+        FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
+        packet.writeInt(key);
+        packet.writeBoolean(Screen.hasShiftDown());
+        packet.writeBoolean(Screen.hasAltDown());
+        NetworkManager.sendToServer(WandsMod.KB_PACKET, packet);
     }
     public static void send_palette(boolean next_mode,boolean toggle_rotate){
         FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());            

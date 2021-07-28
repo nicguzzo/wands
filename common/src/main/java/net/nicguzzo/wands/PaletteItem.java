@@ -92,7 +92,7 @@ public class PaletteItem extends Item{
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             boolean rotate=tag.getBoolean("rotate");
-            WandsMod.LOGGER.info("toggleRotate: "+ !rotate);
+            //WandsMod.LOGGER.info("toggleRotate: "+ !rotate);
             tag.putBoolean("rotate", !rotate);
             
         }
@@ -101,7 +101,7 @@ public class PaletteItem extends Item{
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int mode=(tag.getInt("mode")+1) % (2);
-            WandsMod.LOGGER.info("nextMode: "+mode);
+            //WandsMod.LOGGER.info("nextMode: "+mode);
             tag.putInt("mode", mode);
             
             //LOGGER.info("wand tag: ("+tag+")");
@@ -113,7 +113,7 @@ public class PaletteItem extends Item{
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
         
         ItemStack paletteItemStack =player.getItemInHand(interactionHand);
-        WandsMod.LOGGER.info("paletteItemStack "+paletteItemStack.getTag());
+        //WandsMod.LOGGER.info("paletteItemStack "+paletteItemStack.getTag());
         if(!world.isClientSide()) {
             MenuRegistry.openExtendedMenu((ServerPlayer)player, new ExtendedMenuProvider(){
                 @Override                

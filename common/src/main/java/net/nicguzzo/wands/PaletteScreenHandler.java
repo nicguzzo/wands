@@ -124,18 +124,34 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                         }
                     }
                     //System.out.println("itemStack2: "+itemStack);
+                    if(button == 1){
+                        if (actionType == ClickType.PICKUP) {
+                            ItemStack itemStack = slot.getItem();
+                            if(!itemStack.isEmpty()){
+                                //System.out.println("empty");
+                                slot.set(ItemStack.EMPTY);
+                                slot.setChanged();
+                            }
+                        }
+                    }
                     if(button == 0){
                         if(slotIndex<27 ){
                             if (actionType == ClickType.PICKUP || actionType == ClickType.QUICK_CRAFT) {
                                 
                                 ItemStack itemStack = slot.getItem();
                                 if(!itemStack.isEmpty()){
-                                    System.out.println("empty");
-                                    slot.set(ItemStack.EMPTY);                                    
+                                    //System.out.println("empty");
+                                    //slot.set(ItemStack.EMPTY);
+                                    ItemStack itemStack2=itemStack.copy();
+                                    if(can_pickup(itemStack2)){
+                                        itemStack2.setCount(1);                        
+                                        playerInventory.setCarried(itemStack2);
+                                    }
                                 }else{
                                     itemStack=playerInventory.getCarried();
                                     if(!itemStack.isEmpty()){
                                         slot.set(itemStack);
+                                        playerInventory.setCarried(ItemStack.EMPTY);
                                     }
                                     //this.setCarried(ItemStack.EMPTY);
                                 }

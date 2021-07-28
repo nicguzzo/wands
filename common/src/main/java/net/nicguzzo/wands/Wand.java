@@ -155,7 +155,7 @@ public class Wand {
                 y0 = 0.5f;
             }
         }
-        WandsMod.log("block_height "+block_height,prnt);
+        //WandsMod.log("block_height "+block_height,prnt);
         valid = false;
         boolean destroy = WandUtils.can_destroy(player, block_state);
 
@@ -221,7 +221,7 @@ public class Wand {
         }
         
         if (!preview && placed > 0) {
-            log("placed: " + placed);
+            //log("placed: " + placed);
             //if (sound_block_state != null) {
             //    block_state = sound_block_state;
             //}
@@ -481,7 +481,7 @@ public class Wand {
                 y2 = y1 + 1;
                 z2 = z1 + 1;
             }
-            log("mode2 from: "+p1+" to: "+pos);
+            //log("mode2 from: "+p1+" to: "+pos);
             if (!preview) {
                 placed = fill(p1,pos);
             }
@@ -821,18 +821,11 @@ public class Wand {
                 }
             }
         }
-        //if(p2){
-        //    p2=false;
-        //    //block_buffer.length=0;
-        //    valid=false;
-        //    p1=null;
-        //}
-        
         return placed;
     }
 
     public int fill(BlockPos from, BlockPos to) {
-        log("fill from: "+from+" to: "+to);
+        //log("fill from: "+from+" to: "+to);
         int placed = 0;
         int xs, ys, zs, xe, ye, ze;
 
