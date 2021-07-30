@@ -5,12 +5,14 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +32,7 @@ public class ClientRender {
     static BlockPos last_pos=null;
     static Direction last_side=null;
     static int last_mode=-1;
+    static WandItem.Orientation last_orientation=null;
     private static boolean last_valid =false;
     public static Wand wand=new Wand();
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
@@ -50,14 +53,18 @@ public class ClientRender {
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {                
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 int mode=WandItem.getMode(stack);
+                WandItem.Orientation orientation=WandItem.getOrientation(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
                 //if(prnt){
                 //    WandsMod.LOGGER.info("render block_state "+block_state);
                 //}
-                if(last_pos==null || !pos.equals(last_pos) || !side.equals(last_side) || mode==0 || mode==6 || mode!=last_mode || last_valid!=wand.valid){
-                    WandsMod.LOGGER.info("wand.do_or_preview");
+                if(last_pos==null || !pos.equals(last_pos) || !side.equals(last_side)
+                        || mode==0 || mode==6 || mode!=last_mode || last_valid!=wand.valid
+                        || orientation!=last_orientation
+                ){
+                    //WandsMod.LOGGER.info("wand.do_or_preview");
                     last_pos=pos;
                     last_side=side;
                     last_mode=mode;
@@ -83,13 +90,15 @@ public class ClientRender {
             
             Tesselator tesselator = Tesselator.getInstance();
             BufferBuilder bufferBuilder = tesselator.getBuilder();
-            //RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            RenderSystem.shadeModel(7425);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            //RenderSystem.shadeModel(7425);
             RenderSystem.enableDepthTest();
             RenderSystem.disableTexture();
             RenderSystem.disableBlend();
+            //RenderSystem.disableDepthTest();
             //RenderSystem.lineWidth(1.0f);
-            bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
+            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+            //bufferBuilder.begin(GL11.GL_LINES, DefaultVertexFormat.POSITION_COLOR);
             switch (mode){
                 case 0:
                     grid(bufferBuilder,wand.side,
@@ -115,11 +124,13 @@ public class ClientRender {
                 case 3:
                 case 4:
                 case 5:
+
                     if(wand.valid && wand.block_buffer!=null){
                         for (int a = 0; a < wand.block_buffer.length && a< Wand.MAX_LIMIT; a++) {			
 							int x=wand.block_buffer.buffer_x[a];
                             int y=wand.block_buffer.buffer_y[a];
                             int z=wand.block_buffer.buffer_z[a];
+
 							preview_block(bufferBuilder,
                                 c.x+x  , c.y+y  , c.z+z, 
                                 c.x+x+1, c.y+y+1, c.z+z+1
@@ -150,7 +161,7 @@ public class ClientRender {
 
             RenderSystem.enableBlend();
             RenderSystem.enableTexture();            
-            RenderSystem.shadeModel(7424);
+            //RenderSystem.shadeModel(7424);
         }
     }
 
@@ -161,7 +172,6 @@ public class ClientRender {
         fx2 -= p_o;
         fy2 -= p_o;
         fz2 -= p_o;
-        //TODO: optimize with line strip
         bufferBuilder.vertex(fx1, fy1, fz1).color(255,255,255,255).endVertex();
         bufferBuilder.vertex(fx2, fy1, fz1).color(255,255,255,255).endVertex();
         bufferBuilder.vertex(fx1, fy1, fz1).color(255,255,255,255).endVertex();

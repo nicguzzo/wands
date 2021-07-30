@@ -1,6 +1,6 @@
 package net.nicguzzo.wands.mixin;
 
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.nicguzzo.wands.ClientRender;
 
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class RenderWorldMixin {
     
     @Inject(method = "render", at = @At(value = "TAIL")) 
-    public void render(PoseStack matrices, MultiBufferSource.BufferSource bufferIn, double camX, double camY, double camZ, CallbackInfo ci) {
+    public void render(PoseStack matrices, BufferSource bufferIn, double camX, double camY, double camZ, CallbackInfo ci) {
         ClientRender.render(matrices,camX,camY,camZ, bufferIn);
     }
 }

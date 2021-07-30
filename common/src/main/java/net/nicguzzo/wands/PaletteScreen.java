@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -42,8 +43,10 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
                 WandsModClient.send_palette(false,true);
             }
         });
-        this.addButton(btn_mode);
-        this.addButton(btn_rotate);
+        this.addWidget(btn_mode);
+        this.addWidget(btn_rotate);
+        //this.addButton(btn_mode);
+        //this.addButton(btn_rotate);
     }
 
     @Override 
@@ -74,11 +77,11 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     }
     @Override
     protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
-        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        //RenderSystem.setShaderTexture(0, TEXTURE);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bind(TEXTURE);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, TEXTURE);
+        //RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        //this.minecraft.getTextureManager().bind(TEXTURE);
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
@@ -113,7 +116,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.findSlot(mouseX, mouseY);
         if(slot!=null){
-            ItemStack itemStack = this.menu.playerInventory.getCarried();
+            ItemStack itemStack = this.menu.playerInventory.getSelected();
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

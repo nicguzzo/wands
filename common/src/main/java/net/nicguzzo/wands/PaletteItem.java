@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
-import me.shedaniel.architectury.registry.MenuRegistry;
-import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
-import me.shedaniel.architectury.utils.NbtType;
+import dev.architectury.registry.menu.MenuRegistry;
+import dev.architectury.registry.menu.ExtendedMenuProvider;
+import dev.architectury.utils.NbtType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;

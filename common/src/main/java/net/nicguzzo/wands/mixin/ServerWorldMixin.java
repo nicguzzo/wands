@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.mixin;
 
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,7 +16,7 @@ import net.nicguzzo.wands.WandsMod;
 public class ServerWorldMixin {	
 
 	@Inject(at = @At("HEAD"), method = "removePlayerImmediately")
-	public void removePlayer(ServerPlayer player,CallbackInfo info) 
+	public void removePlayer(ServerPlayer player, Entity.RemovalReason removalReason, CallbackInfo ci)
 	{
 		WandsMod.LOGGER.info("player disconnected !!!");
 		if (player != null) {

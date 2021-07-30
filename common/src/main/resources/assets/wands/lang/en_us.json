@@ -12,5 +12,5 @@
     "key.wands.wand_palette_mode": "Palette Mode",
     "key.wands.wand_fill_circle": "Circle fill",
     "key.wands.wand_undo": "Undo",
-    "category.wands": "Wands"
+    "itemGroup.wands.wands_tab": "Building Wands"
   }

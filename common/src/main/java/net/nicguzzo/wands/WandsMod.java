@@ -1,13 +1,12 @@
 package net.nicguzzo.wands;
 
-
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.NetworkManager.Side;
-import me.shedaniel.architectury.registry.CreativeTabs;
-import me.shedaniel.architectury.registry.DeferredRegister;
-import me.shedaniel.architectury.registry.MenuRegistry;
-import me.shedaniel.architectury.registry.Registries;
-import me.shedaniel.architectury.registry.RegistrySupplier;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.NetworkManager.Side;
+import dev.architectury.registry.CreativeTabRegistry;
+import dev.architectury.registry.registries.DeferredRegister;
+import dev.architectury.registry.menu.MenuRegistry;
+import dev.architectury.registry.registries.Registries;
+import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.LazyLoadedValue;
@@ -30,10 +29,10 @@ public class WandsMod {
     // We can use this if we don't want to use DeferredRegister
     public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
     // Registering a new creative tab
-    public static final CreativeModeTab WANDS_TAB = CreativeTabs.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
+    public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
         @Override
         public ItemStack get() {
-            return new ItemStack(STONE_WAND_ITEM.get());
+            return new ItemStack(DIAMOND_WAND_ITEM.get());
         }
     });
     
@@ -143,7 +142,7 @@ public class WandsMod {
                     }
                 break;
                 case wand_undo:
-                    if(player.abilities.instabuild==true && !player.level.isClientSide()){
+                    if(player.getAbilities().instabuild==true && !player.level.isClientSide()){
                         Wand wand=PlayerWand.get(player);
                         if(wand!=null){
                             int n=1;

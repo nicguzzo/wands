@@ -5,8 +5,8 @@ import java.util.Vector;
 import java.util.function.Consumer;
 
 import io.netty.buffer.Unpooled;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.utils.NbtType;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.utils.NbtType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -176,7 +176,7 @@ public class Wand {
         }
         //WandsMod.log("block_height "+block_height,prnt);
         valid = false;
-        boolean destroy = WandUtils.can_destroy(player, block_state);
+        this.destroy = WandUtils.can_destroy(player, block_state);
 
         ItemStack offhand = player.getOffhandItem();
         // Block offhand_block=null;
@@ -194,18 +194,9 @@ public class Wand {
                 }
             }
         }
-
-        // offhand_block=Block.byItem(offhand.getItem());
-        // if(offhand_block != Blocks.AIR){
-        // block_state=offhand_block.defaultBlockState();
-        // item_stack=offhand;
-        // }
         if (item_stack == null) {
             item_stack = Item.byBlock(block_state.getBlock()).getDefaultInstance();
         }
-        // if(item_stack.isEmpty()){
-        // return;
-        // }
         if (WandUtils.is_shulker(item_stack)) {
             valid=false;
             return;
@@ -434,21 +425,6 @@ public class Wand {
                         stop2 = true;
                     }
                 }
-                if (!destroy) {
-                    //TODO: check player intersections
-                    // if (WandsMod.compat.interescts_player_bb(player, pos1.getX(), pos1.getY(),
-                    // pos1.getZ(), pos1.getX() + 1,
-                    // pos1.getY() + 1, pos1.getZ() + 1)) {
-                    // intersects = true;
-                    // break;
-                    // }
-                    // if (WandsMod.compat.interescts_player_bb(player, pos3.getX(), pos3.getY(),
-                    // pos3.getZ(), pos3.getX() + 1,
-                    // pos3.getY() + 1, pos3.getZ() + 1)) {
-                    // intersects = true;
-                    // break;
-                    // }
-                }
                 k++;
                 if (stop1 && stop2) {
                     k = 1000000;
@@ -467,7 +443,7 @@ public class Wand {
                 z2 = pos3.getZ() + offz + 1;
                 valid = true;
             } else {
-                return fill(pos1, pos2);
+                return fill(pos1, pos3);
             }
         } else {
             valid = false;
@@ -528,7 +504,7 @@ public class Wand {
         }
         if (destroy) {
             for (int a = 0; a < block_buffer.length; a++) {
-                block_buffer.set(a, block_buffer.get(i).relative(side, -1));
+                block_buffer.set(a, block_buffer.get(a).relative(side, -1));
             }
         }
         placed = from_buffer();
@@ -542,7 +518,8 @@ public class Wand {
             int z1 = p1.getZ();
             int x2 = pos.getX();
             int y2 = pos.getY();
-            int z2 = pos.getZ();            
+            int z2 = pos.getZ();
+            int n=0;
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);
@@ -563,6 +540,7 @@ public class Wand {
                 zs = -1;
             }
             block_buffer.add(x1, y1, z1);
+            n++;
             // X
             if (dx >= dy && dx >= dz) {
                 lp1 = 2 * dy - dx;
@@ -580,6 +558,9 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dz;
                     block_buffer.add(x1, y1, z1);
+                    n++;
+                    if(n>= wand_item.limit)
+                        break;
                 }
             } else if (dy >= dx && dy >= dz) {
                 lp1 = 2 * dx - dy;
@@ -597,6 +578,9 @@ public class Wand {
                     lp1 += 2 * dx;
                     lp2 += 2 * dz;
                     block_buffer.add(x1, y1, z1);
+                    n++;
+                    if(n>= wand_item.limit)
+                        break;
                 }
             } else {
                 lp1 = 2 * dy - dz;
@@ -614,6 +598,9 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dx;
                     block_buffer.add(x1, y1, z1);
+                    n++;
+                    if(n>= wand_item.limit)
+                        break;
                 }
             }
         }
@@ -895,7 +882,7 @@ public class Wand {
             CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
             ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
             if(!stack.isEmpty()){
-                if(player.abilities.instabuild){
+                if(player.getAbilities().instabuild){
                     slots.add(i);
                 }else{
                     int[] count=WandUtils.count_in_player(player, stack);
@@ -926,9 +913,10 @@ public class Wand {
     public int from_buffer() {
         int placed = 0;
         if (preview) {
-            valid = (block_buffer.length > 0);
+            valid = (block_buffer.length > 0) && block_buffer.length< wand_item.limit;
+
         } else {
-            for (int a = 0; a < block_buffer.length && a < MAX_LIMIT; a++) {
+            for (int a = 0; a < block_buffer.length && a < wand_item.limit && a < MAX_LIMIT; a++) {
                 if (place_block(block_buffer.get(a))) {
                     placed++;
                 }
@@ -965,7 +953,7 @@ public class Wand {
         }
 
         int limit = MAX_LIMIT;
-        if (!player.abilities.instabuild) {
+        if (!player.getAbilities().instabuild) {
             limit = wand_item.limit;
         }
 
@@ -988,8 +976,9 @@ public class Wand {
     }
 
     public boolean place_block(BlockPos pos) {
+        //WandsMod.log("place_block "+pos,true);
         Level level = player.level;
-        boolean creative = player.abilities.instabuild;
+        boolean creative = player.getAbilities().instabuild;
         if (level.isClientSide) {
             return false;
         }
@@ -1048,6 +1037,9 @@ public class Wand {
             if (!WandUtils.can_place(state, wand.removes_water, wand.removes_lava)) {
                 return false;
             }
+            if(player.getBoundingBox().intersects(pos.getX(),pos.getY(),pos.getZ(),pos.getX()+1,pos.getY()+1,pos.getZ()+1)){
+                return false;
+            }
         }
         p1_state=block_state;
         if (creative) {
@@ -1075,7 +1067,6 @@ public class Wand {
                 ItemStack wand_stack = player.getMainHandItem();
                 ItemStack offhand = player.getOffhandItem();
                 int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
-                // System.out.println("wand_stack.getDamage() "+wand_durability);
                 if ((wand_durability > 1 || WandsMod.config.allow_wand_to_break)
                         && (BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
                     if (destroy) {
@@ -1103,11 +1094,11 @@ public class Wand {
                         if (!is_tool) {
                             // System.out.println("slot "+slot);
 
-                            int player_inv_size = player.inventory.getContainerSize();
+                            //int player_inv_size = player.getInventory().getContainerSize();
                             ItemStack stack2 = null;
                             /*
                              * //count item in shulkers and in main inv for (int i = 0; i < player_inv_size;
-                             * ++i) { stack2 = player.inventory.getItem(i); if(stack2!=null &&
+                             * ++i) { stack2 = player.getInventory().getItem(i); if(stack2!=null &&
                              * WandUtils.is_shulker(stack2)){ count_in_shulker+=WandUtils.count_in_shulker(
                              * stack2, item_stack); } if (stack2!=null && item_stack!=null &&
                              * !stack2.isEmpty() && item_stack.getItem() == stack2.getItem() &&
@@ -1119,23 +1110,24 @@ public class Wand {
                             if (level.setBlockAndUpdate(pos, block_state)) {
                                 int removed = 0;
                                 if (count_in_shulker > 0) {// try shulkers first
-                                    for (int i = 0; i < player_inv_size; ++i) {
-                                        stack2 = player.inventory.getItem(i);
+                                    for (int i = 0; i < 36; ++i) {
+                                        stack2 = player.getInventory().getItem(i);
                                         if (stack2 != null && WandUtils.is_shulker(stack2)) {
-                                            removed = WandUtils.remove_item_from_shulker(stack2, item_stack, n);
+                                            removed += WandUtils.remove_item_from_shulker(stack2, item_stack, n);
+                                            if (removed == n)
+                                                break;
                                         }
                                     }
                                 }
-                                if (removed < n) {
-                                    for (int i = 0; i < player_inv_size; ++i) {
-                                        stack2 = player.inventory.getItem(i);
+                                int safe=1000;
+                                while (removed < n && safe>0) {
+                                    safe--;
+                                    for (int i = 0; i < 36; ++i) {
+                                        stack2 = player.getInventory().getItem(i);
                                         if (stack2 != null && item_stack != null && !stack2.isEmpty()
                                                 && item_stack.getItem() == stack2.getItem() && stack2.getCount() > 0) {
-                                            if (stack2.getCount() >= n) {
-                                                player.inventory.items.get(i).shrink(n);
-                                                removed = n;
-                                            } else {
-                                                player.inventory.items.get(i).shrink(1);
+                                            if (stack2.getCount() >0) {
+                                                stack2.shrink(1);
                                                 removed++;
                                             }
                                             if (removed == n)
@@ -1170,7 +1162,6 @@ public class Wand {
                                 prog = prog - a;
                             } else {
                                 if (prog > 0.0f) {
-                                    // TODO: dirty solution....
                                     prog = 1.0f + (a - prog);
                                 } else {
                                     prog = 1.0f;

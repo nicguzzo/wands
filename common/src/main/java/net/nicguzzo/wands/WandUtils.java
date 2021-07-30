@@ -2,7 +2,7 @@ package net.nicguzzo.wands;
 
 
 
-import me.shedaniel.architectury.utils.NbtType;
+import dev.architectury.utils.NbtType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -45,15 +45,15 @@ class WandUtils{
         return n;
     }
     static public int[] count_in_player(Player player,ItemStack item_stack){
-        int n[]=new int[2];
+        int[] n=new int[2];
 		int count_in_player=0;
         int count_in_shulker=0;
         if(!item_stack.isEmpty()){
-            int player_inv_size=player.inventory.getContainerSize();
+            //int player_inv_size=player.getInventory().getContainerSize();
             //count item in shulkers and in main inv
             ItemStack stack=null;
-            for (int i = 0; i < player_inv_size; ++i) {
-                stack = player.inventory.getItem(i);
+            for (int i = 0; i < 36; ++i) {
+                stack = player.getInventory().getItem(i);
                 if(is_shulker(stack)){
                     count_in_shulker+=count_in_shulker(stack,item_stack);				
                 }else{
@@ -72,26 +72,26 @@ class WandUtils{
     
         CompoundTag entity_tag = shulker.getTagElement("BlockEntityTag");
         int removed=0;
+        int m=n;
         if(entity_tag!=null){
             ListTag shulker_items= entity_tag.getList("Items", 10);
-            for (int i = 0, len = shulker_items.size(); i < len; ++i) {
-                CompoundTag itemTag = shulker_items.getCompound(i);
-                ItemStack stack_item = ItemStack.of(itemTag);
-                if( stack_item!=null && !stack_item.isEmpty() && 
-                    stack_item.getItem() == item_stack.getItem() && 
-                    stack_item.getCount()>0)
-                {   
-                    if(stack_item.getCount()>=n){
-                        stack_item.setCount(stack_item.getCount() - n);
-                        removed=n;
-                    }else{
+            int safe=1000;
+            while(m>0 && safe>0) {
+                safe--;
+                for (int i = 0, len = shulker_items.size(); i < len; ++i) {
+                    CompoundTag itemTag = shulker_items.getCompound(i);
+                    ItemStack stack_item = ItemStack.of(itemTag);
+                    if (stack_item != null && !stack_item.isEmpty() &&
+                            stack_item.getItem() == item_stack.getItem() &&
+                            stack_item.getCount() > 0) {
                         stack_item.setCount(stack_item.getCount() - 1);
+                        m--;
                         removed++;
+                        shulker_items.set(i, stack_item.save(itemTag));
+                        if (m <= 0)
+                            break;
                     }
-                    shulker_items.set(i, stack_item.save(itemTag));
-                    if(removed==n)
-                        break;
-                }            
+                }
             }
         }
         return removed;
@@ -104,7 +104,7 @@ class WandUtils{
         if(offand_item!=null && !offand_item.isEmpty() &&offand_item.getItem() instanceof DiggerItem){
             DiggerItem mt=(DiggerItem)offand_item.getItem();
             if(mt!=null){
-                return  player.abilities.instabuild|| mt.getDestroySpeed(null, block_state) > 1.0f||is_glass;
+                return  player.getAbilities().instabuild|| mt.getDestroySpeed(null, block_state) > 1.0f||is_glass;
             }
         }        
         return false;

@@ -1,12 +1,12 @@
 package net.nicguzzo.wands;
 
 import io.netty.buffer.Unpooled;
-import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
-import me.shedaniel.architectury.event.events.client.ClientTickEvent;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.NetworkManager.Side;
-import me.shedaniel.architectury.registry.KeyBindings;
-import me.shedaniel.architectury.registry.MenuRegistry;
+import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.event.events.client.ClientLifecycleEvent;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.NetworkManager.Side;
+import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -30,7 +30,7 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
         };
         for(KeyMapping k: km){
-            KeyBindings.registerKeyBinding(k);
+            KeyMappingRegistry.register(k);
         }
         
         ClientTickEvent.CLIENT_PRE.register(e -> {

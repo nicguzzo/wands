@@ -1,17 +1,30 @@
 package net.nicguzzo.wands;
+import dev.architectury.utils.NbtType;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+
 public class WandItem extends Item{
     
     public enum Orientation {
@@ -24,7 +37,7 @@ public class WandItem extends Item{
     public int limit = 0;
     public boolean removes_water;
     public boolean removes_lava;
-    static private final int max_mode=6;
+    static private final int max_mode=5;
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
         super(properties);
@@ -95,7 +108,6 @@ public class WandItem extends Item{
             tag.putBoolean("cfill", !cfill);
         }
     }
-    //TODO: send feedback to player
     static public boolean isCircleFill(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             return stack.getOrCreateTag().getBoolean("cfill");
@@ -137,7 +149,7 @@ public class WandItem extends Item{
                     wand.x1=pos.getX();
                     wand.y1=pos.getY();
                     wand.z1=pos.getZ();
-                    wand.copy_pos1=pos;                    
+                    wand.copy_pos1=pos;
                     WandsMod.log("pos1 "+pos,true);
                     return InteractionResult.SUCCESS;
                 }else{
@@ -174,6 +186,14 @@ public class WandItem extends Item{
         wand.clear();
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
-
+    @Environment(EnvType.CLIENT)
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
+        CompoundTag tag=stack.getOrCreateTag();
+        list.add(new TextComponent("mode: "+tag.getInt("mode")));
+        list.add(new TextComponent("orientation: "+Orientation.values()[tag.getInt("orientation")].toString()));
+        list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
+        list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
+    }
    
 }
