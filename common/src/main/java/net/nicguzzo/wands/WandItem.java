@@ -150,13 +150,13 @@ public class WandItem extends Item{
                     wand.y1=pos.getY();
                     wand.z1=pos.getZ();
                     wand.copy_pos1=pos;
-                    WandsMod.log("pos1 "+pos,true);
+                    //WandsMod.log("pos1 "+pos,true);
                     return InteractionResult.SUCCESS;
                 }else{
                     if(wand.copy_pos2==null){
                         wand.copy_pos2=pos;
                     }
-                    WandsMod.log("pos2 "+pos,true);
+                    //WandsMod.log("pos2 "+pos,true);
                     block_state=wand.p1_state;
                     wand.p2=true;
                 }
@@ -184,6 +184,12 @@ public class WandItem extends Item{
             wand=ClientRender.wand;
         }
         wand.clear();
+        if(!world.isClientSide()) {
+            ItemStack stack = player.getMainHandItem();//check anyway...
+            if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
+                player.displayClientMessage(new TextComponent("Wand mode: " + WandItem.getMode(stack)), false);
+            }
+        }
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
     @Environment(EnvType.CLIENT)

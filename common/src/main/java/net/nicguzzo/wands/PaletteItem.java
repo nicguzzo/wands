@@ -130,7 +130,8 @@ public class PaletteItem extends Item{
                 }                
             });
         }
-        return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+        WandsMod.LOGGER.info("palette");
+        return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
         //return super.use(world, player, hand);
     }
 }

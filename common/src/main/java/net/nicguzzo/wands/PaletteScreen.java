@@ -86,6 +86,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
         int y = (height - imageHeight) / 2;
         blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
     }
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         btn_mode.mouseClicked(mouseX, mouseY, button);
         btn_rotate.mouseClicked(mouseX, mouseY, button);
@@ -109,6 +110,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
         }
         return true;
     }
+    @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return true;
     }
@@ -116,7 +118,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.findSlot(mouseX, mouseY);
         if(slot!=null){
-            ItemStack itemStack = this.menu.playerInventory.getSelected();
+            ItemStack itemStack = this.menu.getCarried();
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

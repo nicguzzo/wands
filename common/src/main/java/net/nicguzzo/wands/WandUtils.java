@@ -10,12 +10,10 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AbstractGlassBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.BushBlock;
-import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 
 class WandUtils{
@@ -24,10 +22,10 @@ class WandUtils{
     static public boolean is_shulker(ItemStack item_stack){        
 		return Block.byItem(item_stack.getItem()) instanceof ShulkerBoxBlock ;
     }
-    static public int count_in_shulker(ItemStack shulker,ItemStack item_stack){
+    static public int count_in_shulker(ItemStack shulker, Item item){
         ListTag shulker_items=null;
-        int n=0;    
-        if(!item_stack.isEmpty()){    
+        int n=0;
+        if(item!=null){
             CompoundTag entity_tag =shulker.getTagElement("BlockEntityTag");
             if(entity_tag!=null){
                 shulker_items = entity_tag.getList("Items", NbtType.COMPOUND);
@@ -35,7 +33,7 @@ class WandUtils{
                     for (int i = 0, len = shulker_items.size(); i < len; ++i) {
                         CompoundTag itemTag = shulker_items.getCompound(i);                        
                         ItemStack s = ItemStack.of(itemTag);
-                        if(!s.isEmpty() && s.getItem()== item_stack.getItem()){
+                        if(!s.isEmpty() && s.getItem()== item){
                             n+=s.getCount();
                         }							
                     }
@@ -55,7 +53,7 @@ class WandUtils{
             for (int i = 0; i < 36; ++i) {
                 stack = player.getInventory().getItem(i);
                 if(is_shulker(stack)){
-                    count_in_shulker+=count_in_shulker(stack,item_stack);				
+                    count_in_shulker+=count_in_shulker(stack,item_stack.getItem());
                 }else{
                     if (stack!=null && item_stack!=null && !stack.isEmpty() && item_stack.getItem() == stack.getItem()){
                         count_in_player+=stack.getCount();				
@@ -97,14 +95,22 @@ class WandUtils{
         return removed;
     }
 
-    static public boolean can_destroy(Player player,BlockState block_state){
-        ItemStack offand_item=player.getOffhandItem();
+    static public boolean can_destroy(Player player,BlockState block_state,boolean check_speed){
+        ItemStack offhand_item=player.getOffhandItem();
         
         boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
-        if(offand_item!=null && !offand_item.isEmpty() &&offand_item.getItem() instanceof DiggerItem){
-            DiggerItem mt=(DiggerItem)offand_item.getItem();
-            if(mt!=null){
-                return  player.getAbilities().instabuild|| mt.getDestroySpeed(null, block_state) > 1.0f||is_glass;
+        boolean is_snow_layer=false;
+        if(block_state.getBlock() instanceof SnowLayerBlock){
+            is_snow_layer= block_state.getValue(SnowLayerBlock.LAYERS)==1;
+        }
+        if(offhand_item!=null && !offhand_item.isEmpty() &&offhand_item.getItem() instanceof DiggerItem){
+            if(check_speed){
+                DiggerItem mt=(DiggerItem)offhand_item.getItem();
+                if(mt!=null) {
+                    return player.getAbilities().instabuild || mt.getDestroySpeed(null, block_state) > 1.0f || is_glass|| is_snow_layer;
+                }
+            }else{
+                return true;
             }
         }        
         return false;
@@ -129,15 +135,17 @@ class WandUtils{
     static public boolean can_place(BlockState state,boolean water, boolean lava) {
         return (state.isAir() || is_fluid(state,water,lava) || is_plant(state));
     }
-    static public void add_neighbour(BlockBuffer block_buffer,WandItem wand,BlockPos pos, BlockState block_state, Level world, Direction side) {
+    static public int add_neighbour(BlockBuffer block_buffer,WandItem wand,BlockPos pos, BlockState block_state, Level world, Direction side) {
         BlockPos pos2 = pos.relative(side);
         if (!block_buffer.in_buffer(pos2)) {
             BlockState bs1 = world.getBlockState(pos);
             BlockState bs2 = world.getBlockState(pos2);
             if (bs1.equals(block_state) && can_place(bs2,wand.removes_water,wand.removes_lava)) {
                 block_buffer.add(pos2);
+                return 1;
             }
         }
+        return 0;
     }
     static public BlockPos find_next_diag(Level world, BlockState block_state, Direction dir1, Direction dir2, BlockPos pos,
     WandItem wand,boolean destroy,BlockState offhand_state) {
@@ -184,98 +192,147 @@ class WandUtils{
         }
         return null;
     }
-    static public void find_neighbours(BlockBuffer block_buffer,WandItem wand, BlockPos pos, BlockState block_state, Level world, Direction side) {
-
+    static public int find_neighbours(BlockBuffer block_buffer,WandItem wand, BlockPos pos, BlockState block_state, Level world, Direction side) {
+        int found=0;
 		if (side == Direction.UP || side == Direction.DOWN) {
 			BlockPos p0 = pos.relative( Direction.EAST, 1);
-			add_neighbour(block_buffer,wand, p0, block_state, world, side);
+			found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+			if(found>= wand.limit)
+			    return found;
 
 			p0 = pos.relative( Direction.EAST, 1);
 			BlockPos p1 = p0.relative( Direction.NORTH, 1);
-			add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.NORTH, 1);
-			add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.NORTH, 1);
 			p1 = p0.relative( Direction.WEST, 1);
-			add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.WEST, 1);
-			add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.SOUTH, 1);
 			p1 = p0.relative( Direction.WEST, 1);
-			add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.SOUTH, 1);
-			add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 			p0 = pos.relative( Direction.SOUTH, 1);
 			p1 = p0.relative( Direction.EAST, 1);
-			add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+            if(found>= wand.limit)
+                return found;
 
 		} else {
 			if (side == Direction.EAST || side == Direction.WEST) {
 				BlockPos p0 = pos.relative( Direction.UP, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.UP, 1);
 				BlockPos p1 = p0.relative( Direction.NORTH, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.NORTH, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.NORTH, 1);
 				p1 = p0.relative( Direction.DOWN, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.DOWN, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.SOUTH, 1);
 				p1 = p0.relative( Direction.DOWN, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.SOUTH, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.SOUTH, 1);
 				p1 = p0.relative( Direction.UP, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 			} else if (side == Direction.NORTH || side == Direction.SOUTH) {
 				BlockPos p0 = pos.relative( Direction.EAST, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.EAST, 1);
 				BlockPos p1 = p0.relative( Direction.UP, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.UP, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.UP, 1);
 				p1 = p0.relative( Direction.WEST, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.WEST, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.DOWN, 1);
 				p1 = p0.relative( Direction.WEST, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.DOWN, 1);
-				add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p0, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 				p0 = pos.relative( Direction.DOWN, 1);
 				p1 = p0.relative( Direction.EAST, 1);
-				add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                found+=add_neighbour(block_buffer,wand, p1, block_state, world, side);
+                if(found>= wand.limit)
+                    return found;
 
 			}
 		}
+		return found;
 	}
     public static float calc_xp(final int level,float prog) {
         float xp=calc_xp_level(level);

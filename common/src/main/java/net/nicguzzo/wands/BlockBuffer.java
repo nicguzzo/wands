@@ -1,23 +1,38 @@
 package net.nicguzzo.wands;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.state.BlockState;
 //import net.minecraft.world.level.block.state.BlockState;
 
 public class BlockBuffer{
     
     public  int max=0;
-    public  int length=0;
+    private  int length=0;
     public  int[] buffer_x=null;
     public  int[] buffer_y=null;
     public  int[] buffer_z=null;
-    //public  BlockState[] state=null;
+    public  BlockState[] state=null;
+    public  Item[] item=null;
 
     public BlockBuffer(int n){
         max=n;
         buffer_x=new int[max];
         buffer_y=new int[max];
         buffer_z=new int[max];
-        //state=new BlockState[max];
+        state=new BlockState[max];
+        item=new Item[max];
+    }
+    public void reset(){
+        length=0;
+    }
+    public int get_length(){
+        return length;
     }
     public boolean in_buffer(BlockPos p){
         for(int i=0;i<length && i<max;i++){
@@ -42,11 +57,15 @@ public class BlockBuffer{
             buffer_z[i]=z;
         }
     }    
-    public void add(int x,int y,int z){
+    public void add(int x, int y, int z){
+
+
         if(length<max){
             buffer_x[length]=x;
             buffer_y[length]=y;
             buffer_z[length]=z;
+            state[length]=null;
+            item[length]=null;
             length++;
         }
     }

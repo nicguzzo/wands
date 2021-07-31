@@ -69,7 +69,7 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
     public void removed(Player player) {
         Inventory inventory = player.getInventory();
         if (!inventory.getSelected().isEmpty()) {           
-           inventory.setPickedItem(ItemStack.EMPTY);
+           this.setCarried(ItemStack.EMPTY);
         }
     }
     @Override
@@ -93,11 +93,13 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
     }
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-        try {            
-            System.out.println("onSlotClick "+button+" index "+slotIndex +" action: "+actionType);
+        System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
+        //return;
+        try {
+            //TODO: fix palette pick
             
             if(actionType != ClickType.QUICK_CRAFT && button == 1){
-                playerInventory.setPickedItem(ItemStack.EMPTY);
+                this.setCarried(ItemStack.EMPTY);
             }
             
             if(slotIndex>=0 && slotIndex<63){
@@ -121,19 +123,22 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                         ItemStack itemStack2=itemStack.copy();                            
                         if(can_pickup(itemStack2)){
                             itemStack2.setCount(1);                        
-                            playerInventory.setPickedItem(itemStack2);
+                            this.setCarried(itemStack2);
                         }
                     }
                     //System.out.println("itemStack2: "+itemStack);
                     if(button == 1){
-                        if (actionType == ClickType.PICKUP) {
-                            ItemStack itemStack = slot.getItem();
-                            if(!itemStack.isEmpty()){
-                                //System.out.println("empty");
-                                slot.set(ItemStack.EMPTY);
-                                slot.setChanged();
+                        if(slotIndex<27 ) {
+                            if (actionType == ClickType.PICKUP) {
+                                ItemStack itemStack = slot.getItem();
+                                if (!itemStack.isEmpty()) {
+                                    //System.out.println("empty");
+                                    slot.set(ItemStack.EMPTY);
+                                    slot.setChanged();
+                                }
                             }
                         }
+                        return;
                     }
                     if(button == 0){
                         if(slotIndex<27 ){
@@ -146,15 +151,15 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                                     ItemStack itemStack2=itemStack.copy();
                                     if(can_pickup(itemStack2)){
                                         itemStack2.setCount(1);                        
-                                        playerInventory.setPickedItem(itemStack2);
+                                        this.setCarried(itemStack2);
                                     }
                                 }else{
-                                    itemStack=playerInventory.getSelected();
+                                    itemStack=this.getCarried();
                                     if(!itemStack.isEmpty()){
                                         slot.set(itemStack);
-                                        playerInventory.setPickedItem(ItemStack.EMPTY);
+                                        this.setCarried(ItemStack.EMPTY);
                                     }
-                                    //this.setPickedItem(ItemStack.EMPTY);
+                                    //this.setCarried(ItemStack.EMPTY);
                                 }
                                 slot.setChanged();
                             }
@@ -165,7 +170,7 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                                 if(can_pickup(itemStack2)){
                                     itemStack2.setCount(1);
                                     if(actionType == ClickType.PICKUP){
-                                        playerInventory.setPickedItem(itemStack2);
+                                        this.setCarried(itemStack2);
                                     }else{
                                         insert(itemStack2);      
                                     }
@@ -200,11 +205,12 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
          //return ItemStack.EMPTY;
          return;
     }
-    public ItemStack transferSlot(Player player, int index) {
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
         return itemStack;
-     }
-     public static ListTag toTag(SimpleContainer inventory) {
+    }
+    public static ListTag toTag(SimpleContainer inventory) {
         ListTag tag = new ListTag();        
         for(int i = 0; i < inventory.getContainerSize(); i++) {
             CompoundTag stackTag = new CompoundTag();

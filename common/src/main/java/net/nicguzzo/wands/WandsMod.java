@@ -7,7 +7,10 @@ import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.LazyLoadedValue;
 import net.minecraft.world.entity.player.Player;
@@ -114,31 +117,36 @@ public class WandsMod {
     
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
-        if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){               
-            
+        if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
             switch(key){
                 case wand_mode_key:
                     WandItem.nextMode(item_stack);
+                    player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getMode(item_stack)),false);
                 break;
                 case wand_orientation_key:
-                    int mode=WandItem.getMode(item_stack);
-                    if(mode==5){
+                    if(WandItem.getMode(item_stack)==5){
                         WandItem.nextPlane(item_stack);
+                        player.displayClientMessage(new TextComponent("Wand Plane: "+ WandItem.getPlane(item_stack)),false);
                     }else{
                         WandItem.nextOrientation(item_stack);
+                        player.displayClientMessage(new TextComponent("Wand Orientation: "+WandItem.getOrientation(item_stack)),false);
                     }
+
                 break;
                 case wand_invert_key:
                     WandItem.invert(item_stack);
+                    player.displayClientMessage(new TextComponent("Wand inverted: "+WandItem.isInverted(item_stack)),false);
                 break;
                 case wand_fill_circle_key:
                     WandItem.toggleCircleFill(item_stack);
+                    player.displayClientMessage(new TextComponent("Wand circle fill: "+WandItem.isCircleFill(item_stack)),false);
                 break;
                 case palette_mode_key:
                     ItemStack offhand_stack=player.getOffhandItem();
                     if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
                         PaletteItem.nextMode(offhand_stack);
                         //LOGGER.info("1 palette tag: "+ offhand_stack.getTag());
+                        player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(offhand_stack)),false);
                     }
                 break;
                 case wand_undo:
@@ -165,6 +173,7 @@ public class WandsMod {
             switch(key){
                 case palette_mode_key:
                     PaletteItem.nextMode(item_stack);
+                    player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(item_stack)),false);
                     //LOGGER.info("2 palette tag: "+ item_stack.getTag());
                 break;
             }

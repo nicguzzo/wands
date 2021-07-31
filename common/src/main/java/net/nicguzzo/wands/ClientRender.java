@@ -126,7 +126,7 @@ public class ClientRender {
                 case 5:
 
                     if(wand.valid && wand.block_buffer!=null){
-                        for (int a = 0; a < wand.block_buffer.length && a< Wand.MAX_LIMIT; a++) {			
+                        for (int a = 0; a < wand.block_buffer.get_length() && a< Wand.MAX_LIMIT; a++) {
 							int x=wand.block_buffer.buffer_x[a];
                             int y=wand.block_buffer.buffer_y[a];
                             int z=wand.block_buffer.buffer_z[a];
