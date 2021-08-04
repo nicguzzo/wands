@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_16",  
   "client": [    
     "RenderWorldMixin",
-    "GameMixin"
+    "GameMixin",
+    "GuiMixin"
   ],
   "server":[
     "ServerWorldMixin"

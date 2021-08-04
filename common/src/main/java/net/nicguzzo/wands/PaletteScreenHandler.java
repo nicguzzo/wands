@@ -96,7 +96,6 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
         System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
-            //TODO: fix palette pick
             
             if(actionType != ClickType.QUICK_CRAFT && button == 1){
                 this.setCarried(ItemStack.EMPTY);

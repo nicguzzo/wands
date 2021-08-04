@@ -19,7 +19,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 
 public class WandsModClient {
-    
+    static boolean shift =false;
+    static boolean alt =false;
     public static void initialize() {
         KeyMapping[] km={
             new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"category.wands"),
@@ -34,13 +35,24 @@ public class WandsModClient {
         }
         
         ClientTickEvent.CLIENT_PRE.register(e -> {
+            boolean any=false;
             for(KeyMapping k: km){
                 if (k.consumeClick()) {
-                    //WandsMod.LOGGER.info("key binding: "+k.getDefaultKey().getValue());
-                    //Minecraft client=Minecraft.getInstance();
-                    //WandsMod.process_keys(client.player, k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());                    
-                    send_key(k.getDefaultKey().getValue());
+                    if(!any) any=true;
+                        send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
                 }
+            }
+            if(!any){
+                //WandsMod.LOGGER.info("ClientTickEvent");
+                if(alt !=Screen.hasAltDown() || shift !=Screen.hasShiftDown()){
+                    alt =Screen.hasAltDown();
+                    shift =Screen.hasShiftDown();
+                    ClientRender.wand.is_alt_pressed=alt;
+                    ClientRender.wand.is_shift_pressed=shift;
+                    send_key(-1, shift, alt);
+                }
+
+                //send_key(-1);
             }
         });
 
@@ -63,13 +75,16 @@ public class WandsModClient {
             });
         });
     }
-    public static void send_key(int key){
-
-        FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
-        packet.writeInt(key);
-        packet.writeBoolean(Screen.hasShiftDown());
-        packet.writeBoolean(Screen.hasAltDown());
-        NetworkManager.sendToServer(WandsMod.KB_PACKET, packet);
+    public static void send_key(int key,boolean shift, boolean alt){
+        Minecraft client=Minecraft.getInstance();
+        if(client.getConnection() != null) {
+            WandsMod.LOGGER.info("send_key"+key+" shift "+shift +" alt "+alt);
+            FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+            packet.writeInt(key);
+            packet.writeBoolean(shift);
+            packet.writeBoolean(alt);
+            NetworkManager.sendToServer(WandsMod.KB_PACKET, packet);
+        }
     }
     public static void send_palette(boolean next_mode,boolean toggle_rotate){
         FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());            

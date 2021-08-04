@@ -1,6 +1,7 @@
 package net.nicguzzo.wands;
 import java.util.HashMap;
 
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 
 public class PlayerWand{
@@ -17,6 +18,5 @@ public class PlayerWand{
     static public Wand get(Player player){
         return player_wand.get(player.getStringUUID());
     }
-    
 }
     

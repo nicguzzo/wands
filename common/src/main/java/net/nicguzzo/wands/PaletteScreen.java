@@ -43,8 +43,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
                 WandsModClient.send_palette(false,true);
             }
         });
-        this.addWidget(btn_mode);
-        this.addWidget(btn_rotate);
+        this.addRenderableWidget(btn_mode);
+        this.addRenderableWidget(btn_rotate);
         //this.addButton(btn_mode);
         //this.addButton(btn_rotate);
     }
@@ -53,8 +53,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public void render(PoseStack poseStack, int mouseX, int mouseY, float delta){
         super.render(poseStack, mouseX, mouseY, delta);
         
-        this.btn_mode.render(poseStack, mouseX, mouseY, delta);
-        this.btn_rotate.render(poseStack, mouseX, mouseY, delta);
+        //this.btn_mode.render(poseStack, mouseX, mouseY, delta);
+        //this.btn_rotate.render(poseStack, mouseX, mouseY, delta);
         
         if(this.menu.palette!=null){
             PaletteMode mode=PaletteItem.getMode(this.menu.palette);            

@@ -1,15 +1,11 @@
 package net.nicguzzo.wands;
-import dev.architectury.utils.NbtType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -19,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -28,16 +25,20 @@ import java.util.List;
 public class WandItem extends Item{
     
     public enum Orientation {
-        HORIZONTAL, VERTICAL
+        ROW, COL
     }
     public enum Plane {
         XZ,XY,YZ
+    }
+    //TODO: state placement mode
+    public enum BState {
+        CLONE,DEFAULT
     }
     
     public int limit = 0;
     public boolean removes_water;
     public boolean removes_lava;
-    static private final int max_mode=5;
+    static private final int max_mode=7;
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
         super(properties);
@@ -49,7 +50,25 @@ public class WandItem extends Item{
         if(stack!=null && !stack.isEmpty())
             return stack.getOrCreateTag().getInt("mode");
         return -1;
-    }   
+    }
+
+    static public String getModeString(ItemStack stack) {
+
+        if(stack!=null && !stack.isEmpty()) {
+            int mode = stack.getOrCreateTag().getInt("mode");
+            switch (mode){
+                case 0: return "Direction";
+                case 1: return "Row/Col";
+                case 2: return "Fill";
+                case 3: return "Area";
+                case 4: return "Line";
+                case 5: return "Circle";
+                case 6: return "Copy";
+                case 7: return "Paste";
+            }
+        }
+        return "";
+    }
     
     static public void nextMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
@@ -58,7 +77,16 @@ public class WandItem extends Item{
             tag.putInt("mode", mode);
         }
     }
-    
+    static public void prevMode(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int mode=tag.getInt("mode")-1;
+            if(mode<0){
+                mode=max_mode;
+            }
+            tag.putInt("mode", mode);
+        }
+    }
     static public boolean isInverted(ItemStack stack) {
         if(stack!=null && !stack.isEmpty())
             return stack.getOrCreateTag().getBoolean("inverted");
@@ -76,7 +104,7 @@ public class WandItem extends Item{
             int o=stack.getOrCreateTag().getInt("orientation");
             return Orientation.values()[o];
         }
-        return Orientation.HORIZONTAL;
+        return Orientation.ROW;
     }
     static public void nextOrientation(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
@@ -114,7 +142,19 @@ public class WandItem extends Item{
         }
         return false;
     }
- 
+
+    static public int getRotation(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty())
+            return stack.getOrCreateTag().getInt("rotation");
+        return 0;
+    }
+    static public void nextRotation(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int rot=(tag.getInt("rotation")+1) % Rotation.values().length;
+            tag.putInt("rotation", rot);
+        }
+    }
     @Override
     public InteractionResult useOn(UseOnContext context) {    
         WandsMod.LOGGER.info("UseOn");
@@ -132,6 +172,7 @@ public class WandItem extends Item{
         }else{
             wand=ClientRender.wand;
         }
+        wand.force_render=true;
         ItemStack stack = context.getPlayer().getMainHandItem();//check anyway...
         if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
             Vec3 hit = context.getClickLocation();
@@ -141,6 +182,11 @@ public class WandItem extends Item{
             int mode = WandItem.getMode(stack);
             WandsMod.log("mode "+mode,true);
             if(mode==2||mode==4||mode==5||mode==6){
+                if(wand.is_alt_pressed){
+                    WandsMod.log("pos "+pos,true);
+                    pos=pos.relative(side,1);
+                    WandsMod.log("pos "+pos,true);
+                }
                 if(wand.p1==null){
                     //clear();
                     wand.p1_state=block_state;
@@ -149,20 +195,24 @@ public class WandItem extends Item{
                     wand.x1=pos.getX();
                     wand.y1=pos.getY();
                     wand.z1=pos.getZ();
-                    wand.copy_pos1=pos;
+                    wand.copy_pos1 = pos;
+
                     //WandsMod.log("pos1 "+pos,true);
                     return InteractionResult.SUCCESS;
                 }else{
-                    if(wand.copy_pos2==null){
+                    ///if(wand.copy_pos2==null){
                         wand.copy_pos2=pos;
-                    }
+                    //}
                     //WandsMod.log("pos2 "+pos,true);
                     block_state=wand.p1_state;
                     wand.p2=true;
                 }
             }
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
-            
+            if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
+                wand.copy_pos1=null;
+                wand.copy_pos2=null;
+            }
         }
         
         return InteractionResult.SUCCESS;
@@ -182,24 +232,26 @@ public class WandItem extends Item{
             }
         }else{
             wand=ClientRender.wand;
+            wand.force_render=true;
         }
         wand.clear();
-        if(!world.isClientSide()) {
+        /*if(!world.isClientSide()) {
             ItemStack stack = player.getMainHandItem();//check anyway...
             if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-                player.displayClientMessage(new TextComponent("Wand mode: " + WandItem.getMode(stack)), false);
+                player.displayClientMessage(new TextComponent("Wand mode: " + getModeString(stack)), false);
             }
-        }
+        }*/
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
     @Environment(EnvType.CLIENT)
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
-        list.add(new TextComponent("mode: "+tag.getInt("mode")));
+        list.add(new TextComponent("mode: " + getModeString(stack)));
         list.add(new TextComponent("orientation: "+Orientation.values()[tag.getInt("orientation")].toString()));
         list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
+        list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));
     }
    
 }

@@ -56,10 +56,18 @@ public class BlockBuffer{
             buffer_y[i]=y;
             buffer_z[i]=z;
         }
-    }    
+    }
+    public void add(int x, int y, int z,BlockState s,Item i) {
+        if(length<max){
+            buffer_x[length]=x;
+            buffer_y[length]=y;
+            buffer_z[length]=z;
+            state[length]=s;
+            item[length]=i;
+            length++;
+        }
+    }
     public void add(int x, int y, int z){
-
-
         if(length<max){
             buffer_x[length]=x;
             buffer_y[length]=y;
@@ -74,5 +82,8 @@ public class BlockBuffer{
     }
     public void add(BlockPos p){
         add(p.getX(),p.getY(),p.getZ());
+    }
+    public void add(BlockPos p,BlockState s){
+        add(p.getX(),p.getY(),p.getZ(),s,null);
     }
 }

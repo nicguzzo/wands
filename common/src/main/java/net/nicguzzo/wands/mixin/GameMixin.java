@@ -1,7 +1,5 @@
 package net.nicguzzo.wands.mixin;
 
-//import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

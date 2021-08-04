@@ -102,7 +102,7 @@ class CircularBuffer {
         System.out.println("undo buffer");
         for(int i=0;i<last+1 && i<max;i++){
             e = elem[i];
-            System.out.println("i: "+i+" elem: "+e);
+            System.out.println("i: "+i+" elem: "+e.state);
         }
         System.out.println("top: "+ top);
         System.out.println("bottom: "+ bottom);

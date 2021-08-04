@@ -8,11 +8,13 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.LazyLoadedValue;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
@@ -120,16 +122,40 @@ public class WandsMod {
         if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
             switch(key){
                 case wand_mode_key:
-                    WandItem.nextMode(item_stack);
-                    player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getMode(item_stack)),false);
+                    if(shift){
+                        WandItem.prevMode(item_stack);
+                    }else {
+                        WandItem.nextMode(item_stack);
+                    }
+                    player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getModeString(item_stack)),false);
                 break;
                 case wand_orientation_key:
-                    if(WandItem.getMode(item_stack)==5){
-                        WandItem.nextPlane(item_stack);
-                        player.displayClientMessage(new TextComponent("Wand Plane: "+ WandItem.getPlane(item_stack)),false);
-                    }else{
-                        WandItem.nextOrientation(item_stack);
-                        player.displayClientMessage(new TextComponent("Wand Orientation: "+WandItem.getOrientation(item_stack)),false);
+                    switch(WandItem.getMode(item_stack)){
+                        case 5:
+                            WandItem.nextPlane(item_stack);
+                            player.displayClientMessage(new TextComponent("Wand Plane: "+ WandItem.getPlane(item_stack)),false);
+                            break;
+                        case 7:
+                            WandItem.nextRotation(item_stack);
+                            int r=WandItem.getRotation(item_stack);
+                            String rot="0°";
+                            switch(r) {
+                                case 1:
+                                    rot="90°";
+                                    break;
+                                case 2:
+                                    rot="180°";
+                                    break;
+                                case 3:
+                                    rot="270°";
+                                    break;
+                            }
+                            player.displayClientMessage(new TextComponent("Wand Rotation: "+ rot),false);
+                            break;
+                        default:
+                            WandItem.nextOrientation(item_stack);
+                            player.displayClientMessage(new TextComponent("Wand Orientation: "+WandItem.getOrientation(item_stack).toString().toLowerCase()),false);
+                            break;
                     }
 
                 break;
@@ -176,6 +202,21 @@ public class WandsMod {
                     player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(item_stack)),false);
                     //LOGGER.info("2 palette tag: "+ item_stack.getTag());
                 break;
+            }
+        }
+        if(key==-1){
+            Wand wand=null;
+            if(!player.level.isClientSide()){
+                wand=PlayerWand.get(player);
+                if(wand==null){
+                    PlayerWand.add_player(player);
+                    wand=PlayerWand.get(player);
+                }
+            }
+            if(wand!=null){
+                wand.is_alt_pressed=alt;
+                wand.is_shift_pressed=shift;
+                WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
             }
         }
     }
