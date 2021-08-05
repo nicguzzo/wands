@@ -258,6 +258,23 @@ public class Wand {
                 has_offhand=true;
             }
         }
+        if(offhand!=null && !has_palette && !has_bucket && !destroy){
+            if(offhand.getTag()!=null){
+                if(!preview){
+                    player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED),false);
+                }
+                offhand=null;
+                return;
+            }
+            if(!offhand.isStackable()){
+                if(!preview){
+                    player.displayClientMessage(new TextComponent("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED),false);
+                }
+                offhand=null;
+                return;
+            }
+        }
+
         if(!has_palette && !has_bucket){
             if(offhand_block!=null && Blocks.AIR != offhand_block){
                 offhand_state = offhand_block.defaultBlockState();

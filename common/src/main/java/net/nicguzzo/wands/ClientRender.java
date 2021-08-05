@@ -210,11 +210,12 @@ public class ClientRender {
                 case 2:
                     //preview_mode1(bufferBuilder);
                     if (wand.valid) {
-                        if(mode==2 || wand.block_buffer!=null && wand.block_buffer.get_length()==0) {
+                        if(mode==1 || mode==2/*wand.block_buffer!=null && wand.block_buffer.get_length()==0*/)
+                        {
                             preview_block(bufferBuilder,
-                                    c.x + wand.x1+0.01f, c.y + wand.y1+0.01f, c.z + wand.z1+0.01f,
-                                    c.x + wand.x2-0.01f, c.y + wand.y2-0.01f, c.z + wand.z2-0.01f,
-                                    0,0,255,255);
+                                    c.x + wand.x1+0.01f, c.y + wand.y1+0.01f, c.z + wand.z1-0.01f,
+                                    c.x + wand.x2-0.01f, c.y + wand.y2-0.01f, c.z + wand.z2+0.01f,
+                                    0,255,0,255);
                         }
                     }
                     //break;

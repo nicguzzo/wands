@@ -93,7 +93,7 @@ public class WandsModClient {
     public static void send_key(int key,boolean shift, boolean alt){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
-            WandsMod.LOGGER.info("send_key"+key+" shift "+shift +" alt "+alt);
+            //WandsMod.LOGGER.info("send_key"+key+" shift "+shift +" alt "+alt);
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeInt(key);
             packet.writeBoolean(shift);
