@@ -157,7 +157,7 @@ public class WandItem extends Item{
     }
     @Override
     public InteractionResult useOn(UseOnContext context) {    
-        WandsMod.LOGGER.info("UseOn");
+        //WandsMod.LOGGER.info("UseOn");
         Level world=context.getLevel();
         Wand wand=null;
         if(!world.isClientSide()){
@@ -180,12 +180,12 @@ public class WandItem extends Item{
             Direction side = context.getClickedFace();
             BlockState block_state = world.getBlockState(pos);
             int mode = WandItem.getMode(stack);
-            WandsMod.log("mode "+mode,true);
+            //WandsMod.log("mode "+mode,true);
             if(mode==2||mode==4||mode==5||mode==6){
                 if(wand.is_alt_pressed){
-                    WandsMod.log("pos "+pos,true);
+                    //WandsMod.log("pos "+pos,true);
                     pos=pos.relative(side,1);
-                    WandsMod.log("pos "+pos,true);
+                    //WandsMod.log("pos "+pos,true);
                 }
                 if(wand.p1==null){
                     //clear();
@@ -219,7 +219,7 @@ public class WandItem extends Item{
     }
     @Override
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {   
-        WandsMod.LOGGER.info("use");     
+        //WandsMod.LOGGER.info("use");     
         Wand wand=null;
         if(!world.isClientSide()){
             wand=PlayerWand.get(player);

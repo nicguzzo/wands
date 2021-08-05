@@ -220,7 +220,7 @@ public class WandsMod {
             if(wand!=null){
                 wand.is_alt_pressed=alt;
                 wand.is_shift_pressed=shift;
-                WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
+                //WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
             }
         }
     }

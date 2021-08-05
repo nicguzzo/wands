@@ -93,7 +93,7 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
     }
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-        System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
+        //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
             

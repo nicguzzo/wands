@@ -38,7 +38,7 @@ public class WandsConfig {
 	static public List<Block> denied=new ArrayList<Block>();
 
 	public void generate_lists(){
-		System.out.println("generating allow/deny lists");
+		//System.out.println("generating allow/deny lists");
 		for (String id : str_allowed) {
 			ResourceLocation res=ResourceLocation.tryParse(id);
 			Item item=Registry.ITEM.get(res);

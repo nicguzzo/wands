@@ -15,7 +15,7 @@ public class WandsForgeEventHandler {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRenderWorldLast(RenderWorldLastEvent event) {        
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
         //System.out.println("forge render!!");
         PoseStack poseStack=event.getMatrixStack();
         PoseStack poseStack2 = RenderSystem.getModelViewStack();
@@ -23,7 +23,6 @@ public class WandsForgeEventHandler {
         poseStack2.mulPoseMatrix(poseStack.last().pose());
         RenderSystem.applyModelViewMatrix();
         ClientRender.render(event.getMatrixStack(), 0, 0, 0, null);
-
         poseStack2.popPose();
         RenderSystem.applyModelViewMatrix();
     }
