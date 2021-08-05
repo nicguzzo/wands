@@ -183,6 +183,8 @@ public class Wand {
         //TODO: break items in palette, add tool slot to palette
         //TODO: plant with wand
         //TODO: rotate stairs based on player
+        //TODO: allow place on different blocks if offhand or palette
+        //TODO: place offhand (log) based on plyer direction??
         boolean creative = player.getAbilities().instabuild;
         boolean is_copy_paste=mode==6 || mode==7;
 

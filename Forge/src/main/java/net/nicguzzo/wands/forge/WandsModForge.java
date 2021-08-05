@@ -1,20 +1,45 @@
 package net.nicguzzo.wands.forge;
 
-import me.shedaniel.architectury.platform.forge.EventBuses;
-import me.shedaniel.architectury.utils.Env;
-import me.shedaniel.architectury.utils.EnvExecutor;
+import dev.architectury.event.events.common.TickEvent.Player;
+//import me.shedaniel.architectury.platform.forge.EventBuses;
+//import me.shedaniel.architectury.utils.Env;
+//import me.shedaniel.architectury.utils.EnvExecutor;
+import dev.architectury.platform.forge.EventBuses;
+import dev.architectury.utils.Env;
+import dev.architectury.utils.EnvExecutor;
 
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.WandsModClient;
+//import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod(WandsMod.MOD_ID)
+
 public class WandsModForge {
+    public static final Logger LOGGER = LogManager.getLogger();
+    
     public WandsModForge() {
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(WandsMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
-        WandsMod.init();        
-        EnvExecutor.runInEnv(Env.CLIENT, () -> WandsModClient::initialize);
+        WandsMod.init();
+        
+        EnvExecutor.runInEnv(Env.CLIENT, () -> 
+            ()-> {
+                WandsModClient.initialize();
+                MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
+            }
+        );
+        //MinecraftForge.EVENT_BUS.register(this);
     }
 }

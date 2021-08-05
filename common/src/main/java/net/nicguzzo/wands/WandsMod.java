@@ -1,30 +1,28 @@
 package net.nicguzzo.wands;
 
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.CreativeTabRegistry;
-import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.menu.MenuRegistry;
-import dev.architectury.registry.registries.Registries;
-import dev.architectury.registry.registries.RegistrySupplier;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.LazyLoadedValue;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import java.util.function.Supplier;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+
+import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.NetworkManager.Side;
+import dev.architectury.registry.CreativeTabRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
+import dev.architectury.registry.registries.DeferredRegister;
+import dev.architectury.registry.registries.Registries;
+import dev.architectury.registry.registries.RegistrySupplier;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.LazyLoadedValue;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class WandsMod {
     public static WandsConfig config=WandsConfig.get_instance();
@@ -79,6 +77,7 @@ public class WandsMod {
         ITEMS.register();
         MENUES.register();
         System.out.println(WandsExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
+                
         //NetworkReceiver
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
@@ -115,6 +114,11 @@ public class WandsMod {
                 }
             });
         });
+        PlayerEvent.PLAYER_QUIT.register((player)->{
+            LOGGER.info("PLAYER_QUIT");
+            PlayerWand.remove_player(player);
+        });
+        
     }
     
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
@@ -127,7 +131,7 @@ public class WandsMod {
                     }else {
                         WandItem.nextMode(item_stack);
                     }
-                    player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getModeString(item_stack)),false);
+                    //player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getModeString(item_stack)),false);
                 break;
                 case wand_orientation_key:
                     switch(WandItem.getMode(item_stack)){

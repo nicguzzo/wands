@@ -4,12 +4,9 @@
   "minVersion": "0.8",  
   "compatibilityLevel": "JAVA_16",  
   "client": [    
-    "RenderWorldMixin",
-    "GameMixin",
-    "GuiMixin"
+    "RenderWorldMixin"
   ],
-  "server":[
-    "ServerWorldMixin"
+  "server":[    
   ],
   "injectors": {
     "defaultRequire": 1

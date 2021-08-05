@@ -30,7 +30,7 @@ public class WandsConfig {
 	public boolean destroy_in_survival_drop=true;
 	public boolean allow_wand_to_break=false;
 	public boolean allow_offhand_to_break=false;
-	public float wand_mode_display_x_pos = 0.005f;
+	public float wand_mode_display_x_pos = 80.0f;
 	public float wand_mode_display_y_pos = 100.0f;
 	public String[] str_allowed=default_allowed;
 	public String[] str_denied=default_denied;

@@ -2,6 +2,12 @@ package net.nicguzzo.wands;
 
 import io.netty.buffer.Unpooled;
 import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
+
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
@@ -9,7 +15,10 @@ import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
@@ -56,6 +65,12 @@ public class WandsModClient {
             }
         });
 
+
+
+        ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
+            render_wand_info(pose);
+        });
+
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
             
@@ -91,5 +106,28 @@ public class WandsModClient {
         packet.writeBoolean(next_mode);
         packet.writeBoolean(toggle_rotate);
         NetworkManager.sendToServer(WandsMod.PALETTE_PACKET, packet);
+    }
+
+    public static void render_wand_info(PoseStack poseStack){
+        
+        Minecraft client = Minecraft.getInstance();
+        if(client!=null && client.player!=null){
+            ItemStack stack=client.player.getMainHandItem();
+            if(stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem){
+                int screenWidth =client.getWindow().getGuiScaledWidth();
+                int screenHeight = client.getWindow().getGuiScaledHeight();
+                Font font = client.font;
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                String msg="Mode: "+WandItem.getModeString(stack);
+                //int w=font.width(msg);
+                int h=font.lineHeight;
+                float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
+                float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
+                font.draw(poseStack,msg,x,y,0xffffff);
+            }
+        }
     }
 }
