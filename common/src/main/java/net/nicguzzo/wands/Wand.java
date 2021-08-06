@@ -14,6 +14,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -137,9 +138,10 @@ public class Wand {
         copy_pos1=null;
         copy_pos2=null;
         //copied=false;
-        copy_paste_buffer.clear();
+        //copy_paste_buffer.clear();
         if(player!=null)
             player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN),false);
+        tally_copied_buffer();
     }
 
     public void do_or_preview(
@@ -550,7 +552,7 @@ public class Wand {
                     //if (has_palette) {
 //                        block_state = block_buffer.state[a];
 //                    }
-                    if (!destroy && bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
+                    if (!destroy && !has_bucket && bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
                         continue;
                     }
                     if (place_block(tmp_pos, block_buffer.state[a])) {
@@ -610,7 +612,6 @@ public class Wand {
                                 if(pa.placed<=stack_item.getCount()){
                                     stack_item.setCount(stack_item.getCount() - pa.placed);
                                     pa.placed = 0;
-                                    break;
                                 }else{
                                     pa.placed-=stack_item.getCount();
                                     stack_item.setCount(0);
@@ -1145,7 +1146,7 @@ public class Wand {
                             for (int x = xs; x <= xe; x++) {
                                 bp.set(x, y, z);
                                 BlockState bs = level.getBlockState(bp);
-                                if (bs != Blocks.AIR.defaultBlockState()) {
+                                if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
                                     cp++;
                                     copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x-xs, y-ys, z-zs), bs));
                                 }
@@ -1256,68 +1257,10 @@ public class Wand {
             //undo_buffer.print();
         }
     }
-    /*public void prepare_palette(){
-        if(palette!=null) {
-            palette_slots.clear();
-            ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
-            //log("palette_inv: "+palette_inv);
-            int s = palette_inv.size();
-            for (int i = 0; i < s; i++) {
-                CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
-                ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
-                if (!stack.isEmpty()) {
-                    Block blk = Block.byItem(stack.getItem());
-                    if (blk != Blocks.AIR) {
-                        palette_slots.add(new PaletteSlot(i,blk.defaultBlockState()));
-                    }
-                }
-            }
-        }
-    }
-    public ItemStack get_item_from_palette(){
-        if(palette==null){
-            return ItemStack.EMPTY;
-        }
-        PaletteMode palatte_mode=PaletteItem.getMode(palette);
-        int bound=palette_slots.get(slot).slot;
-        if (palatte_mode == PaletteMode.RANDOM) {
-            slot = random.nextInt(bound);
-        } else if (palatte_mode == PaletteMode.ROUND_ROBIN) {
-            slot = (slot + 1) % bound;
-        }
-
-        PaletteMode palatte_mode=PaletteItem.getMode(palette);
-        CompoundTag tag= palette.getTag();
-        ListTag palette_inv = tag.getList("Palette", NbtType.COMPOUND);
-        if(palette_slots.size()>0){
-            nextSlot(palatte_mode, player.level.random,palette_slots.size());
-            CompoundTag stackTag = (CompoundTag) palette_inv.get(slots.get(slot));
-            ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
-            if(stack!=ItemStack.EMPTY){
-                return stack;
-            }
-        }
-        return ItemStack.EMPTY;
-    }
-    void nextSlot(PaletteMode palatte_mode,Random random,int bound) {
-		if (palatte_mode == PaletteMode.RANDOM) {
-			slot = random.nextInt(bound);
-		} else if (palatte_mode == PaletteMode.ROUND_ROBIN) {
-			slot = (slot + 1) % bound;
-		}
-	}*/
     public int from_buffer() {
         int placed = 0;
         if (preview) {
-            //log("block_buffer "+block_buffer.get_length());
             valid = (block_buffer.get_length() > 0) && block_buffer.get_length()<= wand_item.limit;
-
-        } else {
-            //for (int a = 0; a < block_buffer.get_length() && a < wand_item.limit && a < MAX_LIMIT; a++) {
-            //    if (place_block(block_buffer.get(a))) {
-            //        placed++;
-            //    }
-            //}
         }
         return placed;
     }
@@ -1721,5 +1664,24 @@ public class Wand {
         }
         return ret;
     }
-
+    void tally_copied_buffer(){
+        Map<String, BlockAccounting> ba_map = new HashMap<>();
+        for(CopyPasteBuffer b: copy_paste_buffer){
+            if(b.state!=null){
+                BlockAccounting ba= ba_map.get(b.state.getBlock().getDescriptionId());
+                if(ba==null) {
+                    ba = new BlockAccounting();
+                    ba_map.put(b.state.getBlock().getDescriptionId(),ba);
+                }
+                ba.needed+=1;
+            }
+        }
+        player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
+        for (var entry : ba_map.entrySet()){
+            TranslatableComponent name=new TranslatableComponent(entry.getKey());
+            TextComponent st=new TextComponent("   ");
+            st.append(name).append(" needed: "+entry.getValue().needed);
+            player.displayClientMessage(st,false);
+        }
+    }
 }

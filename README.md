@@ -66,13 +66,13 @@ Configurable in wands.json
 
 ###Optional: 
 Cconsume xp to place blocks. To enable change config file wands.json
-
+```
 "blocks_per_xp": 0      to disable xp consumption. 
 
 "blocks_per_xp": 2      will allow to place 2 blocks per xp point.
 
 "blocks_per_xp":0.5    would mean 2 xp cost per block
-
+```
  
 
 ##Version 2 now depends on Architectury Mod
@@ -94,6 +94,8 @@ Cconsume xp to place blocks. To enable change config file wands.json
 - Show wand mode on screen
 - Show more info on wand/palette tooltips
 - Keeping alt key pressed uses block next to targeted side as picking block for fill - Mode, lines, circles and copy.
+- Having an empty water bucket on the offhand can remove water
+- Having filled water bucket on the offhand can place water
  
 
 ####Any feedback is welcomed, please report any issues to me.
