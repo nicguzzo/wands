@@ -156,13 +156,13 @@ class WandUtils{
             BlockState bs = world.getBlockState(pos);
             if (bs != null) {
                 if(destroy){
-                    if (!(bs.equals(block_state) ||bs.equals(offhand_state))&& p0!=null)
+                    if (!(bs.equals(block_state) ||(offhand_state!=null&&  bs.is(offhand_state.getBlock())))&& p0!=null)
                         return p0;
                 }else{
                     if (can_place(bs,wand.removes_water,wand.removes_lava)) {
                         return pos;
                     } else {
-                        if (!(bs.equals(block_state)||bs.equals(offhand_state)))
+                        if (!(bs.equals(block_state)||(offhand_state!=null&&  bs.is(offhand_state.getBlock()))))
                             return null;
                     }
                 }
@@ -177,7 +177,7 @@ class WandUtils{
             BlockState bs = world.getBlockState(pos2);
             
             if (bs != null) {
-                if (!(bs.equals(block_state)||bs.equals(offhand_state))) {
+                if (!(bs.is(block_state.getBlock())|| (offhand_state!=null&&  bs.is(offhand_state.getBlock()))  )) {
                     if(destroy){
                         return pos.relative(dir, i);
                     }else{

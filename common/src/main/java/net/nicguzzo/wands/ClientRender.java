@@ -178,10 +178,10 @@ public class ClientRender {
                                                 aabb
                                         );
                                     }
-                                    preview_block(bufferBuilder,
+                                    /*preview_block(bufferBuilder,
                                         c.x + wand.x1 + aabb.minX, c.y + wand.y1 + aabb.minY, c.z + wand.z1 + aabb.minZ,
                                         c.x + wand.x1 + aabb.maxX, c.y + wand.y1 + aabb.maxY, c.z + wand.z1 + aabb.maxZ,
-                                        255,255,255,255);
+                                        255,255,255,255);*/
                                     //}
                                     vi++;
                                 }
@@ -205,7 +205,7 @@ public class ClientRender {
                                     255,255,255,255);
                         }
                     }
-                    break;
+                    //break;
                 case 1:
                 case 2:
                     //preview_mode1(bufferBuilder);

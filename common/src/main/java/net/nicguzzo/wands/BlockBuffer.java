@@ -86,4 +86,7 @@ public class BlockBuffer{
     public void add(BlockPos p,BlockState s){
         add(p.getX(),p.getY(),p.getZ(),s,null);
     }
+    public void add(BlockPos p,BlockState s,Item i){
+        add(p.getX(),p.getY(),p.getZ(),s,i);
+    }
 }

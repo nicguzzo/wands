@@ -139,22 +139,9 @@ public class WandsMod {
                             WandItem.nextPlane(item_stack);
                             player.displayClientMessage(new TextComponent("Wand Plane: "+ WandItem.getPlane(item_stack)),false);
                             break;
+                        case 0:
                         case 7:
-                            WandItem.nextRotation(item_stack);
-                            int r=WandItem.getRotation(item_stack);
-                            String rot="0°";
-                            switch(r) {
-                                case 1:
-                                    rot="90°";
-                                    break;
-                                case 2:
-                                    rot="180°";
-                                    break;
-                                case 3:
-                                    rot="270°";
-                                    break;
-                            }
-                            player.displayClientMessage(new TextComponent("Wand Rotation: "+ rot),false);
+
                             break;
                         default:
                             WandItem.nextOrientation(item_stack);
@@ -177,7 +164,24 @@ public class WandsMod {
                         PaletteItem.nextMode(offhand_stack);
                         //LOGGER.info("1 palette tag: "+ offhand_stack.getTag());
                         player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(offhand_stack)),false);
+                    }else{
+                        WandItem.nextRotation(item_stack);
+                        int r=WandItem.getRotation(item_stack);
+                        String rot="0°";
+                        switch(r) {
+                            case 1:
+                                rot="90°";
+                                break;
+                            case 2:
+                                rot="180°";
+                                break;
+                            case 3:
+                                rot="270°";
+                                break;
+                        }
+                        player.displayClientMessage(new TextComponent("Wand Rotation: "+ rot),false);
                     }
+
                 break;
                 case wand_undo:
                     if(player.getAbilities().instabuild==true && !player.level.isClientSide()){

@@ -221,9 +221,9 @@ public class Wand {
 
         ItemStack offhand = player.getOffhandItem();
         has_offhand=false;
-        if(mode==0 ){
-            offhand=null;
-        }
+        //if(mode==0 ){
+//            offhand=null;
+//        }
 
         ItemStack item_stack = null;
 
@@ -281,18 +281,53 @@ public class Wand {
                 //log("offhand_block: "+offhand_block);
                 if (offhand_block instanceof SlabBlock) {
                     double hity = WandUtils.unitCoord(hit.y);
-                    if (hity > 0.5) {
-                        offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
-                    } else {
-                        offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+                    if(mode==0  ){
+                        if(!offhand_state.is(block_state.getBlock())) {
+                            if (is_alt_pressed) {
+                                offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+                            }else{
+                                offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+                            }
+                        }else{
+                            offhand_state=block_state;
+                        }
+                    }else {
+                        if (hity > 0.5) {
+                            offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+                        } else {
+                            offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+                        }
                     }
                 } else {
                     if (offhand_block instanceof StairBlock) {
                         double hity = WandUtils.unitCoord(hit.y);
-                        if (hity > 0.5) {
-                            offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
-                        } else {
-                            offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
+                        if(mode==0  ){
+                            if(!offhand_state.is(block_state.getBlock())) {
+                                if (is_alt_pressed) {
+                                    offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
+                                }else{
+                                    offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
+                                }
+                            }else{
+                                offhand_state=block_state;
+                            }
+                        }else {
+                            if (hity > 0.5) {
+                                offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
+                            } else {
+                                offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
+                            }
+                        }
+                        switch(WandItem.getRotation(wand_stack)){
+                            case 1:
+                                offhand_state=offhand_state.rotate(Rotation.CLOCKWISE_90);
+                                break;
+                            case 2:
+                                offhand_state=offhand_state.rotate(Rotation.CLOCKWISE_180);
+                                break;
+                            case 3:
+                                offhand_state=offhand_state.rotate(Rotation.COUNTERCLOCKWISE_90);
+                                break;
                         }
                     }
                 }
@@ -551,12 +586,13 @@ public class Wand {
                                     if (stack_item != null && !stack_item.isEmpty()) {
                                         BlockAccounting pa= block_accounting.get(stack_item.getItem());
                                         if(pa!=null && pa.placed>0){
+                                            log(stack_item.getDescriptionId()+" needed: "+pa.needed+" placed: "+pa.placed);
                                             if(pa.placed<=stack_item.getCount()){
                                                 stack_item.setCount(stack_item.getCount() - pa.placed);
                                                 pa.placed = 0;
                                             }else{
+                                                pa.placed -= stack_item.getCount();
                                                 stack_item.setCount(0);
-                                                pa.placed = pa.placed - stack_item.getCount();
                                             }
                                             shulker_items.set(j, stack_item.save(itemTag));
                                         }
@@ -574,9 +610,10 @@ public class Wand {
                                 if(pa.placed<=stack_item.getCount()){
                                     stack_item.setCount(stack_item.getCount() - pa.placed);
                                     pa.placed = 0;
+                                    break;
                                 }else{
+                                    pa.placed-=stack_item.getCount();
                                     stack_item.setCount(0);
-                                    pa.placed = pa.placed - stack_item.getCount();
                                 }
                             }
                         }
@@ -624,28 +661,6 @@ public class Wand {
             x = pos.getX();
             y = pos.getY();
             z = pos.getZ();
-            //float o = 0.01f;
-            /*switch (side) {
-                case UP:
-                    y += block_height ;
-                    break;
-                case DOWN:
-                    y -= o;
-                    break;
-                case SOUTH:
-                    z += 1 + o;
-                    break;
-                case NORTH:
-                    z -= o;
-                    break;
-                case EAST:
-                    x += 1 + o;
-                    break;
-                case WEST:
-                    x -= o;
-                    break;
-            }*/
-
         }
         if (d1 != null) {
             BlockPos dest = null;
@@ -655,7 +670,7 @@ public class Wand {
                 dest = WandUtils.find_next_pos(player.level, block_state, d1, pos, wand_item, destroy, offhand_state);
             }
             if (dest != null) {
-                if (preview) {
+                //if (preview) {
                     x1 = dest.getX();
                     y1 = dest.getY();
                     z1 = dest.getZ();
@@ -663,13 +678,20 @@ public class Wand {
                     y2 = y1 + 1;
                     z2 = z1 + 1;
                     valid = true;
-                } else {
+                //} else {
                     block_buffer.reset();
-                    block_buffer.add(dest);
-                    //if (place_block(dest,block_state)) {
-//                        return 1;
-//                    }
-                }
+                    BlockState state=null;
+                    Item item=null;
+                    if(!has_palette) {
+                        if(offhand_state!=null && !offhand_state.isAir()){
+                            state=offhand_state;
+                        }
+                        if(state!=null){
+                            item=state.getBlock().asItem();
+                        }
+                    }
+                    block_buffer.add(dest,state,item);
+                //}
             }
         }
         return 0;
