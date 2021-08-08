@@ -194,7 +194,6 @@ public class Wand {
         //TODO: make snow add layers if there's snow already
         //TODO: fix undo/redo
         //TODO: replace mode
-        //TODO: preview with texture
         //TODO: break items in palette, add tool slot to palette
         //TODO: plant with wand
         //TODO: rotate stairs based on player
@@ -298,59 +297,6 @@ public class Wand {
         if (!has_palette && !has_bucket) {
             if (offhand_block != null && Blocks.AIR != offhand_block) {
                 offhand_state = offhand_block.defaultBlockState();
-                //log("offhand_block: "+offhand_block);
-                /*if (offhand_block instanceof SlabBlock) {
-                    double hity = WandUtils.unitCoord(hit.y);
-                    if (mode == 0) {
-                        if (!offhand_state.is(block_state.getBlock())) {
-                            if (is_alt_pressed) {
-                                offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
-                            } else {
-                                offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
-                            }
-                        } else {
-                            offhand_state = block_state;
-                        }
-                    } else {
-                        if (hity > 0.5) {
-                            offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
-                        } else {
-                            offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
-                        }
-                    }
-                } else {
-                    if (offhand_block instanceof StairBlock) {
-                        double hity = WandUtils.unitCoord(hit.y);
-                        if (mode == 0) {
-                            if (!offhand_state.is(block_state.getBlock())) {
-                                if (is_alt_pressed) {
-                                    offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
-                                } else {
-                                    offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
-                                }
-                            } else {
-                                offhand_state = block_state;
-                            }
-                        } else {
-                            if (hity > 0.5 || is_alt_pressed) {
-                                offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
-                            } else {
-                                offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
-                            }
-                        }
-                        switch (WandItem.getRotation(wand_stack)) {
-                            case 1:
-                                offhand_state = offhand_state.rotate(Rotation.CLOCKWISE_90);
-                                break;
-                            case 2:
-                                offhand_state = offhand_state.rotate(Rotation.CLOCKWISE_180);
-                                break;
-                            case 3:
-                                offhand_state = offhand_state.rotate(Rotation.COUNTERCLOCKWISE_90);
-                                break;
-                        }
-                    }
-                }*/
             }
         }
         int placed = 0;
@@ -476,8 +422,24 @@ public class Wand {
                         //log("bucket " + bucket);
                         if (bucket.is(Fluids.WATER.getBucket())) {
                             //log("bucket is water");
-                            has_bucket = true;
-                            block_state = Blocks.WATER.defaultBlockState();
+                            if(creative){
+                                has_bucket = true;
+                                block_state = Blocks.WATER.defaultBlockState();
+                            }else {
+                                //in survival check if player has another water bucket
+                                for (int i = 0; i < 36; ++i) {
+                                    ItemStack stack = player.getInventory().getItem(i);
+                                    if (stack.getItem() instanceof BucketItem && stack.is(Fluids.WATER.getBucket())) {
+                                        has_bucket = true;
+                                        block_state = Blocks.WATER.defaultBlockState();
+                                        break;
+                                    }
+                                }
+                                if(!has_bucket){
+                                    player.displayClientMessage(new TextComponent("You need another water bucket in the inventory."),false);
+                                    return;
+                                }
+                            }
                         }
                         if (bucket.isStackable()) {
                             //log("bucket is empty");
@@ -1289,7 +1251,7 @@ public class Wand {
             if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
                 if (blk instanceof SnowLayerBlock) {
                     int sn = random.nextInt(7);
-                    st.setValue(SnowLayerBlock.LAYERS, sn + 1);
+                    st=st.setValue(SnowLayerBlock.LAYERS, sn + 1);
                 }
             }
             st=stair_slabs(st);

@@ -53,7 +53,7 @@ public class ClientRender {
     //private static boolean last_valid =false;
     public static Wand wand=new Wand();
     static VoxelShape preview_shape =null;
-    static RenderShape render_shape =null;
+
     static AABB def_aabb=new AABB(0,0,0,1,1,1);
     static private final int grid_n=16;
     static private int grid_i=0;
@@ -154,7 +154,7 @@ public class ClientRender {
 //                }
                 if(block_state!=null) {
                     preview_shape = block_state.getShape(client.level, last_pos);
-                    render_shape=block_state.getRenderShape();
+                    //render_shape=block_state.getRenderShape();
                     //block_state.getMaterial()
                 }
                 preview_mode(wand.mode,matrixStack,bufferIn);
@@ -327,9 +327,9 @@ public class ClientRender {
                             tesselator.end();
                         }
 
-                        if (wand.block_buffer != null) {
+                        if (wand.block_buffer != null ) {
                             random.setSeed(0);
-                            if(!wand.destroy) {
+                            if(!wand.destroy && !wand.has_bucket) {
                                 setRender_shape_begin(tesselator, bufferBuilder);
                                 for (int a = 0; a < wand.block_buffer.get_length() && a < Wand.MAX_LIMIT; a++) {
                                     int x = wand.block_buffer.buffer_x[a];
