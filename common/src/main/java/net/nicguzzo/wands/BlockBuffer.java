@@ -67,26 +67,26 @@ public class BlockBuffer{
             length++;
         }
     }
-    public void add(int x, int y, int z){
+    public void add(int x, int y, int z,Wand w){
         if(length<max){
             buffer_x[length]=x;
             buffer_y[length]=y;
             buffer_z[length]=z;
-            state[length]=null;
-            item[length]=null;
+            state[length]=w.get_state();
+            item[length]=w.get_item(state[length]);
             length++;
         }
     }
     public void set(int i,BlockPos p){
         set(i,p.getX(),p.getY(),p.getZ());
     }
-    public void add(BlockPos p){
+    /*public void add(BlockPos p){
         add(p.getX(),p.getY(),p.getZ());
-    }
-    public void add(BlockPos p,BlockState s){
+    }*/
+    /*public void add(BlockPos p,BlockState s){
         add(p.getX(),p.getY(),p.getZ(),s,null);
-    }
-    public void add(BlockPos p,BlockState s,Item i){
-        add(p.getX(),p.getY(),p.getZ(),s,i);
+    }*/
+    public void add(BlockPos p,Wand w){
+        add(p.getX(),p.getY(),p.getZ(),w);
     }
 }

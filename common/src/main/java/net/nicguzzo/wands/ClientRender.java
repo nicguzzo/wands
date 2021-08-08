@@ -39,6 +39,7 @@ public class ClientRender {
     public static final float p_o = -0.001f;// preview_block offset
     private static long t0 = 0;
 	private static long t1 = 0;
+    private static long t00 = 0;
 	private static boolean prnt;
     public static Vec3 c=new Vec3(0,0,0);
     static BlockPos last_pos=null;
@@ -66,24 +67,27 @@ public class ClientRender {
     static double x2=0;
     static double y2=0;
     static double z2=0;
+    static float opacity=0.8f;
     private static final ResourceLocation GRID_TEXTURE = new ResourceLocation("wands", "textures/blocks/grid.png");
     static Random random=new Random();
     static Direction[] dirs={ Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST,null};
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
-
+        opacity=WandsMod.config.preview_opacity;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         ItemStack stack = player.getMainHandItem();
         prnt = false;
-
+        force=false;
         if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
             
             t1 = System.currentTimeMillis();
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
                 prnt = true;
-            }else{
-               force=(t1 - t0 > 100);
+            }//else{
+            if (t1 - t00 > 100) {
+                t00 = System.currentTimeMillis();
+               force=true;
             }
 
             //if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
@@ -680,11 +684,16 @@ public class ClientRender {
         RenderSystem.enableTexture();
         RenderSystem.enableCull();
         RenderSystem.enableBlend();
-        RenderSystem.blendFunc(
+        RenderSystem.defaultBlendFunc();
+        /*RenderSystem.blendFunc(
                 GlStateManager.SourceFactor.SRC_COLOR,
                 GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR);
-        RenderSystem.blendEquation(32774);
-        bufferBuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        RenderSystem.blendEquation(32774);*/
+        /*RenderSystem.blendFunc(
+                GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_DST_ALPHA);*/
+        RenderSystem.setShaderColor(1.0f,1.0f,1.0f,opacity);
+        bufferBuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
     }
     static void render_shape(Tesselator tesselator,BufferBuilder bufferBuilder,BlockState state,double x, double y,double z){
         float vx=0;
@@ -713,7 +722,7 @@ public class ClientRender {
                             u = Float.intBitsToFloat(verts[j + 4]);
                             v = Float.intBitsToFloat(verts[j + 5]);
                             //WandsMod.log("vert " + i + "  " + x1 + " " + y1 + " " + z1 + " uv: " + u + " " + v, prnt);
-                            bufferBuilder.vertex(c.x + x + vx, +c.y + y + vy, c.z + z + vz).uv(u, v).color(255,255,255,255).endVertex();
+                            bufferBuilder.vertex(c.x + x + vx, +c.y + y + vy, c.z + z + vz).uv(u, v).endVertex();
                         }
                     }
                 }

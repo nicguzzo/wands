@@ -45,17 +45,17 @@ public class Wand {
     public float y2 = 0.0f;
     public float z2 = 0.0f;
     public BlockPos p1 = null;
-    public boolean  p2=false;
-    public BlockState p1_state = null;    
-    
+    public boolean p2 = false;
+    public BlockState p1_state = null;
+
     public boolean valid = false;
     public static final int MAX_UNDO = 2048;
-    public static final int MAX_LIMIT = 32768;    
+    public static final int MAX_LIMIT = 32768;
     Player player;
     Level level;
     BlockState block_state;
-    BlockState offhand_state=null;
-    Block offhand_block=null;
+    BlockState offhand_state = null;
+    Block offhand_block = null;
     BlockPos pos;
     public Direction side = Direction.UP;
     Vec3 hit;
@@ -64,116 +64,129 @@ public class Wand {
     public float y0 = 0.0f;
     public float block_height = 1.0f;
     boolean is_stair = false;
-    Rotation stair_rotation=Rotation.NONE;
+    Rotation stair_rotation = Rotation.NONE;
     boolean is_slab_top = false;
     boolean is_slab_bottom = false;
-    boolean is_alt_pressed=false;
-    boolean is_shift_pressed=false;
+    boolean is_alt_pressed = false;
+    boolean is_shift_pressed = false;
     public boolean destroy;
-    boolean stop=false;
-    ItemStack bucket=null;
-    public boolean is_double_slab=false;
-    public int grid_voxel_index=0;
-    public ItemStack palette=null;
-    boolean has_palette=false;
-    boolean has_bucket=false;
-    boolean has_offhand=false;
-    public boolean force_render=false;
-    private class PaletteSlot{
-        public ItemStack stack=null;
-        public BlockState state=null;
-        public int slot=0;
-        PaletteSlot(int s,BlockState b,ItemStack stk){
-            slot=s;
-            state=b;
-            stack=stk;
+    boolean stop = false;
+    ItemStack bucket = null;
+    public boolean is_double_slab = false;
+    public int grid_voxel_index = 0;
+    public ItemStack palette = null;
+    boolean has_palette = false;
+    boolean has_bucket = false;
+    boolean has_offhand = false;
+    public boolean force_render = false;
+
+    private class PaletteSlot {
+        public ItemStack stack = null;
+        public BlockState state = null;
+        public int slot = 0;
+
+        PaletteSlot(int s, BlockState b, ItemStack stk) {
+            slot = s;
+            state = b;
+            stack = stk;
         }
     }
+
     private class BlockAccounting {
-        public int placed=0;
-        public int needed=0;
-        public int in_player=0;
+        public int placed = 0;
+        public int needed = 0;
+        public int in_player = 0;
     }
-    public int slot=0;
-    public Vector<PaletteSlot> palette_slots= new Vector<PaletteSlot>();
+
+    public int slot = 0;
+    public Random random = new Random();
+    public volatile long palette_seed = System.currentTimeMillis();
+    public Vector<PaletteSlot> palette_slots = new Vector<PaletteSlot>();
     public Map<Item, BlockAccounting> block_accounting = new HashMap<Item, BlockAccounting>();
-    public BlockBuffer block_buffer=new BlockBuffer(MAX_LIMIT);
+    public BlockBuffer block_buffer = new BlockBuffer(MAX_LIMIT);
     public CircularBuffer undo_buffer = new CircularBuffer(MAX_UNDO);
 
-    private BlockPos.MutableBlockPos tmp_pos=new BlockPos.MutableBlockPos();
+    private BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
 
-    int MAX_COPY_VOL=20*20*20;
-    class CopyPasteBuffer{
-        public BlockPos pos=null;
-        public BlockState state=null;
-        public CopyPasteBuffer(BlockPos pos,BlockState state){
-            this.pos=pos;
-            this.state=state;
+    int MAX_COPY_VOL = 20 * 20 * 20;
+
+    class CopyPasteBuffer {
+        public BlockPos pos = null;
+        public BlockState state = null;
+
+        public CopyPasteBuffer(BlockPos pos, BlockState state) {
+            this.pos = pos;
+            this.state = state;
         }
     }
-    Vector<CopyPasteBuffer> copy_paste_buffer=new Vector<CopyPasteBuffer>();
-    public BlockPos copy_pos1=null;
-    public BlockPos copy_pos2=null;
-    public int copy_x1=0;
-    public int copy_y1=0;
-    public int copy_z1=0;
-    public int copy_x2=0;
-    public int copy_y2=0;
-    public int copy_z2=0;
+
+    Vector<CopyPasteBuffer> copy_paste_buffer = new Vector<CopyPasteBuffer>();
+    public BlockPos copy_pos1 = null;
+    public BlockPos copy_pos2 = null;
+    public int copy_x1 = 0;
+    public int copy_y1 = 0;
+    public int copy_z1 = 0;
+    public int copy_x2 = 0;
+    public int copy_y2 = 0;
+    public int copy_z2 = 0;
     //public boolean  copied=false;
     boolean preview;
     public int mode;
-    boolean prnt=false;
-    private void log(String s){
-        WandsMod.log(s,prnt);
+    boolean prnt = false;
+
+    private void log(String s) {
+        WandsMod.log(s, prnt);
     }
 
     public void clear() {
         p1 = null;
-        p1_state=null;
+        p1_state = null;
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
         //log("wand cleared");
-        copy_pos1=null;
-        copy_pos2=null;
+        copy_pos1 = null;
+        copy_pos2 = null;
         //copied=false;
         //copy_paste_buffer.clear();
-        if(player!=null)
-            player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN),false);
-        tally_copied_buffer();
+        if (!player.level.isClientSide()) {
+            if (player != null)
+                player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
+            tally_copied_buffer();
+        }
     }
 
     public void do_or_preview(
-        Player player,
-        Level level,
-        BlockState block_state,
-        BlockPos pos,
-        Direction side,
-        Vec3 hit,
-        ItemStack wand_stack,
-        boolean prnt) {
-        this.player=player;
-        this.level=level;
-        this.block_state=block_state;
-        this.pos=pos;
-        this.side=side;
-        this.hit=hit;
-        this.wand_stack=wand_stack;
-        this.prnt=prnt;
-        y0 =0.0f;
+            Player player,
+            Level level,
+            BlockState block_state,
+            BlockPos pos,
+            Direction side,
+            Vec3 hit,
+            ItemStack wand_stack,
+            boolean prnt) {
+        this.player = player;
+        this.level = level;
+        this.block_state = block_state;
+        this.pos = pos;
+        this.side = side;
+        this.hit = hit;
+        this.wand_stack = wand_stack;
+        this.prnt = prnt;
+        y0 = 0.0f;
         block_height = 1.0f;
-        is_slab_top=false;
-        is_double_slab=false;
-        is_slab_bottom=false;
-        is_stair=false;
+        is_slab_top = false;
+        is_double_slab = false;
+        is_slab_bottom = false;
+        is_stair = false;
         preview = level.isClientSide();
-        offhand_state =null;
-        stop=false;
+        offhand_state = null;
+        stop = false;
+        random.setSeed(palette_seed);
         //if (!preview) {
 //            log("server");
 //        }
-        if(block_state==null || pos==null || side==null || level==null || player==null || hit==null|| wand_stack==null){
+        if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
 
@@ -187,13 +200,14 @@ public class Wand {
         //TODO: rotate stairs based on player
         //TODO: allow place on different blocks if offhand or palette
         //TODO: place offhand (log) based on plyer direction??
+        //TODO: cull preview blocks
         boolean creative = player.getAbilities().instabuild;
-        boolean is_copy_paste=mode==6 || mode==7;
+        boolean is_copy_paste = mode == 6 || mode == 7;
 
         wand_item = (WandItem) wand_stack.getItem();
         mode = WandItem.getMode(wand_stack);
-        
-        if (block_state.getBlock() instanceof SlabBlock) {
+
+        /*if (block_state.getBlock() instanceof SlabBlock) {
             if (!preview) {
                 is_double_slab = block_state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE;
             }
@@ -202,98 +216,102 @@ public class Wand {
         } else {
             if (block_state.getBlock() instanceof SnowLayerBlock) {
                 //SnowLayerBlock snow=(SnowLayerBlock)block_state.getBlock();
-                int layers=block_state.getValue(SnowLayerBlock.LAYERS);
-                block_height=layers/8.0f;
-                if(layers<8){
+                int layers = block_state.getValue(SnowLayerBlock.LAYERS);
+                block_height = layers / 8.0f;
+                if (layers < 8) {
                     //valid=false;
                     //return;
                 }
             }
         }
-        
+
         if (is_slab_top || is_slab_bottom) {
             block_height = 0.5f;
             if (is_slab_top) {
                 y0 = 0.5f;
             }
-        }
+        }*/
         //WandsMod.log("block_height "+block_height,prnt);
         valid = false;
-        this.destroy = WandUtils.can_destroy(player, block_state,false);
+        this.destroy = WandUtils.can_destroy(player, block_state, false);
 
         ItemStack offhand = player.getOffhandItem();
-        has_offhand=false;
+        has_offhand = false;
         //if(mode==0 ){
 //            offhand=null;
 //        }
 
         ItemStack item_stack = null;
 
-        if (offhand!=null && WandUtils.is_shulker(offhand)) {
+        if (offhand != null && WandUtils.is_shulker(offhand)) {
             /*if(!preview){
                 player.displayClientMessage(new TextComponent("offhand can't be a shulkerbox, use a palette! "),false);
             }
             return;*/
-            offhand=null;
+            offhand = null;
         }
         palette = null;
-        has_palette=false;
-        has_bucket=false;
-        if (offhand!=null && offhand.getItem() instanceof PaletteItem) {
+        has_palette = false;
+        has_bucket = false;
+        if (offhand != null && offhand.getItem() instanceof PaletteItem) {
             if (mode > 0) {
                 palette = offhand;
-                has_palette=true;
+                has_palette = true;
             }
         }
-        if (offhand!=null && offhand.getItem() instanceof BucketItem) {
+        if (offhand != null && offhand.getItem() instanceof BucketItem) {
             if (mode > 0) {
-                bucket=offhand;
+                bucket = offhand;
                 has_bucket = true;
             }
         }
         if (item_stack == null) {
             item_stack = Item.byBlock(block_state.getBlock()).getDefaultInstance();
         }
-        if(offhand!=null){
-            offhand_block=Block.byItem(offhand.getItem());
-            if(offhand_block!=Blocks.AIR){
-                has_offhand=true;
+        if (offhand != null) {
+            offhand_block = Block.byItem(offhand.getItem());
+            if (offhand_block != Blocks.AIR) {
+                has_offhand = true;
             }
         }
-        if(offhand!=null && !has_palette && !has_bucket && !destroy){
-            if(offhand.getTag()!=null){
-                if(!preview){
-                    player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED),false);
+        if (offhand != null && !has_palette && !has_bucket && !destroy) {
+            if (offhand.getTag() != null) {
+                if (!preview) {
+                    player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED), false);
                 }
-                offhand=null;
+                offhand = null;
                 return;
             }
-            if(!offhand.isStackable()){
-                if(!preview){
-                    player.displayClientMessage(new TextComponent("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED),false);
+            if (!offhand.isStackable()) {
+                if (!preview) {
+                    player.displayClientMessage(new TextComponent("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
                 }
-                offhand=null;
+                offhand = null;
                 return;
             }
+        }
+        block_accounting.clear();
+        if (has_palette && !destroy && !is_copy_paste) {
+            update_palette();
         }
 
-        if(!has_palette && !has_bucket){
-            if(offhand_block!=null && Blocks.AIR != offhand_block){
+        if (!has_palette && !has_bucket) {
+            if (offhand_block != null && Blocks.AIR != offhand_block) {
                 offhand_state = offhand_block.defaultBlockState();
                 //log("offhand_block: "+offhand_block);
-                if (offhand_block instanceof SlabBlock) {
+                /*if (offhand_block instanceof SlabBlock) {
                     double hity = WandUtils.unitCoord(hit.y);
-                    if(mode==0  ){
-                        if(!offhand_state.is(block_state.getBlock())) {
+                    if (mode == 0) {
+                        if (!offhand_state.is(block_state.getBlock())) {
                             if (is_alt_pressed) {
                                 offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
-                            }else{
+                            } else {
                                 offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
                             }
-                        }else{
-                            offhand_state=block_state;
+                        } else {
+                            offhand_state = block_state;
                         }
-                    }else {
+                    } else {
                         if (hity > 0.5) {
                             offhand_state = offhand_block.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
                         } else {
@@ -303,36 +321,36 @@ public class Wand {
                 } else {
                     if (offhand_block instanceof StairBlock) {
                         double hity = WandUtils.unitCoord(hit.y);
-                        if(mode==0  ){
-                            if(!offhand_state.is(block_state.getBlock())) {
+                        if (mode == 0) {
+                            if (!offhand_state.is(block_state.getBlock())) {
                                 if (is_alt_pressed) {
                                     offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
-                                }else{
+                                } else {
                                     offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
                                 }
-                            }else{
-                                offhand_state=block_state;
+                            } else {
+                                offhand_state = block_state;
                             }
-                        }else {
-                            if (hity > 0.5) {
+                        } else {
+                            if (hity > 0.5 || is_alt_pressed) {
                                 offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.TOP);
                             } else {
                                 offhand_state = offhand_block.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM);
                             }
                         }
-                        switch(WandItem.getRotation(wand_stack)){
+                        switch (WandItem.getRotation(wand_stack)) {
                             case 1:
-                                offhand_state=offhand_state.rotate(Rotation.CLOCKWISE_90);
+                                offhand_state = offhand_state.rotate(Rotation.CLOCKWISE_90);
                                 break;
                             case 2:
-                                offhand_state=offhand_state.rotate(Rotation.CLOCKWISE_180);
+                                offhand_state = offhand_state.rotate(Rotation.CLOCKWISE_180);
                                 break;
                             case 3:
-                                offhand_state=offhand_state.rotate(Rotation.COUNTERCLOCKWISE_90);
+                                offhand_state = offhand_state.rotate(Rotation.COUNTERCLOCKWISE_90);
                                 break;
                         }
                     }
-                }
+                }*/
             }
         }
         int placed = 0;
@@ -368,83 +386,84 @@ public class Wand {
 
         }
 
-        if (!preview ) {
+        if (!preview) {
+            log(" using palette seed: " + palette_seed);
             int limit = MAX_LIMIT;
             if (!creative) {
                 limit = wand_item.limit;
             }
             //log("has_palette: "+has_palette);
-            palette_slots.clear();
-            block_accounting.clear();
+
+
             if (has_palette && !destroy && !is_copy_paste) {
 
-                ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
-                //log("palette_inv: "+palette_inv);
-                int s = palette_inv.size();
-                for (int i = 0; i < s; i++) {
-                    CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
-                    ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
-                    if (!stack.isEmpty()) {
-                        Block blk = Block.byItem(stack.getItem());
-                        if (blk != Blocks.AIR) {
-                            PaletteSlot psl=new PaletteSlot(i,blk.defaultBlockState(),stack);
-                            if(!palette_slots.stream().anyMatch(pp-> (pp.stack.sameItem(stack)) ) ) {
-                                block_accounting.put(stack.getItem(),new BlockAccounting());
-                            }
-                            palette_slots.add(psl);
-                        }
-                    }
-                }
+                //update_palette();
                 //log("palette: "+palette_slots);
                 //log("block_accounting: "+ block_accounting);
                 PaletteMode palette_mode = PaletteItem.getMode(palette);
                 CompoundTag tag = palette.getTag();
-                slot=0;
+
                 for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                     if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
                         block_buffer.state[a] = null;
+                        block_buffer.item[a] = null;
                         continue;
                     }
-                    int bound = palette_slots.size();
+                    /*int bound = palette_slots.size();
                     if (palette_mode == PaletteMode.RANDOM) {
-                        slot = level.random.nextInt(bound);
+                        slot = random.nextInt(bound);
                     } else if (palette_mode == PaletteMode.ROUND_ROBIN) {
                         slot = (slot + 1) % bound;
                     }
-                    PaletteSlot ps=palette_slots.get(slot);
-                    BlockAccounting pa= block_accounting.get(ps.stack.getItem());
-                    if(pa==null){
+                    PaletteSlot ps=palette_slots.get(slot);*/
+                    BlockState st = block_buffer.state[a];
+                    if (st == null) {
+                        continue;
+                    }
+                    Item it = block_buffer.item[a];
+                    if (it == null) {
+                        continue;
+                    }
+                    BlockAccounting pa = block_accounting.get(it);
+                    //BlockAccounting pa= block_accounting.get(ps.stack.getItem());
+                    if (pa == null) {
                         //log("no palette accounting found for "+ps.stack.getItem());
                         continue;
                     }
                     pa.needed++;
 
-                    if (!ps.stack.isEmpty()) {
-                        block_buffer.state[a]=ps.state;
-                        block_buffer.item[a]=ps.stack.getItem();
-                        if (ps.state.getBlock() instanceof SlabBlock) {
-                            if (ps.state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
-                                pa.needed++;
-                            }
+                    //if (!ps.stack.isEmpty())
+                    //{
+                    //block_buffer.state[a]=ps.state;
+                    //block_buffer.item[a]=ps.stack.getItem();
+                    if (st.getBlock() instanceof SlabBlock) {
+                        if (st.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
+                            pa.needed++;
                         }
-                        if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
+                    } else {
+                        if (st.getBlock() instanceof SnowLayerBlock) {
+                            int sn = st.getValue(SnowLayerBlock.LAYERS);
+                            pa.needed += sn - 1;
+                        }
+                    }
+                        /*if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
                             if (ps.state.getBlock() instanceof SnowLayerBlock) {
-                                int sn=player.level.random.nextInt(7);
+                                int sn=level.random.nextInt(7);
                                 pa.needed+=sn;
                                 block_buffer.state[a] = ps.state.setValue(SnowLayerBlock.LAYERS, sn+1);
                             }
                             if (PaletteItem.getRotate(palette)) {
                                 block_buffer.state[a] = ps.state.getBlock().rotate(ps.state, Rotation.getRandom(level.random));
                             }
-                        }
-                    } else {
+                        }*/
+                    /*} else {
                         block_buffer.state[a] = null;
                         block_buffer.item[a] = null;
-                    }
+                    }*/
 
                 }
-            }else{
-                if(!is_copy_paste) {
+            } else {
+                if (!is_copy_paste) {
                     if (!has_palette && !destroy && has_offhand) {
                         Block offhand_block = Block.byItem(offhand.getItem());
                         if (offhand_block != Blocks.AIR) {
@@ -467,33 +486,33 @@ public class Wand {
                         }
                     }
                     //palette_slots.add(new PaletteSlot(0,block_state,item_stack));
-                    BlockAccounting pa =new BlockAccounting();
+                    BlockAccounting pa = new BlockAccounting();
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                         if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
-                        }else{
+                        } else {
                             pa.needed++;
-                            if(offhand_state!=null)
+                            if (offhand_state != null)
                                 block_buffer.state[a] = offhand_state;
                             else
                                 block_buffer.state[a] = block_state;
                             block_buffer.item[a] = item_stack.getItem();
                         }
                     }
-                    block_accounting.put(item_stack.getItem(),pa);
-                }else{
+                    block_accounting.put(item_stack.getItem(), pa);
+                } else {
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                         if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
-                        }else{
-                            BlockAccounting pa=block_accounting.get(block_buffer.item[a]);
-                            if(pa==null) {
+                        } else {
+                            BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
+                            if (pa == null) {
                                 pa = new BlockAccounting();
                                 pa.needed++;
-                                block_accounting.put(block_buffer.item[a],pa);
-                            }else{
+                                block_accounting.put(block_buffer.item[a], pa);
+                            } else {
                                 pa.needed++;
                             }
                         }
@@ -502,14 +521,13 @@ public class Wand {
             }
             //log("block_state "+block_state);
             //log( "palette_slots "+palette_slots.size());
-            //log( "block_accounting "+block_accounting.size());
-            boolean missing_blocks=block_accounting.size()==0;
+            log("block_accounting " + block_accounting.size());
+            boolean missing_blocks = block_accounting.size() == 0;
 
             //deal with inventory
-            if(!creative && !destroy && !has_bucket && mode !=6)
-            {
+            if (!creative && !destroy && !has_bucket && mode != 6) {
                 //for (var pa : palette_accounting.entrySet()) {
-                    //log(pa.getKey()+" in player "+pa.getValue().in_player);
+                //log(pa.getKey()+" in player "+pa.getValue().in_player);
                 //}
                 ItemStack stack;
                 for (int i = 0; i < 36; ++i) {
@@ -517,7 +535,7 @@ public class Wand {
                     if (WandUtils.is_shulker(stack)) {
                         //count_in_shulker += count_in_shulker(stack, item_stack);
                         for (var pa : block_accounting.entrySet()) {
-                            pa.getValue().in_player +=WandUtils.count_in_shulker(stack, pa.getKey());
+                            pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
                         }
                     } else {
                         for (var pa : block_accounting.entrySet()) {
@@ -542,10 +560,10 @@ public class Wand {
             //log("block_buffer.length: " + block_buffer.get_length());
             //log("wand limit: " + wand_item.limit);
             //log( "limit "+limit);
-            //log( "missing_blocks "+missing_blocks);
-            placed=0;
-            int a=0;
-            if(!missing_blocks || destroy || has_bucket) {
+            log("missing_blocks " + missing_blocks);
+            placed = 0;
+            int a = 0;
+            if (!missing_blocks || destroy || has_bucket) {
                 AABB bb = player.getBoundingBox();
                 for (a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                     tmp_pos.set(block_buffer.buffer_x[a], block_buffer.buffer_y[a], block_buffer.buffer_z[a]);
@@ -556,7 +574,7 @@ public class Wand {
                         continue;
                     }
                     if (place_block(tmp_pos, block_buffer.state[a])) {
-                        if(!destroy) {
+                        if (!destroy) {
                             Item item = block_buffer.item[a];
                             if (item != null) {
                                 BlockAccounting pa = block_accounting.get(item);
@@ -567,12 +585,12 @@ public class Wand {
                         }
                         placed++;
                     }
-                    if(stop){
+                    if (stop) {
                         break;
                     }
                 }
 
-                if (!creative && !destroy && placed>0) {
+                if (!creative && !destroy && placed > 0) {
                     ItemStack stack = null;
                     ItemStack stack_item = null;
                     //look for items on shulker boxes first
@@ -586,13 +604,13 @@ public class Wand {
                                     CompoundTag itemTag = shulker_items.getCompound(j);
                                     stack_item = ItemStack.of(itemTag);
                                     if (stack_item != null && !stack_item.isEmpty()) {
-                                        BlockAccounting pa= block_accounting.get(stack_item.getItem());
-                                        if(pa!=null && pa.placed>0){
-                                            log(stack_item.getDescriptionId()+" needed: "+pa.needed+" placed: "+pa.placed);
-                                            if(pa.placed<=stack_item.getCount()){
+                                        BlockAccounting pa = block_accounting.get(stack_item.getItem());
+                                        if (pa != null && pa.placed > 0) {
+                                            log(stack_item.getDescriptionId() + " needed: " + pa.needed + " placed: " + pa.placed);
+                                            if (pa.placed <= stack_item.getCount()) {
                                                 stack_item.setCount(stack_item.getCount() - pa.placed);
                                                 pa.placed = 0;
-                                            }else{
+                                            } else {
                                                 pa.placed -= stack_item.getCount();
                                                 stack_item.setCount(0);
                                             }
@@ -607,13 +625,13 @@ public class Wand {
                     for (int i = 0; i < 36; ++i) {
                         stack_item = player.getInventory().getItem(i);
                         if (!WandUtils.is_shulker(stack_item)) {
-                            BlockAccounting pa= block_accounting.get(stack_item.getItem());
-                            if(pa!=null && pa.placed>0){
-                                if(pa.placed<=stack_item.getCount()){
+                            BlockAccounting pa = block_accounting.get(stack_item.getItem());
+                            if (pa != null && pa.placed > 0) {
+                                if (pa.placed <= stack_item.getCount()) {
                                     stack_item.setCount(stack_item.getCount() - pa.placed);
                                     pa.placed = 0;
-                                }else{
-                                    pa.placed-=stack_item.getCount();
+                                } else {
+                                    pa.placed -= stack_item.getCount();
                                     stack_item.setCount(0);
                                 }
                             }
@@ -634,22 +652,22 @@ public class Wand {
                 } else {
                     if (block_state != null) {
                         packet.writeItem(block_state.getBlock().asItem().getDefaultInstance());
-                    }else{
+                    } else {
                         packet.writeItem(ItemStack.EMPTY);
                     }
                 }
                 NetworkManager.sendToPlayer((ServerPlayer) player, WandsMod.SND_PACKET, packet);
             }
         }
-        if(p2){
+        if (p2) {
             p1 = null;
-            p2=false;
-            valid=false;
+            p2 = false;
+            valid = false;
         }
     }
 
     public int mode0(boolean invert) {
-        Direction dirs[] = getDirMode0(side,hit.x, hit.y, hit.z);
+        Direction dirs[] = getDirMode0(side, hit.x, hit.y, hit.z);
         if (invert) {
             if (dirs[0] != null)
                 dirs[0] = dirs[0].getOpposite();
@@ -672,23 +690,22 @@ public class Wand {
             }
             if (dest != null) {
                 //if (preview) {
-                    x1 = dest.getX();
-                    y1 = dest.getY();
-                    z1 = dest.getZ();
-                    x2 = x1 + 1;
-                    y2 = y1 + 1;
-                    z2 = z1 + 1;
-                    valid = true;
+                x1 = dest.getX();
+                y1 = dest.getY();
+                z1 = dest.getZ();
+                x2 = x1 + 1;
+                y2 = y1 + 1;
+                z2 = z1 + 1;
+                valid = true;
                 //} else {
-                    block_buffer.reset();
-                    BlockState state=get_state();
-                    Item item=get_item(state);
-                    block_buffer.add(dest,state,item);
+                block_buffer.reset();
+                block_buffer.add(dest, this);
                 //}
             }
         }
         return 0;
     }
+
     public int mode1(Orientation orientation) {
         boolean preview = player.level.isClientSide();
         Direction dir = Direction.EAST;
@@ -704,7 +721,7 @@ public class Wand {
             int offx = 0;
             int offy = 0;
             int offz = 0;
-            
+
             switch (side) {
                 case UP:
                 case DOWN:
@@ -807,16 +824,17 @@ public class Wand {
                 z2 = pos3.getZ() + offz + 1;
                 valid = true;
             } //else {
-                return fill(pos1, pos3);
+            return fill(pos1, pos3);
             //}
         } else {
             valid = false;
         }
         return 0;
     }
+
     public int mode2() {
-        int placed=0;
-        if (p1 != null  &&  (p2||preview)) {
+        int placed = 0;
+        if (p1 != null && (p2 || preview)) {
             valid = true;
             x1 = p1.getX();
             y1 = p1.getY();
@@ -845,23 +863,24 @@ public class Wand {
                 y2 = y1 + 1;
                 z2 = z1 + 1;
             }
-            placed = fill(p1,pos);
+            placed = fill(p1, pos);
             valid = true;
         }
-        
+
         return placed;
     }
+
     public int mode3() {
         block_buffer.reset();
-        BlockState st=get_state();
-        WandUtils.add_neighbour(block_buffer, wand_item, pos, block_state, player.level, side,st);
+        //BlockState st=get_state();
+        WandUtils.add_neighbour(block_buffer, wand_item, pos, block_state, player.level, side, this);
         int i = 0;
         int placed = 0;
-        int found=1;
-        while (i < wand_item.limit && i < MAX_LIMIT && found< wand_item.limit) {
+        int found = 1;
+        while (i < wand_item.limit && i < MAX_LIMIT && found < wand_item.limit) {
             if (i < block_buffer.get_length()) {
                 BlockPos p = block_buffer.get(i).relative(side, -1);
-                found+=WandUtils.find_neighbours(block_buffer, wand_item, p, block_state, player.level, side,st);
+                found += WandUtils.find_neighbours(block_buffer, wand_item, p, block_state, player.level, side, this);
             }
             i++;
         }
@@ -874,19 +893,20 @@ public class Wand {
         placed = from_buffer();
         return placed;
     }
+
     public int mode4() {
         block_buffer.reset();
-        BlockState state=get_state();
-        Item item=get_item(state);
+        BlockState state = get_state();
+        Item item = get_item(state);
 
-        if (p1 != null  &&  (p2||preview)) {
+        if (p1 != null && (p2 || preview)) {
             int x1 = p1.getX();
             int y1 = p1.getY();
             int z1 = p1.getZ();
             int x2 = pos.getX();
             int y2 = pos.getY();
             int z2 = pos.getZ();
-            int n=0;
+            int n = 0;
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);
@@ -906,7 +926,7 @@ public class Wand {
             } else {
                 zs = -1;
             }
-            block_buffer.add(x1, y1, z1,state,item);
+            block_buffer.add(x1, y1, z1, this);
             n++;
             // X
             if (dx >= dy && dx >= dz) {
@@ -924,9 +944,9 @@ public class Wand {
                     }
                     lp1 += 2 * dy;
                     lp2 += 2 * dz;
-                    block_buffer.add(x1, y1, z1,state,item);
+                    block_buffer.add(x1, y1, z1, this);
                     n++;
-                    if(n>= wand_item.limit)
+                    if (n >= wand_item.limit)
                         break;
                 }
             } else if (dy >= dx && dy >= dz) {
@@ -944,9 +964,9 @@ public class Wand {
                     }
                     lp1 += 2 * dx;
                     lp2 += 2 * dz;
-                    block_buffer.add(x1, y1, z1,state,item);
+                    block_buffer.add(x1, y1, z1, this);
                     n++;
-                    if(n>= wand_item.limit)
+                    if (n >= wand_item.limit)
                         break;
                 }
             } else {
@@ -964,33 +984,34 @@ public class Wand {
                     }
                     lp1 += 2 * dy;
                     lp2 += 2 * dx;
-                    block_buffer.add(x1, y1, z1,state,item);
+                    block_buffer.add(x1, y1, z1, this);
                     n++;
-                    if(n>= wand_item.limit)
+                    if (n >= wand_item.limit)
                         break;
                 }
             }
         }
         return from_buffer();
     }
+
     public int mode5(int plane, boolean fill) {
         block_buffer.reset();
-        BlockState state=get_state();
-        Item item=get_item(state);
-        if (p1 != null && (p2||preview)) {
+        BlockState state = get_state();
+        Item item = get_item(state);
+        if (p1 != null && (p2 || preview)) {
             int xc = p1.getX();
             int yc = p1.getY();
             int zc = p1.getZ();
             int px = pos.getX() - xc;
             int py = pos.getY() - yc;
-            int pz = pos.getZ() - zc;            
+            int pz = pos.getZ() - zc;
             // log("circle plane:"+plane+ " fill: "+fill);
             int r = (int) Math.sqrt(px * px + py * py + pz * pz);
 
             if (plane == 0) {// XZ;
                 int x = 0, y = 0, z = r;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                drawCircle(xc, yc, zc, x, y, z, plane);
 
                 while (z >= x) {
                     x++;
@@ -999,16 +1020,16 @@ public class Wand {
                         d = d + 4 * (x - z) + 10;
                     } else
                         d = d + 4 * x + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                    drawCircle(xc, yc, zc, x, y, z, plane);
                 }
                 if (fill) {
                     int r2 = r * r;
-                    
+
                     for (z = -r; z <= r; z++) {
                         for (x = -r; x <= r; x++) {
                             int det = (x * x) + (z * z);
                             if (det <= r2) {
-                                block_buffer.add(xc + x, yc, zc + z,state,item);
+                                block_buffer.add(xc + x, yc, zc + z, this);
                             }
                         }
                     }
@@ -1016,7 +1037,7 @@ public class Wand {
             } else if (plane == 1) {// XY;
                 int x = 0, y = r, z = 0;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                drawCircle(xc, yc, zc, x, y, z, plane);
                 while (y >= x) {
                     x++;
                     if (d > 0) {
@@ -1024,14 +1045,14 @@ public class Wand {
                         d = d + 4 * (x - y) + 10;
                     } else
                         d = d + 4 * x + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                    drawCircle(xc, yc, zc, x, y, z, plane);
                 }
                 if (fill) {
-                    int r2 = r * r;                    
+                    int r2 = r * r;
                     for (y = -r; y <= r; y++) {
                         for (x = -r; x <= r; x++) {
                             if ((x * x) + (y * y) <= r2) {
-                                block_buffer.add(xc + x, yc + y, zc,state,item);
+                                block_buffer.add(xc + x, yc + y, zc, this);
                             }
                         }
                     }
@@ -1039,7 +1060,7 @@ public class Wand {
             } else if (plane == 2) {// YZ;
                 int x = 0, y = 0, z = r;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                drawCircle(xc, yc, zc, x, y, z, plane);
                 while (z >= y) {
                     y++;
                     if (d > 0) {
@@ -1047,14 +1068,14 @@ public class Wand {
                         d = d + 4 * (y - z) + 10;
                     } else
                         d = d + 4 * y + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
+                    drawCircle(xc, yc, zc, x, y, z, plane);
                 }
                 if (fill) {
-                    int r2 = r * r;                    
+                    int r2 = r * r;
                     for (z = -r; z <= r; z++) {
                         for (y = -r; y <= r; y++) {
                             if ((y * y) + (z * z) <= r2) {
-                                block_buffer.add(xc, yc + y, zc + z,state,item);
+                                block_buffer.add(xc, yc + y, zc + z, this);
                             }
                         }
                     }
@@ -1063,20 +1084,21 @@ public class Wand {
         }
         return from_buffer();
     }
-    public int mode6(){
-        if(!preview){
+
+    public int mode6() {
+        if (!preview) {
             //WandsMod.log("mode6 copy_pos1: "+copy_pos1+" copy_pos2: "+copy_pos2 + " copy_paste_buffer: "+copy_paste_buffer.size(),prnt);
         }
-        if (copy_pos1 != null  &&  preview) {
+        if (copy_pos1 != null && preview) {
             valid = true;
             copy_x1 = copy_pos1.getX();
             copy_y1 = copy_pos1.getY();
             copy_z1 = copy_pos1.getZ();
-            if(copy_pos2==null){
+            if (copy_pos2 == null) {
                 copy_x2 = pos.getX();
                 copy_y2 = pos.getY();
                 copy_z2 = pos.getZ();
-            }else{
+            } else {
                 copy_x2 = copy_pos2.getX();
                 copy_y2 = copy_pos2.getY();
                 copy_z2 = copy_pos2.getZ();
@@ -1103,7 +1125,7 @@ public class Wand {
                 copy_z2 = copy_z1 + 1;
             }
         }
-        if (copy_pos1 != null  &&  copy_pos2!=null ) {
+        if (copy_pos1 != null && copy_pos2 != null) {
             //if(!preview )
             {
                 int xs, ys, zs, xe, ye, ze;
@@ -1133,7 +1155,7 @@ public class Wand {
                 if (ll <= MAX_COPY_VOL) {
                     BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
                     copy_paste_buffer.clear();
-                    int cp=0;
+                    int cp = 0;
                     for (int z = zs; z <= ze; z++) {
                         for (int y = ys; y <= ye; y++) {
                             for (int x = xs; x <= xe; x++) {
@@ -1141,73 +1163,77 @@ public class Wand {
                                 BlockState bs = level.getBlockState(bp);
                                 if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
                                     cp++;
-                                    copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x-xs, y-ys, z-zs), bs));
+                                    copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
                                 }
                             }
                         }
                     }
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
-                    if(!preview)
-                        player.displayClientMessage(new TextComponent("Copied: "+ cp+" blocks"),false);
+                    if (!preview)
+                        player.displayClientMessage(new TextComponent("Copied: " + cp + " blocks"), false);
                 } else {
+                    player.displayClientMessage(new TextComponent("Copy limit reached"), false);
                     //log("max volume");
                 }
             }
         }
         return 0;
     }
-    int mode7(){
 
-        if(!preview) {
+    int mode7() {
+
+        if (!preview) {
             //log("mode6 paste "+copy_paste_buffer.size());
             BlockPos b_pos = pos.relative(side, 1);
             BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             block_buffer.reset();
             for (CopyPasteBuffer b : copy_paste_buffer) {
-                int rot=WandItem.getRotation(wand_stack);
-                Rotation rotation=Rotation.values()[rot];
-                BlockPos p=b.pos.rotate(rotation);
+                int rot = WandItem.getRotation(wand_stack);
+                Rotation rotation = Rotation.values()[rot];
+                BlockPos p = b.pos.rotate(rotation);
                 block_buffer.add(b_pos.getX() + p.getX(),
-                                 b_pos.getY() + p.getY(),
-                                 b_pos.getZ() + p.getZ(), b.state.rotate(rotation), Item.byBlock(b.state.getBlock()));
+                        b_pos.getY() + p.getY(),
+                        b_pos.getZ() + p.getZ(), b.state.rotate(rotation), b.state.getBlock().asItem());
             }
         }
         return 0;
     }
-    private void drawCircle( int xc, int yc, int zc, int x, int y, int z, int plane,BlockState state,Item item) {
+
+    private void drawCircle(int xc, int yc, int zc, int x, int y, int z, int plane) {
         switch (plane) {
             case 0:// XZ
-                block_buffer.add(xc + x, yc, zc + z,state,item);
-                block_buffer.add(xc - x, yc, zc + z,state,item);
-                block_buffer.add(xc + x, yc, zc - z,state,item);
-                block_buffer.add(xc - x, yc, zc - z,state,item);
-                block_buffer.add(xc + z, yc, zc + x,state,item);
-                block_buffer.add(xc - z, yc, zc + x,state,item);
-                block_buffer.add(xc + z, yc, zc - x,state,item);
-                block_buffer.add(xc - z, yc, zc - x,state,item);
+                block_buffer.add(xc + x, yc, zc + z, this);
+                block_buffer.add(xc - x, yc, zc + z, this);
+                block_buffer.add(xc + x, yc, zc - z, this);
+                block_buffer.add(xc - x, yc, zc - z, this);
+                block_buffer.add(xc + z, yc, zc + x, this);
+                block_buffer.add(xc - z, yc, zc + x, this);
+                block_buffer.add(xc + z, yc, zc - x, this);
+                block_buffer.add(xc - z, yc, zc - x, this);
                 break;
             case 1:// XY
-                block_buffer.add(xc + x, yc + y, zc,state,item);
-                block_buffer.add(xc - x, yc + y, zc,state,item);
-                block_buffer.add(xc + x, yc - y, zc,state,item);
-                block_buffer.add(xc - x, yc - y, zc,state,item);
-                block_buffer.add(xc + y, yc + x, zc,state,item);
-                block_buffer.add(xc - y, yc + x, zc,state,item);
-                block_buffer.add(xc + y, yc - x, zc,state,item);
-                block_buffer.add(xc - y, yc - x, zc,state,item);
+                block_buffer.add(xc + x, yc + y, zc, this);
+                block_buffer.add(xc - x, yc + y, zc, this);
+                block_buffer.add(xc + x, yc - y, zc, this);
+                block_buffer.add(xc - x, yc - y, zc, this);
+                block_buffer.add(xc + y, yc + x, zc, this);
+                block_buffer.add(xc - y, yc + x, zc, this);
+                block_buffer.add(xc + y, yc - x, zc, this);
+                block_buffer.add(xc - y, yc - x, zc, this);
                 break;
             case 2:// YZ
-                block_buffer.add(xc, yc + y, zc + z,state,item);
-                block_buffer.add(xc, yc - y, zc + z,state,item);
-                block_buffer.add(xc, yc + y, zc - z,state,item);
-                block_buffer.add(xc, yc - y, zc - z,state,item);
-                block_buffer.add(xc, yc + z, zc + y,state,item);
-                block_buffer.add(xc, yc - z, zc + y,state,item);
-                block_buffer.add(xc, yc + z, zc - y,state,item);
-                block_buffer.add(xc, yc - z, zc - y,state,item);
+                block_buffer.add(xc, yc + y, zc + z, this);
+                block_buffer.add(xc, yc - y, zc + z, this);
+                block_buffer.add(xc, yc + y, zc - z, this);
+                block_buffer.add(xc, yc - y, zc - z, this);
+                block_buffer.add(xc, yc + z, zc + y, this);
+                block_buffer.add(xc, yc - z, zc + y, this);
+                block_buffer.add(xc, yc + z, zc - y, this);
+                block_buffer.add(xc, yc - z, zc - y, this);
                 break;
         }
     }
+
     public void undo(int n) {
         if (undo_buffer != null) {
             for (int i = 0; i < n && i < undo_buffer.size(); i++) {
@@ -1216,16 +1242,16 @@ public class Wand {
                 if (p != null) {
 
                     if (!p.destroyed) {
-                        if(level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState())){
+                        if (level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState())) {
                             undo_buffer.pop();
-                        }else{
+                        } else {
                             //log("undo failed");
                             //log("    state: "+p.state);
                             //log("    pos: "+p.pos);
                             //log("    destroyed: "+p.destroyed);
                         }
                     } else {
-                        if(level.setBlockAndUpdate(p.pos, p.state)){
+                        if (level.setBlockAndUpdate(p.pos, p.state)) {
                             undo_buffer.pop();
                         }
                     }
@@ -1234,25 +1260,79 @@ public class Wand {
             //undo_buffer.print();
         }
     }
-    BlockState get_state(){
-        if(!has_palette) {
-            if(offhand_state!=null && !offhand_state.isAir()){
-                return offhand_state;
-            }else{
-                if (mode == 2 || mode==4 ||mode==5) {
+
+    BlockState get_state() {
+        if (!has_palette) {
+            BlockState st=block_state;
+            if (offhand_state != null && !offhand_state.isAir()) {
+                st= offhand_state;
+            } else {
+                if (mode == 2 || mode == 4 || mode == 5) {
                     if (p1_state != null)
-                        return p1_state;
+                        st=p1_state;
                 }
             }
+            st=stair_slabs(st);
+            return st;
+        } else {
+            PaletteMode palette_mode = PaletteItem.getMode(palette);
+            int bound = palette_slots.size();
+            if (palette_mode == PaletteMode.RANDOM) {
+                slot = random.nextInt(bound);
+            } else if (palette_mode == PaletteMode.ROUND_ROBIN) {
+                slot = (slot + 1) % bound;
+            }
+
+            PaletteSlot ps = palette_slots.get(slot);
+            BlockState st = ps.state;
+            Block blk = st.getBlock();
+            if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
+                if (blk instanceof SnowLayerBlock) {
+                    int sn = random.nextInt(7);
+                    st.setValue(SnowLayerBlock.LAYERS, sn + 1);
+                }
+            }
+            st=stair_slabs(st);
+            //if (palette_mode == PaletteItem.PaletteMode.RANDOM)
+            {
+                if (PaletteItem.getRotate(palette)) {
+                    st = ps.state.getBlock().rotate(ps.state, Rotation.getRandom(random));
+                }
+            }
+            return st;
         }
-        return block_state;
     }
-    Item get_item(BlockState state){
-        if(state!=null){
+
+    Item get_item(BlockState state) {
+        if (state != null) {
             return state.getBlock().asItem();
         }
         return null;
     }
+    public BlockState stair_slabs(BlockState st){
+        Block blk=st.getBlock();
+        if(blk instanceof SlabBlock){
+            double hity = WandUtils.unitCoord(hit.y);
+            if (hity > 0.5 || is_alt_pressed) {
+                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+            } else {
+                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+            }
+        } else{
+            if (blk instanceof StairBlock) {
+                double hity = WandUtils.unitCoord(hit.y);
+                //st = blk.defaultBlockState().rotate(Rotation.values()[WandItem.getRotation(wand_stack)]);
+                if (hity > 0.5 || is_alt_pressed) {
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(Rotation.values()[WandItem.getRotation(wand_stack)]);
+                } else {
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(Rotation.values()[WandItem.getRotation(wand_stack)]);
+                }
+
+            }
+        }
+        return st;
+    }
+
     public void redo(int n) {
         if (undo_buffer != null) {
             for (int i = 0; i < n && undo_buffer.can_go_forward(); i++) {
@@ -1312,12 +1392,11 @@ public class Wand {
 
         if (ll <= limit) {
             block_buffer.reset();
-            BlockState state=get_state();
-            Item item=get_item(state);
+
             for (int z = zs; z <= ze; z++) {
                 for (int y = ys; y <= ye; y++) {
                     for (int x = xs; x <= xe; x++) {
-                        block_buffer.add(x, y, z,state,item);
+                        block_buffer.add(x, y, z,this);
                     }
                 }
             }
@@ -1678,6 +1757,29 @@ public class Wand {
             TextComponent st=new TextComponent("   ");
             st.append(name).append(" needed: "+entry.getValue().needed);
             player.displayClientMessage(st,false);
+        }
+    }
+    void update_palette(){
+        slot=0;
+        if(palette!=null) {
+            palette_slots.clear();
+            ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
+            //log("palette_inv: "+palette_inv);
+            int s = palette_inv.size();
+            for (int i = 0; i < s; i++) {
+                CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
+                ItemStack stack = ItemStack.of(stackTag.getCompound("Block"));
+                if (!stack.isEmpty()) {
+                    Block blk = Block.byItem(stack.getItem());
+                    if (blk != Blocks.AIR) {
+                        PaletteSlot psl = new PaletteSlot(i, blk.defaultBlockState(), stack);
+                        if (!palette_slots.stream().anyMatch(pp -> (pp.stack.sameItem(stack)))) {
+                            block_accounting.put(stack.getItem(), new BlockAccounting());
+                        }
+                        palette_slots.add(psl);
+                    }
+                }
+            }
         }
     }
 }

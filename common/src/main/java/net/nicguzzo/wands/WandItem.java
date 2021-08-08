@@ -1,11 +1,15 @@
 package net.nicguzzo.wands;
+import dev.architectury.networking.NetworkManager;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -181,6 +185,7 @@ public class WandItem extends Item{
             BlockState block_state = world.getBlockState(pos);
             int mode = WandItem.getMode(stack);
             //WandsMod.log("mode "+mode,true);
+
             if(mode==2||mode==4||mode==5||mode==6){
                 if(wand.is_alt_pressed){
                     pos=pos.relative(side,1);
@@ -209,6 +214,13 @@ public class WandItem extends Item{
                 }
             }
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
+            if(!world.isClientSide()) {
+                wand.palette_seed = world.random.nextInt(20000000);
+                FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+                packet.writeLong(wand.palette_seed);
+                WandsMod.log(" new palette_seed: "+wand.palette_seed,true);
+                NetworkManager.sendToPlayer((ServerPlayer) context.getPlayer(), WandsMod.PALETTE_SEED_PACKET, packet);
+            }
             if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
                 wand.copy_pos1=null;
                 wand.copy_pos2=null;

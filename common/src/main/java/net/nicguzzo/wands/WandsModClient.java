@@ -23,6 +23,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -87,6 +88,15 @@ public class WandsModClient {
                     SoundType sound_type = block.getSoundType(block.defaultBlockState());
                     SoundEvent sound=(destroy? sound_type.getBreakSound() : sound_type.getPlaceSound());
                     context.getPlayer().level.playSound(context.getPlayer(),pos,sound,SoundSource.BLOCKS, 1.0f, 1.0f);
+                }
+            });
+        });
+        NetworkManager.registerReceiver(Side.S2C,WandsMod.PALETTE_SEED_PACKET, (packet,context)->{
+            long seed=packet.readLong();
+            context.queue(()->{
+                if(ClientRender.wand!=null) {
+                    WandsMod.log(" got palette_seed: "+seed,true);
+                    ClientRender.wand.palette_seed = seed;
                 }
             });
         });

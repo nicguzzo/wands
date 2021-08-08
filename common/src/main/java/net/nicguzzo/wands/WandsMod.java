@@ -2,6 +2,7 @@ package net.nicguzzo.wands;
 
 import java.util.function.Supplier;
 
+import net.minecraft.world.InteractionResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -64,7 +65,8 @@ public class WandsMod {
     static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
     static public ResourceLocation SND_PACKET= new ResourceLocation(MOD_ID, "sound_packet");
     static public ResourceLocation PALETTE_PACKET= new ResourceLocation(MOD_ID, "palette_packet");
-    
+    static public ResourceLocation PALETTE_SEED_PACKET= new ResourceLocation(MOD_ID, "palette_seed_packet");
+
     static final public int wand_mode_key        = GLFW.GLFW_KEY_V;
     static final public int wand_orientation_key = GLFW.GLFW_KEY_X;
     static final public int wand_invert_key      = GLFW.GLFW_KEY_I;
@@ -88,6 +90,7 @@ public class WandsMod {
                 process_keys(context.getPlayer(), key,shift,alt);
             });
         });
+
         NetworkManager.registerReceiver(Side.C2S, PALETTE_PACKET, (packet,context)->{
             boolean mode=packet.readBoolean();
             boolean rotate=packet.readBoolean();
@@ -160,7 +163,7 @@ public class WandsMod {
                 break;
                 case palette_mode_key:
                     ItemStack offhand_stack=player.getOffhandItem();
-                    if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
+                    if(!shift&& !offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
                         PaletteItem.nextMode(offhand_stack);
                         //LOGGER.info("1 palette tag: "+ offhand_stack.getTag());
                         player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(offhand_stack)),false);
