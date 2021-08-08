@@ -25,6 +25,7 @@ public class WandsModForge {
         EnvExecutor.runInEnv(Env.CLIENT, () -> 
             ()-> {
                 WandsModClient.initialize();
+                WandsModClient.is_forge=true;
                 MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
             }
         );

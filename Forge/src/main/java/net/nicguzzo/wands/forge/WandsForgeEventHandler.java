@@ -1,5 +1,7 @@
 package net.nicguzzo.wands.forge;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,7 +24,7 @@ public class WandsForgeEventHandler {
         poseStack2.pushPose();
         poseStack2.mulPoseMatrix(poseStack.last().pose());
         RenderSystem.applyModelViewMatrix();
-        ClientRender.render(event.getMatrixStack(), 0, 0, 0, null);
+        ClientRender.render(event.getMatrixStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
         poseStack2.popPose();
         RenderSystem.applyModelViewMatrix();
     }
