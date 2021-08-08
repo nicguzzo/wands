@@ -69,7 +69,7 @@ public class Wand {
     boolean is_slab_bottom = false;
     boolean is_alt_pressed=false;
     boolean is_shift_pressed=false;
-    boolean destroy;
+    public boolean destroy;
     boolean stop=false;
     ItemStack bucket=null;
     public boolean is_double_slab=false;
@@ -681,16 +681,8 @@ public class Wand {
                     valid = true;
                 //} else {
                     block_buffer.reset();
-                    BlockState state=null;
-                    Item item=null;
-                    if(!has_palette) {
-                        if(offhand_state!=null && !offhand_state.isAir()){
-                            state=offhand_state;
-                        }
-                        if(state!=null){
-                            item=state.getBlock().asItem();
-                        }
-                    }
+                    BlockState state=get_state();
+                    Item item=get_item(state);
                     block_buffer.add(dest,state,item);
                 //}
             }
@@ -861,10 +853,7 @@ public class Wand {
     }
     public int mode3() {
         block_buffer.reset();
-        BlockState st=block_state;
-        if(has_offhand && offhand_state!=null && !offhand_state.isAir()){
-            st=offhand_state;
-        }
+        BlockState st=get_state();
         WandUtils.add_neighbour(block_buffer, wand_item, pos, block_state, player.level, side,st);
         int i = 0;
         int placed = 0;
@@ -887,6 +876,9 @@ public class Wand {
     }
     public int mode4() {
         block_buffer.reset();
+        BlockState state=get_state();
+        Item item=get_item(state);
+
         if (p1 != null  &&  (p2||preview)) {
             int x1 = p1.getX();
             int y1 = p1.getY();
@@ -914,7 +906,7 @@ public class Wand {
             } else {
                 zs = -1;
             }
-            block_buffer.add(x1, y1, z1,block_state,null);
+            block_buffer.add(x1, y1, z1,state,item);
             n++;
             // X
             if (dx >= dy && dx >= dz) {
@@ -932,7 +924,7 @@ public class Wand {
                     }
                     lp1 += 2 * dy;
                     lp2 += 2 * dz;
-                    block_buffer.add(x1, y1, z1,block_state,null);
+                    block_buffer.add(x1, y1, z1,state,item);
                     n++;
                     if(n>= wand_item.limit)
                         break;
@@ -952,7 +944,7 @@ public class Wand {
                     }
                     lp1 += 2 * dx;
                     lp2 += 2 * dz;
-                    block_buffer.add(x1, y1, z1,block_state,null);
+                    block_buffer.add(x1, y1, z1,state,item);
                     n++;
                     if(n>= wand_item.limit)
                         break;
@@ -972,7 +964,7 @@ public class Wand {
                     }
                     lp1 += 2 * dy;
                     lp2 += 2 * dx;
-                    block_buffer.add(x1, y1, z1,block_state,null);
+                    block_buffer.add(x1, y1, z1,state,item);
                     n++;
                     if(n>= wand_item.limit)
                         break;
@@ -983,7 +975,8 @@ public class Wand {
     }
     public int mode5(int plane, boolean fill) {
         block_buffer.reset();
-
+        BlockState state=get_state();
+        Item item=get_item(state);
         if (p1 != null && (p2||preview)) {
             int xc = p1.getX();
             int yc = p1.getY();
@@ -997,7 +990,7 @@ public class Wand {
             if (plane == 0) {// XZ;
                 int x = 0, y = 0, z = r;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane);
+                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
 
                 while (z >= x) {
                     x++;
@@ -1006,7 +999,7 @@ public class Wand {
                         d = d + 4 * (x - z) + 10;
                     } else
                         d = d + 4 * x + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane);
+                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
                 }
                 if (fill) {
                     int r2 = r * r;
@@ -1015,7 +1008,7 @@ public class Wand {
                         for (x = -r; x <= r; x++) {
                             int det = (x * x) + (z * z);
                             if (det <= r2) {
-                                block_buffer.add(xc + x, yc, zc + z,block_state,null);
+                                block_buffer.add(xc + x, yc, zc + z,state,item);
                             }
                         }
                     }
@@ -1023,7 +1016,7 @@ public class Wand {
             } else if (plane == 1) {// XY;
                 int x = 0, y = r, z = 0;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane);
+                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
                 while (y >= x) {
                     x++;
                     if (d > 0) {
@@ -1031,14 +1024,14 @@ public class Wand {
                         d = d + 4 * (x - y) + 10;
                     } else
                         d = d + 4 * x + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane);
+                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
                 }
                 if (fill) {
                     int r2 = r * r;                    
                     for (y = -r; y <= r; y++) {
                         for (x = -r; x <= r; x++) {
                             if ((x * x) + (y * y) <= r2) {
-                                block_buffer.add(xc + x, yc + y, zc,block_state,null);
+                                block_buffer.add(xc + x, yc + y, zc,state,item);
                             }
                         }
                     }
@@ -1046,7 +1039,7 @@ public class Wand {
             } else if (plane == 2) {// YZ;
                 int x = 0, y = 0, z = r;
                 int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane);
+                drawCircle(xc, yc, zc, x, y, z, plane,state,item);
                 while (z >= y) {
                     y++;
                     if (d > 0) {
@@ -1054,14 +1047,14 @@ public class Wand {
                         d = d + 4 * (y - z) + 10;
                     } else
                         d = d + 4 * y + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane);
+                    drawCircle(xc, yc, zc, x, y, z, plane,state,item);
                 }
                 if (fill) {
                     int r2 = r * r;                    
                     for (z = -r; z <= r; z++) {
                         for (y = -r; y <= r; y++) {
                             if ((y * y) + (z * z) <= r2) {
-                                block_buffer.add(xc, yc + y, zc + z,block_state,null);
+                                block_buffer.add(xc, yc + y, zc + z,state,item);
                             }
                         }
                     }
@@ -1181,37 +1174,37 @@ public class Wand {
         }
         return 0;
     }
-    private void drawCircle( int xc, int yc, int zc, int x, int y, int z, int plane) {
+    private void drawCircle( int xc, int yc, int zc, int x, int y, int z, int plane,BlockState state,Item item) {
         switch (plane) {
             case 0:// XZ
-                block_buffer.add(xc + x, yc, zc + z,block_state,null);
-                block_buffer.add(xc - x, yc, zc + z,block_state,null);
-                block_buffer.add(xc + x, yc, zc - z,block_state,null);
-                block_buffer.add(xc - x, yc, zc - z,block_state,null);
-                block_buffer.add(xc + z, yc, zc + x,block_state,null);
-                block_buffer.add(xc - z, yc, zc + x,block_state,null);
-                block_buffer.add(xc + z, yc, zc - x,block_state,null);
-                block_buffer.add(xc - z, yc, zc - x,block_state,null);
+                block_buffer.add(xc + x, yc, zc + z,state,item);
+                block_buffer.add(xc - x, yc, zc + z,state,item);
+                block_buffer.add(xc + x, yc, zc - z,state,item);
+                block_buffer.add(xc - x, yc, zc - z,state,item);
+                block_buffer.add(xc + z, yc, zc + x,state,item);
+                block_buffer.add(xc - z, yc, zc + x,state,item);
+                block_buffer.add(xc + z, yc, zc - x,state,item);
+                block_buffer.add(xc - z, yc, zc - x,state,item);
                 break;
             case 1:// XY
-                block_buffer.add(xc + x, yc + y, zc,block_state,null);
-                block_buffer.add(xc - x, yc + y, zc,block_state,null);
-                block_buffer.add(xc + x, yc - y, zc,block_state,null);
-                block_buffer.add(xc - x, yc - y, zc,block_state,null);
-                block_buffer.add(xc + y, yc + x, zc,block_state,null);
-                block_buffer.add(xc - y, yc + x, zc,block_state,null);
-                block_buffer.add(xc + y, yc - x, zc,block_state,null);
-                block_buffer.add(xc - y, yc - x, zc,block_state,null);
+                block_buffer.add(xc + x, yc + y, zc,state,item);
+                block_buffer.add(xc - x, yc + y, zc,state,item);
+                block_buffer.add(xc + x, yc - y, zc,state,item);
+                block_buffer.add(xc - x, yc - y, zc,state,item);
+                block_buffer.add(xc + y, yc + x, zc,state,item);
+                block_buffer.add(xc - y, yc + x, zc,state,item);
+                block_buffer.add(xc + y, yc - x, zc,state,item);
+                block_buffer.add(xc - y, yc - x, zc,state,item);
                 break;
             case 2:// YZ
-                block_buffer.add(xc, yc + y, zc + z,block_state,null);
-                block_buffer.add(xc, yc - y, zc + z,block_state,null);
-                block_buffer.add(xc, yc + y, zc - z,block_state,null);
-                block_buffer.add(xc, yc - y, zc - z,block_state,null);
-                block_buffer.add(xc, yc + z, zc + y,block_state,null);
-                block_buffer.add(xc, yc - z, zc + y,block_state,null);
-                block_buffer.add(xc, yc + z, zc - y,block_state,null);
-                block_buffer.add(xc, yc - z, zc - y,block_state,null);
+                block_buffer.add(xc, yc + y, zc + z,state,item);
+                block_buffer.add(xc, yc - y, zc + z,state,item);
+                block_buffer.add(xc, yc + y, zc - z,state,item);
+                block_buffer.add(xc, yc - y, zc - z,state,item);
+                block_buffer.add(xc, yc + z, zc + y,state,item);
+                block_buffer.add(xc, yc - z, zc + y,state,item);
+                block_buffer.add(xc, yc + z, zc - y,state,item);
+                block_buffer.add(xc, yc - z, zc - y,state,item);
                 break;
         }
     }
@@ -1240,6 +1233,25 @@ public class Wand {
             }
             //undo_buffer.print();
         }
+    }
+    BlockState get_state(){
+        if(!has_palette) {
+            if(offhand_state!=null && !offhand_state.isAir()){
+                return offhand_state;
+            }else{
+                if (mode == 2 || mode==4 ||mode==5) {
+                    if (p1_state != null)
+                        return p1_state;
+                }
+            }
+        }
+        return block_state;
+    }
+    Item get_item(BlockState state){
+        if(state!=null){
+            return state.getBlock().asItem();
+        }
+        return null;
     }
     public void redo(int n) {
         if (undo_buffer != null) {
@@ -1300,27 +1312,11 @@ public class Wand {
 
         if (ll <= limit) {
             block_buffer.reset();
-            BlockState state=null;
-            if(!has_palette) {
-                state = block_state;
-
-                if (mode == 2) {
-                    if (p1_state != null)
-                        state = p1_state;
-                }
-            }
-            Item item=null;
+            BlockState state=get_state();
+            Item item=get_item(state);
             for (int z = zs; z <= ze; z++) {
                 for (int y = ys; y <= ye; y++) {
                     for (int x = xs; x <= xe; x++) {
-                        if(!has_palette) {
-                            if(offhand_state!=null && !offhand_state.isAir()){
-                                state=offhand_state;
-                            }
-                            if(state!=null){
-                                item=state.getBlock().asItem();
-                            }
-                        }
                         block_buffer.add(x, y, z,state,item);
                     }
                 }

@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.SoundType;
 public class WandsModClient {
     static boolean shift =false;
     static boolean alt =false;
+    public static boolean is_forge=false;
     public static void initialize() {
         KeyMapping[] km={
             new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"category.wands"),

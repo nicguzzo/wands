@@ -183,29 +183,29 @@ public class WandItem extends Item{
             //WandsMod.log("mode "+mode,true);
             if(mode==2||mode==4||mode==5||mode==6){
                 if(wand.is_alt_pressed){
-                    //WandsMod.log("pos "+pos,true);
                     pos=pos.relative(side,1);
-                    //WandsMod.log("pos "+pos,true);
                 }
-                if(wand.p1==null){
-                    //clear();
-                    wand.p1_state=block_state;
-                    wand.p2=false;
-                    wand.p1=pos;
-                    wand.x1=pos.getX();
-                    wand.y1=pos.getY();
-                    wand.z1=pos.getZ();
-                    wand.copy_pos1 = pos;
-
-                    //WandsMod.log("pos1 "+pos,true);
-                    return InteractionResult.SUCCESS;
-                }else{
-                    ///if(wand.copy_pos2==null){
-                        wand.copy_pos2=pos;
-                    //}
-                    //WandsMod.log("pos2 "+pos,true);
-                    block_state=wand.p1_state;
-                    wand.p2=true;
+                if(mode==6) {
+                    if (wand.copy_pos1 == null) {
+                        wand.copy_pos1 = pos;
+                        return InteractionResult.SUCCESS;
+                    } else {
+                        wand.copy_pos2 = pos;
+                    }
+                }else {
+                    if (wand.p1 == null) {
+                        //clear();
+                        wand.p1_state = block_state;
+                        wand.p2 = false;
+                        wand.p1 = pos;
+                        wand.x1 = pos.getX();
+                        wand.y1 = pos.getY();
+                        wand.z1 = pos.getZ();
+                        return InteractionResult.SUCCESS;
+                    } else {
+                        block_state = wand.p1_state;
+                        wand.p2 = true;
+                    }
                 }
             }
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
