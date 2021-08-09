@@ -16,6 +16,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -79,7 +80,7 @@ public class Wand {
     boolean has_bucket = false;
     boolean has_offhand = false;
     public boolean force_render = false;
-
+    public Direction.Axis axis= Direction.Axis.X;
     private class PaletteSlot {
         public ItemStack stack = null;
         public BlockState state = null;
@@ -189,15 +190,13 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
-
+        //TODO: wand gui
         //TODO: show preview only if there's enough items
-        //TODO: make snow add layers if there's snow already
         //TODO: fix undo/redo
         //TODO: replace mode
         //TODO: break items in palette, add tool slot to palette
         //TODO: plant with wand
         //TODO: rotate stairs based on player
-        //TODO: allow place on different blocks if offhand or palette
         //TODO: place offhand (log) based on plyer direction??
         //TODO: cull preview blocks
         boolean creative = player.getAbilities().instabuild;
@@ -333,7 +332,7 @@ public class Wand {
         }
 
         if (!preview) {
-            log(" using palette seed: " + palette_seed);
+            //log(" using palette seed: " + palette_seed);
             int limit = MAX_LIMIT;
             if (!creative) {
                 limit = wand_item.limit;
@@ -355,13 +354,6 @@ public class Wand {
                         block_buffer.item[a] = null;
                         continue;
                     }
-                    /*int bound = palette_slots.size();
-                    if (palette_mode == PaletteMode.RANDOM) {
-                        slot = random.nextInt(bound);
-                    } else if (palette_mode == PaletteMode.ROUND_ROBIN) {
-                        slot = (slot + 1) % bound;
-                    }
-                    PaletteSlot ps=palette_slots.get(slot);*/
                     BlockState st = block_buffer.state[a];
                     if (st == null) {
                         continue;
@@ -371,17 +363,12 @@ public class Wand {
                         continue;
                     }
                     BlockAccounting pa = block_accounting.get(it);
-                    //BlockAccounting pa= block_accounting.get(ps.stack.getItem());
                     if (pa == null) {
                         //log("no palette accounting found for "+ps.stack.getItem());
                         continue;
                     }
                     pa.needed++;
 
-                    //if (!ps.stack.isEmpty())
-                    //{
-                    //block_buffer.state[a]=ps.state;
-                    //block_buffer.item[a]=ps.stack.getItem();
                     if (st.getBlock() instanceof SlabBlock) {
                         if (st.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
                             pa.needed++;
@@ -392,31 +379,16 @@ public class Wand {
                             pa.needed += sn - 1;
                         }
                     }
-                        /*if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
-                            if (ps.state.getBlock() instanceof SnowLayerBlock) {
-                                int sn=level.random.nextInt(7);
-                                pa.needed+=sn;
-                                block_buffer.state[a] = ps.state.setValue(SnowLayerBlock.LAYERS, sn+1);
-                            }
-                            if (PaletteItem.getRotate(palette)) {
-                                block_buffer.state[a] = ps.state.getBlock().rotate(ps.state, Rotation.getRandom(level.random));
-                            }
-                        }*/
-                    /*} else {
-                        block_buffer.state[a] = null;
-                        block_buffer.item[a] = null;
-                    }*/
-
                 }
             } else {
                 if (!is_copy_paste) {
-                    if (!has_palette && !destroy && has_offhand) {
+                    /*if (!has_palette && !destroy && has_offhand) {
                         Block offhand_block = Block.byItem(offhand.getItem());
                         if (offhand_block != Blocks.AIR) {
                             block_state = offhand_block.defaultBlockState();
                             item_stack = Item.byBlock(block_state.getBlock()).getDefaultInstance();
                         }
-                    }
+                    }*/
                     if (has_bucket) {
                         has_bucket = false;
                         //log("bucket " + bucket);
@@ -447,7 +419,7 @@ public class Wand {
                             block_state = Blocks.AIR.defaultBlockState();
                         }
                     }
-                    //palette_slots.add(new PaletteSlot(0,block_state,item_stack));
+
                     BlockAccounting pa = new BlockAccounting();
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                         if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
@@ -455,11 +427,6 @@ public class Wand {
                             block_buffer.item[a] = null;
                         } else {
                             pa.needed++;
-                            if (offhand_state != null)
-                                block_buffer.state[a] = offhand_state;
-                            else
-                                block_buffer.state[a] = block_state;
-                            block_buffer.item[a] = item_stack.getItem();
                         }
                     }
                     block_accounting.put(item_stack.getItem(), pa);
@@ -483,7 +450,7 @@ public class Wand {
             }
             //log("block_state "+block_state);
             //log( "palette_slots "+palette_slots.size());
-            log("block_accounting " + block_accounting.size());
+            //log("block_accounting " + block_accounting.size());
             boolean missing_blocks = block_accounting.size() == 0;
 
             //deal with inventory
@@ -522,7 +489,7 @@ public class Wand {
             //log("block_buffer.length: " + block_buffer.get_length());
             //log("wand limit: " + wand_item.limit);
             //log( "limit "+limit);
-            log("missing_blocks " + missing_blocks);
+            //log("missing_blocks " + missing_blocks);
             placed = 0;
             int a = 0;
             if (!missing_blocks || destroy || has_bucket) {
@@ -532,8 +499,20 @@ public class Wand {
                     //if (has_palette) {
 //                        block_state = block_buffer.state[a];
 //                    }
-                    if (!destroy && !has_bucket && bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
-                        continue;
+                    if (!destroy && !has_bucket){
+                        if(bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
+                            continue;
+                        }
+                        boolean pp=false;
+                        for(Player pl: player.level.players()){
+                            if(pl.getBoundingBox().intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
+                                pp=true;
+                                break;
+                            }
+                        }
+                        if(pp){
+                            continue;
+                        }
                     }
                     if (place_block(tmp_pos, block_buffer.state[a])) {
                         if (!destroy) {
@@ -1289,7 +1268,10 @@ public class Wand {
                 } else {
                     st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(Rotation.values()[WandItem.getRotation(wand_stack)]);
                 }
-
+            }else{
+                if(blk instanceof RotatedPillarBlock){
+                    st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
+                }
             }
         }
         return st;
@@ -1358,7 +1340,9 @@ public class Wand {
             for (int z = zs; z <= ze; z++) {
                 for (int y = ys; y <= ye; y++) {
                     for (int x = xs; x <= xe; x++) {
-                        block_buffer.add(x, y, z,this);
+                        BlockState st=level.getBlockState(tmp_pos.set(x,y,z));
+                        if(WandUtils.can_place(st, wand_item.removes_water,wand_item.removes_lava))
+                            block_buffer.add(x, y, z,this);
                     }
                 }
             }
@@ -1386,6 +1370,21 @@ public class Wand {
         if(state!=null && WandsMod.config.denied.contains(state.getBlock())){
             //log("block is in the denied list");
             return false;
+        }
+        if (!destroy) {
+            if (state.getBlock() instanceof SnowLayerBlock) {
+                BlockState below = level.getBlockState(block_pos.below());
+                if (below.getBlock() instanceof SnowLayerBlock) {
+                    int layers = below.getValue(SnowLayerBlock.LAYERS);
+                    int new_layers = state.getValue(SnowLayerBlock.LAYERS);
+                    //log("layers: " + layers + " new_layers: " + new_layers);
+                    if (layers + new_layers <=8) {
+                        state=state.setValue(SnowLayerBlock.LAYERS,layers + new_layers);
+                        level.destroyBlock(block_pos, false);
+                        block_pos = block_pos.below();
+                    }
+                }
+            }
         }
         p1_state=state;
         if (creative) {

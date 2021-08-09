@@ -33,6 +33,7 @@ public class WandsConfig {
 	public float wand_mode_display_x_pos = 80.0f;
 	public float wand_mode_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
+	public boolean fancy_preview = true;
 	public String[] str_allowed=default_allowed;
 	public String[] str_denied=default_denied;
 	static public List<Block> allowed=new ArrayList<Block>();

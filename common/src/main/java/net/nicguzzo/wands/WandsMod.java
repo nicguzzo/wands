@@ -2,9 +2,14 @@ package net.nicguzzo.wands;
 
 import java.util.function.Supplier;
 
+import io.netty.buffer.Unpooled;
+import net.minecraft.core.Direction;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.jmx.Server;
 import org.lwjgl.glfw.GLFW;
 
 import dev.architectury.event.events.common.PlayerEvent;
@@ -26,7 +31,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class WandsMod {
-    public static WandsConfig config=WandsConfig.get_instance();
+    public static final WandsConfig config=WandsConfig.get_instance();
     public static final String MOD_ID = "wands";
     
     public static final Logger LOGGER = LogManager.getLogger();
@@ -65,7 +70,7 @@ public class WandsMod {
     static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
     static public ResourceLocation SND_PACKET= new ResourceLocation(MOD_ID, "sound_packet");
     static public ResourceLocation PALETTE_PACKET= new ResourceLocation(MOD_ID, "palette_packet");
-    static public ResourceLocation PALETTE_SEED_PACKET= new ResourceLocation(MOD_ID, "palette_seed_packet");
+    static public ResourceLocation STATE_PACKET= new ResourceLocation(MOD_ID, "state_packet");
 
     static final public int wand_mode_key        = GLFW.GLFW_KEY_V;
     static final public int wand_orientation_key = GLFW.GLFW_KEY_X;
@@ -123,7 +128,14 @@ public class WandsMod {
         });
         
     }
-    
+    public static void send_state(ServerPlayer player,Wand wand){
+        if(wand!=null && player!=null && !player.level.isClientSide()) {
+            FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+            packet.writeLong(wand.palette_seed);
+            packet.writeInt(wand.axis.ordinal());
+            NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
+        }
+    }
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
         if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
@@ -137,19 +149,30 @@ public class WandsMod {
                     //player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getModeString(item_stack)),false);
                 break;
                 case wand_orientation_key:
-                    switch(WandItem.getMode(item_stack)){
-                        case 5:
-                            WandItem.nextPlane(item_stack);
-                            player.displayClientMessage(new TextComponent("Wand Plane: "+ WandItem.getPlane(item_stack)),false);
-                            break;
-                        case 0:
-                        case 7:
+                    if(alt){//change axis
+                        Wand wand=PlayerWand.get(player);
+                        if(wand!=null){
+                            Direction.Axis a=wand.axis;
+                            int n=(wand.axis.ordinal()+1)%3;
+                            wand.axis=Direction.Axis.values()[n];
+                            player.displayClientMessage(new TextComponent("Wand Axis: " + wand.axis), false);
+                            send_state((ServerPlayer) player,wand);
+                        }
+                    }else {
+                        switch (WandItem.getMode(item_stack)) {
+                            case 5:
+                                WandItem.nextPlane(item_stack);
+                                player.displayClientMessage(new TextComponent("Wand Plane: " + WandItem.getPlane(item_stack)), false);
+                                break;
+                            case 0:
+                            case 7:
 
-                            break;
-                        default:
-                            WandItem.nextOrientation(item_stack);
-                            player.displayClientMessage(new TextComponent("Wand Orientation: "+WandItem.getOrientation(item_stack).toString().toLowerCase()),false);
-                            break;
+                                break;
+                            default:
+                                WandItem.nextOrientation(item_stack);
+                                player.displayClientMessage(new TextComponent("Wand Orientation: " + WandItem.getOrientation(item_stack).toString().toLowerCase()), false);
+                                break;
+                        }
                     }
 
                 break;

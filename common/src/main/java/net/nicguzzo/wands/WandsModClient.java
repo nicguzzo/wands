@@ -20,7 +20,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
@@ -44,13 +46,12 @@ public class WandsModClient {
         for(KeyMapping k: km){
             KeyMappingRegistry.register(k);
         }
-        
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
             for(KeyMapping k: km){
                 if (k.consumeClick()) {
                     if(!any) any=true;
-                        send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
+                    send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
                 }
             }
             if(!any){
@@ -62,12 +63,8 @@ public class WandsModClient {
                     ClientRender.wand.is_shift_pressed=shift;
                     send_key(-1, shift, alt);
                 }
-
-                //send_key(-1);
             }
         });
-
-
 
         ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
             render_wand_info(pose);
@@ -91,12 +88,16 @@ public class WandsModClient {
                 }
             });
         });
-        NetworkManager.registerReceiver(Side.S2C,WandsMod.PALETTE_SEED_PACKET, (packet,context)->{
+        NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{
             long seed=packet.readLong();
+            int  axis=packet.readInt();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    WandsMod.log(" got palette_seed: "+seed,true);
+                    ClientRender.wand.axis=Direction.Axis.values()[axis];
                     ClientRender.wand.palette_seed = seed;
+
+                    WandsMod.log(" got palette_seed: "+seed,true);
+                    WandsMod.log(" got axis "+axis,true);
                 }
             });
         });

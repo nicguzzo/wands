@@ -216,10 +216,7 @@ public class WandItem extends Item{
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
             if(!world.isClientSide()) {
                 wand.palette_seed = world.random.nextInt(20000000);
-                FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-                packet.writeLong(wand.palette_seed);
-                WandsMod.log(" new palette_seed: "+wand.palette_seed,true);
-                NetworkManager.sendToPlayer((ServerPlayer) context.getPlayer(), WandsMod.PALETTE_SEED_PACKET, packet);
+                WandsMod.send_state((ServerPlayer) context.getPlayer(),wand);
             }
             if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
                 wand.copy_pos1=null;
