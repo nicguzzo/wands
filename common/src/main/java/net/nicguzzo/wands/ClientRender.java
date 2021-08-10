@@ -303,7 +303,6 @@ public class ClientRender {
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
                             bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-                            grid(bufferBuilder, wand.side,wand_x1,wand_y1,wand_z1,def_aabb);
                             preview_block(bufferBuilder,
                                     wand_x1, (wand_y1 + wand.y0),wand_z1,
                                     wand_x2, (wand_y1 + wand.y0 + wand.block_height), wand_z2,
@@ -316,6 +315,7 @@ public class ClientRender {
                 case 2:
                 case 3:
                 case 4:
+
                 case 5:
 
                     //preview_mode1(bufferBuilder);
@@ -332,6 +332,25 @@ public class ClientRender {
                                     0,255,0,255);
                             tesselator.end();
                         }
+
+                        if (mode == 4 || mode==5) {
+                            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                            RenderSystem.disableTexture();
+                            RenderSystem.disableBlend();
+                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            preview_block(bufferBuilder,
+                                    c.x+wand.p1.getX(),c.y+wand.p1.getY(),c.z+wand.p1.getZ(),
+                                    c.x+wand.p1.getX()+1,c.y+wand.p1.getY()+1,c.z+wand.p1.getZ()+1,
+                                    0,255,0,255);
+
+                            preview_block(bufferBuilder,
+                                    last_pos_x-0.1,last_pos_y-0.1,last_pos_z-0.1,
+                                    last_pos_x+1.1,last_pos_y+1.1,last_pos_z+1.1,
+                                    0,255,0,255);
+
+                            tesselator.end();
+                        }
+
 
                         if (wand.block_buffer != null ) {
                             random.setSeed(0);

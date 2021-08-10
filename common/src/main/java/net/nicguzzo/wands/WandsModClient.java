@@ -96,8 +96,8 @@ public class WandsModClient {
                     ClientRender.wand.axis=Direction.Axis.values()[axis];
                     ClientRender.wand.palette_seed = seed;
 
-                    WandsMod.log(" got palette_seed: "+seed,true);
-                    WandsMod.log(" got axis "+axis,true);
+                    //WandsMod.log(" got palette_seed: "+seed,true);
+                    //WandsMod.log(" got axis "+axis,true);
                 }
             });
         });
@@ -133,12 +133,31 @@ public class WandsModClient {
                 RenderSystem.defaultBlendFunc();
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                String msg="Mode: "+WandItem.getModeString(stack);
+                String ln1="";
+                String ln2="Mode: "+WandItem.getModeString(stack);
+                Wand wand=ClientRender.wand;
+                if(wand.valid) {
+                    switch(wand.mode){
+                        case 0:
+                            ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"]";
+                            break;
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                            ln1="Blocks: "+wand.block_buffer.get_length();
+                            break;
+                        case 5:
+                            ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
+                            break;
+                    }
+                }
                 //int w=font.width(msg);
-                int h=font.lineHeight;
+                int h=2*font.lineHeight;
                 float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
                 float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
-                font.draw(poseStack,msg,x,y,0xffffff);
+                font.draw(poseStack,ln1,x,y,0xffffff);
+                font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
             }
         }
     }
