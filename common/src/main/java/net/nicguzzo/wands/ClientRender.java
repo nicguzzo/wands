@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -327,8 +328,8 @@ public class ClientRender {
                             RenderSystem.disableBlend();
                             bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             preview_block(bufferBuilder,
-                                    wand_x1+0.01f,wand_y1+0.01f, wand_z1-0.01f,
-                                    wand_x2-0.01f,wand_y2-0.01f, wand_z2+0.01f,
+                                    wand_x1+0.1f,wand_y1+0.1f, wand_z1-0.1f,
+                                    wand_x2-0.1f,wand_y2-0.1f, wand_z2+0.1f,
                                     0,255,0,255);
                             tesselator.end();
                         }
@@ -357,12 +358,19 @@ public class ClientRender {
                             if(fancy && !wand.destroy && !wand.has_bucket) {
                                 setRender_shape_begin(tesselator, bufferBuilder);
                                 for (int a = 0; a < wand.block_buffer.get_length() && a < Wand.MAX_LIMIT; a++) {
-                                    int x = wand.block_buffer.buffer_x[a];
-                                    int y = wand.block_buffer.buffer_y[a];
-                                    int z = wand.block_buffer.buffer_z[a];
                                     if (wand.block_buffer.state[a] != null) {
                                         preview_shape = wand.block_buffer.state[a].getShape(client.level, last_pos);
-                                        render_shape(tesselator, bufferBuilder, wand.block_buffer.state[a], x, y, z);
+                                        render_shape(tesselator, bufferBuilder, wand.block_buffer.state[a],
+                                                wand.block_buffer.buffer_x[a],
+                                                wand.block_buffer.buffer_y[a],
+                                                wand.block_buffer.buffer_z[a]);
+                                        if(wand.block_buffer.state[a].getBlock() instanceof DoorBlock){
+
+                                            render_shape(tesselator, bufferBuilder, wand.block_buffer.state[a].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                                    wand.block_buffer.buffer_x[a],
+                                                    wand.block_buffer.buffer_y[a]+1,
+                                                    wand.block_buffer.buffer_z[a]);
+                                        }
                                     }
                                 }
                                 tesselator.end();
@@ -413,9 +421,17 @@ public class ClientRender {
                         RenderSystem.disableTexture();
                         RenderSystem.disableBlend();
                         bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+
+                        x1=(wand.copy_x1>wand.copy_x2)? (c.x+wand.copy_x1+0.1) : (c.x+wand.copy_x1-0.1);
+                        y1=(wand.copy_y1>wand.copy_y2)? (c.y+wand.copy_y1+0.1) : (c.y+wand.copy_y1-0.1);
+                        z1=(wand.copy_z1>wand.copy_z2)? (c.z+wand.copy_z1+0.1) : (c.z+wand.copy_z1-0.1);
+                        x2=(wand.copy_x2>wand.copy_x1)? (c.x+wand.copy_x2+0.1) : (c.x+wand.copy_x2-0.1);
+                        y2=(wand.copy_y2>wand.copy_y1)? (c.y+wand.copy_y2+0.1) : (c.y+wand.copy_y2-0.1);
+                        z2=(wand.copy_z2>wand.copy_z1)? (c.z+wand.copy_z2+0.1) : (c.z+wand.copy_z2-0.1);
+
                         preview_block(bufferBuilder,
-                                c.x+wand.copy_x1, c.y+wand.copy_y1, c.z+wand.copy_z1,
-                                c.x+wand.copy_x2, c.y+wand.copy_y2, c.z+wand.copy_z2,
+                                x1,y1,z1,
+                                x2,y2,z2,
                                 0,0,255,255);
                         tesselator.end();
                     }
@@ -425,7 +441,7 @@ public class ClientRender {
                     if (wand.copy_paste_buffer.size() > 0) {
 
                         BlockPos b_pos = last_pos.relative(last_side, 1);
-                        if(fancy) {
+                        if (fancy) {
                             setRender_shape_begin(tesselator, bufferBuilder);
                             random.setSeed(0);
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
@@ -438,16 +454,36 @@ public class ClientRender {
                         RenderSystem.disableTexture();
                         RenderSystem.disableBlend();
                         bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                        x1=Integer.MAX_VALUE;y1=Integer.MAX_VALUE;z1=Integer.MAX_VALUE;
+                        x2=Integer.MIN_VALUE;y2=Integer.MIN_VALUE;z2=Integer.MIN_VALUE;
                         for (CopyPasteBuffer b : wand.copy_paste_buffer) {
-                            BlockPos p=b.pos.rotate(Rotation.values()[last_rot]);
-                            double x = c.x+b_pos.getX() + p.getX();
-                            double y = c.y+b_pos.getY() + p.getY();
-                            double z = c.z+b_pos.getZ() + p.getZ();
+                            BlockPos p = b.pos.rotate(Rotation.values()[last_rot]);
+                            double x = c.x + b_pos.getX() + p.getX();
+                            double y = c.y + b_pos.getY() + p.getY();
+                            double z = c.z + b_pos.getZ() + p.getZ();
                             preview_block(bufferBuilder,
-                                     x,y,z,
-                                     x + 1, y + 1,z + 1,255,255,255,255
+                                    x, y, z,
+                                    x + 1, y + 1, z + 1, 255, 255, 255, 255
                             );
+                            if(p.getX()<x1) x1=p.getX();
+                            if(p.getY()<y1) y1=p.getY();
+                            if(p.getZ()<z1) z1=p.getZ();
+                            if(p.getX()+1>x2) x2=p.getX()+1;
+                            if(p.getY()+1>y2) y2=p.getY()+1;
+                            if(p.getZ()+1>z2) z2=p.getZ()+1;
                         }
+                        x1 = c.x + b_pos.getX() + x1-0.1;
+                        y1 = c.y + b_pos.getY() + y1-0.1;
+                        z1 = c.z + b_pos.getZ() + z1-0.1;
+                        x2 = c.x + b_pos.getX() + x2+0.1;
+                        y2 = c.y + b_pos.getY() + y2+0.1;
+                        z2 = c.z + b_pos.getZ() + z2+0.1;
+
+                        preview_block(bufferBuilder,
+                                x1, y1, z1,
+                                x2, y2, z2,
+                                0, 0, 255, 255);
+
                         tesselator.end();
                     }
                 break;

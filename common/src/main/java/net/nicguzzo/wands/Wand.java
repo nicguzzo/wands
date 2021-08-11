@@ -9,6 +9,7 @@ import io.netty.buffer.Unpooled;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.utils.NbtType;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -25,12 +26,14 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Fluids;
@@ -137,6 +140,8 @@ public class Wand {
     Vector<CopyPasteBuffer> copy_paste_buffer = new Vector<CopyPasteBuffer>();
     public BlockPos copy_pos1 = null;
     public BlockPos copy_pos2 = null;
+    public BlockPos copied_pos1 = null;
+    public BlockPos copied_pos2 = null;
     public int copy_x1 = 0;
     public int copy_y1 = 0;
     public int copy_z1 = 0;
@@ -212,8 +217,7 @@ public class Wand {
 
         //TODO: cull preview blocks
         //TODO: hollow fill
-
-        //TODO: fix snow layers
+        //TODO: handle doors
 
         boolean creative = player.getAbilities().instabuild;
         boolean is_copy_paste = mode == 6 || mode == 7;
@@ -251,8 +255,8 @@ public class Wand {
         palette = null;
         has_palette = false;
         has_bucket = false;
-        has_water_bucket=true;
-        has_empty_bucket=true;
+        has_water_bucket=false;
+        has_empty_bucket=false;
         if (offhand != null && offhand.getItem() instanceof PaletteItem) {
             if (mode > 0) {
                 palette = offhand;
@@ -421,11 +425,14 @@ public class Wand {
                             if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
+                                continue;
                             }
                             pa.needed++;
                         }
                     }
-                    block_accounting.put(item_stack.getItem(), pa);
+                    if(block_buffer.get_length()>0 && pa.needed>0) {
+                        block_accounting.put(block_buffer.item[0], pa);
+                    }
                 } else {
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
                         if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
@@ -1125,6 +1132,9 @@ public class Wand {
                             }
                         }
                     }
+                    //copied_pos1=new BlockPos(copy_pos1.getX() - xs, copy_pos1.getY() - ys,copy_pos1.getZ() - zs);
+                    //copied_pos2=new BlockPos(copy_pos2.getX() - xs, copy_pos2.getY() - ys,copy_pos2.getZ() - zs);
+
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
                     if (!preview)
                         player.displayClientMessage(new TextComponent("Copied: " + cp + " blocks"), false);
@@ -1196,37 +1206,9 @@ public class Wand {
                 break;
         }
     }
-
-    public void undo(int n) {
-        if (undo_buffer != null) {
-            for (int i = 0; i < n && i < undo_buffer.size(); i++) {
-                CircularBuffer.P p = undo_buffer.peek();
-
-                if (p != null) {
-
-                    if (!p.destroyed) {
-                        if (level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState())) {
-                            undo_buffer.pop();
-                        } else {
-                            //log("undo failed");
-                            //log("    state: "+p.state);
-                            //log("    pos: "+p.pos);
-                            //log("    destroyed: "+p.destroyed);
-                        }
-                    } else {
-                        if (level.setBlockAndUpdate(p.pos, p.state)) {
-                            undo_buffer.pop();
-                        }
-                    }
-                }
-            }
-            //undo_buffer.print();
-        }
-    }
-
     BlockState get_state() {
+        BlockState st=block_state;
         if (!has_palette || mode==0) {
-            BlockState st=block_state;
             if (offhand_state != null && !offhand_state.isAir()) {
                 st= offhand_state;
             } else {
@@ -1236,10 +1218,9 @@ public class Wand {
                 }
             }
             st=stair_slabs(st);
-            return st;
         } else {
-            BlockState st = null;
-            if(palette_slots.size()>0) {
+
+            if (palette_slots.size() > 0) {
                 PaletteMode palette_mode = PaletteItem.getMode(palette);
                 int bound = palette_slots.size();
                 if (palette_mode == PaletteMode.RANDOM) {
@@ -1265,8 +1246,9 @@ public class Wand {
                     }
                 }
             }
-            return st;
         }
+
+        return st;
     }
 
     Item get_item(BlockState state) {
@@ -1296,12 +1278,39 @@ public class Wand {
             }else{
                 if(blk instanceof RotatedPillarBlock){
                     st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
+                }else{
+                    //if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock)
+                    {
+                        BlockHitResult hit_res = new BlockHitResult(hit, side, pos, true);
+                        UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
+                        BlockPlaceContext pctx = new BlockPlaceContext(uctx);
+                        st = st.getBlock().getStateForPlacement(pctx);
+                        //is_door=true;
+                    }
                 }
             }
         }
         return st;
     }
-
+    public void undo(int n) {
+        if (undo_buffer != null) {
+            for (int i = 0; i < n && i < undo_buffer.size(); i++) {
+                CircularBuffer.P p = undo_buffer.peek();
+                if (p != null) {
+                    if (!p.destroyed) {
+                        if(level.destroyBlock(p.pos, false)){
+                            undo_buffer.pop();
+                        }
+                    } else {
+                        if (level.setBlockAndUpdate(p.pos, p.state)) {
+                            undo_buffer.pop();
+                        }
+                    }
+                }
+            }
+            //undo_buffer.print();
+        }
+    }
     public void redo(int n) {
         if (undo_buffer != null) {
             for (int i = 0; i < n && undo_buffer.can_go_forward(); i++) {
@@ -1392,6 +1401,7 @@ public class Wand {
     }
     public boolean place_block(BlockPos block_pos,BlockState state) {
         boolean placed = false;
+        boolean is_door=false;
         //log("place_block "+block_pos+" state: "+state + " destroy: " + destroy);
         Level level = player.level;
         boolean creative = player.getAbilities().instabuild;
@@ -1409,41 +1419,47 @@ public class Wand {
             //log("block is in the denied list");
             return false;
         }
+        int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
+        int offhand_durability = -1;
+        if (offhand!=null) {
+            offhand_durability = offhand.getMaxDamage() - offhand.getDamageValue();
+        }
+
+        boolean will_break=(wand_durability == 1 && !WandsMod.config.allow_wand_to_break) ||
+                (offhand_durability == 1 && !WandsMod.config.allow_offhand_to_break);
+        if(will_break){
+            player.displayClientMessage(new TextComponent("tool damaged"),false);
+            stop=true;
+            return false;
+        }
         p1_state=state;
         if (!destroy) {
             //if (state.getBlock() instanceof SnowLayerBlock) {
-            if (offhand!=null && Block.byItem(offhand.getItem())  instanceof SnowLayerBlock) {
-                BlockPos bpos=block_pos;
+            Block blk=state.getBlock();
+            if (offhand!=null) {
+                blk = Block.byItem(offhand.getItem());
+            }
+            if(!blk.canSurvive(state, level, block_pos)){
+                return false;
+            }
+            if(blk  instanceof SnowLayerBlock) {
                 BlockState below = level.getBlockState(block_pos.below());
                 if (below.getBlock() instanceof SnowLayerBlock) {
-                    bpos=block_pos.below();
-                }
-                BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,bpos,true);
-                UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
-                InteractionResult r=offhand.getItem().useOn(ctx);
-                //log("r "+r);
-                if( r == InteractionResult.CONSUME)
-                    return true;
-
-                /*
-                BlockState below = level.getBlockState(block_pos.below());
-                int layers = below.getValue(SnowLayerBlock.LAYERS);
-                if (below.getBlock() instanceof SnowLayerBlock) {
-                    int layers = below.getValue(SnowLayerBlock.LAYERS);
-                    int new_layers = state.getValue(SnowLayerBlock.LAYERS);
-                    //log("layers: " + layers + " new_layers: " + new_layers);
-                    if (layers + new_layers <=8) {
-                        state=state.setValue(SnowLayerBlock.LAYERS,layers + new_layers);
-                        level.destroyBlock(block_pos, false);
-                        block_pos = block_pos.below();
+                    int layers=below.getValue(SnowLayerBlock.LAYERS);
+                    if(layers<8){
+                        block_pos=block_pos.below();
+                        state=state.setValue(SnowLayerBlock.LAYERS,layers+1);
+                        //level.setBlock(block_pos,Blocks.AIR.defaultBlockState(),2);
+                        //level.destroyBlock(block_pos, false);
                     }
-                }*/
+                }
             }else{
-                if ( offhand!=null && Block.byItem(offhand.getItem()) instanceof BushBlock) {
-                    BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,block_pos,true);
-                    UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
-                    if( offhand.useOn(ctx) != InteractionResult.PASS)
-                        return true;
+                if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock) {
+                    BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), side, block_pos, true);
+                    UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
+                    BlockPlaceContext pctx = new BlockPlaceContext(uctx);
+                    state = state.getBlock().getStateForPlacement(pctx);
+                    is_door=true;
                 }
             }
         }else{
@@ -1451,23 +1467,43 @@ public class Wand {
                 //HoeItem hoe=(HoeItem) offhand.getItem();
                 BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,block_pos,true);
                 UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
-                if( offhand.useOn(ctx) != InteractionResult.PASS)
+
+                if( offhand.useOn(ctx) != InteractionResult.PASS) {
+                    if (!creative) {
+                        wand_stack.hurtAndBreak(1, (LivingEntity) player, (Consumer<LivingEntity>) ((p) -> {
+                            ((LivingEntity) p).broadcastBreakEvent(InteractionHand.MAIN_HAND);
+                        }));
+                        offhand.hurtAndBreak(1, (LivingEntity) player, (Consumer<LivingEntity>) ((p) -> {
+                            ((LivingEntity) p).broadcastBreakEvent(InteractionHand.OFF_HAND);
+                        }));
+                        consume_xp();
+                    }
                     return true;
+                }
             }
         }
 
         if (creative) {
-            if (undo_buffer != null) {
-                //TODO: undo is broken
-                //undo_buffer.put(block_pos, state, destroy);
-                //undo_buffer.print();
-            }
+
             if (destroy) {
                 if (level.destroyBlock(block_pos, false)) {
+                    if (undo_buffer != null) {
+                        undo_buffer.put(block_pos,  level.getBlockState(block_pos), destroy);
+                        //undo_buffer.print();
+                    }
                     return true;
                 }
             } else {
+
                 if (level.setBlockAndUpdate(block_pos, state)) {
+                    if (undo_buffer != null) {
+                        undo_buffer.put(block_pos, state, destroy);
+                        //undo_buffer.print();
+                    }
+                    if(is_door){
+                        level.setBlock(block_pos.above(), (BlockState)state.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), 3);
+//                        level.setBlockAndUpdate(block_pos.above(), state);
+                    }
                     return true;
                 }
             }
@@ -1481,31 +1517,22 @@ public class Wand {
                 if (BLOCKS_PER_XP != 0) {
                     dec = (1.0f / BLOCKS_PER_XP);
                 }
-                ItemStack wand_stack = player.getMainHandItem();
-                ItemStack offhand = player.getOffhandItem();
-                int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
-                if ((wand_durability > 1 || WandsMod.config.allow_wand_to_break)
+                if (!will_break
                         && (BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
                     if (destroy) {
                         BlockState st = level.getBlockState(block_pos);
                         if (WandUtils.can_destroy(player, st,true)) {
                             //log("can destroy: "+st);
-                            int offhand_durability = offhand.getMaxDamage() - offhand.getDamageValue();
-                            if (offhand_durability > 1 || WandsMod.config.allow_offhand_to_break) {
-                                placed = level.destroyBlock(block_pos, false);
-                                //log("destroyed: "+placed);
-                                if (placed && WandsMod.config.destroy_in_survival_drop) {
-                                    int silk_touch = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,
-                                            offhand);
-                                    int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,
-                                            offhand);
-                                    if (fortune > 0 || silk_touch > 0) {
-                                        st.getBlock().playerDestroy(level, player, block_pos, st, null, offhand);
-                                    }
+                            placed = level.destroyBlock(block_pos, false);
+                            //log("destroyed: "+placed);
+                            if (placed && WandsMod.config.destroy_in_survival_drop) {
+                                int silk_touch = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,
+                                        offhand);
+                                int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,
+                                        offhand);
+                                if (fortune > 0 || silk_touch > 0) {
+                                    st.getBlock().playerDestroy(level, player, block_pos, st, null, offhand);
                                 }
-                            }else{
-                                player.displayClientMessage(new TextComponent("tool damaged"),false);
-                                stop=true;
                             }
                         }else{
                             //log("can't destroy: "+st);
@@ -1516,6 +1543,9 @@ public class Wand {
                         if (!is_tool) {
                             ItemStack stack2 = null;
                             if (level.setBlockAndUpdate(block_pos, state)) {
+                                if(is_door){
+                                    level.setBlock(block_pos.above(), (BlockState)state.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), 3);
+                                }
                                 placed=true;
                             }
                         }
@@ -1540,32 +1570,7 @@ public class Wand {
                     wand_stack.hurtAndBreak(1, (LivingEntity) player, (Consumer<LivingEntity>) ((p) -> {
                         ((LivingEntity) p).broadcastBreakEvent(InteractionHand.MAIN_HAND);
                     }));
-                    if (BLOCKS_PER_XP != 0) {
-                        float diff = WandUtils.calc_xp_to_next_level(player.experienceLevel);
-                        float prog = player.experienceProgress;
-                        if (diff > 0 && BLOCKS_PER_XP != 0.0f) {
-                            float a = (1.0f / diff) / BLOCKS_PER_XP;
-                            if (prog - a > 0) {
-                                prog = prog - a;
-                            } else {
-                                if (prog > 0.0f) {
-                                    prog = 1.0f + (a - prog);
-                                } else {
-                                    prog = 1.0f;
-                                }
-                                if (player.experienceLevel > 0) {
-                                    player.experienceLevel--;
-                                    diff = WandUtils.calc_xp_to_next_level(player.experienceLevel);
-                                    a = (1.0f / diff) / BLOCKS_PER_XP;
-                                    if (prog - a > 0) {
-                                        prog = prog - a;
-                                    }
-                                }
-
-                                // WandsMod.compat.send_xp_to_player(player);
-                            }
-                        }
-                    }
+                    consume_xp();
                 }
             }
         }
@@ -1819,6 +1824,39 @@ public class Wand {
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
             if(WandUtils.can_place(st, wand_item.removes_water, wand_item.removes_lava))
                 block_buffer.add(x, y, z, this);
+        }
+    }
+    void consume_xp(){
+        float xp = WandUtils.calc_xp(player.experienceLevel, player.experienceProgress);
+        float dec = 0.0f;
+        float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
+        if (BLOCKS_PER_XP != 0) {
+            dec = (1.0f / BLOCKS_PER_XP);
+
+            float diff = WandUtils.calc_xp_to_next_level(player.experienceLevel);
+            float prog = player.experienceProgress;
+            if (diff > 0 && BLOCKS_PER_XP != 0.0f) {
+                float a = (1.0f / diff) / BLOCKS_PER_XP;
+                if (prog - a > 0) {
+                    prog = prog - a;
+                } else {
+                    if (prog > 0.0f) {
+                        prog = 1.0f + (a - prog);
+                    } else {
+                        prog = 1.0f;
+                    }
+                    if (player.experienceLevel > 0) {
+                        player.experienceLevel--;
+                        diff = WandUtils.calc_xp_to_next_level(player.experienceLevel);
+                        a = (1.0f / diff) / BLOCKS_PER_XP;
+                        if (prog - a > 0) {
+                            prog = prog - a;
+                        }
+                    }
+
+                    // WandsMod.compat.send_xp_to_player(player);
+                }
+            }
         }
     }
 }

@@ -5,7 +5,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 class CircularBuffer {
     class P{
-        BlockPos pos=null;
+        BlockPos.MutableBlockPos pos=new BlockPos.MutableBlockPos();
         BlockState state=null;
         boolean destroyed=false;
     };
@@ -42,7 +42,8 @@ class CircularBuffer {
         forward();
         if(elem[top]==null)
             elem[top]=new P();
-        elem[top].pos=p;
+        elem[top].pos.set(p);
+
         elem[top].state=s;
         elem[top].destroyed=d;
         
@@ -102,7 +103,7 @@ class CircularBuffer {
         System.out.println("undo buffer");
         for(int i=0;i<last+1 && i<max;i++){
             e = elem[i];
-            System.out.println("i: "+i+" elem: "+e.state);
+            System.out.println("i: "+i+" elem: "+e.state +" pos"+e.pos);
         }
         System.out.println("top: "+ top);
         System.out.println("bottom: "+ bottom);

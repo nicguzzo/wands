@@ -133,14 +133,14 @@ class WandUtils{
         return false;        
     }    
     static public boolean can_place(BlockState state,boolean water, boolean lava) {
-        return (state.isAir() || is_fluid(state,water,lava) || is_plant(state));
+        return (state.isAir() || is_fluid(state,water,lava) || is_plant(state) || state.getBlock() instanceof SnowLayerBlock);
     }
     static public int add_neighbour(BlockBuffer block_buffer,WandItem wand,BlockPos pos, BlockState block_state, Level world, Direction side,Wand w) {
         BlockPos pos2 = pos.relative(side);
         if (!block_buffer.in_buffer(pos2)) {
             BlockState bs1 = world.getBlockState(pos);
             BlockState bs2 = world.getBlockState(pos2);
-            if (bs1.equals(block_state) && can_place(bs2,wand.removes_water,wand.removes_lava)) {
+            if (block_buffer.get_length()<w.wand_item.limit && bs1.equals(block_state) && can_place(bs2,wand.removes_water,wand.removes_lava)) {
                 block_buffer.add(pos2,w);
                 return 1;
             }
