@@ -211,13 +211,10 @@ public class Wand {
         }
         //TODO: wand gui
         //TODO: show preview only if there's enough items
-        //TODO: fix undo/redo
         //TODO: replace mode
         //TODO: break items in palette, add tool slot to palette
-
         //TODO: cull preview blocks
         //TODO: hollow fill
-        //TODO: handle doors
 
         boolean creative = player.getAbilities().instabuild;
         boolean is_copy_paste = mode == 6 || mode == 7;
@@ -1408,14 +1405,16 @@ public class Wand {
         if (level.isClientSide) {
             return false;
         }
-        if(state==null && !destroy){
+        if(state==null /*&& !destroy*/){
             //log("state is null");
             return false;
         }
         //if (state!=null && state.getBlock() instanceof CrossCollisionBlock) {
             //state=state.getBlock().defaultBlockState();
         //}
-        if(state!=null && WandsMod.config.denied.contains(state.getBlock())){
+        Block blk=state.getBlock();
+
+        if( WandsMod.config.denied.contains(blk)){
             //log("block is in the denied list");
             return false;
         }
@@ -1432,10 +1431,11 @@ public class Wand {
             stop=true;
             return false;
         }
+
         p1_state=state;
         if (!destroy) {
             //if (state.getBlock() instanceof SnowLayerBlock) {
-            Block blk=state.getBlock();
+
             if (offhand!=null) {
                 blk = Block.byItem(offhand.getItem());
             }
@@ -1496,13 +1496,10 @@ public class Wand {
             } else {
 
                 if (level.setBlockAndUpdate(block_pos, state)) {
+                    blk.setPlacedBy(level,block_pos,state,player,blk.asItem().getDefaultInstance());
                     if (undo_buffer != null) {
                         undo_buffer.put(block_pos, state, destroy);
                         //undo_buffer.print();
-                    }
-                    if(is_door){
-                        level.setBlock(block_pos.above(), (BlockState)state.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), 3);
-//                        level.setBlockAndUpdate(block_pos.above(), state);
                     }
                     return true;
                 }
@@ -1543,9 +1540,7 @@ public class Wand {
                         if (!is_tool) {
                             ItemStack stack2 = null;
                             if (level.setBlockAndUpdate(block_pos, state)) {
-                                if(is_door){
-                                    level.setBlock(block_pos.above(), (BlockState)state.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER), 3);
-                                }
+                                blk.setPlacedBy(level,block_pos,state,player,blk.asItem().getDefaultInstance());
                                 placed=true;
                             }
                         }

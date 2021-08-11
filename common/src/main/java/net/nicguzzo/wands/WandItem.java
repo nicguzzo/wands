@@ -133,6 +133,7 @@ public class WandItem extends Item{
             tag.putInt("plane", plane);
         }
     }
+
     static public void toggleCircleFill(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
