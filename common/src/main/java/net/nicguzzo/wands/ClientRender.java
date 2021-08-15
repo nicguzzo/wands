@@ -1,15 +1,11 @@
 package net.nicguzzo.wands;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.shaders.BlendMode;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.blaze3d.vertex.VertexFormat.Mode;
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.BakedModel;
@@ -18,7 +14,6 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -36,8 +31,10 @@ import net.nicguzzo.wands.Wand.CopyPasteBuffer;
 import java.util.List;
 import java.util.Random;
 
+import net.nicguzzo.wands.WandItem.Mode;
+
 public class ClientRender {
-    public static final float p_o = -0.001f;// preview_block offset
+    public static final float p_o = -0.005f;// preview_block offset
     private static long t0 = 0;
 	private static long t1 = 0;
     private static long t00 = 0;
@@ -45,7 +42,7 @@ public class ClientRender {
     public static Vec3 c=new Vec3(0,0,0);
     static BlockPos last_pos=null;
     static Direction last_side=null;
-    static int last_mode=-1;
+    static Mode last_mode;
     static int last_rot=0;
     static boolean last_alt=false;
     //static int last_y=0;
@@ -97,8 +94,8 @@ public class ClientRender {
             //    preview_mode(wand.mode);
             //}
             HitResult hitResult=client.hitResult;
-            int mode = WandItem.getMode(stack);
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode==7 && wand.is_alt_pressed)) {
+            Mode mode = WandItem.getMode(stack);
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode==Mode.PASTE && wand.is_alt_pressed)) {
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
 
                 int rot = WandItem.getRotation(stack);
@@ -131,46 +128,36 @@ public class ClientRender {
                 ) {
                     wand.force_render=false;
                     //WandsMod.log("render ",prnt);
-                    if(mode==2||mode==4||mode==5||mode==6) {
+                    if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY||mode==Mode.RECT) {
                         if (wand.is_alt_pressed) {
-                            //WandsMod.log("pos "+pos,prnt);
                             pos = pos.relative(side, 1);
-                            //WandsMod.log("pos "+pos,prnt);
                         }
                     }
-                    //WandsMod.LOGGER.info("wand.do_or_preview");
+                    //WandsMod.LOGGER.info("wand.mode"+ mode);
                     last_pos = pos;
                     last_side = side;
                     last_mode = mode;
                     last_orientation = orientation;
                     last_rot=rot;
-                    //last_valid = wand.valid;
                     last_alt=wand.is_alt_pressed;
                     last_buffer_size=wand.block_buffer.get_length();
-                    //if(prnt){
-                    //    WandsMod.LOGGER.info("render "+wand.block_height);
-                    //}
+
                     wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack, prnt);
                 }
                 preview_shape =null;
-                //if(offhand_block!=null && offhand_block!= Blocks.AIR){
-//                    block_state=offhand_block.defaultBlockState();
-//                }
                 if(block_state!=null) {
                     preview_shape = block_state.getShape(client.level, last_pos);
-                    //render_shape=block_state.getRenderShape();
-                    //block_state.getMaterial()
                 }
                 preview_mode(wand.mode,matrixStack,bufferIn);
             }else{
-                if(wand.mode==7 && wand.copy_paste_buffer.size()!=0 && wand.is_alt_pressed) {
+                if(wand.mode== WandItem.Mode.PASTE && wand.copy_paste_buffer.size()!=0 && wand.is_alt_pressed) {
                     preview_mode(wand.mode, matrixStack, bufferIn);
                 }
             }
         }
     }
 
-    private static void preview_mode(int mode, PoseStack matrixStack,MultiBufferSource.BufferSource bufferIn) {
+    private static void preview_mode(Mode mode, PoseStack matrixStack, MultiBufferSource.BufferSource bufferIn) {
 
         Minecraft client = Minecraft.getInstance();
         Camera camera = client.gameRenderer.getMainCamera();
@@ -198,18 +185,11 @@ public class ClientRender {
             double wand_x2=c.x+wand.x2;
             double wand_y2=c.y+wand.y2;
             double wand_z2=c.z+wand.z2;
-
-            //Vec3 cam = camera.getPosition();
-            //matrixStack=RenderSystem.getModelViewStack();
-            //matrixStack.pushPose();
-            //matrixStack.setIdentity();
-            //matrixStack.translate(-cam.x,-cam.y,-cam.z);
-            //matrixStack.mulPoseMatrix(matrixStack.last().pose());
-            //RenderSystem.applyModelViewMatrix();
-
+            float off2=0.05f;
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            //WandsMod.log("mode "+mode.toString(),prnt);
             switch (mode) {
-                case 0:
+                case DIRECTION:
                     if (wand.valid) {
                         boolean no_shape=false;
                         //preview_shape=null;
@@ -229,7 +209,7 @@ public class ClientRender {
                                     RenderSystem.enableTexture();
                                     RenderSystem.disableCull();
                                     //RenderSystem.enableCull();
-                                    bufferBuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+                                    bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
                                     int vi = 0;
                                     for (AABB aabb : list) {
                                         if (vi == wand.grid_voxel_index) {
@@ -282,7 +262,7 @@ public class ClientRender {
                                     RenderSystem.disableBlend();
                                     RenderSystem.disableCull();
                                     RenderSystem.lineWidth(2.0F);
-                                    bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                                    bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                                     int vi = 0;
                                     for (AABB aabb : list) {
                                         if (vi == wand.grid_voxel_index) {
@@ -303,7 +283,7 @@ public class ClientRender {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
-                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             preview_block(bufferBuilder,
                                     wand_x1, (wand_y1 + wand.y0),wand_z1,
                                     wand_x2, (wand_y1 + wand.y0 + wand.block_height), wand_z2,
@@ -312,41 +292,41 @@ public class ClientRender {
                         }
                     }
                     //break;
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-
-                case 5:
+                case ROW_COL:
+                case FILL:
+                case AREA:
+                case LINE:
+                case CIRCLE:
+                case RECT:
 
                     //preview_mode1(bufferBuilder);
                     if (wand.valid) {
-                        if(mode==1 || mode==2)
+                        if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
                         {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
-                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             preview_block(bufferBuilder,
-                                    wand_x1+0.1f,wand_y1+0.1f, wand_z1-0.1f,
-                                    wand_x2-0.1f,wand_y2-0.1f, wand_z2+0.1f,
-                                    0,255,0,255);
+                                    c.x+wand.bb1_x-off2,c.y+wand.bb1_y-off2, c.z+wand.bb1_z-off2,
+                                    c.x+wand.bb2_x+off2,c.y+wand.bb2_y+off2, c.z+wand.bb2_z+off2,
+                                    0,0,255,255);
                             tesselator.end();
                         }
 
-                        if (mode == 4 || mode==5) {
+                        if (mode == Mode.LINE || mode==Mode.CIRCLE) {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
-                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             preview_block(bufferBuilder,
                                     c.x+wand.p1.getX(),c.y+wand.p1.getY(),c.z+wand.p1.getZ(),
                                     c.x+wand.p1.getX()+1,c.y+wand.p1.getY()+1,c.z+wand.p1.getZ()+1,
                                     0,255,0,255);
 
                             preview_block(bufferBuilder,
-                                    last_pos_x-0.1,last_pos_y-0.1,last_pos_z-0.1,
-                                    last_pos_x+1.1,last_pos_y+1.1,last_pos_z+1.1,
+                                    last_pos_x-off2,last_pos_y-off2,last_pos_z-off2,
+                                    last_pos_x+1+off2,last_pos_y+1+off2,last_pos_z+1+off2,
                                     0,255,0,255);
 
                             tesselator.end();
@@ -379,7 +359,7 @@ public class ClientRender {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
-                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             for (int a = 0; a < wand.block_buffer.get_length() && a < Wand.MAX_LIMIT; a++) {
                                 double x = c.x+wand.block_buffer.buffer_x[a];
                                 double y = c.y+wand.block_buffer.buffer_y[a];
@@ -400,34 +380,29 @@ public class ClientRender {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
-                            bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                             preview_block(bufferBuilder,
                                     wand_x1, wand_y1, wand_z1,
                                     wand_x2, wand_y2, wand_z2,
                                     255,255,255,255);
-                            /*preview_block(bufferBuilder,
-                                    c.x + x, c.y + y, c.z + z,
-                                    c.x + x + 1, c.y + y + 1, c.z + z + 1,
-                                    255, 255, 255, 255
-                            );*/
                             tesselator.end();
                         }
                     }
                     break;
-                case 6:
+                case COPY:
 
                     if (wand.valid) {
                         RenderSystem.setShader(GameRenderer::getPositionColorShader);
                         RenderSystem.disableTexture();
                         RenderSystem.disableBlend();
-                        bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                        bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
 
-                        x1=(wand.copy_x1>wand.copy_x2)? (c.x+wand.copy_x1+0.1) : (c.x+wand.copy_x1-0.1);
-                        y1=(wand.copy_y1>wand.copy_y2)? (c.y+wand.copy_y1+0.1) : (c.y+wand.copy_y1-0.1);
-                        z1=(wand.copy_z1>wand.copy_z2)? (c.z+wand.copy_z1+0.1) : (c.z+wand.copy_z1-0.1);
-                        x2=(wand.copy_x2>wand.copy_x1)? (c.x+wand.copy_x2+0.1) : (c.x+wand.copy_x2-0.1);
-                        y2=(wand.copy_y2>wand.copy_y1)? (c.y+wand.copy_y2+0.1) : (c.y+wand.copy_y2-0.1);
-                        z2=(wand.copy_z2>wand.copy_z1)? (c.z+wand.copy_z2+0.1) : (c.z+wand.copy_z2-0.1);
+                        x1=(wand.copy_x1>wand.copy_x2)? (c.x+wand.copy_x1+off2) : (c.x+wand.copy_x1-off2);
+                        y1=(wand.copy_y1>wand.copy_y2)? (c.y+wand.copy_y1+off2) : (c.y+wand.copy_y1-off2);
+                        z1=(wand.copy_z1>wand.copy_z2)? (c.z+wand.copy_z1+off2) : (c.z+wand.copy_z1-off2);
+                        x2=(wand.copy_x2>wand.copy_x1)? (c.x+wand.copy_x2+off2) : (c.x+wand.copy_x2-off2);
+                        y2=(wand.copy_y2>wand.copy_y1)? (c.y+wand.copy_y2+off2) : (c.y+wand.copy_y2-off2);
+                        z2=(wand.copy_z2>wand.copy_z1)? (c.z+wand.copy_z2+off2) : (c.z+wand.copy_z2-off2);
 
                         preview_block(bufferBuilder,
                                 x1,y1,z1,
@@ -437,7 +412,7 @@ public class ClientRender {
                     }
 
                 break;
-                case 7:
+                case PASTE:
                     if (wand.copy_paste_buffer.size() > 0) {
 
                         BlockPos b_pos = last_pos.relative(last_side, 1);
@@ -453,7 +428,7 @@ public class ClientRender {
                         RenderSystem.setShader(GameRenderer::getPositionColorShader);
                         RenderSystem.disableTexture();
                         RenderSystem.disableBlend();
-                        bufferBuilder.begin(Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                        bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
                         x1=Integer.MAX_VALUE;y1=Integer.MAX_VALUE;z1=Integer.MAX_VALUE;
                         x2=Integer.MIN_VALUE;y2=Integer.MIN_VALUE;z2=Integer.MIN_VALUE;
                         for (CopyPasteBuffer b : wand.copy_paste_buffer) {
@@ -472,12 +447,12 @@ public class ClientRender {
                             if(p.getY()+1>y2) y2=p.getY()+1;
                             if(p.getZ()+1>z2) z2=p.getZ()+1;
                         }
-                        x1 = c.x + b_pos.getX() + x1-0.1;
-                        y1 = c.y + b_pos.getY() + y1-0.1;
-                        z1 = c.z + b_pos.getZ() + z1-0.1;
-                        x2 = c.x + b_pos.getX() + x2+0.1;
-                        y2 = c.y + b_pos.getY() + y2+0.1;
-                        z2 = c.z + b_pos.getZ() + z2+0.1;
+                        x1 = c.x + b_pos.getX() + x1-off2;
+                        y1 = c.y + b_pos.getY() + y1-off2;
+                        z1 = c.z + b_pos.getZ() + z1-off2;
+                        x2 = c.x + b_pos.getX() + x2+off2;
+                        y2 = c.y + b_pos.getY() + y2+off2;
+                        z2 = c.z + b_pos.getZ() + z2+off2;
 
                         preview_block(bufferBuilder,
                                 x1, y1, z1,
@@ -488,17 +463,12 @@ public class ClientRender {
                     }
                 break;
             }
-            //matrixStack.popPose();
-            //RenderSystem.applyModelViewMatrix();
             RenderSystem.enableBlend();
             RenderSystem.enableTexture();
-
-            //RenderSystem.shadeModel(7424);
         }
     }
 
-    private static void preview_block(BufferBuilder bufferBuilder,double fx1, double fy1, double fz1, double fx2, double fy2, double fz2
-    ,int r,int g,int b,int a) {
+    private static void preview_block(BufferBuilder bufferBuilder,double fx1, double fy1, double fz1, double fx2, double fy2, double fz2,int r,int g,int b,int a) {
         fx1 += p_o;
         fy1 += p_o;
         fz1 += p_o;
@@ -750,15 +720,8 @@ public class ClientRender {
         RenderSystem.enableCull();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        /*RenderSystem.blendFunc(
-                GlStateManager.SourceFactor.SRC_COLOR,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR);
-        RenderSystem.blendEquation(32774);*/
-        /*RenderSystem.blendFunc(
-                GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_DST_ALPHA);*/
         RenderSystem.setShaderColor(1.0f,1.0f,1.0f,opacity);
-        bufferBuilder.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
     }
     static void render_shape(Tesselator tesselator,BufferBuilder bufferBuilder,BlockState state,double x, double y,double z){
         float vx=0;
@@ -771,11 +734,8 @@ public class ClientRender {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         if(bakedModel!=null) {
             for(Direction dir: dirs) {
-                //WandsMod.log("dir "+dir, prnt);
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
                 if (!bake_list.isEmpty()) {
-                    //WandsMod.log("quads! "+bake_list.size(), prnt);
-                    //RenderSystem.set
                     for (BakedQuad quad : bake_list) {
                         RenderSystem.setShaderTexture(0, quad.getSprite().atlas().getId());
                         int[] verts = quad.getVertices();
@@ -786,16 +746,12 @@ public class ClientRender {
                             vz = Float.intBitsToFloat(verts[j + 2]);
                             u = Float.intBitsToFloat(verts[j + 4]);
                             v = Float.intBitsToFloat(verts[j + 5]);
-                            //WandsMod.log("vert " + i + "  " + x1 + " " + y1 + " " + z1 + " uv: " + u + " " + v, prnt);
                             bufferBuilder.vertex(c.x+x + vx,c.y+ y + vy,c.z+ z + vz).uv(u, v).endVertex();
                         }
                     }
                 }
             }
         }
-//        tesselator.end();
     }
-    
-    
 }
 

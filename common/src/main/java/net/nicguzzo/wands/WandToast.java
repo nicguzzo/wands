@@ -14,7 +14,7 @@ public class WandToast implements Toast {
         Minecraft client=Minecraft.getInstance();
         ItemStack item_stack=client.player.getMainHandItem();
         if(item_stack!=null && item_stack.getItem() instanceof WandItem){
-            int mode=WandItem.getMode(item_stack);
+            WandItem.Mode mode=WandItem.getMode(item_stack);
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderTexture(0, TEXTURE);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

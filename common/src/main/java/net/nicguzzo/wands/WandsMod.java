@@ -133,12 +133,15 @@ public class WandsMod {
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeLong(wand.palette_seed);
             packet.writeInt(wand.axis.ordinal());
+            packet.writeInt(wand.plane.ordinal());
+            packet.writeInt((wand.slot + 1) % wand.palette_slots.size());
             NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
         }
     }
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
         if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
+            Wand wand=PlayerWand.get(player);
             switch(key){
                 case wand_mode_key:
                     if(shift){
@@ -146,11 +149,11 @@ public class WandsMod {
                     }else {
                         WandItem.nextMode(item_stack);
                     }
-                    //player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getModeString(item_stack)),false);
+                    //player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getMode(item_stack).toString()),false);
                 break;
                 case wand_orientation_key:
                     if(alt){//change axis
-                        Wand wand=PlayerWand.get(player);
+
                         if(wand!=null){
                             Direction.Axis a=wand.axis;
                             int n=(wand.axis.ordinal()+1)%3;
@@ -160,12 +163,15 @@ public class WandsMod {
                         }
                     }else {
                         switch (WandItem.getMode(item_stack)) {
-                            case 5:
+                            case CIRCLE:
+                            case RECT:
                                 WandItem.nextPlane(item_stack);
+                                wand.plane=WandItem.getPlane(item_stack);
                                 player.displayClientMessage(new TextComponent("Wand Plane: " + WandItem.getPlane(item_stack)), false);
+                                send_state((ServerPlayer) player,wand);
                                 break;
-                            case 0:
-                            case 7:
+                            case DIRECTION:
+                            case PASTE:
 
                                 break;
                             default:
@@ -211,7 +217,7 @@ public class WandsMod {
                 break;
                 case wand_undo:
                     if(player.getAbilities().instabuild==true && !player.level.isClientSide()){
-                        Wand wand=PlayerWand.get(player);
+
                         if(wand!=null){
                             int n=1;
                             if(alt){

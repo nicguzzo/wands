@@ -91,10 +91,15 @@ public class WandsModClient {
         NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{
             long seed=packet.readLong();
             int  axis=packet.readInt();
+            int  plane=packet.readInt();
+            int  slot=packet.readInt();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
                     ClientRender.wand.axis=Direction.Axis.values()[axis];
+                    ClientRender.wand.plane= WandItem.Plane.values()[axis];
                     ClientRender.wand.palette_seed = seed;
+                    if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
+                        ClientRender.wand.slot = slot;
 
                     //WandsMod.log(" got palette_seed: "+seed,true);
                     //WandsMod.log(" got axis "+axis,true);
@@ -133,22 +138,33 @@ public class WandsModClient {
                 RenderSystem.defaultBlendFunc();
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                String ln1="";
-                String ln2="Mode: "+WandItem.getModeString(stack);
                 Wand wand=ClientRender.wand;
+                WandItem wand_item=(WandItem)stack.getItem();
+                WandItem.Mode mode=wand_item.getMode(stack);
+
+                String ln1="";
+                String ln2="Mode: "+mode.toString();
                 if(wand.valid) {
-                    switch(wand.mode){
-                        case 0:
+                    switch(mode){
+                        case DIRECTION:
                             ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"]";
                             break;
-                        case 1:
-                        case 2:
-                        case 3:
-                        case 4:
+                        case ROW_COL:
+                        case FILL:
+                        case AREA:
+                        case LINE:
                             ln1="Blocks: "+wand.block_buffer.get_length();
                             break;
-                        case 5:
+                        case CIRCLE:
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
+                            break;
+                        case RECT:
+                            WandItem.Plane plane=wand_item.getPlane(stack);
+                            ln1="Blocks: "+wand.block_buffer.get_length()+" Plane: "+plane;
+                            break;
+                        case COPY:
+                        case PASTE:
+                            ln1="Copied Blocks: "+wand.copy_paste_buffer.size();
                             break;
                     }
                 }

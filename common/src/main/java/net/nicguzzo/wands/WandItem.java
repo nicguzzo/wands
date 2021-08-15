@@ -27,7 +27,53 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class WandItem extends Item{
-    
+    public enum Mode{
+        DIRECTION{
+            public String toString() {
+                return "Direction";
+            }
+        },
+        ROW_COL{
+            public String toString() {
+                return "Row/Column";
+            }
+        },
+        FILL{
+            public String toString() {
+                return "Fill";
+            }
+        },
+        AREA{
+            public String toString() {
+                return "Area";
+            }
+        },
+        LINE{
+            public String toString() {
+                return "Line";
+            }
+        },
+        CIRCLE{
+            public String toString() {
+                return "Circle";
+            }
+        },
+        RECT{
+            public String toString() {
+                return "Rectangle";
+            }
+        },
+        COPY{
+            public String toString() {
+                return "Copy";
+            }
+        },
+        PASTE{
+            public String toString() {
+                return "Paste";
+            }
+        }
+    }
     public enum Orientation {
         ROW, COL
     }
@@ -42,7 +88,8 @@ public class WandItem extends Item{
     public int limit = 0;
     public boolean removes_water;
     public boolean removes_lava;
-    static private final int max_mode=7;
+    static private final int max_mode=Mode.values().length;
+    static private final Mode[] modes=Mode.values();
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
         super(properties);
@@ -50,34 +97,19 @@ public class WandItem extends Item{
         this.removes_lava=removes_lava;
         this.removes_water=removes_water;
     }
-    static public int getMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty())
-            return stack.getOrCreateTag().getInt("mode");
-        return -1;
-    }
-
-    static public String getModeString(ItemStack stack) {
-
+    static public Mode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()) {
-            int mode = stack.getOrCreateTag().getInt("mode");
-            switch (mode){
-                case 0: return "Direction";
-                case 1: return "Row/Col";
-                case 2: return "Fill";
-                case 3: return "Area";
-                case 4: return "Line";
-                case 5: return "Circle";
-                case 6: return "Copy";
-                case 7: return "Paste";
-            }
+            int m=stack.getOrCreateTag().getInt("mode");
+            if(m<max_mode)
+                return modes[m];
         }
-        return "";
+        return Mode.DIRECTION;
     }
-    
+
     static public void nextMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int mode=(tag.getInt("mode")+1) % (max_mode+1);        
+            int mode=(tag.getInt("mode")+1) % (max_mode);
             tag.putInt("mode", mode);
         }
     }
@@ -86,7 +118,7 @@ public class WandItem extends Item{
             CompoundTag tag=stack.getOrCreateTag();
             int mode=tag.getInt("mode")-1;
             if(mode<0){
-                mode=max_mode;
+                mode=max_mode-1;
             }
             tag.putInt("mode", mode);
         }
@@ -133,7 +165,6 @@ public class WandItem extends Item{
             tag.putInt("plane", plane);
         }
     }
-
     static public void toggleCircleFill(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
@@ -184,14 +215,14 @@ public class WandItem extends Item{
             BlockPos pos = context.getClickedPos();
             Direction side = context.getClickedFace();
             BlockState block_state = world.getBlockState(pos);
-            int mode = WandItem.getMode(stack);
+            Mode mode = WandItem.getMode(stack);
             //WandsMod.log("mode "+mode,true);
 
-            if(mode==2||mode==4||mode==5||mode==6){
+            if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY||mode==Mode.RECT){
                 if(wand.is_alt_pressed){
                     pos=pos.relative(side,1);
                 }
-                if(mode==6) {
+                if(mode==Mode.COPY) {
                     if (wand.copy_pos1 == null) {
                         wand.copy_pos1 = pos;
                         return InteractionResult.SUCCESS;
@@ -219,7 +250,7 @@ public class WandItem extends Item{
                 wand.palette_seed = world.random.nextInt(20000000);
                 WandsMod.send_state((ServerPlayer) context.getPlayer(),wand);
             }
-            if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
+            if(mode==Mode.COPY && wand.copy_pos1!=null && wand.copy_pos2!=null){
                 wand.copy_pos1=null;
                 wand.copy_pos2=null;
             }
@@ -257,7 +288,8 @@ public class WandItem extends Item{
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
-        list.add(new TextComponent("mode: " + getModeString(stack)));
+
+        list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
         list.add(new TextComponent("orientation: "+Orientation.values()[tag.getInt("orientation")].toString()));
         list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));

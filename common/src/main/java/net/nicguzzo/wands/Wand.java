@@ -2,16 +2,14 @@ package net.nicguzzo.wands;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
-import com.mojang.datafixers.util.Pair;
 import io.netty.buffer.Unpooled;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.utils.NbtType;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -19,10 +17,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
@@ -33,7 +29,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Fluids;
@@ -43,17 +38,25 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.WandItem.Orientation;
+import net.nicguzzo.wands.WandItem.Mode;
 
 public class Wand {
-    public float x = 0.0f;
-    public float y = 0.0f;
-    public float z = 0.0f;
-    public float x1 = 0.0f;
-    public float y1 = 0.0f;
-    public float z1 = 0.0f;
-    public float x2 = 0.0f;
-    public float y2 = 0.0f;
-    public float z2 = 0.0f;
+    public int x = 0;
+    public int y = 0;
+    public int z = 0;
+    public int x1 = 0;
+    public int y1 = 0;
+    public int z1 = 0;
+    public int x2 = 0;
+    public int y2 = 0;
+    public int z2 = 0;
+    public int bb1_x=0;
+    public int bb1_y=0;
+    public int bb1_z=0;
+    public int bb2_x=0;
+    public int bb2_y=0;
+    public int bb2_z=0;
+
     public BlockPos p1 = null;
     public boolean p2 = false;
     public BlockState p1_state = null;
@@ -75,7 +78,6 @@ public class Wand {
     public float y0 = 0.0f;
     public float block_height = 1.0f;
     boolean is_stair = false;
-    Rotation stair_rotation = Rotation.NONE;
     boolean is_slab_top = false;
     boolean is_slab_bottom = false;
     boolean is_alt_pressed = false;
@@ -86,7 +88,7 @@ public class Wand {
     public boolean is_double_slab = false;
     public int grid_voxel_index = 0;
     public ItemStack palette = null;
-    boolean has_palette = false;
+    public boolean has_palette = false;
     boolean has_bucket = false;
     boolean has_water_bucket = false;
     boolean has_empty_bucket = false;
@@ -96,10 +98,11 @@ public class Wand {
     boolean has_axe=false;
     public boolean force_render = false;
     public Direction.Axis axis= Direction.Axis.X;
-    private class PaletteSlot {
-        public ItemStack stack = null;
-        public BlockState state = null;
-        public int slot = 0;
+    public WandItem.Plane plane=WandItem.Plane.XZ;
+    public class PaletteSlot {
+        public ItemStack stack;
+        public BlockState state;
+        public int slot;
 
         PaletteSlot(int s, BlockState b, ItemStack stk) {
             slot = s;
@@ -108,7 +111,7 @@ public class Wand {
         }
     }
 
-    private class BlockAccounting {
+    private static class BlockAccounting {
         public int placed = 0;
         public int needed = 0;
         public int in_player = 0;
@@ -117,19 +120,19 @@ public class Wand {
     public int slot = 0;
     public Random random = new Random();
     public volatile long palette_seed = System.currentTimeMillis();
-    public Vector<PaletteSlot> palette_slots = new Vector<PaletteSlot>();
-    public Map<Item, BlockAccounting> block_accounting = new HashMap<Item, BlockAccounting>();
+    public Vector<PaletteSlot> palette_slots = new Vector<>();
+    public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
     public BlockBuffer block_buffer = new BlockBuffer(MAX_LIMIT);
     public CircularBuffer undo_buffer = new CircularBuffer(MAX_UNDO);
 
-    private BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
+    private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
 
     int MAX_COPY_VOL = 20 * 20 * 20;
     int radius=0;
 
-    class CopyPasteBuffer {
-        public BlockPos pos = null;
-        public BlockState state = null;
+    static class CopyPasteBuffer {
+        public BlockPos pos;
+        public BlockState state;
 
         public CopyPasteBuffer(BlockPos pos, BlockState state) {
             this.pos = pos;
@@ -137,11 +140,9 @@ public class Wand {
         }
     }
 
-    Vector<CopyPasteBuffer> copy_paste_buffer = new Vector<CopyPasteBuffer>();
+    Vector<CopyPasteBuffer> copy_paste_buffer = new Vector<>();
     public BlockPos copy_pos1 = null;
     public BlockPos copy_pos2 = null;
-    public BlockPos copied_pos1 = null;
-    public BlockPos copied_pos2 = null;
     public int copy_x1 = 0;
     public int copy_y1 = 0;
     public int copy_z1 = 0;
@@ -150,7 +151,7 @@ public class Wand {
     public int copy_z2 = 0;
     //public boolean  copied=false;
     boolean preview;
-    public int mode;
+    public WandItem.Mode mode;
     boolean prnt = false;
 
     private void log(String s) {
@@ -209,15 +210,13 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
-        //TODO: wand gui
-        //TODO: show preview only if there's enough items
         //TODO: replace mode
+        //TODO: wand gui
         //TODO: break items in palette, add tool slot to palette
-        //TODO: cull preview blocks
-        //TODO: hollow fill
+        //TODO: modes compare with palette items
 
         boolean creative = player.getAbilities().instabuild;
-        boolean is_copy_paste = mode == 6 || mode == 7;
+        boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
         wand_item = (WandItem) wand_stack.getItem();
         mode = WandItem.getMode(wand_stack);
@@ -255,13 +254,14 @@ public class Wand {
         has_water_bucket=false;
         has_empty_bucket=false;
         if (offhand != null && offhand.getItem() instanceof PaletteItem) {
-            if (mode > 0) {
+            //if (mode != Mode.DIRECTION)
+            {
                 palette = offhand;
                 has_palette = true;
             }
         }
         if (offhand != null && offhand.getItem() instanceof BucketItem) {
-            if (mode > 0) {
+            if (mode != Mode.DIRECTION) {
                 bucket = offhand;
                 has_bucket = true;
             }
@@ -303,35 +303,37 @@ public class Wand {
         }
         int placed = 0;
         switch (mode) {
-            case 0:
+            case DIRECTION:
                 boolean invert = WandItem.isInverted(wand_stack);
-                placed += mode0(invert);
+                mode_direction(invert);
                 break;
-            case 1:
+            case ROW_COL:
                 Orientation orientation = WandItem.getOrientation(wand_stack);
-                placed += mode1(orientation);
+                mode_row_col(orientation);
                 break;
-            case 2:
-                placed += mode2();
+            case FILL:
+                mode_fill_rect(false);
                 break;
-            case 3:
-                placed += mode3();
+            case AREA:
+                mode_area();
                 break;
-            case 4:
-                placed += mode4();
+            case LINE:
+                mode_line();
                 break;
-            case 5:
+            case CIRCLE:
                 int plane = WandItem.getPlane(wand_stack).ordinal();
                 boolean fill = WandItem.isCircleFill(wand_stack);
-                placed += mode5(plane, fill);
+                mode_circle(plane, fill);
                 break;
-            case 6:
-                placed += mode6();
+            case RECT:
+                mode_fill_rect(true);
                 break;
-            case 7:
-                placed += mode7();
+            case COPY:
+                mode_copy();
                 break;
-
+            case PASTE:
+                mode_paste();
+                break;
         }
 
         if (!preview) {
@@ -419,12 +421,13 @@ public class Wand {
                         if(has_empty_bucket||has_water_bucket){
                             block_buffer.state[a]=block_state;
                         }else{
-                            if (!WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
+                            if (!destroy && !WandUtils.can_place(player.level.getBlockState(block_buffer.get(a)), wand_item.removes_water, wand_item.removes_lava)) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                                 continue;
+                            }else {
+                                pa.needed++;
                             }
-                            pa.needed++;
                         }
                     }
                     if(block_buffer.get_length()>0 && pa.needed>0) {
@@ -454,7 +457,7 @@ public class Wand {
             boolean missing_blocks = block_accounting.size() == 0;
 
             //deal with inventory
-            if (!creative && !destroy && !has_bucket && mode != 6) {
+            if (!creative && !destroy && !has_bucket && mode != Mode.COPY) {
                 //for (var pa : palette_accounting.entrySet()) {
                 //log(pa.getKey()+" in player "+pa.getValue().in_player);
                 //}
@@ -605,7 +608,7 @@ public class Wand {
         }
     }
 
-    public int mode0(boolean invert) {
+    void mode_direction(boolean invert) {
         Direction dirs[] = getDirMode0(side, hit.x, hit.y, hit.z);
         if (invert) {
             if (dirs[0] != null)
@@ -623,9 +626,9 @@ public class Wand {
         if (d1 != null) {
             BlockPos dest = null;
             if (d2 != null) {
-                dest = WandUtils.find_next_diag(player.level, block_state, d1, d2, pos, wand_item, destroy, offhand_state);
+                dest = WandUtils.find_next_diag(player.level, block_state, d1, d2, pos, wand_item, destroy, offhand_state,this);
             } else {
-                dest = WandUtils.find_next_pos(player.level, block_state, d1, pos, wand_item, destroy, offhand_state);
+                dest = WandUtils.find_next_pos(player.level, block_state, d1, pos, wand_item, destroy, offhand_state,this);
             }
             if (dest != null) {
                 //if (preview) {
@@ -642,10 +645,9 @@ public class Wand {
                 //}
             }
         }
-        return 0;
     }
 
-    public int mode1(Orientation orientation) {
+    void mode_row_col(Orientation orientation) {
         boolean preview = player.level.isClientSide();
         Direction dir = Direction.EAST;
         BlockPos pos_m = pos.relative(side, 1);
@@ -721,6 +723,7 @@ public class Wand {
                     } else {
                         eq = bs0.equals(block_state);
                     }
+                    eq=eq || state_in_slot(bs0);
                     if (eq && (bs1.isAir() || WandUtils.is_fluid(bs1, wand.removes_water, wand.removes_lava))) {
                         pos0 = pos0.relative(dir);
                         pos1 = pos1.relative(dir);
@@ -737,6 +740,7 @@ public class Wand {
                     } else {
                         eq = bs2.equals(block_state);
                     }
+                    eq=eq || state_in_slot(bs2);
                     if (eq && (bs3.isAir() || WandUtils.is_fluid(bs3, wand.removes_water, wand.removes_lava))) {
                         pos2 = pos2.relative(op);
                         pos3 = pos3.relative(op);
@@ -762,54 +766,68 @@ public class Wand {
                 y2 = pos3.getY() + offy + 1;
                 z2 = pos3.getZ() + offz + 1;
                 valid = true;
-            } //else {
-            return fill(pos1, pos3);
-            //}
+            }
+            fill(pos1, pos3,false);
         } else {
             valid = false;
         }
-        return 0;
     }
-
-    public int mode2() {
-        int placed = 0;
-        if (p1 != null && (p2 || preview)) {
-            valid = true;
-            x1 = p1.getX();
-            y1 = p1.getY();
-            z1 = p1.getZ();
-            x2 = pos.getX();
-            y2 = pos.getY();
-            z2 = pos.getZ();
-            if (!p1.equals(pos)) {
-                if (x1 >= x2) {
-                    x1 += 1;
-                } else {
-                    x2 += 1;
-                }
-                if (y1 >= y2) {
-                    y1 += 1;
-                } else {
-                    y2 += 1;
-                }
-                if (z1 >= z2) {
-                    z1 += 1;
-                } else {
-                    z2 += 1;
-                }
+    void calc_pv_bbox(){
+        x1 = p1.getX();
+        y1 = p1.getY();
+        z1 = p1.getZ();
+        x2 = pos.getX();
+        y2 = pos.getY();
+        z2 = pos.getZ();
+        if (!p1.equals(pos)) {
+            if (x1 >= x2) {
+                x1 += 1;
+                bb1_x=x2;
+                bb2_x=x1;
             } else {
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-                z2 = z1 + 1;
+                x2 += 1;
+                bb1_x=x1;
+                bb2_x=x2;
             }
-            placed = fill(p1, pos);
-            valid = true;
+            if (y1 >= y2) {
+                y1 += 1;
+                bb1_y=y2;
+                bb2_y=y1;
+            } else {
+                y2 += 1;
+                bb1_y=y1;
+                bb2_y=y2;
+            }
+            if (z1 >= z2) {
+                z1 += 1;
+                bb1_z=z2;
+                bb2_z=z1;
+            } else {
+                z2 += 1;
+                bb1_z=z1;
+                bb2_z=z2;
+            }
+        } else {
+            x2 = x1 + 1;
+            y2 = y1 + 1;
+            z2 = z1 + 1;
+            bb1_x=x1;
+            bb1_y=y1;
+            bb1_z=z1;
+            bb2_x=x2;
+            bb2_y=y2;
+            bb2_z=z2;
         }
 
-        return placed;
+        valid = true;
     }
-
-    public int mode3() {
+    void mode_fill_rect(boolean rect) {
+        if (p1 != null && (p2 || preview)) {
+            calc_pv_bbox();
+            fill(p1, pos,rect);
+        }
+    }
+    void mode_area() {
         block_buffer.reset();
         //BlockState st=get_state();
         WandUtils.add_neighbour(block_buffer, wand_item, pos, block_state, player.level, side, this);
@@ -829,11 +847,10 @@ public class Wand {
                 block_buffer.set(a, block_buffer.get(a).relative(side, -1));
             }
         }
-        placed = from_buffer();
-        return placed;
+        validate_buffer();
     }
 
-    public int mode4() {
+    void mode_line() {
         block_buffer.reset();
         BlockState state = get_state();
         Item item = get_item(state);
@@ -930,10 +947,10 @@ public class Wand {
                 }
             }
         }
-        return from_buffer();
+        validate_buffer();
     }
 
-    public int mode5(int plane, boolean fill) {
+    void mode_circle(int plane, boolean fill) {
         block_buffer.reset();
         int diameter=0;
         if (p1 != null && (p2 || preview)) {
@@ -945,9 +962,9 @@ public class Wand {
             int pz = pos.getZ() - zc;
             // log("circle plane:"+plane+ " fill: "+fill);
             int r = (int) Math.sqrt(px * px + py * py + pz * pz);
-            radius=r;
+            radius=r+1;
             if(r<1){
-                return 0;
+                return;
             }
             diameter=2*r;
             if (plane == 0) {// XZ;
@@ -956,13 +973,13 @@ public class Wand {
                 int z = 0;
                 int d = 1 - r;
                 do {
-                    drawCircle(xc, yc, zc, x, y, z, plane);
-                    z = z + 1;
+                    drawCircleOctants(xc, yc, zc, x, y, z, plane);
+                    z++;
                     if (d< 0 )
-                        d=d + 2 * z + 1;
+                        d+= 2 * z + 1;
                     else {
-                        x = x - 1;
-                        d = d + 2 * (z - x) + 1;
+                        x--;
+                        d+=  2 * (z - x) + 1;
                     }
                     //break;
                 }while(z<=x);
@@ -973,8 +990,7 @@ public class Wand {
                         int r2 = r * r;
                         for (z = -r; z <= r; z++) {
                             for (x = -r; x <= r; x++) {
-                                int det = (x * x) + (z * z);
-                                if (det < r2) {
+                                if ( (x * x) + (z * z) < r2) {
                                     add_to_buffer(xc + x, yc, zc + z);
                                 }
                             }
@@ -982,18 +998,21 @@ public class Wand {
                     }
                 }
             } else if (plane == 1) {// XY;
-                int x = 0, y = r, z = 0;
-                int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane);
-                while (y >= x) {
-                    x++;
-                    if (d > 0) {
-                        y--;
-                        d = d + 4 * (x - y) + 10;
-                    } else
-                        d = d + 4 * x + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane);
-                }
+                int x = r;
+                int y = 0;
+                int z = 0;
+                int d = 1 - r;
+                do {
+                    drawCircleOctants(xc, yc, zc, x, y, z, plane);
+                    y++;
+                    if (d< 0 )
+                        d+= 2 * y + 1;
+                    else {
+                        x--;
+                        d+=  2 * (y - x) + 1;
+                    }
+                    //break;
+                }while(y<=x);
                 if (fill) {
                     if(r==1){
                         add_to_buffer(xc, yc, zc);
@@ -1009,18 +1028,22 @@ public class Wand {
                     }
                 }
             } else if (plane == 2) {// YZ;
-                int x = 0, y = 0, z = r;
-                int d = 3 - 2 * r;
-                drawCircle(xc, yc, zc, x, y, z, plane);
-                while (z >= y) {
+
+                int x = 0;
+                int y = 0;
+                int z = r;
+                int d = 1 - r;
+                do {
+                    drawCircleOctants(xc, yc, zc, x, y, z, plane);
                     y++;
-                    if (d > 0) {
+                    if (d< 0 )
+                        d+= 2 * y + 1;
+                    else {
                         z--;
-                        d = d + 4 * (y - z) + 10;
-                    } else
-                        d = d + 4 * y + 6;
-                    drawCircle(xc, yc, zc, x, y, z, plane);
-                }
+                        d+=  2 * (y - z) + 1;
+                    }
+                    //break;
+                }while(y<=z);
                 if (fill) {
                     int r2 = r * r;
                     for (z = -r; z <= r; z++) {
@@ -1043,10 +1066,9 @@ public class Wand {
                 player.displayClientMessage(new TextComponent("limit reached"), false);
             }
         }
-        return 0;
     }
 
-    public int mode6() {
+    void mode_copy() {
         if (!preview) {
             //WandsMod.log("mode6 copy_pos1: "+copy_pos1+" copy_pos2: "+copy_pos2 + " copy_paste_buffer: "+copy_paste_buffer.size(),prnt);
         }
@@ -1141,11 +1163,9 @@ public class Wand {
                 }
             }
         }
-        return 0;
     }
 
-    int mode7() {
-
+    void mode_paste() {
         if (!preview) {
             //log("mode6 paste "+copy_paste_buffer.size());
             BlockPos b_pos = pos.relative(side, 1);
@@ -1160,10 +1180,9 @@ public class Wand {
                         b_pos.getZ() + p.getZ(), b.state.rotate(rotation), b.state.getBlock().asItem());
             }
         }
-        return 0;
     }
 
-    private void drawCircle(int xc, int yc, int zc, int x, int y, int z, int plane) {
+    void drawCircleOctants(int xc, int yc, int zc, int x, int y, int z, int plane) {
         switch (plane) {
             case 0:// XZ
                 add_to_buffer(xc + x, yc, zc + z);
@@ -1182,6 +1201,22 @@ public class Wand {
                 }
                 break;
             case 1:// XY
+                add_to_buffer(xc + x, yc +y, zc);
+                if(x!=y) {
+                    add_to_buffer(xc + y, yc + x, zc);
+                    add_to_buffer(xc + y, yc - x, zc);
+                    add_to_buffer(xc - x, yc - y, zc);
+                }
+                if(y>0) {
+                    add_to_buffer(xc + x, yc - y, zc);
+                    add_to_buffer(xc - y, yc - x, zc);
+                    add_to_buffer(xc - y, yc + x, zc);
+                    if(x!=y) {
+                        add_to_buffer(xc - x,yc + y,zc);
+                    }
+                }
+
+               /*
                 add_to_buffer(xc + x, yc + y, zc);
                 add_to_buffer(xc - x, yc + y, zc);
                 add_to_buffer(xc + x, yc - y, zc);
@@ -1189,32 +1224,46 @@ public class Wand {
                 add_to_buffer(xc + y, yc + x, zc);
                 add_to_buffer(xc - y, yc + x, zc);
                 add_to_buffer(xc + y, yc - x, zc);
-                add_to_buffer(xc - y, yc - x, zc);
+                add_to_buffer(xc - y, yc - x, zc);       */
                 break;
             case 2:// YZ
-                add_to_buffer(xc, yc + y, zc + z);
+                add_to_buffer(xc,yc + y, zc + z);
+                if(y!=z) {
+                    add_to_buffer(xc, yc + z, zc + y);
+                    add_to_buffer(xc, yc + z, zc - y);
+                    add_to_buffer(xc, yc - y, zc - z);
+                }
+                if(z>0) {
+                    add_to_buffer(xc, yc + y, zc - z);
+                    add_to_buffer(xc, yc - z, zc - y);
+                    add_to_buffer(xc, yc - z, zc + y);
+                    if(y!=z) {
+                        add_to_buffer(xc, yc - y, zc + z);
+                    }
+                }
+                /*add_to_buffer(xc, yc + y, zc + z);
                 add_to_buffer(xc, yc - y, zc + z);
                 add_to_buffer(xc, yc + y, zc - z);
                 add_to_buffer(xc, yc - y, zc - z);
                 add_to_buffer(xc, yc + z, zc + y);
                 add_to_buffer(xc, yc - z, zc + y);
                 add_to_buffer(xc, yc + z, zc - y);
-                add_to_buffer(xc, yc - z, zc - y);
+                add_to_buffer(xc, yc - z, zc - y); */
                 break;
         }
     }
     BlockState get_state() {
         BlockState st=block_state;
-        if (!has_palette || mode==0) {
+        if (!has_palette/* || mode==Mode.DIRECTION*/) {
             if (offhand_state != null && !offhand_state.isAir()) {
                 st= offhand_state;
             } else {
-                if (mode == 2 || mode == 4 || mode == 5) {
+                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE|| mode==Mode.RECT) {
                     if (p1_state != null)
                         st=p1_state;
                 }
             }
-            st=stair_slabs(st);
+            st= state_for_placement(st);
         } else {
 
             if (palette_slots.size() > 0) {
@@ -1222,10 +1271,10 @@ public class Wand {
                 int bound = palette_slots.size();
                 if (palette_mode == PaletteMode.RANDOM) {
                     slot = random.nextInt(bound);
-                } else if (palette_mode == PaletteMode.ROUND_ROBIN) {
-                    slot = (slot + 1) % bound;
+                } else if (palette_mode == PaletteMode.ROUND_ROBIN ) {
+                    if(!(mode==Mode.DIRECTION && !level.isClientSide()))
+                        slot = (slot + 1) % bound;
                 }
-
                 PaletteSlot ps = palette_slots.get(slot);
                 st = ps.state;
                 Block blk = st.getBlock();
@@ -1235,7 +1284,7 @@ public class Wand {
                         st = st.setValue(SnowLayerBlock.LAYERS, sn + 1);
                     }
                 }
-                st = stair_slabs(st);
+                st = state_for_placement(st);
                 //if (palette_mode == PaletteItem.PaletteMode.RANDOM)
                 {
                     if (PaletteItem.getRotate(palette)) {
@@ -1254,7 +1303,7 @@ public class Wand {
         }
         return null;
     }
-    public BlockState stair_slabs(BlockState st){
+    BlockState state_for_placement(BlockState st){
         Block blk=st.getBlock();
         if(blk instanceof SlabBlock){
             double hity = WandUtils.unitCoord(hit.y);
@@ -1324,18 +1373,16 @@ public class Wand {
             //undo_buffer.print();
         }
     }
-    public int from_buffer() {
+    int validate_buffer() {
         int placed = 0;
         if (preview) {
             valid = (block_buffer.get_length() > 0) && block_buffer.get_length()<= wand_item.limit;
         }
         return placed;
     }
-    public int fill(BlockPos from, BlockPos to) {
+    void fill(BlockPos from, BlockPos to,boolean hollow) {
         //log("fill from: "+from+" to: "+to);
-        int placed = 0;
         int xs, ys, zs, xe, ye, ze;
-
         if (from.getX() >= to.getX()) {
             xs = to.getX();
             xe = from.getX();
@@ -1357,34 +1404,34 @@ public class Wand {
             zs = from.getZ();
             ze = to.getZ();
         }
-
         //int limit = MAX_LIMIT;
         //if (!player.getAbilities().instabuild) {
         int    limit = wand_item.limit;
-
-        //}
-
-        /*int ll = ((xe - xs) + 1) * ((ye - ys) + 1) * ((ze - zs) + 1);
-        log("xs: "+xs);
-        log("ys: "+ys);
-        log("zs: "+zs);
-        log("xe: "+xe);
-        log("ye: "+ye);
-        log("ze: "+ze);
-        log("wx: "+(xe - xs + 1));
-        log("wy: "+(ye - ys + 1));
-        log("wz: "+(ze - zs + 1));     */
         int ll=0;
-
         block_buffer.reset();
-
         for (int z = zs; z <= ze; z++) {
             for (int y = ys; y <= ye; y++) {
                 for (int x = xs; x <= xe; x++) {
+                    if(hollow) {
+                        switch (axis) {
+                            case X:
+                                if (y > ys && y < ye && z > zs && z < ze)
+                                    continue;
+                                break;
+                            case Y:
+                                if (x > xs && x < xe && z > zs && z < ze)
+                                    continue;
+                                break;
+                            case Z:
+                                if (x > xs && x < xe && y > ys && y < ye)
+                                    continue;
+                                break;
+                        }
+                    }
                     if (ll < limit && ll < MAX_LIMIT) {
                         add_to_buffer(x, y, z);
+                        ll++;
                     }
-                    ll++;
                 }
             }
         }
@@ -1394,9 +1441,8 @@ public class Wand {
 //                player.displayClientMessage(new TextComponent("Wand limit reached: "+ limit + ")"), false);
 //            }
         //}
-        return placed;
     }
-    public boolean place_block(BlockPos block_pos,BlockState state) {
+    boolean place_block(BlockPos block_pos,BlockState state) {
         boolean placed = false;
         boolean is_door=false;
         //log("place_block "+block_pos+" state: "+state + " destroy: " + destroy);
@@ -1573,7 +1619,7 @@ public class Wand {
         return placed;
     }
 
-    public Direction[] getDirMode0(Direction side, double hit_x, double hit_y, double hit_z) {
+    Direction[] getDirMode0(Direction side, double hit_x, double hit_y, double hit_z) {
         Direction ret[] = new Direction[2];
         ret[0] = null;
         ret[1] = null;
@@ -1790,7 +1836,8 @@ public class Wand {
         }
     }
     void update_palette(){
-        slot=0;
+        if(mode!= Mode.DIRECTION)
+            slot=0;
         if(palette!=null) {
             palette_slots.clear();
             ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
@@ -1853,5 +1900,17 @@ public class Wand {
                 }
             }
         }
+    }
+    public boolean state_in_slot(BlockState bs){
+        boolean cond=false;
+        if(has_palette) {
+            for (Wand.PaletteSlot slot: palette_slots) {
+                if(bs.equals(slot.state)){
+                    cond=true;
+                    break;
+                }
+            }
+        }
+        return cond;
     }
 }
