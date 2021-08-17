@@ -61,6 +61,10 @@ public class WandsMod {
         return new WandItem(config.netherite_wand_limit,true,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
     });
 
+    public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
+        return new WandItem(Wand.MAX_LIMIT,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+    });
+
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
         return new PaletteItem(new Item.Properties().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
@@ -83,8 +87,8 @@ public class WandsMod {
         
         ITEMS.register();
         MENUES.register();
-        System.out.println(WandsExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
-                
+        //System.out.println(WandsExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
+
         //NetworkReceiver
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
@@ -134,7 +138,16 @@ public class WandsMod {
             packet.writeLong(wand.palette_seed);
             packet.writeInt(wand.axis.ordinal());
             packet.writeInt(wand.plane.ordinal());
-            packet.writeInt((wand.slot + 1) % wand.palette_slots.size());
+            packet.writeInt(wand.mode.ordinal());
+            if(wand.palette_slots.size()!=0) {
+                packet.writeInt((wand.slot + 1) % wand.palette_slots.size());
+            }else{
+                packet.writeInt(0);
+            }
+            float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
+            packet.writeBoolean (BLOCKS_PER_XP != 0);
+            packet.writeInt(player.experienceLevel);
+            packet.writeFloat(player.experienceProgress);
             NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
         }
     }

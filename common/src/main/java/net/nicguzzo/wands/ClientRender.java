@@ -84,12 +84,13 @@ public class ClientRender {
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
                 prnt = true;
+
             }//else{
             if (t1 - t00 > 100) {
                 t00 = System.currentTimeMillis();
                force=true;
             }
-
+            //WandsMod.log("inv slot0: "+player.getInventory().getItem(9),prnt);
             //if(mode==6 && wand.copy_pos1!=null && wand.copy_pos2!=null){
             //    preview_mode(wand.mode);
             //}
@@ -301,7 +302,7 @@ public class ClientRender {
 
                     //preview_mode1(bufferBuilder);
                     if (wand.valid) {
-                        if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
+                        if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)//bbox
                         {
                             RenderSystem.setShader(GameRenderer::getPositionColorShader);
                             RenderSystem.disableTexture();
@@ -329,6 +330,9 @@ public class ClientRender {
                                     last_pos_x+1+off2,last_pos_y+1+off2,last_pos_z+1+off2,
                                     0,255,0,255);
 
+
+                            //bufferBuilder.vertex(last_pos_x+0.5, last_pos_y+0.5, last_pos_z+0.5).color(255,255,255,255).endVertex();
+                            //bufferBuilder.vertex(wand_x1+0.5, wand_y1+0.5, wand_z1+0.5).color(255,0,255,255).endVertex();
                             tesselator.end();
                         }
 
@@ -360,6 +364,9 @@ public class ClientRender {
                             RenderSystem.disableTexture();
                             RenderSystem.disableBlend();
                             bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+                            int r=255;
+                            int g=255;
+                            int b=255;
                             for (int a = 0; a < wand.block_buffer.get_length() && a < Wand.MAX_LIMIT; a++) {
                                 double x = c.x+wand.block_buffer.buffer_x[a];
                                 double y = c.y+wand.block_buffer.buffer_y[a];
@@ -368,10 +375,13 @@ public class ClientRender {
                                     preview_shape = wand.block_buffer.state[a].getShape(client.level, last_pos);
                                     List<AABB> list = preview_shape.toAabbs();
                                     for (AABB aabb : list) {
+                                        if(wand.destroy){
+                                            r=255;g=0;b=0;
+                                        }
                                         preview_block(bufferBuilder,
                                                 x + aabb.minX, y + aabb.minY, z + aabb.minZ,
                                                 x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
-                                                255, 255, 255, 255);
+                                                r, g, b, 255);
                                     }
                                 }
                             }
@@ -384,7 +394,18 @@ public class ClientRender {
                             preview_block(bufferBuilder,
                                     wand_x1, wand_y1, wand_z1,
                                     wand_x2, wand_y2, wand_z2,
-                                    255,255,255,255);
+                                    255,0,0,255);
+                            tesselator.end();
+                        }
+                        if (mode == Mode.LINE || mode==Mode.CIRCLE) {
+                            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+                            RenderSystem.disableTexture();
+                            RenderSystem.disableBlend();
+                            RenderSystem.disableDepthTest();
+                            bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+
+                            bufferBuilder.vertex(last_pos_x+0.5, last_pos_y+0.5, last_pos_z+0.5).color(255,0,255,255).endVertex();
+                            bufferBuilder.vertex(wand_x1+0.5, wand_y1+0.5, wand_z1+0.5).color(255,0,255,255).endVertex();
                             tesselator.end();
                         }
                     }
@@ -457,7 +478,7 @@ public class ClientRender {
                         preview_block(bufferBuilder,
                                 x1, y1, z1,
                                 x2, y2, z2,
-                                0, 0, 255, 255);
+                                255,255, 0, 255);
 
                         tesselator.end();
                     }
@@ -465,6 +486,7 @@ public class ClientRender {
             }
             RenderSystem.enableBlend();
             RenderSystem.enableTexture();
+            RenderSystem.enableDepthTest();
         }
     }
 

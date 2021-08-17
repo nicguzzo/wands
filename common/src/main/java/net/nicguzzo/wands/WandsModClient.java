@@ -92,15 +92,23 @@ public class WandsModClient {
             long seed=packet.readLong();
             int  axis=packet.readInt();
             int  plane=packet.readInt();
+            int  mode=packet.readInt();
             int  slot=packet.readInt();
+            boolean  xp=packet.readBoolean();
+            int  levels=packet.readInt();
+            float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
                     ClientRender.wand.axis=Direction.Axis.values()[axis];
-                    ClientRender.wand.plane= WandItem.Plane.values()[axis];
+                    ClientRender.wand.plane= WandItem.Plane.values()[plane];
                     ClientRender.wand.palette_seed = seed;
+                    ClientRender.wand.mode= WandItem.Mode.values()[mode];
                     if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
                         ClientRender.wand.slot = slot;
-
+                    if(xp){
+                        context.getPlayer().experienceLevel=levels;
+                        context.getPlayer().experienceProgress=prog;
+                    }
                     //WandsMod.log(" got palette_seed: "+seed,true);
                     //WandsMod.log(" got axis "+axis,true);
                 }

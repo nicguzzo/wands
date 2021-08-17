@@ -290,6 +290,7 @@ public class WandItem extends Item{
         CompoundTag tag=stack.getOrCreateTag();
 
         list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
+        list.add(new TextComponent("limit: " + this.limit ));
         list.add(new TextComponent("orientation: "+Orientation.values()[tag.getInt("orientation")].toString()));
         list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
