@@ -24,7 +24,7 @@ class WandUtils{
                     for (int i = 0, len = shulker_items.size(); i < len; ++i) {
                         CompoundTag itemTag = shulker_items.getCompound(i);                        
                         ItemStack s = ItemStack.of(itemTag);
-                        if(!s.isEmpty() && s.getItem()== item){
+                        if(!s.isEmpty() && s.getTag()==null && s.getItem()== item){
                             n+=s.getCount();
                         }							
                     }

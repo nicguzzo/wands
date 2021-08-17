@@ -159,7 +159,7 @@ public class ClientRender {
     }
 
     private static void preview_mode(Mode mode, PoseStack matrixStack, MultiBufferSource.BufferSource bufferIn) {
-
+        //TODO: preview water
         Minecraft client = Minecraft.getInstance();
         Camera camera = client.gameRenderer.getMainCamera();
         //client.gameRenderer.lightTexture().turnOnLightLayer();
@@ -367,6 +367,12 @@ public class ClientRender {
                             int r=255;
                             int g=255;
                             int b=255;
+                            if(wand.destroy){
+                                r=255;g=0;b=0;
+                            }
+                            if(wand.is_alt_pressed &&  (wand.has_hoe|| wand.has_axe || wand.has_shovel)){
+                                r=0;g=255;b=255;
+                            }
                             for (int a = 0; a < wand.block_buffer.get_length() && a < Wand.MAX_LIMIT; a++) {
                                 double x = c.x+wand.block_buffer.buffer_x[a];
                                 double y = c.y+wand.block_buffer.buffer_y[a];
@@ -375,9 +381,7 @@ public class ClientRender {
                                     preview_shape = wand.block_buffer.state[a].getShape(client.level, last_pos);
                                     List<AABB> list = preview_shape.toAabbs();
                                     for (AABB aabb : list) {
-                                        if(wand.destroy){
-                                            r=255;g=0;b=0;
-                                        }
+
                                         preview_block(bufferBuilder,
                                                 x + aabb.minX, y + aabb.minY, z + aabb.minZ,
                                                 x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,

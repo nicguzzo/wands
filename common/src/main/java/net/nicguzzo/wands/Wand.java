@@ -96,9 +96,9 @@ public class Wand {
     boolean has_water_bucket = false;
     boolean has_empty_bucket = false;
     boolean has_offhand = false;
-    boolean has_hoe=false;
-    boolean has_shovel=false;
-    boolean has_axe=false;
+    public boolean has_hoe=false;
+    public boolean has_shovel=false;
+    public boolean has_axe=false;
     public boolean force_render = false;
     public boolean limit_reached=false;
     public Direction.Axis axis= Direction.Axis.X;
@@ -281,13 +281,17 @@ public class Wand {
                     player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED), false);
                 }
                 offhand = null;
-                return;
+                has_offhand =false;
+                offhand_block=null;
+                //return;
             }
-            if (!offhand.isStackable()) {
+            if (offhand != null && !offhand.isStackable()) {
                 if (!preview) {
                     player.displayClientMessage(new TextComponent("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
                 }
                 offhand = null;
+                has_offhand =false;
+                offhand_block=null;
                 return;
             }
         }
@@ -451,16 +455,20 @@ public class Wand {
                 ItemStack stack;
                 for (int i = 0; i < 36; ++i) {
                     stack = player.getInventory().getItem(i);
-                    if (WandUtils.is_shulker(stack)) {
-                        //count_in_shulker += count_in_shulker(stack, item_stack);
-                        for (var pa : block_accounting.entrySet()) {
-                            pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
-                        }
-                    } else {
-                        for (var pa : block_accounting.entrySet()) {
-                            Item item = pa.getKey();
-                            if (item != null && !stack.isEmpty() && item == stack.getItem()) {
-                                pa.getValue().in_player += stack.getCount();
+                    if(stack.getItem()!= Items.AIR) {
+                        if (WandUtils.is_shulker(stack)) {
+                            //count_in_shulker += count_in_shulker(stack, item_stack);
+                            for (var pa : block_accounting.entrySet()) {
+                                pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
+                            }
+                        } else {
+                            if (stack.getTag() == null) {
+                                for (var pa : block_accounting.entrySet()) {
+                                    Item item = pa.getKey();
+                                    if (item != null && !stack.isEmpty() && item == stack.getItem()) {
+                                        pa.getValue().in_player += stack.getCount();
+                                    }
+                                }
                             }
                         }
                     }
@@ -524,25 +532,27 @@ public class Wand {
                     //look for items on shulker boxes first
                     for (int pi = 0; pi < 36; ++pi) {
                         stack = player.getInventory().getItem(pi);
-                        if (WandUtils.is_shulker(stack)) {
-                            CompoundTag shulker_tag = stack.getTagElement("BlockEntityTag");
-                            if (shulker_tag != null) {
-                                ListTag shulker_items = shulker_tag.getList("Items", 10);
-                                for (int j = 0, len = shulker_items.size(); j < len; ++j) {
-                                    CompoundTag itemTag = shulker_items.getCompound(j);
-                                    stack_item = ItemStack.of(itemTag);
-                                    if (stack_item != null && !stack_item.isEmpty()) {
-                                        BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                                        if (pa != null && pa.placed > 0) {
-                                            //log(stack_item.getDescriptionId() + " needed: " + pa.needed + " placed: " + pa.placed);
-                                            if (pa.placed <= stack_item.getCount()) {
-                                                stack_item.setCount(stack_item.getCount() - pa.placed);
-                                                pa.placed = 0;
-                                            } else {
-                                                pa.placed -= stack_item.getCount();
-                                                stack_item.setCount(0);
+                        if(stack.getItem() != Items.AIR) {
+                            if (WandUtils.is_shulker(stack)) {
+                                CompoundTag shulker_tag = stack.getTagElement("BlockEntityTag");
+                                if (shulker_tag != null) {
+                                    ListTag shulker_items = shulker_tag.getList("Items", 10);
+                                    for (int j = 0, len = shulker_items.size(); j < len; ++j) {
+                                        CompoundTag itemTag = shulker_items.getCompound(j);
+                                        stack_item = ItemStack.of(itemTag);
+                                        if (stack_item != null && !stack_item.isEmpty() && stack_item.getTag() == null ) {
+                                            BlockAccounting pa = block_accounting.get(stack_item.getItem());
+                                            if (pa != null && pa.placed > 0) {
+                                                //log(stack_item.getDescriptionId() + " needed: " + pa.needed + " placed: " + pa.placed);
+                                                if (pa.placed <= stack_item.getCount()) {
+                                                    stack_item.setCount(stack_item.getCount() - pa.placed);
+                                                    pa.placed = 0;
+                                                } else {
+                                                    pa.placed -= stack_item.getCount();
+                                                    stack_item.setCount(0);
+                                                }
+                                                shulker_items.set(j, stack_item.save(itemTag));
                                             }
-                                            shulker_items.set(j, stack_item.save(itemTag));
                                         }
                                     }
                                 }
@@ -552,15 +562,17 @@ public class Wand {
                     //now look for items on player inv
                     for (int i = 0; i < 36; ++i) {
                         stack_item = player.getInventory().getItem(i);
-                        if (!WandUtils.is_shulker(stack_item)) {
-                            BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                            if (pa != null && pa.placed > 0) {
-                                if (pa.placed <= stack_item.getCount()) {
-                                    stack_item.setCount(stack_item.getCount() - pa.placed);
-                                    pa.placed = 0;
-                                } else {
-                                    pa.placed -= stack_item.getCount();
-                                    stack_item.setCount(0);
+                        if(stack_item.getItem() != Items.AIR) {
+                            if (!WandUtils.is_shulker(stack_item) && stack_item.getTag()==null) {
+                                BlockAccounting pa = block_accounting.get(stack_item.getItem());
+                                if (pa != null && pa.placed > 0) {
+                                    if (pa.placed <= stack_item.getCount()) {
+                                        stack_item.setCount(stack_item.getCount() - pa.placed);
+                                        pa.placed = 0;
+                                    } else {
+                                        pa.placed -= stack_item.getCount();
+                                        stack_item.setCount(0);
+                                    }
                                 }
                             }
                         }
