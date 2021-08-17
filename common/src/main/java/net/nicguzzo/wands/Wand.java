@@ -374,6 +374,7 @@ public class Wand {
                             //log("bucket is water");
                             if(creative){
                                 has_bucket = true;
+                                has_water_bucket=true;
                                 block_state = Blocks.WATER.defaultBlockState();
                             }else {
                                 //in survival check if player has another water bucket part from the one in the offhand
@@ -507,8 +508,9 @@ public class Wand {
                     if (item != null) {
                         pa = block_accounting.get(item);
                     }
-                    if ((destroy ||creative|| (pa != null && pa.placed<pa.in_player)) && place_block(tmp_pos, block_buffer.state[a])) {
-                        pa.placed++;
+                    if ((destroy ||creative||has_bucket|| (pa != null && pa.placed<pa.in_player)) && place_block(tmp_pos, block_buffer.state[a])) {
+                        if(pa != null)
+                            pa.placed++;
                         placed++;
                     }
                     if (stop) {

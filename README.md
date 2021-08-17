@@ -87,15 +87,19 @@ Cconsume xp to place blocks. To enable change config file wands.json
 
 ##V2.0 Changes
 
-- New copy/paste modes
-- Improved block shape preview
-- New palette item to set up palettes of blocks
-- Modes are now per item using nbt tags
-- Show wand mode on screen
-- Show more info on wand/palette tooltips
+- New copy/paste modes.
+- Improved block shape preview.
+- New palette item to set up palettes of blocks.
+- Modes are now per item using nbt tags.
+- Show wand mode on screen.
+- Show more info on wand/palette tooltips.
 - Keeping alt key pressed uses block next to targeted side as picking block for fill - Mode, lines, circles and copy.
-- Having an empty water bucket on the offhand can remove water
-- Having filled water bucket on the offhand can place water
- 
+- Having an empty water bucket on the offhand can remove water.
+- Having filled water bucket on the offhand can place water.
+- textured preview.
+- palette applies over all modes.
+- can break items on palette, using tool on first inventory lot.
+- can use tool in offhand on blocks, when appropiate, by pressing alt key.
+
 
 ####Any feedback is welcomed, please report any issues to me.
