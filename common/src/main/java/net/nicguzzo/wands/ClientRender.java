@@ -172,7 +172,7 @@ public class ClientRender {
         //RenderSystem.depthMask(false);
         //RenderSystem.depthMask(Minecraft.useShaderTransparency());
         //RenderSystem.enableDepthTest();
-        if(Screen.hasControlDown() || (WandsModClient.is_forge&& Minecraft.useShaderTransparency() )){
+        if(Screen.hasControlDown() /*|| (WandsModClient.is_forge&& Minecraft.useShaderTransparency() )*/){
             RenderSystem.disableDepthTest();
         }else{
             RenderSystem.enableDepthTest();

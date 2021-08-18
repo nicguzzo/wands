@@ -1,5 +1,6 @@
 package net.nicguzzo.wands;
 
+import me.shedaniel.architectury.event.events.GuiEvent;
 //1.16.5
 import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
@@ -73,11 +74,19 @@ public class WandsModClient {
                 }
             }
         });
-
-        //1.17.1
+        
+        //1.16.5
+#if MC1_16
+        GuiEvent.RENDER_HUD.register((pose,delta)->{
+                render_wand_info(pose);
+        });
+#endif
+       //1.17.1
+#if MC1_17
         //ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
         //    render_wand_info(pose);
         //});
+#endif
 
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);

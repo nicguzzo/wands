@@ -18,7 +18,6 @@ rm -rf forge/.project
 rm -rf forge/.classpath
 rm -rf forge/build
 rm -rf forge/bin
-
 rm -rf common/.gradle
 rm -rf common/.settings
 rm -rf common/.project
