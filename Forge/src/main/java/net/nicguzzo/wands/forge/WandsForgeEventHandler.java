@@ -19,14 +19,14 @@ public class WandsForgeEventHandler {
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
         //System.out.println("forge render!!");
-        PoseStack poseStack=event.getMatrixStack();
-        PoseStack poseStack2 = RenderSystem.getModelViewStack();
-        poseStack2.pushPose();
-        poseStack2.mulPoseMatrix(poseStack.last().pose());
-        RenderSystem.applyModelViewMatrix();
-        ClientRender.render(event.getMatrixStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
-        poseStack2.popPose();
-        RenderSystem.applyModelViewMatrix();
+        //PoseStack poseStack=event.getMatrixStack();
+        //PoseStack poseStack2 = RenderSystem.getModelViewStack();
+        //poseStack2.pushPose();
+        //poseStack2.mulPoseMatrix(poseStack.last().pose());
+        //RenderSystem.applyModelViewMatrix();
+        //ClientRender.render(event.getMatrixStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
+        //poseStack2.popPose();
+        //RenderSystem.applyModelViewMatrix();
     }
     
 }

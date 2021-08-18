@@ -15,9 +15,9 @@ public class WandToast implements Toast {
         ItemStack item_stack=client.player.getMainHandItem();
         if(item_stack!=null && item_stack.getItem() instanceof WandItem){
             WandItem.Mode mode=WandItem.getMode(item_stack);
-            RenderSystem.setShader(GameRenderer::getPositionTexShader);
-            RenderSystem.setShaderTexture(0, TEXTURE);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            //RenderSystem.setShaderTexture(0, TEXTURE);
+            //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             return l >= 5000L ? Visibility.HIDE : Visibility.SHOW;
         }
         return Visibility.HIDE;

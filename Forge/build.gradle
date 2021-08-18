@@ -1,5 +1,8 @@
 plugins {
-    id "com.github.johnrengelman.shadow" version "7.0.0"
+    //1.16.5
+    id "com.github.johnrengelman.shadow" version "5.0.0"
+    //1.17.1
+    //id "com.github.johnrengelman.shadow" version "7.0.0"
 }
 configurations {
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
@@ -18,7 +21,10 @@ loom {
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
     // Remove the next line if you don't want to depend on the API
-    modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
+    //1.16.5
+    modApi "me.shedaniel:architectury-forge:${rootProject.architectury_version}"
+    //1.17.1
+    //modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
     implementation(project(path: ":common")) {
         transitive = false

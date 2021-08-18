@@ -1,7 +1,8 @@
 package net.nicguzzo.wands;
 
 import dev.architectury.injectables.annotations.ExpectPlatform;
-import dev.architectury.platform.Platform;
+import me.shedaniel.architectury.platform.Platform;
+//import dev.architectury.platform.Platform;
 
 import java.nio.file.Path;
 

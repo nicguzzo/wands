@@ -2,24 +2,28 @@ package net.nicguzzo.wands;
 
 import java.util.function.Supplier;
 
+import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
+import me.shedaniel.architectury.event.events.PlayerEvent;
+import me.shedaniel.architectury.registry.*;
+import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.NetworkManager.Side;
+//1.17.1
+//import dev.architectury.event.events.common.PlayerEvent;
+//import dev.architectury.networking.NetworkManager;
+//import dev.architectury.networking.NetworkManager.Side;
+//import dev.architectury.registry.CreativeTabRegistry;
+//import dev.architectury.registry.menu.MenuRegistry;
+//import dev.architectury.registry.registries.DeferredRegister;
+//import dev.architectury.registry.registries.Registries;
+//import dev.architectury.registry.registries.RegistrySupplier;
+
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionResult;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.jmx.Server;
 import org.lwjgl.glfw.GLFW;
-
-import dev.architectury.event.events.common.PlayerEvent;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.CreativeTabRegistry;
-import dev.architectury.registry.menu.MenuRegistry;
-import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.Registries;
-import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -37,13 +41,21 @@ public class WandsMod {
     public static final Logger LOGGER = LogManager.getLogger();
     // We can use this if we don't want to use DeferredRegister
     public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
-    // Registering a new creative tab
-    public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
+    
+
+    public static final CreativeModeTab WANDS_TAB = CreativeTabs.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
         @Override
         public ItemStack get() {
             return new ItemStack(DIAMOND_WAND_ITEM.get());
         }
     });
+    // Registering a new creative tab
+    //public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
+    //    @Override
+    //    public ItemStack get() {
+    //        return new ItemStack(DIAMOND_WAND_ITEM.get());
+    //    }
+    //});
     
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registry.ITEM_REGISTRY);
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
@@ -229,7 +241,9 @@ public class WandsMod {
 
                 break;
                 case wand_undo:
-                    if(player.getAbilities().instabuild==true && !player.level.isClientSide()){
+                    boolean creative=player.abilities.instabuild;
+                    //boolean creative=player.getAbilities().instabuild;
+                    if(creative==true && !player.level.isClientSide()){
 
                         if(wand!=null){
                             int n=1;

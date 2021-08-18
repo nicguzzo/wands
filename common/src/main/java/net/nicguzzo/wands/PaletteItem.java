@@ -3,11 +3,14 @@ package net.nicguzzo.wands;
 
 import java.util.List;
 
+import me.shedaniel.architectury.registry.MenuRegistry;
+import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
 import org.jetbrains.annotations.Nullable;
+import me.shedaniel.architectury.utils.NbtType;
 
-import dev.architectury.registry.menu.MenuRegistry;
-import dev.architectury.registry.menu.ExtendedMenuProvider;
-import dev.architectury.utils.NbtType;
+//import dev.architectury.registry.menu.MenuRegistry;
+//import dev.architectury.registry.menu.ExtendedMenuProvider;
+//import dev.architectury.utils.NbtType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
@@ -53,7 +56,7 @@ public class PaletteItem extends Item{
             }
         }
         PaletteMode mode=PaletteItem.getMode(stack);            
-        Component mode_val=new TextComponent("mode: ");
+        Component mode_val;
         if(mode==PaletteMode.ROUND_ROBIN){
                 mode_val=new TextComponent("mode: "+PaletteItem.mode_val_rr.getString());
         }else{

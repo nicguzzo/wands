@@ -43,10 +43,13 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
                 WandsModClient.send_palette(false,true);
             }
         });
-        this.addRenderableWidget(btn_mode);
-        this.addRenderableWidget(btn_rotate);
-        //this.addButton(btn_mode);
-        //this.addButton(btn_rotate);
+        //1.16.5
+        this.addWidget(btn_mode);
+        this.addWidget(btn_rotate);
+        //1.17.1
+        //this.addRenderableWidget(btn_mode);
+        //this.addRenderableWidget(btn_rotate);
+
     }
 
     @Override 
@@ -77,11 +80,14 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     }
     @Override
     protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        //RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        //this.minecraft.getTextureManager().bind(TEXTURE);
+        //1.16.5
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.minecraft.getTextureManager().bind(TEXTURE);
+        //1.17.1
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        //RenderSystem.setShaderTexture(0, TEXTURE);
+
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
@@ -118,7 +124,10 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.findSlot(mouseX, mouseY);
         if(slot!=null){
-            ItemStack itemStack = this.menu.getCarried();
+            //1.16.5
+            ItemStack itemStack = this.menu.playerInventory.getCarried();
+            //1.17.1
+            //ItemStack itemStack = this.menu.getCarried();
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

@@ -1,5 +1,5 @@
 package net.nicguzzo.wands;
-import dev.architectury.networking.NetworkManager;
+//import dev.architectury.networking.NetworkManager;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

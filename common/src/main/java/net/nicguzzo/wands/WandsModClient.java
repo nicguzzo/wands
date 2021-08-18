@@ -1,31 +1,37 @@
 package net.nicguzzo.wands;
 
-import io.netty.buffer.Unpooled;
-import dev.architectury.event.events.client.ClientTickEvent;
-import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
+//1.16.5
+import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
+import me.shedaniel.architectury.event.events.client.ClientTickEvent;
+import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.networking.NetworkManager.Side;
+import me.shedaniel.architectury.registry.KeyBindings;
 
+//1.17.1
+//import dev.architectury.event.events.client.ClientTickEvent;
+//import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
+//import dev.architectury.event.events.client.ClientGuiEvent;
+//import dev.architectury.event.events.client.ClientLifecycleEvent;
+//import dev.architectury.networking.NetworkManager;
+//import dev.architectury.networking.NetworkManager.Side;
+//import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
+//import dev.architectury.registry.menu.MenuRegistry;
+
+import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.architectury.event.events.client.ClientGuiEvent;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-import dev.architectury.registry.menu.MenuRegistry;
+import me.shedaniel.architectury.registry.MenuRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -44,7 +50,9 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
         };
         for(KeyMapping k: km){
-            KeyMappingRegistry.register(k);
+            KeyBindings.registerKeyBinding(k);
+            //1.17.1
+            //KeyMappingRegistry.register(k);
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
@@ -66,15 +74,16 @@ public class WandsModClient {
             }
         });
 
-        ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
-            render_wand_info(pose);
-        });
+        //1.17.1
+        //ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
+        //    render_wand_info(pose);
+        //});
 
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
             
         });
-        NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet,context)->{
+        NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
             boolean destroy=packet.readBoolean();
             ItemStack item_stack=packet.readItem();
@@ -144,8 +153,11 @@ public class WandsModClient {
                 Font font = client.font;
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                //1.16.5
+                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+                //1.17.1
+                //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                ///RenderSystem.setShader(GameRenderer::getPositionTexShader);
                 Wand wand=ClientRender.wand;
                 WandItem wand_item=(WandItem)stack.getItem();
                 WandItem.Mode mode=wand_item.getMode(stack);

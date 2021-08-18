@@ -1,7 +1,8 @@
 package net.nicguzzo.wands;
 
 
-import dev.architectury.utils.NbtType;
+//import dev.architectury.utils.NbtType;
+import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.Item;

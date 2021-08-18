@@ -4,10 +4,11 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import io.netty.buffer.Unpooled;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.utils.NbtType;
+//import dev.architectury.networking.NetworkManager;
+//import dev.architectury.utils.NbtType;
+import me.shedaniel.architectury.networking.NetworkManager;
+import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -21,6 +22,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.*;
@@ -159,6 +161,8 @@ public class Wand {
     public WandItem.Mode mode;
     boolean prnt = false;
     public int limit=MAX_LIMIT;
+    Inventory player_inv;
+
     private void log(String s) {
         WandsMod.log(s, prnt);
     }
@@ -197,6 +201,8 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
+        player_inv=player.inventory;
+        //player_inv=player.getInventory();
         y0 = 0.0f;
         block_height = 1.0f;
         is_slab_top = false;
@@ -223,8 +229,8 @@ public class Wand {
         if(limit>MAX_LIMIT){
             limit=MAX_LIMIT;
         }
-
-        creative = player.getAbilities().instabuild;
+        creative = player.abilities.instabuild;
+        //creative = player.getAbilities().instabuild;
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
 
@@ -306,25 +312,25 @@ public class Wand {
             }
         }
         switch (mode) {
-            case DIRECTION -> {
+            case DIRECTION: {
                 boolean invert = WandItem.isInverted(wand_stack);
                 mode_direction(invert);
-            }
-            case ROW_COL -> {
+            }break;
+            case ROW_COL: {
                 Orientation orientation = WandItem.getOrientation(wand_stack);
                 mode_row_col(orientation);
-            }
-            case FILL -> mode_fill_rect(false);
-            case AREA -> mode_area();
-            case LINE -> mode_line();
-            case CIRCLE -> {
+            }break;
+            case FILL: mode_fill_rect(false); break;
+            case AREA: mode_area(); break;
+            case LINE: mode_line(); break;
+            case CIRCLE: {
                 int plane = WandItem.getPlane(wand_stack).ordinal();
                 boolean fill = WandItem.isCircleFill(wand_stack);
                 mode_circle(plane, fill);
-            }
-            case RECT -> mode_fill_rect(true);
-            case COPY -> mode_copy();
-            case PASTE -> mode_paste();
+            }break;
+            case RECT: mode_fill_rect(true); break;
+            case COPY: mode_copy(); break;
+            case PASTE: mode_paste(); break;
         }
 
         if (!preview) {
@@ -374,7 +380,9 @@ public class Wand {
                     if (has_bucket) {
                         has_bucket = false;
                         //log("bucket " + bucket);
-                        if (bucket.is(Fluids.WATER.getBucket())) {
+                        //boolean is_water_bucket=bucket.is(Fluids.WATER.getBucket()));
+                        boolean is_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
+                        if (is_water_bucket) {
                             //log("bucket is water");
                             if(creative){
                                 has_bucket = true;
@@ -383,8 +391,10 @@ public class Wand {
                             }else {
                                 //in survival check if player has another water bucket part from the one in the offhand
                                 for (int i = 0; i < 36; ++i) {
-                                    ItemStack stack = player.getInventory().getItem(i);
-                                    if (stack.getItem() instanceof BucketItem && stack.is(Fluids.WATER.getBucket())) {
+                                    ItemStack stack = player_inv.getItem(i);
+                                    is_water_bucket=stack.getItem().equals(Fluids.WATER.getBucket());
+                                    //is_water_bucket=stack.is(Fluids.WATER.getBucket());
+                                    if (stack.getItem() instanceof BucketItem && is_water_bucket) {
                                         has_bucket = true;
                                         has_water_bucket=true;
                                         block_state = Blocks.WATER.defaultBlockState();
@@ -454,16 +464,16 @@ public class Wand {
                 //}
                 ItemStack stack;
                 for (int i = 0; i < 36; ++i) {
-                    stack = player.getInventory().getItem(i);
+                    stack = player_inv.getItem(i);
                     if(stack.getItem()!= Items.AIR) {
                         if (WandUtils.is_shulker(stack)) {
                             //count_in_shulker += count_in_shulker(stack, item_stack);
-                            for (var pa : block_accounting.entrySet()) {
+                            for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                                 pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
                             }
                         } else {
                             if (stack.getTag() == null) {
-                                for (var pa : block_accounting.entrySet()) {
+                                for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                                     Item item = pa.getKey();
                                     if (item != null && !stack.isEmpty() && item == stack.getItem()) {
                                         pa.getValue().in_player += stack.getCount();
@@ -473,9 +483,9 @@ public class Wand {
                         }
                     }
                 }
-                for (var pa : block_accounting.entrySet()) {
+                for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                     if (pa.getValue().in_player < pa.getValue().needed) {
-                        var name=new TranslatableComponent(pa.getKey().getDescriptionId());
+                        TranslatableComponent name=new TranslatableComponent(pa.getKey().getDescriptionId());
                         MutableComponent mc = new TextComponent("Not enough ").withStyle(ChatFormatting.RED).append(name);
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
@@ -531,7 +541,7 @@ public class Wand {
                     ItemStack stack_item;
                     //look for items on shulker boxes first
                     for (int pi = 0; pi < 36; ++pi) {
-                        stack = player.getInventory().getItem(pi);
+                        stack = player_inv.getItem(pi);
                         if(stack.getItem() != Items.AIR) {
                             if (WandUtils.is_shulker(stack)) {
                                 CompoundTag shulker_tag = stack.getTagElement("BlockEntityTag");
@@ -561,7 +571,7 @@ public class Wand {
                     }
                     //now look for items on player inv
                     for (int i = 0; i < 36; ++i) {
-                        stack_item = player.getInventory().getItem(i);
+                        stack_item = player_inv.getItem(i);
                         if(stack_item.getItem() != Items.AIR) {
                             if (!WandUtils.is_shulker(stack_item) && stack_item.getTag()==null) {
                                 BlockAccounting pa = block_accounting.get(stack_item.getItem());
@@ -667,40 +677,40 @@ public class Wand {
                 case UP:
                 case DOWN:
                     switch (orientation) {
-                        case ROW -> {
+                        case ROW: {
                             dir = Direction.SOUTH;
                             offz = -1;
-                        }
-                        case COL -> {
+                        }break;
+                        case COL: {
                             dir = Direction.EAST;
                             offx = -1;
-                        }
+                        }break;
                     }
                     break;
                 case SOUTH:
                 case NORTH:
                     switch (orientation) {
-                        case ROW -> {
+                        case ROW: {
                             dir = Direction.EAST;
                             offx = -1;
-                        }
-                        case COL -> {
+                        }break;
+                        case COL: {
                             dir = Direction.UP;
                             offy = -1;
-                        }
+                        }break;
                     }
                     break;
                 case EAST:
                 case WEST:
                     switch (orientation) {
-                        case ROW -> {
+                        case ROW: {
                             dir = Direction.SOUTH;
                             offz = -1;
-                        }
-                        case COL -> {
+                        }break;
+                        case COL: {
                             dir = Direction.UP;
                             offy = -1;
-                        }
+                        }break;
                     }
                     break;
             }
@@ -1175,7 +1185,7 @@ public class Wand {
 
     void drawCircleOctants(int xc, int yc, int zc, int x, int y, int z, int plane) {
         switch (plane) {
-            case 0 -> {// XZ
+            case 0: {// XZ
                 add_to_buffer(xc + x, yc, zc + z);
                 if (x != z) {
                     add_to_buffer(xc + z, yc, zc + x);
@@ -1190,8 +1200,8 @@ public class Wand {
                         add_to_buffer(xc - x, yc, zc + z);
                     }
                 }
-            }
-            case 1 -> {// XY
+            }break;
+            case 1: {// XY
                 add_to_buffer(xc + x, yc + y, zc);
                 if (x != y) {
                     add_to_buffer(xc + y, yc + x, zc);
@@ -1206,8 +1216,8 @@ public class Wand {
                         add_to_buffer(xc - x, yc + y, zc);
                     }
                 }
-            }
-            case 2 -> {// YZ
+            }break;
+            case 2: {// YZ
                 add_to_buffer(xc, yc + y, zc + z);
                 if (y != z) {
                     add_to_buffer(xc, yc + z, zc + y);
@@ -1222,7 +1232,7 @@ public class Wand {
                         add_to_buffer(xc, yc - y, zc + z);
                     }
                 }
-            }
+            }break;
         }
     }
     BlockState get_state() {
@@ -1417,7 +1427,6 @@ public class Wand {
         boolean placed = false;
         //log("place_block "+block_pos+" state: "+state + " destroy: " + destroy);
         Level level = player.level;
-        boolean creative = player.getAbilities().instabuild;
         if (level.isClientSide) {
             return false;
         }
@@ -1779,7 +1788,7 @@ public class Wand {
             }
         }
         player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
-        for (var entry : ba_map.entrySet()){
+        for (Map.Entry<String, BlockAccounting> entry : ba_map.entrySet()){
             TranslatableComponent name=new TranslatableComponent(entry.getKey());
             TextComponent st=new TextComponent("   ");
             st.append(name).append(" needed: "+entry.getValue().needed);
@@ -1865,7 +1874,7 @@ public class Wand {
     public boolean can_destroy(Player player,BlockState block_state,boolean check_speed){
         offhand_digger=player.getOffhandItem();
         if(offhand_digger.getItem() instanceof  PaletteItem){
-            offhand_digger=player.getInventory().getItem(9);
+            offhand_digger=player_inv.getItem(9);
         }
         boolean is_glass=block_state.getBlock() instanceof AbstractGlassBlock;
         boolean is_snow_layer=false;
@@ -1876,7 +1885,7 @@ public class Wand {
             if(check_speed){
                 DiggerItem mt=(DiggerItem)offhand_digger.getItem();
                 if(mt!=null) {
-                    boolean cond= player.getAbilities().instabuild || mt.getDestroySpeed(null, block_state) > 1.0f || is_glass|| is_snow_layer;
+                    boolean cond= creative || mt.getDestroySpeed(null, block_state) > 1.0f || is_glass|| is_snow_layer;
                     /*if(!cond) {
                         for (PaletteSlot slt : palette_slots) {
                             if (mt.getDestroySpeed(null, slt.state) > 1.0f) return true;

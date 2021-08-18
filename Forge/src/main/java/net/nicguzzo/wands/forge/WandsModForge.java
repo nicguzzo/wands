@@ -2,10 +2,14 @@ package net.nicguzzo.wands.forge;
 
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
+import me.shedaniel.architectury.platform.forge.EventBuses;
+import me.shedaniel.architectury.utils.Env;
+import me.shedaniel.architectury.utils.EnvExecutor;
 
-import dev.architectury.platform.forge.EventBuses;
-import dev.architectury.utils.Env;
-import dev.architectury.utils.EnvExecutor;
+//import dev.architectury.platform.forge.EventBuses;
+//import dev.architectury.utils.Env;
+//import dev.architectury.utils.EnvExecutor;
+
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -20,13 +24,12 @@ public class WandsModForge {
     public WandsModForge() {
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(WandsMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
-        WandsMod.init();
-        
+        WandsMod.init();        
         EnvExecutor.runInEnv(Env.CLIENT, () -> 
             ()-> {
                 WandsModClient.initialize();
                 WandsModClient.is_forge=true;
-                MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
+                //MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
             }
         );
         //MinecraftForge.EVENT_BUS.register(this);
