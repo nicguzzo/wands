@@ -2,20 +2,24 @@ package net.nicguzzo.wands;
 
 import java.util.function.Supplier;
 
+//beginMC1.16.5
 import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//1.17.1
-//import dev.architectury.event.events.common.PlayerEvent;
-//import dev.architectury.networking.NetworkManager;
-//import dev.architectury.networking.NetworkManager.Side;
-//import dev.architectury.registry.CreativeTabRegistry;
-//import dev.architectury.registry.menu.MenuRegistry;
-//import dev.architectury.registry.registries.DeferredRegister;
-//import dev.architectury.registry.registries.Registries;
-//import dev.architectury.registry.registries.RegistrySupplier;
+//endMC1.16.5
+
+/*//beginMC1.17.1 
+import dev.architectury.event.events.common.PlayerEvent;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.NetworkManager.Side;
+import dev.architectury.registry.CreativeTabRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
+import dev.architectury.registry.registries.DeferredRegister;
+import dev.architectury.registry.registries.Registries;
+import dev.architectury.registry.registries.RegistrySupplier;
+//endMC1.17.1 */
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;
@@ -241,8 +245,14 @@ public class WandsMod {
 
                 break;
                 case wand_undo:
+                    //beginMC1.16.5
                     boolean creative=player.abilities.instabuild;
-                    //boolean creative=player.getAbilities().instabuild;
+                    //endMC1.16.5
+                    
+                    /*//beginMC1.17.1
+                    boolean creative=player.getAbilities().instabuild;
+                    //endMC1.17.1*/
+                    
                     if(creative==true && !player.level.isClientSide()){
 
                         if(wand!=null){

@@ -1,10 +1,10 @@
 modLoader = "javafml"
-loaderVersion = "[35,)"
+loaderVersion = "[${min_forge_loader},)"
 #issueTrackerURL = ""
 license = "Insert License Here"
 
 [[mods]]
-modId = "wands"
+modId = "${modid}"
 version = "${version}"
 displayName = "Building Wands"
 authors = "Me!"
@@ -16,20 +16,20 @@ Building Wands!
 [[dependencies.wands]]
 modId = "forge"
 mandatory = true
-versionRange = "[35,)"
+versionRange = "[${min_forge_loader},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.wands]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.16.2,)"
+versionRange = "[${min_minecraft_version},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.wands]]
 modId = "architectury"
 mandatory = true
-versionRange = "[1.1.55,)"
+versionRange = "[${min_architectury},)"
 ordering = "AFTER"
 side = "BOTH"

@@ -1,22 +1,27 @@
 package net.nicguzzo.wands;
 
+//MC1.16.5
 import me.shedaniel.architectury.event.events.GuiEvent;
-//1.16.5
+//MC1.16.5
 import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
+//MC1.16.5
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
+//MC1.16.5
 import me.shedaniel.architectury.networking.NetworkManager;
+//MC1.16.5
 import me.shedaniel.architectury.networking.NetworkManager.Side;
+//MC1.16.5
 import me.shedaniel.architectury.registry.KeyBindings;
 
-//1.17.1
-//import dev.architectury.event.events.client.ClientTickEvent;
-//import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
-//import dev.architectury.event.events.client.ClientGuiEvent;
-//import dev.architectury.event.events.client.ClientLifecycleEvent;
-//import dev.architectury.networking.NetworkManager;
-//import dev.architectury.networking.NetworkManager.Side;
-//import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-//import dev.architectury.registry.menu.MenuRegistry;
+
+//MC1.17.1 import dev.architectury.event.events.client.ClientTickEvent;
+//MC1.17.1 import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
+//MC1.17.1 import dev.architectury.event.events.client.ClientGuiEvent;
+//MC1.17.1 import dev.architectury.event.events.client.ClientLifecycleEvent;
+//MC1.17.1 import dev.architectury.networking.NetworkManager;
+//MC1.17.1 import dev.architectury.networking.NetworkManager.Side;
+//MC1.17.1 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
+//MC1.17.1 import dev.architectury.registry.menu.MenuRegistry;
 
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -51,9 +56,9 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
         };
         for(KeyMapping k: km){
+            //MC1.16.5
             KeyBindings.registerKeyBinding(k);
-            //1.17.1
-            //KeyMappingRegistry.register(k);
+            //MC1.17.1 KeyMappingRegistry.register(k);
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
@@ -75,22 +80,13 @@ public class WandsModClient {
             }
         });
         
-        //1.16.5
-#if MC1_16
-        GuiEvent.RENDER_HUD.register((pose,delta)->{
-                render_wand_info(pose);
-        });
-#endif
-       //1.17.1
-#if MC1_17
-        //ClientGuiEvent.RENDER_HUD.register((pose,delta)->{
-        //    render_wand_info(pose);
-        //});
-#endif
+        //MC1.16.5
+        GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
+        
+        //MC1.17.1 ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
 
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
-            
         });
         NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
@@ -162,11 +158,12 @@ public class WandsModClient {
                 Font font = client.font;
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                //1.16.5
+                //MC1.16.5
                 RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-                //1.17.1
-                //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                ///RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                
+                //MC1.17.1 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                //MC1.17.1 RenderSystem.setShader(GameRenderer::getPositionTexShader);
+
                 Wand wand=ClientRender.wand;
                 WandItem wand_item=(WandItem)stack.getItem();
                 WandItem.Mode mode=wand_item.getMode(stack);

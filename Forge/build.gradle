@@ -1,8 +1,5 @@
-plugins {
-    //1.16.5
-    id "com.github.johnrengelman.shadow" version "5.0.0"
-    //1.17.1
-    //id "com.github.johnrengelman.shadow" version "7.0.0"
+plugins {    
+    id "com.github.johnrengelman.shadow" version "${shadow_version}"
 }
 configurations {
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
@@ -21,11 +18,9 @@ loom {
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
     // Remove the next line if you don't want to depend on the API
-    //1.16.5
-    modApi "me.shedaniel:architectury-forge:${rootProject.architectury_version}"
-    //1.17.1
-    //modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
-
+    
+    modApi "${rootProject.architectury}:architectury-forge:${rootProject.architectury_version}"
+    
     implementation(project(path: ":common")) {
         transitive = false
     }
@@ -38,10 +33,19 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
-
+    inputs.property "modid", rootProject.modid
+    inputs.property "version", rootProject.version
+    inputs.property "min_forge_loader", rootProject.min_forge_loader
+    inputs.property "min_minecraft_version", rootProject.min_minecraft_version
+    inputs.property "min_architectury", rootProject.min_architectury
     filesMatching("META-INF/mods.toml") {
-        expand "version": project.version
+        expand (
+            "modid": rootProject.modid,
+            "version": rootProject.version,
+            "min_forge_loader":  rootProject.min_forge_loader,
+            "min_minecraft_version": rootProject.min_minecraft_version,
+            "min_architectury": rootProject.min_architectury
+        )
     }
 }
 

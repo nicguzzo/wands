@@ -8,7 +8,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
-//import net.minecraft.world.level.block.state.BlockState;
 
 public class BlockBuffer{
     
@@ -80,12 +79,7 @@ public class BlockBuffer{
     public void set(int i,BlockPos p){
         set(i,p.getX(),p.getY(),p.getZ());
     }
-    /*public void add(BlockPos p){
-        add(p.getX(),p.getY(),p.getZ());
-    }*/
-    /*public void add(BlockPos p,BlockState s){
-        add(p.getX(),p.getY(),p.getZ(),s,null);
-    }*/
+
     public void add(BlockPos p,Wand w){
         add(p.getX(),p.getY(),p.getZ(),w);
     }

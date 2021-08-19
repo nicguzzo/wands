@@ -9,8 +9,16 @@ rmdir /S /Q fabric\.settings
 rmdir /S /Q fabric\.project
 rmdir /S /Q fabric\.classpath
 rmdir /S /Q fabric\build
+rmdir /S /Q fabric\bin
 rmdir /S /Q forge\.gradle
 rmdir /S /Q forge\.settings
 rmdir /S /Q forge\.project
 rmdir /S /Q forge\.classpath
 rmdir /S /Q forge\build
+rmdir /S /Q forge\bin
+rmdir /S /Q common\.gradle
+rmdir /S /Q common\.settings
+rmdir /S /Q common\.project
+rmdir /S /Q common\.classpath
+rmdir /S /Q common\build
+rmdir /S /Q common\bin

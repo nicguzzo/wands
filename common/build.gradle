@@ -2,18 +2,19 @@ dependencies {
     // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
     // Do NOT use other classes from fabric loader
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    // Remove the next line if you don't want to depend on the API
-    //1.16.5
-    modApi "me.shedaniel:architectury-fabric:${rootProject.architectury_version}"
-    //1.17.1
-    //modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
-    
+    // Remove the next line if you don't want to depend on the API    
+    modApi "${rootProject.architectury}:architectury:${rootProject.architectury_version}"
 }
 
 architectury {
     common()
 }
-
+processResources {
+    inputs.property "java_compatibilityLevel", rootProject.java_compatibilityLevel    
+    filesMatching("${rootProject.modid}.mixins.json") {
+        expand "java_compatibilityLevel": rootProject.java_compatibilityLevel
+    }
+}
 java {
     withSourcesJar()
 }

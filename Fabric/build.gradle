@@ -1,8 +1,5 @@
 plugins {
-    //1.16.5
-    id "com.github.johnrengelman.shadow" version "5.0.0"
-    //1.17.1
-    //id "com.github.johnrengelman.shadow" version "7.0.0"
+    id "com.github.johnrengelman.shadow" version "${shadow_version}"
 }
 
 configurations {
@@ -17,11 +14,8 @@ architectury {
 dependencies {
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
-    // Remove the next line if you don't want to depend on the API
-    //1.16.5
-    modApi "me.shedaniel:architectury-fabric:${rootProject.architectury_version}"
-    //1.17.1
-    //modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
+    // Remove the next line if you don't want to depend on the API    
+    modApi "${rootProject.architectury}:architectury-fabric:${rootProject.architectury_version}"
 
     implementation(project(path: ":common")) {
         transitive = false
@@ -35,10 +29,21 @@ dependencies {
 }
 
 processResources {
+    
+    inputs.property "modid", rootProject.modid
     inputs.property "version", project.version
+    inputs.property "min_fabric_loader_version", rootProject.min_fabric_loader_version
+    inputs.property "min_minecraft_version", rootProject.min_minecraft_version
+    inputs.property "min_architectury", rootProject.min_architectury
 
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand (
+            "modid": rootProject.modid,
+            "version": project.version,
+            "min_fabric_loader_version":  rootProject.min_fabric_loader_version,
+            "min_minecraft_version": rootProject.min_minecraft_version,
+            "min_architectury": rootProject.min_architectury
+        )
     }
 }
 
@@ -67,6 +72,7 @@ sourcesJar {
     from commonSources.archiveFile.map { zipTree(it) }
     classifier "source"
     version "v${project.version}"
+
     //baseName fileName
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

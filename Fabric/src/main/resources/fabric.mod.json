@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "wands",
+  "id": "${modid}",
   "version": "${version}",
   "name": "Building Wands",
   "description": "This is an example description! Tell everyone what your mod is about!",
@@ -27,10 +27,10 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.7.4",
+    "fabricloader": ">=${min_fabric_loader_version}",
     "fabric": "*",
-    "minecraft": ">=1.16.4",
-    "architectury": ">=1.1.55"
+    "minecraft": ">=${min_minecraft_version}",
+    "architectury": ">=${min_architectury}"
   },
   "suggests": {
     "flamingo": "*"
