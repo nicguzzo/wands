@@ -1,5 +1,18 @@
+#!/bin/bash
 
 
-sed -e  's/\/\/beginMC1\.16\.5/\/\*\/\/beginMC1.16.5 /g' -e  's/\/\/endMC1\.16\.5/\/\/endMC1.16.5*\/ /g'
+enableMC(){
+	ver=$1
+	file=$2
+	sed -e  "s/\/\*\/\/beginMC$ver/\/\/beginMC$ver/g" -e  "s/\/\/endMC$ver\*\//\/\/endMC$ver /g" $file
+}
+disableMC(){
+	ver=$1
+	file=$2
+	sed -e  "s/\/\/beginMC$ver/\/\*\/\/beginMC$ver/g" -e  "s/\/\/endMC$ver/\/\/endMC$ver\*\//g" $file
+}
 
-sed -e  's/\/\/beginMC1\.16\.5/\/\*\/\/beginMC1.16.5 /g' -e  's/\/\/endMC1\.16\.5/\/\/endMC1.16.5*\/ /g'
+disableMC '1_16_5' './common/src/main/java/net/nicguzzo/wands/WandsMod.java'
+enableMC '1_17_1' './common/src/main/java/net/nicguzzo/wands/WandsMod.java'
+
+#find ./ -name *.java

@@ -2,7 +2,6 @@ rmdir /S /Q .gradle
 rmdir /S /Q .project
 rmdir /S /Q .classpath
 rmdir /S /Q .settings
-rmdir /S /Q .vscode
 rmdir /S /Q build
 rmdir /S /Q fabric\.gradle
 rmdir /S /Q fabric\.settings

@@ -1,33 +1,27 @@
 package net.nicguzzo.wands;
 
-//MC1.16.5
+//beginMC1_16_5
 import me.shedaniel.architectury.event.events.GuiEvent;
-//MC1.16.5
 import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
-//MC1.16.5
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
-//MC1.16.5
 import me.shedaniel.architectury.networking.NetworkManager;
-//MC1.16.5
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//MC1.16.5
 import me.shedaniel.architectury.registry.KeyBindings;
-
-
-//MC1.17.1 import dev.architectury.event.events.client.ClientTickEvent;
-//MC1.17.1 import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
-//MC1.17.1 import dev.architectury.event.events.client.ClientGuiEvent;
-//MC1.17.1 import dev.architectury.event.events.client.ClientLifecycleEvent;
-//MC1.17.1 import dev.architectury.networking.NetworkManager;
-//MC1.17.1 import dev.architectury.networking.NetworkManager.Side;
-//MC1.17.1 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-//MC1.17.1 import dev.architectury.registry.menu.MenuRegistry;
-
+import me.shedaniel.architectury.registry.MenuRegistry;
+//endMC1_16_5
+/*//beginMC1_17_1
+import dev.architectury.event.events.client.ClientTickEvent;
+import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
+import dev.architectury.event.events.client.ClientGuiEvent;
+import dev.architectury.event.events.client.ClientLifecycleEvent;
+import dev.architectury.networking.NetworkManager;
+import dev.architectury.networking.NetworkManager.Side;
+import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
+import dev.architectury.registry.menu.MenuRegistry;
+//endMC1_17_1*/
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-
-import me.shedaniel.architectury.registry.MenuRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -45,6 +39,7 @@ import net.minecraft.world.level.block.SoundType;
 public class WandsModClient {
     static boolean shift =false;
     static boolean alt =false;
+    public static boolean has_optifine=false;
     public static boolean is_forge=false;
     public static void initialize() {
         KeyMapping[] km={
@@ -56,9 +51,12 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
         };
         for(KeyMapping k: km){
-            //MC1.16.5
+            //beginMC1_16_5
             KeyBindings.registerKeyBinding(k);
-            //MC1.17.1 KeyMappingRegistry.register(k);
+            //endMC1_16_5
+            /*//beginMC1_17_1
+            KeyMappingRegistry.register(k);
+            //endMC1_17_1*/
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
@@ -80,11 +78,12 @@ public class WandsModClient {
             }
         });
         
-        //MC1.16.5
+        //beginMC1_16_5
         GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
-        
-        //MC1.17.1 ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-
+        //endMC1_16_5
+        /*//beginMC1_17_1
+        ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
+        //endMC1_17_1*/
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
         });

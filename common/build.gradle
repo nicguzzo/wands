@@ -6,15 +6,25 @@ dependencies {
     modApi "${rootProject.architectury}:architectury:${rootProject.architectury_version}"
 }
 
+//sourceSets {
+//    main {
+//        java {
+//            //srcDir 'src'
+//            exclude 'net/nicguzzo/wands/mcver/impl/MCVer1_17_1/**'
+//        }
+//    }
+//}
 architectury {
     common()
 }
+
 processResources {
     inputs.property "java_compatibilityLevel", rootProject.java_compatibilityLevel    
     filesMatching("${rootProject.modid}.mixins.json") {
         expand "java_compatibilityLevel": rootProject.java_compatibilityLevel
     }
 }
+
 java {
     withSourcesJar()
 }

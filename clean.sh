@@ -4,7 +4,6 @@ rm -rf .gradle
 rm -rf .project
 rm -rf .classpath
 rm -rf .settings
-rm -rf .vscode
 rm -rf build
 rm -rf fabric/.gradle
 rm -rf fabric/.settings

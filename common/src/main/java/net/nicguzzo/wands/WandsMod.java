@@ -1,16 +1,13 @@
 package net.nicguzzo.wands;
 
-import java.util.function.Supplier;
-
-//beginMC1.16.5
-import me.shedaniel.architectury.event.events.CommandRegistrationEvent;
+//beginMC1_16_5
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//endMC1.16.5
+//endMC1_16_5
 
-/*//beginMC1.17.1 
+/*//beginMC1_17_1
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
@@ -19,7 +16,7 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
-//endMC1.17.1 */
+//endMC1_17_1 */
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;
@@ -37,30 +34,19 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.nicguzzo.wands.mcver.MCVer;
 
-public class WandsMod {
+public class WandsMod {   
+
     public static final WandsConfig config=WandsConfig.get_instance();
     public static final String MOD_ID = "wands";
     
     public static final Logger LOGGER = LogManager.getLogger();
     // We can use this if we don't want to use DeferredRegister
     public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
-    
 
-    public static final CreativeModeTab WANDS_TAB = CreativeTabs.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
-        @Override
-        public ItemStack get() {
-            return new ItemStack(DIAMOND_WAND_ITEM.get());
-        }
-    });
-    // Registering a new creative tab
-    //public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"), new Supplier<ItemStack>() {
-    //    @Override
-    //    public ItemStack get() {
-    //        return new ItemStack(DIAMOND_WAND_ITEM.get());
-    //    }
-    //});
-    
+    public static final CreativeModeTab WANDS_TAB = MCVer.inst.create_tab(new ResourceLocation(MOD_ID, "wands_tab"));
+
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registry.ITEM_REGISTRY);
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
 
@@ -85,6 +71,8 @@ public class WandsMod {
         return new PaletteItem(new Item.Properties().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
 
+    
+    
     public static final RegistrySupplier<MenuType<PaletteScreenHandler>> PALETTE_SCREEN_HANDLER=MENUES.register("palette_menu",()-> MenuRegistry.ofExtended(PaletteScreenHandler::new));
 
     static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
@@ -103,50 +91,26 @@ public class WandsMod {
         
         ITEMS.register();
         MENUES.register();
-        //System.out.println(WandsExpectPlatform.getConfigDirectory().toAbsolutePath().normalize().toString());
 
-        //NetworkReceiver
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
             boolean shift=packet.readBoolean();
             boolean alt=packet.readBoolean();
-            //LOGGER.info("key from client: "+key);
             context.queue(()->{
                 process_keys(context.getPlayer(), key,shift,alt);
             });
         });
-
         NetworkManager.registerReceiver(Side.C2S, PALETTE_PACKET, (packet,context)->{
             boolean mode=packet.readBoolean();
             boolean rotate=packet.readBoolean();
-            //LOGGER.info("PALETTE_PACKET");
             context.queue(()->{
-                Player player=context.getPlayer();
-                ItemStack item_stack=player.getMainHandItem();
-                ItemStack palette=null;
-                if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){
-                    palette=item_stack;
-                }else{
-                    ItemStack offhand_stack=player.getOffhandItem();
-                    if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
-                        palette=offhand_stack;
-                    }
-                }
-                if(palette!=null){
-                    if(mode){
-                        PaletteItem.nextMode(palette);
-                    }
-                    if(rotate){
-                        PaletteItem.toggleRotate(palette);
-                    }
-                }
+                process_palette(context.getPlayer(), mode,rotate);
             });
         });
         PlayerEvent.PLAYER_QUIT.register((player)->{
             LOGGER.info("PLAYER_QUIT");
             PlayerWand.remove_player(player);
         });
-        
     }
     public static void send_state(ServerPlayer player,Wand wand){
         if(wand!=null && player!=null && !player.level.isClientSide()) {
@@ -167,9 +131,32 @@ public class WandsMod {
             NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
         }
     }
+    public static void process_palette(Player player,boolean mode,boolean rotate){
+        
+        ItemStack item_stack=player.getMainHandItem();
+        ItemStack palette=null;
+        if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){
+            palette=item_stack;
+        }else{
+            ItemStack offhand_stack=player.getOffhandItem();
+            if(!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem){
+                palette=offhand_stack;
+            }
+        }
+        if(palette!=null){
+            if(mode){
+                PaletteItem.nextMode(palette);
+            }
+            if(rotate){
+                PaletteItem.toggleRotate(palette);
+            }
+        }
+    }
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
         if(!item_stack.isEmpty() && item_stack.getItem() instanceof WandItem){
+            boolean creative=MCVer.inst.is_creative(player);
+            
             Wand wand=PlayerWand.get(player);
             switch(key){
                 case wand_mode_key:
@@ -244,16 +231,9 @@ public class WandsMod {
                     }
 
                 break;
-                case wand_undo:
-                    //beginMC1.16.5
-                    boolean creative=player.abilities.instabuild;
-                    //endMC1.16.5
-                    
-                    /*//beginMC1.17.1
-                    boolean creative=player.getAbilities().instabuild;
-                    //endMC1.17.1*/
-                    
-                    if(creative==true && !player.level.isClientSide()){
+                case wand_undo:                   
+
+                    if(creative && !player.level.isClientSide()){
 
                         if(wand!=null){
                             int n=1;

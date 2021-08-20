@@ -29,7 +29,9 @@ public class WandsModForge {
             ()-> {
                 WandsModClient.initialize();
                 WandsModClient.is_forge=true;
-                //MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
+                //beginMC1_17_1
+                MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
+                //endMC1_17_1
             }
         );
         //MinecraftForge.EVENT_BUS.register(this);

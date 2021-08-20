@@ -15,9 +15,8 @@ public class WandsModClientFabric implements ClientModInitializer {
         WandsModClient.initialize();
         Optional<ModContainer> cont= FabricLoader.getInstance().getModContainer("optifabric");
         if(cont.isPresent()){
+            WandsModClient.has_optifine=true;
             WandsMod.log("has optifine!!!!!!!!!!!!",true);
-        }else {
-            WandsMod.log("no optifine!!!!!!!!!!!!", true);
         }
     }
 }
