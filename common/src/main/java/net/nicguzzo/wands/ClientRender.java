@@ -2,14 +2,8 @@ package net.nicguzzo.wands;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-//1.17.1
-//import com.mojang.blaze3d.vertex.VertexFormat;
-//import net.minecraft.client.renderer.GameRenderer;
-
 import net.minecraft.client.CameraType;
 import net.nicguzzo.wands.mcver.MCVer;
-import org.lwjgl.opengl.GL11;
-
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -30,7 +24,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
+
 import net.nicguzzo.wands.Wand.CopyPasteBuffer;
 
 import java.util.List;
@@ -181,9 +175,9 @@ public class ClientRender {
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder bufferBuilder = tesselator.getBuilder();
         boolean fabulous_bug=false;
-        /*//beginMC1_17_1
+        //beginMC1_17_1
         fabulous_bug=(WandsModClient.is_forge&& Minecraft.useShaderTransparency() );
-        //endMC1_17_1*/
+        //endMC1_17_1
         if(Screen.hasControlDown() || fabulous_bug){
             RenderSystem.disableDepthTest();
         }else{

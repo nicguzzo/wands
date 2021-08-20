@@ -1,6 +1,6 @@
 package net.nicguzzo.wands;
 
-//beginMC1_16_5
+/*//beginMC1_16_5
 import me.shedaniel.architectury.event.events.GuiEvent;
 import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
@@ -8,8 +8,8 @@ import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
-//endMC1_16_5
-/*//beginMC1_17_1
+//endMC1_16_5*/
+//beginMC1_17_1
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
 import dev.architectury.event.events.client.ClientGuiEvent;
@@ -18,7 +18,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
-//endMC1_17_1*/
+//endMC1_17_1
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -35,6 +35,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
+import net.nicguzzo.wands.mcver.MCVer;
 
 public class WandsModClient {
     static boolean shift =false;
@@ -51,12 +52,12 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
         };
         for(KeyMapping k: km){
-            //beginMC1_16_5
+            /*//beginMC1_16_5
             KeyBindings.registerKeyBinding(k);
-            //endMC1_16_5
-            /*//beginMC1_17_1
+            //endMC1_16_5*/
+            //beginMC1_17_1
             KeyMappingRegistry.register(k);
-            //endMC1_17_1*/
+            //endMC1_17_1
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
@@ -78,12 +79,12 @@ public class WandsModClient {
             }
         });
         
-        //beginMC1_16_5
+        /*//beginMC1_16_5
         GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
-        //endMC1_16_5
-        /*//beginMC1_17_1
+        //endMC1_16_5*/
+        //beginMC1_17_1
         ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-        //endMC1_17_1*/
+        //endMC1_17_1
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
         });
@@ -157,11 +158,8 @@ public class WandsModClient {
                 Font font = client.font;
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
-                //MC1.16.5
-                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-                
-                //MC1.17.1 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                //MC1.17.1 RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+                MCVer.inst.set_pos_tex_shader();
 
                 Wand wand=ClientRender.wand;
                 WandItem wand_item=(WandItem)stack.getItem();

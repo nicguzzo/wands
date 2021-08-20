@@ -1,11 +1,9 @@
 package net.nicguzzo.wands;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -14,6 +12,8 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.PaletteItem.PaletteMode;
+import net.nicguzzo.wands.mcver.MCVer;
+
 public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler> {
     
     private static final ResourceLocation TEXTURE = new ResourceLocation("minecraft", "textures/gui/container/shulker_box.png");
@@ -80,23 +80,35 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     }
     @Override
     protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
-        //1.16.5
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bind(TEXTURE);
-        //1.17.1
-        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        //RenderSystem.setShaderTexture(0, TEXTURE);
+        MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+        MCVer.inst.set_texture(TEXTURE);
+        MCVer.inst.set_pos_tex_shader();
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
     }
+    boolean is_hovering(int i, int j, int k, int l, double d, double e) {
+        int m = this.leftPos;
+        int n = this.topPos;
+        d -= (double)m;
+        e -= (double)n;
+        return d >= (double)(i - 1) && d < (double)(i + k + 1) && e >= (double)(j - 1) && e < (double)(j + l + 1);
+    }
+    public final Slot find_slot(double d, double e) {
+        for(int i = 0; i < this.menu.slots.size(); ++i) {
+            Slot slot = (Slot)this.menu.slots.get(i);
+            if (is_hovering(slot.x, slot.y, 16, 16, d, e) && slot.isActive()) {
+                return slot;
+            }
+        }
+        return null;
+    }
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         btn_mode.mouseClicked(mouseX, mouseY, button);
         btn_rotate.mouseClicked(mouseX, mouseY, button);
-        Slot slot = this.findSlot(mouseX, mouseY);
+        Slot slot = this.find_slot(mouseX, mouseY);
         if(slot!=null){            
             switch(button){
                 case 0:
@@ -124,10 +136,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.findSlot(mouseX, mouseY);
         if(slot!=null){
-            //1.16.5
-            ItemStack itemStack = this.menu.playerInventory.getCarried();
-            //1.17.1
-            //ItemStack itemStack = this.menu.getCarried();
+            ItemStack itemStack = MCVer.inst.get_carried(Minecraft.getInstance().player,this.menu);
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

@@ -4,10 +4,6 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import io.netty.buffer.Unpooled;
-//import dev.architectury.networking.NetworkManager;
-//import dev.architectury.utils.NbtType;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -24,7 +20,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -43,6 +38,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.WandItem.Orientation;
 import net.nicguzzo.wands.WandItem.Mode;
+import net.nicguzzo.wands.mcver.MCVer;
 
 public class Wand {
     public int x = 0;
@@ -201,8 +197,7 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
-        player_inv=player.inventory;
-        //player_inv=player.getInventory();
+        player_inv= MCVer.inst.get_inventory(player);
         y0 = 0.0f;
         block_height = 1.0f;
         is_slab_top = false;
@@ -229,10 +224,9 @@ public class Wand {
         if(limit>MAX_LIMIT){
             limit=MAX_LIMIT;
         }
-        creative = player.abilities.instabuild;
-        //creative = player.getAbilities().instabuild;
-        boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
+        creative = MCVer.inst.is_creative(player);
 
+        boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
         mode = WandItem.getMode(wand_stack);
 
@@ -607,7 +601,7 @@ public class Wand {
                         packet.writeItem(ItemStack.EMPTY);
                     }
                 }
-                NetworkManager.sendToPlayer((ServerPlayer) player, WandsMod.SND_PACKET, packet);
+                MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
             }
         }
         if (p2) {
@@ -1800,7 +1794,7 @@ public class Wand {
             slot=0;
         if(palette!=null) {
             palette_slots.clear();
-            ListTag palette_inv = palette.getOrCreateTag().getList("Palette", NbtType.COMPOUND);
+            ListTag palette_inv = palette.getOrCreateTag().getList("Palette", MCVer.NbtType.COMPOUND);
             //log("palette_inv: "+palette_inv);
             int s = palette_inv.size();
             for (int i = 0; i < s; i++) {

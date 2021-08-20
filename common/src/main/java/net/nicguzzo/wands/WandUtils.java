@@ -1,14 +1,12 @@
 package net.nicguzzo.wands;
 
-
-//import dev.architectury.utils.NbtType;
-import me.shedaniel.architectury.utils.NbtType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.nicguzzo.wands.mcver.MCVer;
 
 class WandUtils{
 
@@ -20,7 +18,7 @@ class WandUtils{
         if(item!=null){
             CompoundTag entity_tag =shulker.getTagElement("BlockEntityTag");
             if(entity_tag!=null){
-                ListTag shulker_items = entity_tag.getList("Items", NbtType.COMPOUND);
+                ListTag shulker_items = entity_tag.getList("Items", MCVer.NbtType.COMPOUND);
                 if(shulker_items!=null){
                     for (int i = 0, len = shulker_items.size(); i < len; ++i) {
                         CompoundTag itemTag = shulker_items.getCompound(i);                        

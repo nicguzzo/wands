@@ -2,30 +2,20 @@ package net.nicguzzo.wands;
 
 
 import java.util.List;
-
-import me.shedaniel.architectury.registry.MenuRegistry;
-import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
+import net.nicguzzo.wands.mcver.MCVer;
 import org.jetbrains.annotations.Nullable;
-import me.shedaniel.architectury.utils.NbtType;
-
-//import dev.architectury.registry.menu.MenuRegistry;
-//import dev.architectury.registry.menu.ExtendedMenuProvider;
-//import dev.architectury.utils.NbtType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -45,7 +35,7 @@ public class PaletteItem extends Item{
     @Override    
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
-        ListTag inventory = tag.getList("Palette",  NbtType.COMPOUND);//10 COMPOUND
+        ListTag inventory = tag.getList("Palette", MCVer.NbtType.COMPOUND);//10 COMPOUND
         int s =inventory.size();
         for(int i=0;i<s;i++){
             // formatted red text
@@ -118,22 +108,9 @@ public class PaletteItem extends Item{
         ItemStack paletteItemStack =player.getItemInHand(interactionHand);
         //WandsMod.LOGGER.info("paletteItemStack "+paletteItemStack.getTag());
         if(!world.isClientSide()) {
-            MenuRegistry.openExtendedMenu((ServerPlayer)player, new ExtendedMenuProvider(){
-                @Override                
-                public void saveExtraData(FriendlyByteBuf packetByteBuf) {
-                    packetByteBuf.writeItem(paletteItemStack);
-                }
-                @Override
-                public Component getDisplayName(){
-                    return new TranslatableComponent(paletteItemStack.getItem().getDescriptionId());
-                }
-                @Override
-                public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
-                    return new PaletteScreenHandler(syncId, inv, paletteItemStack);
-                }                
-            });
+            MCVer.inst.open_palette((ServerPlayer) player,paletteItemStack);
         }
-        WandsMod.LOGGER.info("palette");
+        //WandsMod.LOGGER.info("palette");
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
         //return super.use(world, player, hand);
     }

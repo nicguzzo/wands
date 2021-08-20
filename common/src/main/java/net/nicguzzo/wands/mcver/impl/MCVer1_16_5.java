@@ -1,3 +1,4 @@
+/*//beginMC1_16_5
 package net.nicguzzo.wands.mcver.impl;
 
 import java.util.function.Supplier;
@@ -87,3 +88,4 @@ public class MCVer1_16_5 extends MCVer{
 		//poseStack.popPose();
 	}
 }
+//endMC1_16_5*/

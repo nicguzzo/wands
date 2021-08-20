@@ -1,7 +1,6 @@
 package net.nicguzzo.wands;
 import java.util.HashMap;
 
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 
 public class PlayerWand{
