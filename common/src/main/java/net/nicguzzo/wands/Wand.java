@@ -176,7 +176,7 @@ public class Wand {
         //copy_paste_buffer.clear();
         if (player != null && player.level!=null && !player.level.isClientSide()) {
             player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
-            tally_copied_buffer();
+            //tally_copied_buffer();
         }
     }
 
@@ -189,6 +189,7 @@ public class Wand {
             Vec3 hit,
             ItemStack wand_stack,
             boolean prnt) {
+        mode = WandItem.getMode(wand_stack);
         this.player = player;
         this.level = level;
         this.block_state = block_state;
@@ -228,7 +229,7 @@ public class Wand {
 
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
-        mode = WandItem.getMode(wand_stack);
+
 
         valid = false;
         this.destroy = can_destroy(player, block_state, false);
@@ -1542,7 +1543,7 @@ public class Wand {
                                         offhand_digger);
                                 int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,
                                         offhand_digger);
-                                if (fortune > 0 || silk_touch > 0) {
+                                if ( WandsMod.config.survival_unenchanted_drops || fortune > 0 || silk_touch > 0) {
                                     st.getBlock().playerDestroy(level, player, block_pos, st, null, offhand_digger);
                                 }
                             }
@@ -1781,7 +1782,7 @@ public class Wand {
                 ba.needed+=1;
             }
         }
-        player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
+        //player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
         for (Map.Entry<String, BlockAccounting> entry : ba_map.entrySet()){
             TranslatableComponent name=new TranslatableComponent(entry.getKey());
             TextComponent st=new TextComponent("   ");
@@ -1917,20 +1918,8 @@ public class Wand {
             if(found>= limit)
                 return found;
 
-            p0 = bpos.relative( Direction.EAST, 1);
-            BlockPos p1 = p0.relative( Direction.NORTH, 1);
-            found+=add_neighbour(p1, state);
-            if(found>= limit)
-                return found;
-
             p0 = bpos.relative( Direction.NORTH, 1);
             found+=add_neighbour(p0, state);
-            if(found>= limit)
-                return found;
-
-            p0 = bpos.relative( Direction.NORTH, 1);
-            p1 = p0.relative( Direction.WEST, 1);
-            found+=add_neighbour(p1, state);
             if(found>= limit)
                 return found;
 
@@ -1940,21 +1929,34 @@ public class Wand {
                 return found;
 
             p0 = bpos.relative( Direction.SOUTH, 1);
-            p1 = p0.relative( Direction.WEST, 1);
-            found+=add_neighbour(p1, state);
-            if(found>= limit)
-                return found;
-
-            p0 = bpos.relative( Direction.SOUTH, 1);
             found+=add_neighbour(p0, state);
             if(found>= limit)
                 return found;
+            if(!is_alt_pressed) {
+                p0 = bpos.relative(Direction.EAST, 1);
+                BlockPos p1 = p0.relative(Direction.NORTH, 1);
+                found += add_neighbour(p1, state);
+                if (found >= limit)
+                    return found;
 
-            p0 = bpos.relative( Direction.SOUTH, 1);
-            p1 = p0.relative( Direction.EAST, 1);
-            found+=add_neighbour(p1, state);
-            if(found>= limit)
-                return found;
+                p0 = bpos.relative(Direction.NORTH, 1);
+                p1 = p0.relative(Direction.WEST, 1);
+                found += add_neighbour(p1, state);
+                if (found >= limit)
+                    return found;
+
+                p0 = bpos.relative(Direction.SOUTH, 1);
+                p1 = p0.relative(Direction.WEST, 1);
+                found += add_neighbour(p1, state);
+                if (found >= limit)
+                    return found;
+
+                p0 = bpos.relative(Direction.SOUTH, 1);
+                p1 = p0.relative(Direction.EAST, 1);
+                found += add_neighbour(p1, state);
+                if (found >= limit)
+                    return found;
+            }
 
         } else {
             if (side == Direction.EAST || side == Direction.WEST) {
@@ -1963,20 +1965,8 @@ public class Wand {
                 if(found>= limit)
                     return found;
 
-                p0 = bpos.relative( Direction.UP, 1);
-                BlockPos p1 = p0.relative( Direction.NORTH, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
-
                 p0 = bpos.relative( Direction.NORTH, 1);
                 found+=add_neighbour(p0, state);
-                if(found>= limit)
-                    return found;
-
-                p0 = bpos.relative( Direction.NORTH, 1);
-                p1 = p0.relative( Direction.DOWN, 1);
-                found+=add_neighbour(p1, state);
                 if(found>= limit)
                     return found;
 
@@ -1986,21 +1976,35 @@ public class Wand {
                     return found;
 
                 p0 = bpos.relative( Direction.SOUTH, 1);
-                p1 = p0.relative( Direction.DOWN, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
-
-                p0 = bpos.relative( Direction.SOUTH, 1);
                 found+=add_neighbour(p0, state);
                 if(found>= limit)
                     return found;
 
-                p0 = bpos.relative( Direction.SOUTH, 1);
-                p1 = p0.relative( Direction.UP, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
+                if(!is_alt_pressed) {
+                    p0 = bpos.relative( Direction.UP, 1);
+                    BlockPos p1 = p0.relative( Direction.NORTH, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+
+                    p0 = bpos.relative( Direction.NORTH, 1);
+                    p1 = p0.relative( Direction.DOWN, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+
+                    p0 = bpos.relative( Direction.SOUTH, 1);
+                    p1 = p0.relative( Direction.DOWN, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+
+                    p0 = bpos.relative( Direction.SOUTH, 1);
+                    p1 = p0.relative( Direction.UP, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+                }
 
             } else if (side == Direction.NORTH || side == Direction.SOUTH) {
                 BlockPos p0 = bpos.relative( Direction.EAST, 1);
@@ -2008,20 +2012,8 @@ public class Wand {
                 if(found>= limit)
                     return found;
 
-                p0 = bpos.relative( Direction.EAST, 1);
-                BlockPos p1 = p0.relative( Direction.UP, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
-
                 p0 = bpos.relative( Direction.UP, 1);
                 found+=add_neighbour(p0, state);
-                if(found>= limit)
-                    return found;
-
-                p0 = bpos.relative( Direction.UP, 1);
-                p1 = p0.relative( Direction.WEST, 1);
-                found+=add_neighbour(p1, state);
                 if(found>= limit)
                     return found;
 
@@ -2031,22 +2023,32 @@ public class Wand {
                     return found;
 
                 p0 = bpos.relative( Direction.DOWN, 1);
-                p1 = p0.relative( Direction.WEST, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
-
-                p0 = bpos.relative( Direction.DOWN, 1);
                 found+=add_neighbour(p0, state);
                 if(found>= limit)
                     return found;
 
-                p0 = bpos.relative( Direction.DOWN, 1);
-                p1 = p0.relative( Direction.EAST, 1);
-                found+=add_neighbour(p1, state);
-                if(found>= limit)
-                    return found;
-
+                if(!is_alt_pressed) {
+                    p0 = bpos.relative( Direction.EAST, 1);
+                    BlockPos p1 = p0.relative( Direction.UP, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+                    p0 = bpos.relative( Direction.UP, 1);
+                    p1 = p0.relative( Direction.WEST, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+                    p0 = bpos.relative( Direction.DOWN, 1);
+                    p1 = p0.relative( Direction.WEST, 1);
+                    found+=add_neighbour(p1, state);
+                    if(found>= limit)
+                        return found;
+                    p0 = bpos.relative(Direction.DOWN, 1);
+                    p1 = p0.relative(Direction.EAST, 1);
+                    found += add_neighbour(p1, state);
+                    if (found >= limit)
+                        return found;
+                }
             }
         }
         return found;

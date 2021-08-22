@@ -1,13 +1,13 @@
 package net.nicguzzo.wands;
 
-/*//beginMC1_16_5
+//beginMC1_16_5
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//endMC1_16_5*/
+//endMC1_16_5 
 
-//beginMC1_17_1
+/*//beginMC1_17_1
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
@@ -15,7 +15,7 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
-//endMC1_17_1
+//endMC1_17_1*/
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;
@@ -113,21 +113,25 @@ public class WandsMod {
     }
     public static void send_state(ServerPlayer player,Wand wand){
         if(wand!=null && player!=null && !player.level.isClientSide()) {
-            FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-            packet.writeLong(wand.palette_seed);
-            packet.writeInt(wand.axis.ordinal());
-            packet.writeInt(wand.plane.ordinal());
-            packet.writeInt(wand.mode.ordinal());
-            if(wand.palette_slots.size()!=0) {
-                packet.writeInt((wand.slot + 1) % wand.palette_slots.size());
-            }else{
-                packet.writeInt(0);
+            ItemStack wand_stack=player.getMainHandItem();
+            if(wand_stack.getItem() instanceof WandItem) {
+                WandItem.Mode mode = WandItem.getMode(wand_stack);
+                FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+                packet.writeLong(wand.palette_seed);
+                packet.writeInt(wand.axis.ordinal());
+                packet.writeInt(wand.plane.ordinal());
+                packet.writeInt(mode.ordinal());
+                if (wand.palette_slots.size() != 0) {
+                    packet.writeInt((wand.slot + 1) % wand.palette_slots.size());
+                } else {
+                    packet.writeInt(0);
+                }
+                float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
+                packet.writeBoolean(BLOCKS_PER_XP != 0);
+                packet.writeInt(player.experienceLevel);
+                packet.writeFloat(player.experienceProgress);
+                NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
             }
-            float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
-            packet.writeBoolean (BLOCKS_PER_XP != 0);
-            packet.writeInt(player.experienceLevel);
-            packet.writeFloat(player.experienceProgress);
-            NetworkManager.sendToPlayer(player, WandsMod.STATE_PACKET, packet);
         }
     }
     public static void process_palette(Player player,boolean mode,boolean rotate){

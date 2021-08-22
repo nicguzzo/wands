@@ -92,12 +92,12 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
     }
 
     @Override
-    /*//beginMC1_16_5
+    //beginMC1_16_5
     public ItemStack clicked(int slotIndex, int button, ClickType actionType, Player player) {
-    //endMC1_16_5*/
-    //beginMC1_17_1
+    //endMC1_16_5 
+    /*//beginMC1_17_1
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-    //endMC1_17_1
+    //endMC1_17_1*/
 
         //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
@@ -113,12 +113,12 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                     if(slotIndex<27){
                         ItemStack itemStack=MCVer.inst.get_carried(player,this);
                         slot.set(itemStack);
-                        /*//beginMC1_16_5
+                        //beginMC1_16_5
                         return ItemStack.EMPTY;
-                        //endMC1_16_5*/
-                        //beginMC1_17_1
+                        //endMC1_16_5 
+                        /*//beginMC1_17_1
                         return;
-                        //endMC1_17_1
+                        //endMC1_17_1*/
 
                     }
                 }
@@ -144,12 +144,12 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
                                 }
                             }
                         }
-                        /*//beginMC1_16_5
+                        //beginMC1_16_5
                         return ItemStack.EMPTY;
-                        //endMC1_16_5*/
-                        //beginMC1_17_1
+                        //endMC1_16_5 
+                        /*//beginMC1_17_1
                         return;
-                        //endMC1_17_1
+                        //endMC1_17_1*/
                     }
                     if(button == 0){
                         if(slotIndex<27 ){
@@ -213,12 +213,12 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
             crashReportCategory.setDetail("Type", (Object)actionType);
             throw new ReportedException(crashReport);
          }
-        /*//beginMC1_16_5
+        //beginMC1_16_5
         return ItemStack.EMPTY;
-        //endMC1_16_5*/
-        //beginMC1_17_1
+        //endMC1_16_5 
+        /*//beginMC1_17_1
         return;
-        //endMC1_17_1
+        //endMC1_17_1*/
     }
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
