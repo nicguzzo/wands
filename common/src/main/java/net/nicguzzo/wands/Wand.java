@@ -92,6 +92,7 @@ public class Wand {
     public boolean has_palette = false;
     boolean has_bucket = false;
     boolean has_water_bucket = false;
+    boolean has_lava_bucket  = false;
     boolean has_empty_bucket = false;
     boolean has_offhand = false;
     public boolean has_hoe=false;
@@ -115,6 +116,7 @@ public class Wand {
 
     private static class BlockAccounting {
         public int placed = 0;
+        public int consumed = 0;
         public int needed = 0;
         public int in_player = 0;
     }
@@ -220,6 +222,7 @@ public class Wand {
         }
         //TODO: replace mode
         //TODO: wand gui
+        //TODO: banner placement not working on sides
         wand_item = (WandItem) wand_stack.getItem();
         limit = wand_item.limit;
         if(limit>MAX_LIMIT){
@@ -253,6 +256,7 @@ public class Wand {
         has_palette = false;
         has_bucket = false;
         has_water_bucket=false;
+        has_lava_bucket=false;
         has_empty_bucket=false;
         if (offhand != null && offhand.getItem() instanceof PaletteItem) {
             //if (mode != Mode.DIRECTION)
@@ -261,15 +265,21 @@ public class Wand {
                 has_palette = true;
             }
         }
-        if (offhand != null && offhand.getItem() instanceof BucketItem) {
+        if (offhand != null && offhand.getItem() instanceof DispensibleContainerItem) {
             if (mode != Mode.DIRECTION) {
                 bucket = offhand;
                 has_bucket = true;
-                has_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
-                if(has_water_bucket) {
-                    has_empty_bucket = false;
-                }
                 has_empty_bucket=bucket.isStackable();
+                //Item itt=Fluids.EMPTY.getBucket();
+                //BucketItem
+                //has_empty_bucket=bucket.getItem().equals(Fluids.EMPTY.getBucket());
+                //TODO: other mods fluids?
+                if(!has_empty_bucket) {
+                    has_water_bucket = bucket.getItem().equals(Fluids.WATER.getBucket());
+                    if (!has_water_bucket) {
+                        has_lava_bucket = bucket.getItem().equals(Fluids.LAVA.getBucket());
+                    }
+                }
             }
         }
 
@@ -381,44 +391,55 @@ public class Wand {
                         has_bucket = false;
                         //log("bucket " + bucket);
                         //boolean is_water_bucket=bucket.is(Fluids.WATER.getBucket()));
-                        boolean is_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
-                        if (is_water_bucket) {
+                        //boolean is_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
+                        if (has_water_bucket||has_lava_bucket) {
                             //log("bucket is water");
                             if(creative){
                                 has_bucket = true;
-                                has_water_bucket=true;
-                                block_state = Blocks.WATER.defaultBlockState();
+                                if(has_water_bucket) {
+                                    block_state = Blocks.WATER.defaultBlockState();
+                                }
+                                if(has_lava_bucket) {
+                                    block_state = Blocks.LAVA.defaultBlockState();
+                                }
+                                //block_state = Blocks.WATER.defaultBlockState();
                             }else {
-                                //in survival check if player has another water bucket part from the one in the offhand
-                                for (int i = 0; i < 36; ++i) {
-                                    ItemStack stack = player_inv.getItem(i);
-                                    is_water_bucket=stack.getItem().equals(Fluids.WATER.getBucket());
-                                    //is_water_bucket=stack.is(Fluids.WATER.getBucket());
-                                    if (stack.getItem() instanceof BucketItem && is_water_bucket) {
-                                        has_bucket = true;
-                                        has_water_bucket=true;
-                                        block_state = Blocks.WATER.defaultBlockState();
-                                        break;
+                                if(has_water_bucket) {
+                                    //in survival check if player has another water bucket part from the one in the offhand
+                                    for (int i = 0; i < 36; ++i) {
+                                        ItemStack stack = player_inv.getItem(i);
+                                        boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
+                                        if (stack.getItem() instanceof BucketItem && is_water_bucket) {
+                                            has_bucket = true;
+                                            has_water_bucket = true;
+                                            block_state = Blocks.WATER.defaultBlockState();
+                                            break;
+                                        }
+                                    }
+                                    if (!has_bucket) {
+                                        player.displayClientMessage(new TextComponent("You need another water bucket in the inventory."), false);
+                                        return;
                                     }
                                 }
-                                if(!has_bucket){
-                                    player.displayClientMessage(new TextComponent("You need another water bucket in the inventory."),false);
-                                    return;
+                                if(has_lava_bucket) {
+                                    block_state = Blocks.LAVA.defaultBlockState();
                                 }
                             }
                         }
-                        if (bucket.isStackable()) {
-                            //log("bucket is empty");
+                        if (has_empty_bucket) {
                             has_bucket = true;
-                            has_empty_bucket=true;
                             block_state = Blocks.AIR.defaultBlockState();
                         }
                     }
 
                     BlockAccounting pa = new BlockAccounting();
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                        if(has_empty_bucket||has_water_bucket){
+                        if(has_empty_bucket||has_water_bucket||has_lava_bucket){
                             block_buffer.state[a]=block_state;
+                            if(has_lava_bucket){
+                                block_buffer.item[a] = bucket.getItem();
+                                pa.needed++;
+                            }
                         }else{
                             if (!destroy && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
                                 block_buffer.state[a] = null;
@@ -458,7 +479,7 @@ public class Wand {
 //            }
 
             //deal with inventory
-            if (!creative && !destroy && !has_bucket && mode != Mode.COPY) {
+            if (!creative && !destroy && !has_water_bucket && mode != Mode.COPY) {
                 //for (var pa : block_accounting.entrySet()) {
                 //    log(pa.getKey()+" in player "+pa.getValue().in_player+" needed: "+pa.getValue().needed +" placed: "+pa.getValue().placed);
                 //}
@@ -552,16 +573,15 @@ public class Wand {
                                         stack_item = ItemStack.of(itemTag);
                                         if (stack_item != null && !stack_item.isEmpty() && stack_item.getTag() == null ) {
                                             BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                                            if (pa != null && pa.placed > 0) {
-                                                //log(stack_item.getDescriptionId() + " needed: " + pa.needed + " placed: " + pa.placed);
-                                                if (pa.placed <= stack_item.getCount()) {
-                                                    stack_item.setCount(stack_item.getCount() - pa.placed);
-                                                    pa.placed = 0;
-                                                } else {
-                                                    pa.placed -= stack_item.getCount();
-                                                    stack_item.setCount(0);
+                                            ItemStack rep=consume_item(pa,stack_item);
+                                            if(rep!=null){
+                                                if(!rep.isEmpty()) {
+                                                    CompoundTag stackTag = rep.save(new CompoundTag());
+                                                    stackTag.putByte("Slot",(byte)j);
+                                                    shulker_items.set(j, stackTag);
+                                                }else {
+                                                    shulker_items.set(j, stack_item.save(itemTag));
                                                 }
-                                                shulker_items.set(j, stack_item.save(itemTag));
                                             }
                                         }
                                     }
@@ -575,14 +595,9 @@ public class Wand {
                         if(stack_item.getItem() != Items.AIR) {
                             if (!WandUtils.is_shulker(stack_item) && stack_item.getTag()==null) {
                                 BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                                if (pa != null && pa.placed > 0) {
-                                    if (pa.placed <= stack_item.getCount()) {
-                                        stack_item.setCount(stack_item.getCount() - pa.placed);
-                                        pa.placed = 0;
-                                    } else {
-                                        pa.placed -= stack_item.getCount();
-                                        stack_item.setCount(0);
-                                    }
+                                ItemStack rep=consume_item(pa,stack_item);
+                                if(rep!=null && !rep.isEmpty()) {
+                                    player_inv.setItem(i,rep);
                                 }
                             }
                         }
@@ -616,7 +631,28 @@ public class Wand {
             valid = false;
         }
     }
-
+    ItemStack consume_item(BlockAccounting pa,ItemStack stack_item){
+        if (pa != null && pa.placed > 0) {
+            if(stack_item.getItem().equals(Fluids.LAVA.getBucket())){
+                pa.placed--;
+                pa.consumed++;
+                ItemStack ret=Items.BUCKET.getDefaultInstance();
+                return ret;
+            }else{
+                if (pa.placed <= stack_item.getCount()) {
+                    pa.consumed+=stack_item.getCount();
+                    stack_item.setCount(stack_item.getCount() - pa.placed);
+                    pa.placed = 0;
+                } else {
+                    pa.consumed+=stack_item.getCount();
+                    pa.placed -= stack_item.getCount();
+                    stack_item.setCount(0);
+                }
+            }
+            return ItemStack.EMPTY;
+        }
+        return null;
+    }
     void mode_direction(boolean invert) {
         Direction[] dirs = getDirMode0(side, hit.x, hit.y, hit.z);
         if (invert) {
@@ -2071,7 +2107,14 @@ public class Wand {
         return false;
     }
     boolean can_place(BlockState state) {
-        return (state.isAir() || replace_fluid(state) || is_plant(state) || state.getBlock() instanceof SnowLayerBlock);
+        return (state.isAir() ||
+                replace_fluid(state) ||
+                is_plant(state) ||
+                state.getBlock() instanceof SnowLayerBlock||
+                (has_empty_bucket && state.getFluidState().is(FluidTags.WATER) ||
+                (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA) )
+                )
+        );
     }
 
     BlockPos find_next_diag(BlockState state, Direction dir1, Direction dir2, BlockPos bpos) {

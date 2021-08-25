@@ -19,6 +19,8 @@ import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
@@ -412,7 +414,7 @@ public class ClientRender {
                 case RECT:
 
                     //preview_mode1(bufferBuilder);
-                    if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ) {
+                    if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ||wand.has_empty_bucket) {
                         //bbox
                         if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
                         {
@@ -437,7 +439,7 @@ public class ClientRender {
                             }
                         }
 
-                        if (wand.valid && has_target&& wand.block_buffer != null ) {
+                        if (wand.has_empty_bucket || (wand.valid && has_target&& wand.block_buffer != null )) {
                             random.setSeed(0);
                             if(fancy && !wand.destroy && !wand.has_empty_bucket) {
                                 RenderSystem.enableTexture();
@@ -449,22 +451,34 @@ public class ClientRender {
                                 BlockState st;
                                 for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
                                     if (wand.block_buffer.state[idx] != null) {
-                                        preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                                        //preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                                        st= wand.block_buffer.state[idx];
                                         if(wand.has_water_bucket) {
                                             st=Blocks.WATER.defaultBlockState();
                                         }else{
-                                            st= wand.block_buffer.state[idx];
+                                            if(wand.has_lava_bucket) {
+                                                st = Blocks.LAVA.defaultBlockState();
+                                            }
                                         }
                                         render_shape(matrixStack,tesselator, bufferBuilder,st,
                                                 wand.block_buffer.buffer_x[idx],
                                                 wand.block_buffer.buffer_y[idx],
                                                 wand.block_buffer.buffer_z[idx]);
-                                        if(wand.block_buffer.state[idx].getBlock() instanceof DoorBlock){
 
-                                            render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                        //TODO: all double blocks!!
+                                        if(wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)){
+                                            render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
                                                     wand.block_buffer.buffer_x[idx],
                                                     wand.block_buffer.buffer_y[idx]+1,
                                                     wand.block_buffer.buffer_z[idx]);
+                                        }else{
+                                            if(wand.block_buffer.state[idx].getBlock() instanceof DoorBlock){
+
+                                                render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                                        wand.block_buffer.buffer_x[idx],
+                                                        wand.block_buffer.buffer_y[idx]+1,
+                                                        wand.block_buffer.buffer_z[idx]);
+                                            }
                                         }
                                     }
                                 }
@@ -661,12 +675,21 @@ public class ClientRender {
                             if(p.getY()+1>y2) y2=p.getY()+1;
                             if(p.getZ()+1>z2) z2=p.getZ()+1;
                         }
+                        tesselator.end();
+                        RenderSystem.disableTexture();
                         x1 = b_pos.getX() + x1-off2;
                         y1 = b_pos.getY() + y1-off2;
                         z1 = b_pos.getZ() + z1-off2;
                         x2 = b_pos.getX() + x2+off2;
                         y2 = b_pos.getY() + y2+off2;
                         z2 = b_pos.getZ() + z2+off2;
+                        if(fat_lines) {
+                            //RenderSystem.disableCull();
+                            RenderSystem.enableTexture();
+                            MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+                        }else {
+                            MCVer.inst.set_render_lines(bufferBuilder);
+                        }
                         if(fat_lines) {
                             preview_block_fat(bufferBuilder,
                                     x1, y1, z1,
@@ -1045,10 +1068,10 @@ public class ClientRender {
         float vx=0;
         float vy=0;
         float vz=0;
-        float u=0;
-        float v=0;
-        float uu=0;
-        float vv=0;
+        float u1=0;
+        float v1=0;
+        float u0=0;
+        float v0=0;
         float r= block_col.r;
         float g= block_col.g;
         float b= block_col.b;
@@ -1057,87 +1080,69 @@ public class ClientRender {
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
         //BlockPos bp=new BlockPos(x,y,z);
         bp.set(x,y,z);
-        if(wand.has_water_bucket && wand.level.getBlockState(bp).isAir()) {
-            //matrixStack2.setIdentity();
-            //matrixStack2.translate(x, y, z);
-            //wand.level.setBlock(bp,state,0);
+        boolean is_water=state==Blocks.WATER.defaultBlockState();
+        boolean is_lava=state==Blocks.LAVA.defaultBlockState();
+        if(is_water||is_lava||
+           (wand.mode!=Mode.PASTE && wand.has_water_bucket && wand.level.getBlockState(bp).isAir())) {
             water=true;
-            FluidState fluidState=Fluids.WATER.defaultFluidState();
             float h=0.875f;
-            int i = BiomeColors.getAverageWaterColor(wand.level, bp);
+            int i;
+            RenderSystem.enableCull();
+
+            TextureAtlasSprite sprite;
+            if(is_water) {
+                sprite = ModelBakery.WATER_FLOW.sprite();
+                i=BiomeColors.getAverageWaterColor(wand.level, bp);
+            }else {
+                sprite = ModelBakery.LAVA_FLOW.sprite();
+                i=16777215;
+            }
             r = (float)(i >> 16 & 255) / 255.0F;
             g = (float)(i >> 8 & 255) / 255.0F;
             b = (float)(i & 255) / 255.0F;
-            //bakedModel = Minecraft.getInstance().getModelManager().getBlockModelShaper().getBlockModel(Blocks.WATER.defaultBlockState());
-
-            //matrixStack2.setIdentity();
-            //matrixStack2.translate(x, y, z);
-            RenderSystem.enableCull();
-            //blockRenderer.renderSingleBlock(state,matrixStack,mbs,-1,OverlayTexture.NO_OVERLAY);
-            //blockRenderer.getModelRenderer().renderModel(matrixStack2.last(), bufferBuilder, state, bakedModel, 0,0, 0, 0, OverlayTexture.NO_OVERLAY);
-            TextureAtlasSprite water_sprite = ModelBakery.WATER_FLOW.sprite();
 
             MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
             int bf = LevelRenderer.getLightColor(wand.level, bp);
-            bf=-1;
-            uu = water_sprite.getU0();
-            vv = water_sprite.getV0();
-            u = water_sprite.getU1();
-            v = water_sprite.getV1();
+            //bf=-1;
+            u0 = sprite.getU0();
+            v0 = sprite.getV0();
+            u1 = sprite.getU1();
+            v1 = sprite.getV1();
             float o=0.1f;
             //up
-            bufferBuilder.vertex(x  +o,y+h-o,z  +o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z  +o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
-
-
+            bufferBuilder.vertex(x  +o,y+h-o,z  +o).color(r,g,b, a).uv(u1, v1).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(u0, v0).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z  +o).color(r,g,b, a).uv(u0, v1).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
             //down
-            bufferBuilder.vertex(x  +o,y+o,z  +o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+o,z  +o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x  +o,y+o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
-
+            bufferBuilder.vertex(x  +o,y+o,z  +o).color(r,g,b, a).uv(u1, v1).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z  +o).color(r,g,b, a).uv(u0, v1).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z+1-o).color(r,g,b, a).uv(u0, v0).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+o,z+1-o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
             //north -z
-            bufferBuilder.vertex(x  +o,y+o,z+o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x  +o,y+h-o,z+o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z+o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+o,z+o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-
+            bufferBuilder.vertex(x  +o,y+o,z  +o).color(r,g,b, a).uv(u1, v1).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+o).color(r,g,b, a).uv(u0, v0).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z  +o).color(r,g,b, a).uv(u0, v1).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
             //south +z
-            bufferBuilder.vertex(x  +o,y+o,z+1-o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+o,z+1-o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
-
+            bufferBuilder.vertex(x  +o,y+o  ,z+1-o).color(r,g,b, a).uv(u1, v1).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o  ,z+1-o).color(r,g,b, a).uv(u0, v1).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(u0, v0).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
             //east
-            bufferBuilder.vertex(x+o,y+o,z+o).color(r,g,b,     a).uv(uu,  v).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+o,y+o,z+1-o).color(r,g,b,   a).uv(u ,  v).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+o,y+h-o,z+o).color(r,g,b,   a).uv(uu, vv).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+o,z+o).color(r,g,b,     a).uv(u0, v1).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+o,z+1-o).color(r,g,b,   a).uv(u1, v1).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+h-o,z+1-o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+h-o,z+o).color(r,g,b,   a).uv(u0, v0).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            //weast
+            bufferBuilder.vertex(x+1-o,y+o  ,z+o  ).color(r,g,b,a).uv(u0, v1).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+o  ).color(r,g,b,a).uv(u0, v0).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b,a).uv(u1, v0).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o  ,z+1-o).color(r,g,b,a).uv(u1, v1).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
 
-            bufferBuilder.vertex(x+1-o,y+o  ,z+o  ).color(r,g,b,a).uv(uu,  v).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z+o  ).color(r,g,b,a).uv(uu, vv).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b,a).uv(u , vv).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
-            bufferBuilder.vertex(x+1-o,y+o  ,z+1-o).color(r,g,b,a).uv(u ,  v).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
-
-
-            //blockRenderer.renderLiquid(bp,wand.level,bufferBuilder, Fluids.WATER.defaultFluidState());
-            //wand.level.setBlock(bp,Blocks.AIR.defaultBlockState(),0);
             return;
         }
-        /*matrixStack2.pushPose();
-        if(bakedModel!=null) {
-            matrixStack2.setIdentity();
-            matrixStack2.translate(x, y, z);
-            BlockPos pp=new BlockPos(x,y,z);
-            long seed=state.getSeed(pp);
-            //blockRenderer.getModelRenderer().tesselateBlock(wand.level,bakedModel,state,pp,matrixStack2,bufferBuilder,true,new Random(),seed,OverlayTexture.NO_OVERLAY);
-            blockRenderer.getModelRenderer().tesselateWithoutAO(wand.level,bakedModel,state,pp,matrixStack2,bufferBuilder,true,new Random(),seed,OverlayTexture.NO_OVERLAY);
-            //blockRenderer.getModelRenderer().renderModel(matrixStack2.last(), bufferBuilder, state, bakedModel, 0,0, 0, 0, OverlayTexture.NO_OVERLAY);
-        }
-        matrixStack2.popPose();*/
-        //TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+
         bakedModel = blockRenderer.getBlockModel(state);
         if(bakedModel!=null) {
             for(Direction dir: dirs) {
