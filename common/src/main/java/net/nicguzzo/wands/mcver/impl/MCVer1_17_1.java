@@ -69,14 +69,16 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void set_render_quads_block(BufferBuilder bufferBuilder) {
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        RenderSystem.setShader(GameRenderer::getBlockShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
     }
 
     @Override
     public void set_render_quads_pos_tex(BufferBuilder bufferBuilder) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        /*RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);*/
     }
     @Override
     public void set_render_lines(BufferBuilder bufferBuilder) {
@@ -97,10 +99,9 @@ public class MCVer1_17_1 extends MCVer {
 
         PoseStack poseStack2 = RenderSystem.getModelViewStack();
         poseStack2.pushPose();
-        if(WandsModClient.is_forge) {
-            poseStack2.mulPoseMatrix(poseStack.last().pose());
-            //RenderSystem.multMatrix(poseStack.last().pose());
-        }
+        //if(WandsModClient.is_forge) {
+            //poseStack2.mulPoseMatrix(poseStack.last().pose());
+        //}
         poseStack2.translate(-c.x,-c.y,-c.z);
         RenderSystem.applyModelViewMatrix();
 

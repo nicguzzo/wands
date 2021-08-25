@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DebugRenderer.class)
 public class RenderWorldMixin {
     
-    @Inject(method = "render", at = @At(value = "TAIL")) 
+    @Inject(method = "render", at = @At(value = "TAIL"))
     public void render(PoseStack matrices, BufferSource bufferIn, double camX, double camY, double camZ, CallbackInfo ci) {
         if(!WandsModClient.is_forge)
         {

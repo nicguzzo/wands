@@ -265,6 +265,11 @@ public class Wand {
             if (mode != Mode.DIRECTION) {
                 bucket = offhand;
                 has_bucket = true;
+                has_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
+                if(has_water_bucket) {
+                    has_empty_bucket = false;
+                }
+                has_empty_bucket=bucket.isStackable();
             }
         }
 

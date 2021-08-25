@@ -1,18 +1,30 @@
 package net.nicguzzo.wands;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Vector3f;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.color.item.ItemColors;
+import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.Vec3i;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.client.Camera;
@@ -89,7 +101,12 @@ public class ClientRender {
     static Color paste_bb_col=new Color(0.0f,0.0f,0.0f,1.0f);
 
     public static boolean has_target=false;
-
+    static ItemColors itemColors;
+    static PoseStack matrixStack2=new PoseStack();
+    static BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
+    static boolean water=false;
+    static BlockState AIR=Blocks.AIR.defaultBlockState();
+    static MultiBufferSource.BufferSource mbs=null;
     public static void render(PoseStack matrixStack, double camX, double camY, double camZ, MultiBufferSource.BufferSource bufferIn) {
         client = Minecraft.getInstance();
         LocalPlayer player = client.player;
@@ -98,7 +115,11 @@ public class ClientRender {
         if(client.options.getCameraType()  != CameraType.FIRST_PERSON){
             return;
         }
+        mbs=bufferIn;
+
         if(update_colors){
+            //itemColors = ItemColors.createDefault(client.getBlockColors());
+            //itemColors=
             update_colors=false;
             update_colors();
         }
@@ -194,19 +215,31 @@ public class ClientRender {
                         (wand.mode== WandItem.Mode.PASTE && wand.copy_paste_buffer.size()!=0 && wand.is_alt_pressed)) {
                     preview_mode(wand.mode, matrixStack, bufferIn);
                 }
+                if(water){
+                    water=false;
+                    /*if(wand.block_buffer.get_length()>0) {
+                        for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
+                            bp.set( wand.block_buffer.buffer_x[idx],
+                                    wand.block_buffer.buffer_y[idx],
+                                    wand.block_buffer.buffer_z[idx]);
+                            wand.level.setBlock(bp,AIR,0);
+                        }
+                    }*/
+                }
             }
         }
     }
 
     private static void preview_mode(Mode mode, PoseStack matrixStack, MultiBufferSource.BufferSource bufferIn) {
-        //TODO: preview water
         MCVer.inst.pre_render(matrixStack);
         Camera camera = client.gameRenderer.getMainCamera();
-        //client.renderBuffers().bufferSource().getBuffer(RenderType.solid());
 
         Tesselator tesselator = Tesselator.getInstance();
 
         BufferBuilder bufferBuilder = tesselator.getBuilder();
+        //client.gameRenderer.lightTexture().turnOnLightLayer();
+        //GameRenderer.getRendertypeSolidShader().apply();
+        //client.gameRenderer.lightTexture().turnOffLightLayer();
         boolean fabulous_bug=false;
 
         fabulous_bug=(WandsModClient.is_forge&& Minecraft.useShaderTransparency() );
@@ -232,7 +265,7 @@ public class ClientRender {
             float nx=0.0f,ny=0.0f,nz=0.0f;
             float fr=1.0f,fg=1.0f,fb=1.0f,fa=1.0f;
             float off2=0.05f;
-            MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+            MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 0.8f);
             //WandsMod.log("mode "+mode.toString(),prnt);
 
             RenderSystem.disableTexture();
@@ -251,62 +284,89 @@ public class ClientRender {
                             if(!list.isEmpty() && wand.grid_voxel_index>=0 && wand.grid_voxel_index< list.size()) {
 
                                 if(fancy) {
-                                    //RenderSystem.enableBlend();
                                     RenderSystem.enableTexture();
-                                    RenderSystem.disableCull();
-                                    MCVer.inst.set_texture(GRID_TEXTURE);
+                                    ////RenderSystem.disableCull();
+                                    RenderSystem.enableCull();
+
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-
+                                    MCVer.inst.set_texture(GRID_TEXTURE);
                                     int vi = 0;
-
                                     for (AABB aabb : list) {
-                                        if (vi == wand.grid_voxel_index) {
+                                        if (vi == wand.grid_voxel_index)
+                                        {
+                                            nx=wand.side.getNormal().getX();
+                                            ny=wand.side.getNormal().getY();
+                                            nz=wand.side.getNormal().getZ();
                                             switch (wand.side) {
                                                 case UP:
-                                                    nx=0; ny=1.0f;nz=0.0f;
-                                                case DOWN:
-                                                    if(wand.side==Direction.DOWN)
-                                                        ny=-1.0f;
                                                     x1 = last_pos_x + aabb.minX;
-                                                    y1 = (wand.side == Direction.UP ? last_pos_y + aabb.maxY + 0.01 : last_pos_y + aabb.minY - 0.01);
+                                                    y1 = last_pos_y + aabb.maxY + 0.02;
                                                     z1 = last_pos_z + aabb.minZ;
                                                     x2 = last_pos_x + aabb.maxX;
                                                     z2 = last_pos_z + aabb.maxZ;
-                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).endVertex();
-                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).endVertex();
-                                                    bufferBuilder.vertex(x2, y1, z2).uv(1, 1).endVertex();
-                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z2).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    break;
+                                                case DOWN:
+                                                    x1 = last_pos_x + aabb.minX;
+                                                    y1 = last_pos_y + aabb.minY - 0.02;
+                                                    z1 = last_pos_z + aabb.minZ;
+                                                    x2 = last_pos_x + aabb.maxX;
+                                                    z2 = last_pos_z + aabb.maxZ;
+
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z2).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
                                                     break;
                                                 case SOUTH:
-                                                    nx=0; ny=0.0f;nz=1.0f;
-                                                case NORTH:
-                                                    if(wand.side==Direction.NORTH)
-                                                        nz=-1.0f;
                                                     x1 = last_pos_x + aabb.minX;
                                                     y1 = last_pos_y + aabb.minY;
-                                                    z1 = (wand.side == Direction.SOUTH ? last_pos_z + aabb.maxZ + 0.01 : last_pos_z + aabb.minZ - 0.01);
+                                                    z1 = last_pos_z + aabb.maxZ + 0.02;
                                                     x2 = last_pos_x + aabb.maxX;
                                                     y2 = last_pos_y + aabb.maxY;
-                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).endVertex();
-                                                    bufferBuilder.vertex(x1, y2, z1).uv(0, 1).endVertex();
-                                                    bufferBuilder.vertex(x2, y2, z1).uv(1, 1).endVertex();
-                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y2, z1).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z1).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    break;
+                                                case NORTH:
+                                                    x1 = last_pos_x + aabb.minX;
+                                                    y1 = last_pos_y + aabb.minY;
+                                                    z1 = last_pos_z + aabb.minZ - 0.02;
+                                                    x2 = last_pos_x + aabb.maxX;
+                                                    y2 = last_pos_y + aabb.maxY;
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z1).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y2, z1).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x2, y1, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
                                                     break;
                                                 case EAST:
-                                                    nx=1.0f; ny=0.0f;nz=0.0f;
-                                                case WEST:
-                                                    if(wand.side==Direction.WEST)
-                                                        nx=-1.0f;
-                                                    x1 = (wand.side == Direction.EAST ? last_pos_x + aabb.maxX + 0.01 : last_pos_x + aabb.minX - 0.01);
+                                                    x1 = last_pos_x + aabb.maxX + 0.02;
                                                     y1 = last_pos_y + aabb.minY;
                                                     z1 = last_pos_z + aabb.minZ;
                                                     y2 = last_pos_y + aabb.maxY;
                                                     z2 = last_pos_z + aabb.maxZ;
 
-                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).endVertex();
-                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).endVertex();
-                                                    bufferBuilder.vertex(x1, y2, z2).uv(1, 1).endVertex();
-                                                    bufferBuilder.vertex(x1, y2, z1).uv(1, 0).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z2).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    break;
+                                                case WEST:
+                                                    x1 = last_pos_x + aabb.minX - 0.02;
+                                                    y1 = last_pos_y + aabb.minY;
+                                                    z1 = last_pos_z + aabb.minZ;
+                                                    y2 = last_pos_y + aabb.maxY;
+                                                    z2 = last_pos_z + aabb.maxZ;
+
+                                                    bufferBuilder.vertex(x1, y1, z1).uv(0, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y1, z2).uv(0, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z2).uv(1, 1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+                                                    bufferBuilder.vertex(x1, y2, z1).uv(1, 0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+
                                                     break;
                                             }
                                         }
@@ -357,7 +417,7 @@ public class ClientRender {
                         if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
                         {
                             if(fat_lines) {
-                                RenderSystem.disableCull();
+                                //RenderSystem.disableCull();
                                 RenderSystem.enableTexture();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                                 preview_block_fat(bufferBuilder,
@@ -379,25 +439,29 @@ public class ClientRender {
 
                         if (wand.valid && has_target&& wand.block_buffer != null ) {
                             random.setSeed(0);
-                            if(fancy && !wand.destroy && !wand.has_bucket) {
+                            if(fancy && !wand.destroy && !wand.has_empty_bucket) {
                                 RenderSystem.enableTexture();
                                 RenderSystem.enableCull();
                                 //RenderSystem.enableBlend();
                                 //RenderSystem.defaultBlendFunc();
                                 MCVer.inst.set_color(1.0f,1.0f,1.0f,opacity);
                                 MCVer.inst.set_render_quads_block(bufferBuilder);
-                                //MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-                                
+                                BlockState st;
                                 for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
                                     if (wand.block_buffer.state[idx] != null) {
                                         preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
-                                        render_shape(tesselator, bufferBuilder, wand.block_buffer.state[idx],
+                                        if(wand.has_water_bucket) {
+                                            st=Blocks.WATER.defaultBlockState();
+                                        }else{
+                                            st= wand.block_buffer.state[idx];
+                                        }
+                                        render_shape(matrixStack,tesselator, bufferBuilder,st,
                                                 wand.block_buffer.buffer_x[idx],
                                                 wand.block_buffer.buffer_y[idx],
                                                 wand.block_buffer.buffer_z[idx]);
                                         if(wand.block_buffer.state[idx].getBlock() instanceof DoorBlock){
 
-                                            render_shape(tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                            render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
                                                     wand.block_buffer.buffer_x[idx],
                                                     wand.block_buffer.buffer_y[idx]+1,
                                                     wand.block_buffer.buffer_z[idx]);
@@ -411,7 +475,7 @@ public class ClientRender {
 
 
                             Color c=bo_col;
-                            if(wand.destroy){
+                            if(wand.destroy || wand.has_empty_bucket){
                                 c= destroy_col;
                             }
                             if(wand.is_alt_pressed &&  (wand.has_hoe|| wand.has_axe || wand.has_shovel)){
@@ -419,10 +483,11 @@ public class ClientRender {
                             }
                             //RenderSystem.enableDepthTest();
                             if(fat_lines ) {
-                                RenderSystem.disableCull();
+                                //RenderSystem.disableCull();
                                 //RenderSystem.disableDepthTest();
                                 RenderSystem.enableTexture();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+
                             }else{
                                 RenderSystem.enableCull();
                                 MCVer.inst.set_render_lines(bufferBuilder);
@@ -458,7 +523,7 @@ public class ClientRender {
 
                             if(fat_lines) {
                                 RenderSystem.enableTexture();
-                                RenderSystem.disableCull();
+                                //RenderSystem.disableCull();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
 
                                 preview_block_fat(bufferBuilder,
@@ -520,7 +585,7 @@ public class ClientRender {
                         y2=(wand.copy_y2>wand.copy_y1)? (wand.copy_y2+off2) : (wand.copy_y2-off2);
                         z2=(wand.copy_z2>wand.copy_z1)? (wand.copy_z2+off2) : (wand.copy_z2-off2);
                         if(fat_lines) {
-                            RenderSystem.disableCull();
+                            //RenderSystem.disableCull();
                             RenderSystem.enableTexture();
                             MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                             preview_block_fat(bufferBuilder,
@@ -552,11 +617,10 @@ public class ClientRender {
                             RenderSystem.enableTexture();
                             MCVer.inst.set_color(1.0f,1.0f,1.0f,opacity);
                             MCVer.inst.set_render_quads_block(bufferBuilder);
-                            //MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                             random.setSeed(0);
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(Rotation.values()[last_rot]);
-                                render_shape(tesselator, bufferBuilder, b.state, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                render_shape(matrixStack,tesselator, bufferBuilder, b.state, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
@@ -567,7 +631,7 @@ public class ClientRender {
                         x2=Integer.MIN_VALUE;y2=Integer.MIN_VALUE;z2=Integer.MIN_VALUE;
 
                         if(fat_lines) {
-                            RenderSystem.disableCull();
+                            //RenderSystem.disableCull();
                             RenderSystem.enableTexture();
                             MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                         }else {
@@ -682,46 +746,54 @@ public class ClientRender {
         MCVer.inst.set_color(c.r,c.g,c.b,c.a);
         MCVer.inst.set_texture(LINE_TEXTURE);
         float w=fat_lines_width;
-
-        //north
-        quad_line(bufferBuilder,  0, w,0, fx1, fy1  , fz1, fx2, fy1 , fz1);
-        quad_line(bufferBuilder,  0,-w,0, fx1, fy2  , fz1, fx2, fy2 , fz1);
-        quad_line(bufferBuilder,  w, 0,0, fx1, fy1+w, fz1, fx1, fy2-w, fz1);
-        quad_line(bufferBuilder, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1);
-        //south
-        quad_line(bufferBuilder,  0, w,0, fx1, fy1  , fz2, fx2, fy1,   fz2);
-        quad_line(bufferBuilder,  0,-w,0, fx1, fy2  , fz2, fx2, fy2,   fz2);
-        quad_line(bufferBuilder,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2);
-        quad_line(bufferBuilder, -w, 0,0, fx2, fy1+w, fz2, fx2, fy2-w, fz2);
-        //up
-        quad_line(bufferBuilder, w,0,0, fx1, fy2, fz1,  fx1, fy2, fz2);
-        quad_line(bufferBuilder, -w,0,0, fx2, fy2, fz1,  fx2, fy2, fz2);
-        quad_line(bufferBuilder, 0,0,w, fx1+w, fy2, fz1,  fx2-w, fy2, fz1);
-        quad_line(bufferBuilder, 0,0,-w, fx1+w, fy2, fz2,  fx2-w, fy2, fz2);
-        //down
-        quad_line(bufferBuilder, w,0,0, fx1, fy1, fz1,  fx1, fy1, fz2);
-        quad_line(bufferBuilder, -w,0,0, fx2, fy1, fz1,  fx2, fy1, fz2);
-        quad_line(bufferBuilder, 0,0,w, fx1+w, fy1, fz1,  fx2-w, fy1, fz1);
-        quad_line(bufferBuilder, 0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2);
-        //east
-        quad_line(bufferBuilder, 0,w,0, fx2, fy1, fz1,  fx2, fy1, fz2);
-        quad_line(bufferBuilder, 0,-w,0, fx2, fy2, fz1,  fx2, fy2, fz2);
-        quad_line(bufferBuilder, 0,0,w, fx2, fy1+w, fz1,  fx2, fy2-w, fz1);
-        quad_line(bufferBuilder, 0,0,-w, fx2, fy1+w, fz2,  fx2, fy2-w, fz2);
-        //west
-        quad_line(bufferBuilder, 0,w,0, fx1, fy1, fz1,  fx1, fy1, fz2);
-        quad_line(bufferBuilder, 0,-w,0, fx1, fy2, fz1,  fx1, fy2, fz2);
-        quad_line(bufferBuilder, 0,0,w, fx1, fy1+w, fz1,  fx1, fy2-w, fz1);
-        quad_line(bufferBuilder, 0,0,-w, fx1, fy1+w, fz2,  fx1, fy2-w, fz2);
+        float nx=0.0f,ny=0.0f,nz=-1.0f;
+        //north -z
+        quad_line(bufferBuilder,  0, w,0, fx1, fy1  , fz1, fx2, fy1  , fz1,nx,ny,nz);
+        quad_line(bufferBuilder,  0,-w,0, fx2, fy2  , fz1, fx1, fy2  , fz1,nx,ny,nz);
+        quad_line(bufferBuilder,  w, 0,0, fx1, fy2-w, fz1, fx1, fy1+w, fz1,nx,ny,nz);
+        quad_line(bufferBuilder, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1,nx,ny,nz);
+        //south +z
+        nx=0.0f;ny=0.0f;nz=1.0f;
+        quad_line(bufferBuilder,  0, w,0,  fx2, fy1,   fz2,fx1, fy1  , fz2,nx,ny,nz);
+        quad_line(bufferBuilder,  0,-w,0, fx1, fy2  , fz2, fx2, fy2,   fz2,nx,ny,nz);
+        quad_line(bufferBuilder,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2,nx,ny,nz);
+        quad_line(bufferBuilder, -w, 0,0,  fx2, fy2-w, fz2,fx2, fy1+w, fz2,nx,ny,nz);
+        //up +y
+        nx=0.0f;ny=1.0f;nz=0.0f;
+        quad_line(bufferBuilder,  w,0, 0, fx1  , fy2, fz2, fx1 , fy2, fz1,nx,ny,nz);
+        quad_line(bufferBuilder, -w,0, 0, fx2  , fy2, fz1, fx2 , fy2, fz2,nx,ny,nz);
+        quad_line(bufferBuilder,  0,0, w, fx1+w, fy2, fz1, fx2-w, fy2, fz1,nx,ny,nz);
+        quad_line(bufferBuilder,  0,0,-w, fx2-w, fy2, fz2, fx1+w, fy2, fz2,nx,ny,nz);
+        //down -y
+        nx=0.0f;ny=-1.0f;nz=0.0f;
+        quad_line(bufferBuilder,  w,0, 0, fx1, fy1, fz1, fx1  , fy1, fz2,nx,ny,nz);
+        quad_line(bufferBuilder, -w,0, 0, fx2  , fy1, fz2,fx2, fy1, fz1,nx,ny,nz);
+        quad_line(bufferBuilder,  0,0, w, fx2-w, fy1, fz1,fx1+w, fy1, fz1,nx,ny,nz);
+        quad_line(bufferBuilder,  0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2,nx,ny,nz);
+        //east +x
+        nx=1.0f;ny=0.0f;nz=0.0f;
+        quad_line(bufferBuilder, 0, w, 0, fx2,   fy1, fz1, fx2,   fy1, fz2,nx,ny,nz);
+        quad_line(bufferBuilder, 0,-w, 0, fx2,   fy2, fz2, fx2, fy2  , fz1,nx,ny,nz);
+        quad_line(bufferBuilder, 0, 0, w, fx2, fy2-w, fz1, fx2, fy1+w, fz1,nx,ny,nz);
+        quad_line(bufferBuilder, 0,0,-w, fx2, fy1+w, fz2,  fx2, fy2-w, fz2,nx,ny,nz);
+        //west -x
+        nx=-1.0f;ny=0.0f;nz=0.0f;
+        quad_line(bufferBuilder, 0, w,0,   fx1,   fy1, fz2,fx1,   fy1, fz1,nx,ny,nz);
+        quad_line(bufferBuilder, 0,-w,0, fx1,   fy2, fz1,  fx1,   fy2, fz2,nx,ny,nz);
+        quad_line(bufferBuilder, 0,0, w, fx1, fy1+w, fz1,  fx1, fy2-w, fz1,nx,ny,nz);
+        quad_line(bufferBuilder, 0,0,-w,   fx1, fy2-w, fz2,fx1, fy1+w, fz2,nx,ny,nz);
 
     }
 
-    private static void quad_line(BufferBuilder bufferBuilder,float wx,float wy,float wz,double lx1, double ly1,double lz1,double lx2, double ly2,double lz2){
-
-        bufferBuilder.vertex(lx1, ly1, lz1).uv(0,0).endVertex();
-        bufferBuilder.vertex(lx2, ly2, lz2).uv(1,0).endVertex();
-        bufferBuilder.vertex(lx2+wx, ly2+wy, lz2+wz).uv(1,1).endVertex();
-        bufferBuilder.vertex(lx1+wx, ly1+wy, lz1+wz).uv(0,1).endVertex();
+    private static void quad_line(BufferBuilder bufferBuilder,
+                                  float wx,float wy,float wz,
+                                  double lx1, double ly1,double lz1,
+                                  double lx2, double ly2,double lz2,
+                                  float nx,float ny,float nz){
+        bufferBuilder.vertex(lx1, ly1, lz1         ).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        bufferBuilder.vertex(lx1+wx, ly1+wy, lz1+wz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        bufferBuilder.vertex(lx2+wx, ly2+wy, lz2+wz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        bufferBuilder.vertex(lx2, ly2, lz2         ).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
     }
 
     private static void player_facing_line(BufferBuilder bufferBuilder,double cx,double cy,double cz,double lx1, double ly1,double lz1,double lx2, double ly2,double lz2,Color c){
@@ -748,10 +820,10 @@ public class ClientRender {
         }
         MCVer.inst.set_texture(LINE_TEXTURE);
         MCVer.inst.set_color(c.r,c.g,c.b,c.a);
-        bufferBuilder.vertex(lx1-nx, ly1-ny, lz1-nz).uv(0,0).endVertex();
-        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).endVertex();
-        bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz).uv(1,1).endVertex();
-        bufferBuilder.vertex(lx1+nx, ly1+ny, lz1+nz).uv(0,1).endVertex();
+        bufferBuilder.vertex(lx1-nx, ly1-ny, lz1-nz).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx1+nx, ly1+ny, lz1+nz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
 
     }
     private static void set_grid_v(int i,double x, double y,double z){
@@ -969,42 +1041,146 @@ public class ClientRender {
 
     }
 
-    static void render_shape(Tesselator tesselator,BufferBuilder bufferBuilder,BlockState state,double x, double y,double z){
+    static void render_shape(PoseStack matrixStack,Tesselator tesselator,BufferBuilder bufferBuilder,BlockState state,double x, double y,double z){
         float vx=0;
         float vy=0;
         float vz=0;
         float u=0;
         float v=0;
+        float uu=0;
+        float vv=0;
+        float r= block_col.r;
+        float g= block_col.g;
+        float b= block_col.b;
+        float a= block_col.a;
+        BakedModel bakedModel;
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        //BlockPos bp=new BlockPos(x,y,z);
+        bp.set(x,y,z);
+        if(wand.has_water_bucket && wand.level.getBlockState(bp).isAir()) {
+            //matrixStack2.setIdentity();
+            //matrixStack2.translate(x, y, z);
+            //wand.level.setBlock(bp,state,0);
+            water=true;
+            FluidState fluidState=Fluids.WATER.defaultFluidState();
+            float h=0.875f;
+            int i = BiomeColors.getAverageWaterColor(wand.level, bp);
+            r = (float)(i >> 16 & 255) / 255.0F;
+            g = (float)(i >> 8 & 255) / 255.0F;
+            b = (float)(i & 255) / 255.0F;
+            //bakedModel = Minecraft.getInstance().getModelManager().getBlockModelShaper().getBlockModel(Blocks.WATER.defaultBlockState());
 
-        BakedModel bakedModel = blockRenderer.getBlockModel(state);
+            //matrixStack2.setIdentity();
+            //matrixStack2.translate(x, y, z);
+            RenderSystem.enableCull();
+            //blockRenderer.renderSingleBlock(state,matrixStack,mbs,-1,OverlayTexture.NO_OVERLAY);
+            //blockRenderer.getModelRenderer().renderModel(matrixStack2.last(), bufferBuilder, state, bakedModel, 0,0, 0, 0, OverlayTexture.NO_OVERLAY);
+            TextureAtlasSprite water_sprite = ModelBakery.WATER_FLOW.sprite();
+
+            MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
+            int bf = LevelRenderer.getLightColor(wand.level, bp);
+            bf=-1;
+            uu = water_sprite.getU0();
+            vv = water_sprite.getV0();
+            u = water_sprite.getU1();
+            v = water_sprite.getV1();
+            float o=0.1f;
+            //up
+            bufferBuilder.vertex(x  +o,y+h-o,z  +o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z  +o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
+
+
+            //down
+            bufferBuilder.vertex(x  +o,y+o,z  +o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z  +o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, -1.0F, 0.0F).endVertex();
+
+            //north -z
+            bufferBuilder.vertex(x  +o,y+o,z+o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z+o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+
+            //south +z
+            bufferBuilder.vertex(x  +o,y+o,z+1-o).color(r,g,b, a).uv(u ,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o,z+1-o).color(r,g,b, a).uv(uu,  v).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(uu, vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+            bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(0.0F, 0.0F, 1.0F).endVertex();
+
+            //east
+            bufferBuilder.vertex(x+o,y+o,z+o).color(r,g,b,     a).uv(uu,  v).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+o,z+1-o).color(r,g,b,   a).uv(u ,  v).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+h-o,z+1-o).color(r,g,b, a).uv(u , vv).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+o,y+h-o,z+o).color(r,g,b,   a).uv(uu, vv).uv2(bf).normal(-1.0F, 0.0F, 0.0F).endVertex();
+
+            bufferBuilder.vertex(x+1-o,y+o  ,z+o  ).color(r,g,b,a).uv(uu,  v).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+o  ).color(r,g,b,a).uv(uu, vv).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b,a).uv(u , vv).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+            bufferBuilder.vertex(x+1-o,y+o  ,z+1-o).color(r,g,b,a).uv(u ,  v).uv2(bf).normal(1.0F, 0.0F, 0.0F).endVertex();
+
+
+            //blockRenderer.renderLiquid(bp,wand.level,bufferBuilder, Fluids.WATER.defaultFluidState());
+            //wand.level.setBlock(bp,Blocks.AIR.defaultBlockState(),0);
+            return;
+        }
+        /*matrixStack2.pushPose();
+        if(bakedModel!=null) {
+            matrixStack2.setIdentity();
+            matrixStack2.translate(x, y, z);
+            BlockPos pp=new BlockPos(x,y,z);
+            long seed=state.getSeed(pp);
+            //blockRenderer.getModelRenderer().tesselateBlock(wand.level,bakedModel,state,pp,matrixStack2,bufferBuilder,true,new Random(),seed,OverlayTexture.NO_OVERLAY);
+            blockRenderer.getModelRenderer().tesselateWithoutAO(wand.level,bakedModel,state,pp,matrixStack2,bufferBuilder,true,new Random(),seed,OverlayTexture.NO_OVERLAY);
+            //blockRenderer.getModelRenderer().renderModel(matrixStack2.last(), bufferBuilder, state, bakedModel, 0,0, 0, 0, OverlayTexture.NO_OVERLAY);
+        }
+        matrixStack2.popPose();*/
         //TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+        bakedModel = blockRenderer.getBlockModel(state);
         if(bakedModel!=null) {
             for(Direction dir: dirs) {
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
 
-                if (!bake_list.isEmpty()) {
+                if (!bake_list.isEmpty() ) {
+                    matrixStack2.setIdentity();
+                    matrixStack2.translate(x, y, z);
                     for (BakedQuad quad : bake_list) {
-                        MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
-                        int[] verts = quad.getVertices();
-                        Vec3i vec3i = quad.getDirection().getNormal();
-                        Vector3f normal = new Vector3f((float)vec3i.getX(), (float)vec3i.getY(), (float)vec3i.getZ());
-                        int n=verts.length/4;
-                        //WandsMod.log("vers length: "+verts.length+" n: "+n,prnt);
-                        for (int i = 0; i < 4; ++i) {
-                            int j = i * n;
-                            vx = Float.intBitsToFloat(verts[j    ]);
-                            vy = Float.intBitsToFloat(verts[j + 1]);
-                            vz = Float.intBitsToFloat(verts[j + 2]);
-                            u  = Float.intBitsToFloat(verts[j + 4]);
-                            v  = Float.intBitsToFloat(verts[j + 5]);
+                        if(Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp)) {
+                            MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
+                            int[] verts = quad.getVertices();
+                            int n = verts.length / 4;
+                            int ii = -1;
+                            if (quad.isTinted()) {
+                                ii = client.getBlockColors().getColor(state, wand.level, last_pos);
+                                r = (float) (ii >> 16 & 255) / 255.0F;
+                                g = (float) (ii >> 8 & 255) / 255.0F;
+                                b = (float) (ii & 255) / 255.0F;
+                            }else{
+                                r= block_col.r;
+                                g= block_col.g;
+                                b= block_col.b;
+                            }
+                            float f = wand.level.getShade(quad.getDirection(), quad.isShade());
 
-                            bufferBuilder
-                                    .vertex(x + vx,y + vy,z + vz)
-                                    .uv(u, v)
-                                    .color(block_col.r, block_col.g, block_col.b, block_col.a)
-                                    .normal(normal.x(),normal.y(),normal.z())
-                                    .endVertex();
+                            bufferBuilder.putBulkData(matrixStack2.last(), quad, new float[]{f, f, f, f}, r, g, b, new int[]{-1, -1, -1, -1}, n, true);
+                            /*
+                            for (int i = 0; i < 4; ++i) {
+                                int j = i * n;
+                                vx = Float.intBitsToFloat(verts[j]);
+                                vy = Float.intBitsToFloat(verts[j + 1]);
+                                vz = Float.intBitsToFloat(verts[j + 2]);
+                                u = Float.intBitsToFloat(verts[j + 4]);
+                                v = Float.intBitsToFloat(verts[j + 5]);
+
+                                bufferBuilder
+                                        .vertex(x + vx, y + vy, z + vz)
+                                        .uv(u, v)
+                                        .color(r, g, b, block_col.a)
+                                        .normal((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ())
+                                        .endVertex();
+                            }*/
                         }
                     }
                 }
