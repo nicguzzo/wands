@@ -42,14 +42,22 @@ public class WandsModClient {
     static boolean alt =false;
     public static boolean has_optifine=false;
     public static boolean is_forge=false;
+    public static KeyMapping wand_menu_km;
+    public static KeyMapping palette_menu_km;
     public static void initialize() {
+        wand_menu_km=new KeyMapping("key.wands.wand_menu",WandsMod.wand_menu_key,"category.wands");
+        palette_menu_km=new KeyMapping("key.wands.palette_menu",WandsMod.palette_menu_key,"category.wands");
         KeyMapping[] km={
             new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"category.wands"),
+            new KeyMapping("key.wands.wand_action",WandsMod.wand_action_key,"category.wands"),
+            wand_menu_km,
             new KeyMapping("key.wands.wand_orientation",WandsMod.wand_orientation_key,"category.wands"),
             new KeyMapping("key.wands.wand_invert",WandsMod.wand_invert_key,"category.wands"),
-            new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"category.wands"),
             new KeyMapping("key.wands.wand_fill_circle",WandsMod.wand_fill_circle_key,"category.wands"),
-            new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo,"category.wands")
+            new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo_key,"category.wands"),
+            palette_menu_km,
+            new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"category.wands"),
+            //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"category.wands"),
         };
         for(KeyMapping k: km){
             /*//beginMC1_16_5
@@ -87,6 +95,7 @@ public class WandsModClient {
         //endMC1_17_1 
         ClientLifecycleEvent.CLIENT_SETUP.register(e->{
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+            MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
         });
         NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
@@ -104,8 +113,6 @@ public class WandsModClient {
         });
         NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{
             long seed=packet.readLong();
-            int  axis=packet.readInt();
-            int  plane=packet.readInt();
             int  mode=packet.readInt();
             int  slot=packet.readInt();
             boolean  xp=packet.readBoolean();
@@ -113,8 +120,8 @@ public class WandsModClient {
             float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    ClientRender.wand.axis=Direction.Axis.values()[axis];
-                    ClientRender.wand.plane= WandItem.Plane.values()[plane];
+                    //ClientRender.wand.axis=Direction.Axis.values()[axis];
+                    //WandItem.setAxis(wand_stack);
                     ClientRender.wand.palette_seed = seed;
                     ClientRender.wand.mode= WandItem.Mode.values()[mode];
                     if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
@@ -147,6 +154,19 @@ public class WandsModClient {
         NetworkManager.sendToServer(WandsMod.PALETTE_PACKET, packet);
     }
 
+    public static void send_wand(int mode,int pmode,int orientation,int plane,int axis,int invert,int fill,int rot){
+        FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
+        packet.writeInt(mode);
+        packet.writeInt(pmode);
+        packet.writeInt(orientation);
+        packet.writeInt(plane);
+        packet.writeInt(axis);
+        packet.writeInt(invert);
+        packet.writeInt(fill);
+        packet.writeInt(rot);
+        NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
+    }
+
     public static void render_wand_info(PoseStack poseStack){
         
         Minecraft client = Minecraft.getInstance();
@@ -164,9 +184,11 @@ public class WandsModClient {
                 Wand wand=ClientRender.wand;
                 WandItem wand_item=(WandItem)stack.getItem();
                 WandItem.Mode mode=wand_item.getMode(stack);
+                WandItem.Action action=wand_item.getAction(stack);
 
                 String ln1="";
-                String ln2="Mode: "+mode.toString();
+                String ln2="Action: "+action.toString();
+                String ln3="Mode: "+mode.toString();
                 if(wand.valid) {
                     switch(mode){
                         case DIRECTION:
@@ -182,8 +204,8 @@ public class WandsModClient {
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                             break;
                         case RECT:
-                            WandItem.Plane plane=wand_item.getPlane(stack);
-                            ln1="Blocks: "+wand.block_buffer.get_length()+" Plane: "+plane;
+                            Direction.Axis axis=wand_item.getAxis(stack);
+                            ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
                             break;
                         case COPY:
                         case PASTE:
@@ -192,11 +214,12 @@ public class WandsModClient {
                     }
                 }
                 //int w=font.width(msg);
-                int h=2*font.lineHeight;
+                int h=3*font.lineHeight;
                 float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
                 float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
                 font.draw(poseStack,ln1,x,y,0xffffff);
                 font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
+                font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
             }
         }
     }

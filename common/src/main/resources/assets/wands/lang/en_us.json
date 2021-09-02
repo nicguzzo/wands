@@ -13,5 +13,8 @@
     "key.wands.wand_palette_mode": "Rotation/Palette Mode",
     "key.wands.wand_fill_circle": "Circle fill",
     "key.wands.wand_undo": "Undo",
+    "key.wands.palette_menu": "Palette Menu",
+    "key.wands.wand_menu": "Wand Menu",
+    "key.wands.wand_action": "Action",
     "itemGroup.wands.wands_tab": "Building Wands"
   }

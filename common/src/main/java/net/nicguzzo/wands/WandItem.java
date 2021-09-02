@@ -77,16 +77,55 @@ public class WandItem extends Item{
     public enum Plane {
         XZ,XY,YZ
     }
+
     //TODO: state placement mode
-    public enum BState {
-        CLONE,DEFAULT
+   /* public enum StateMode {
+        CLONE{
+            public String toString() {
+                return "Clone";
+            }
+        },
+        DEFAULT{
+            public String toString() {
+                return "Default";
+            }
+        }
+    }*/
+    public enum Action{
+        PLACE{
+            public String toString() {
+                return "Place";
+            }
+        },
+        REPLACE{
+            public String toString() {
+                return "Replace";
+            }
+        },
+        DESTROY{
+            public String toString() {
+                return "Destroy";
+            }
+        },
+        USE{
+            public String toString() {
+                return "Use";
+            }
+        }
     }
     
     public int limit = 0;
     public boolean removes_water;
     public boolean removes_lava;
-    static private final int max_mode=Mode.values().length;
-    static private final Mode[] modes=Mode.values();
+
+    static public final Mode[] modes=Mode.values();
+    //static public final StateMode[] state_modes=StateMode.values();
+    static public final Action[] actions=Action.values();
+    static public final Orientation[] orientations=Orientation.values();
+    static public final Plane[] planes=Plane.values();
+    static public final Direction.Axis[] axes=Direction.Axis.values();
+    static public final Rotation[] rotations=Rotation.values();
+
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
         super(properties);
@@ -97,16 +136,21 @@ public class WandItem extends Item{
     static public Mode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()) {
             int m=stack.getOrCreateTag().getInt("mode");
-            if(m<max_mode)
+            if(m<modes.length)
                 return modes[m];
         }
         return Mode.DIRECTION;
     }
-
+    static public void setMode(ItemStack stack,Mode mode) {
+        if(stack!=null && !stack.isEmpty()) {
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("mode", mode.ordinal());
+        }
+    }
     static public void nextMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int mode=(tag.getInt("mode")+1) % (max_mode);
+            int mode=(tag.getInt("mode")+1) % (modes.length);
             tag.putInt("mode", mode);
         }
     }
@@ -115,7 +159,7 @@ public class WandItem extends Item{
             CompoundTag tag=stack.getOrCreateTag();
             int mode=tag.getInt("mode")-1;
             if(mode<0){
-                mode=max_mode-1;
+                mode=modes.length-1;
             }
             tag.putInt("mode", mode);
         }
@@ -132,12 +176,24 @@ public class WandItem extends Item{
             tag.putBoolean("inverted", !inverted);
         }
     }
+    static public void setInvert(ItemStack stack,boolean i) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putBoolean("inverted", i);
+        }
+    }
     static public Orientation getOrientation(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             int o=stack.getOrCreateTag().getInt("orientation");
-            return Orientation.values()[o];
+            return orientations[o];
         }
         return Orientation.ROW;
+    }
+    static public void setOrientation(ItemStack stack,Orientation o) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("orientation", o.ordinal());
+        }
     }
     static public void nextOrientation(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
@@ -150,10 +206,16 @@ public class WandItem extends Item{
         Plane plane=Plane.XZ;
         if(stack!=null && !stack.isEmpty()){
             int p=stack.getOrCreateTag().getInt("plane");
-            if(p>=0 && p< Plane.values().length)
-                plane=Plane.values()[p];
+            if(p>=0 && p<planes.length)
+                plane=planes[p];
         }
         return plane;
+    }
+    static public void setPlane(ItemStack stack,Plane p) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("plane", p.ordinal());
+        }
     }
     static public void nextPlane(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
@@ -169,6 +231,12 @@ public class WandItem extends Item{
             tag.putBoolean("cfill", !cfill);
         }
     }
+    static public void setFill(ItemStack stack,boolean cfill) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putBoolean("cfill",cfill);
+        }
+    }
     static public boolean isCircleFill(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             return stack.getOrCreateTag().getBoolean("cfill");
@@ -176,16 +244,101 @@ public class WandItem extends Item{
         return false;
     }
 
-    static public int getRotation(ItemStack stack) {
+    static public Rotation getRotation(ItemStack stack) {
         if(stack!=null && !stack.isEmpty())
-            return stack.getOrCreateTag().getInt("rotation");
-        return 0;
+            return rotations[stack.getOrCreateTag().getInt("rotation")];
+        return Rotation.NONE;
     }
     static public void nextRotation(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int rot=(tag.getInt("rotation")+1) % Rotation.values().length;
+            int rot=(tag.getInt("rotation")+1) % rotations.length;
             tag.putInt("rotation", rot);
+        }
+    }
+    static public void setRotation(ItemStack stack,Rotation rot) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("rotation", rot.ordinal());
+        }
+    }
+    /*static public StateMode getStateMode(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()) {
+            int m=stack.getOrCreateTag().getInt("state_mode");
+            if(m<state_modes.length)
+                return state_modes[m];
+        }
+        return StateMode.CLONE;
+    }
+    static public void nextStateMode(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int mode=(tag.getInt("state_mode")+1) % (state_modes.length);
+            tag.putInt("state_mode", mode);
+        }
+    }
+    static public void prevStateMode(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int mode=tag.getInt("state_mode")-1;
+            if(mode<0){
+                mode=state_modes.length-1;
+            }
+            tag.putInt("state_mode", mode);
+        }
+    }*/
+    static public Action getAction(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()) {
+            int m=stack.getOrCreateTag().getInt("action");
+            if(m<actions.length)
+                return actions[m];
+        }
+        return Action.PLACE;
+    }
+    static public void setAction(ItemStack stack,Action a) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("action", a.ordinal());
+        }
+    }
+    static public void nextAction(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int a=(tag.getInt("action")+1) % (actions.length);
+            tag.putInt("action", a);
+        }
+    }
+    static public void prevAction(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int a=tag.getInt("action")-1;
+            if(a<0){
+                a=actions.length-1;
+            }
+            tag.putInt("action", a);
+        }
+    }
+
+    static public Direction.Axis getAxis(ItemStack stack) {
+        Direction.Axis axis=Direction.Axis.Y;
+        if(stack!=null && !stack.isEmpty()){
+            int p=stack.getOrCreateTag().getInt("axis");
+            if(p>=0 && p< axes.length)
+                axis=axes[p];
+        }
+        return axis;
+    }
+    static public void setAxis(ItemStack stack,Direction.Axis axis) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("axis", axis.ordinal());
+        }
+    }
+    static public void nextAxis(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()){
+            CompoundTag tag=stack.getOrCreateTag();
+            int axis=(tag.getInt("axis")+1) % 3;
+            tag.putInt("axis", axis);
         }
     }
     @Override
@@ -288,7 +441,8 @@ public class WandItem extends Item{
 
         list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
         list.add(new TextComponent("limit: " + this.limit ));
-        list.add(new TextComponent("orientation: "+Orientation.values()[tag.getInt("orientation")].toString()));
+        list.add(new TextComponent("orientation: "+orientations[tag.getInt("orientation")].toString()));
+        list.add(new TextComponent("axis: "+axes[tag.getInt("axis")].toString()));
         list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
         list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));

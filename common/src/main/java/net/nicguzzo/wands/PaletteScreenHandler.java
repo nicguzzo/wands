@@ -47,12 +47,14 @@ public class PaletteScreenHandler extends AbstractContainerMenu {
             int n;
             for(o = 0; o < 3; ++o) {
                 for(n = 0; n < 9; ++n) {
-                   this.addSlot(new Slot(simplecontainer, n + o * 9, 8 + n * 18, 18 + o * 18));
+                   this.addSlot(new Slot(simplecontainer, n + o * 9,
+                           8 + n * 18, 18 + o * 18));
                 }
             }
             for(o = 0; o < 3; ++o) {                
                 for(n = 0; n < 9; ++n) {
-                   this.addSlot(new Slot(playerInventory, n + o * 9 + 9, 8 + n * 18, 84 + o * 18));
+                   this.addSlot(new Slot(playerInventory, n + o * 9 + 9,
+                           8 + n * 18, 84 + o * 18));
                 }
             }
             for(o = 0; o < 9; ++o) {

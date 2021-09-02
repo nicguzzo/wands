@@ -26,6 +26,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
+import net.nicguzzo.wands.WandScreenHandler;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.WandsModClient;
 import net.nicguzzo.wands.mcver.MCVer;
@@ -134,6 +135,23 @@ public class MCVer1_17_1 extends MCVer {
             @Override
             public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
                 return new PaletteScreenHandler(syncId, inv, paletteItemStack);
+            }
+        });
+    }
+    @Override
+    public void open_wand_menu(ServerPlayer player, ItemStack wandItemStack) {
+        MenuRegistry.openExtendedMenu(player, new ExtendedMenuProvider(){
+            @Override
+            public void saveExtraData(FriendlyByteBuf packetByteBuf) {
+                packetByteBuf.writeItem(wandItemStack);
+            }
+            @Override
+            public Component getDisplayName(){
+                return new TranslatableComponent(wandItemStack.getItem().getDescriptionId());
+            }
+            @Override
+            public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
+                return new WandScreenHandler(syncId, inv, wandItemStack);
             }
         });
     }

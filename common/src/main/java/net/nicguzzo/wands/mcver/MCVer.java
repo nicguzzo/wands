@@ -37,6 +37,7 @@ public abstract class MCVer{
     public abstract void post_render(PoseStack poseStack);
     public abstract void send_to_player(ServerPlayer player, ResourceLocation id, FriendlyByteBuf buf);
     public abstract void open_palette(ServerPlayer player, ItemStack paletteItemStack);
+    public abstract void open_wand_menu(ServerPlayer player, ItemStack wandItemStack);
     public abstract void set_carried(Player player, AbstractContainerMenu menu, ItemStack itemStack);
     public abstract ItemStack get_carried(Player player,AbstractContainerMenu menu);
     public final class NbtType {

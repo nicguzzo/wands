@@ -43,12 +43,14 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
                 WandsModClient.send_palette(false,true);
             }
         });
-        //1.16.5
+        /*//beginMC1_16_5
         this.addWidget(btn_mode);
         this.addWidget(btn_rotate);
-        //1.17.1
-        //this.addRenderableWidget(btn_mode);
-        //this.addRenderableWidget(btn_rotate);
+        //endMC1_16_5*/
+        //beginMC1_17_1
+        this.addRenderableWidget(btn_mode);
+        this.addRenderableWidget(btn_rotate);
+        //endMC1_17_1
 
     }
 

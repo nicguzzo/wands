@@ -59,7 +59,7 @@ public class ClientRender {
     static BlockPos last_pos=null;
     static Direction last_side=null;
     static Mode last_mode;
-    static int last_rot=0;
+    static Rotation last_rot=Rotation.NONE;
     static boolean last_alt=false;
     //static int last_y=0;
     static int last_buffer_size=-1;
@@ -126,6 +126,7 @@ public class ClientRender {
             update_colors();
         }
         opacity=WandsMod.config.preview_opacity;
+        //opacity=0.6f;
         /*if(WandsModClient.has_optifine){
             fancy=false;
         }else {*/
@@ -160,7 +161,7 @@ public class ClientRender {
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode==Mode.PASTE && wand.is_alt_pressed)) {
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 has_target=true;
-                int rot = WandItem.getRotation(stack);
+                Rotation rot = WandItem.getRotation(stack);
                 WandItem.Orientation orientation = WandItem.getOrientation(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
@@ -441,7 +442,7 @@ public class ClientRender {
 
                         if (wand.has_empty_bucket || (wand.valid && has_target&& wand.block_buffer != null )) {
                             random.setSeed(0);
-                            if(fancy && !wand.destroy && !wand.has_empty_bucket) {
+                            if(fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
                                 RenderSystem.enableTexture();
                                 RenderSystem.enableCull();
                                 //RenderSystem.enableBlend();
@@ -492,7 +493,7 @@ public class ClientRender {
                             if(wand.destroy || wand.has_empty_bucket){
                                 c= destroy_col;
                             }
-                            if(wand.is_alt_pressed &&  (wand.has_hoe|| wand.has_axe || wand.has_shovel)){
+                            if(wand.use &&  (wand.has_hoe|| wand.has_axe || wand.has_shovel)){
                                 c= tool_use_col;
                             }
                             //RenderSystem.enableDepthTest();
@@ -633,7 +634,7 @@ public class ClientRender {
                             MCVer.inst.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
-                                BlockPos p = b.pos.rotate(Rotation.values()[last_rot]);
+                                BlockPos p = b.pos.rotate(last_rot);
                                 render_shape(matrixStack,tesselator, bufferBuilder, b.state, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
                             }
                             tesselator.end();
@@ -652,7 +653,7 @@ public class ClientRender {
                             MCVer.inst.set_render_lines(bufferBuilder);
                         }
                         for (CopyPasteBuffer b : wand.copy_paste_buffer) {
-                            BlockPos p = b.pos.rotate(Rotation.values()[last_rot]);
+                            BlockPos p = b.pos.rotate(last_rot);
                             double x = b_pos.getX() + p.getX();
                             double y = b_pos.getY() + p.getY();
                             double z = b_pos.getZ() + p.getZ();
@@ -844,9 +845,9 @@ public class ClientRender {
         MCVer.inst.set_texture(LINE_TEXTURE);
         MCVer.inst.set_color(c.r,c.g,c.b,c.a);
         bufferBuilder.vertex(lx1-nx, ly1-ny, lz1-nz).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
-        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
-        bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
         bufferBuilder.vertex(lx1+nx, ly1+ny, lz1+nz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
 
     }
     private static void set_grid_v(int i,double x, double y,double z){
@@ -1145,20 +1146,40 @@ public class ClientRender {
 
         bakedModel = blockRenderer.getBlockModel(state);
         if(bakedModel!=null) {
+            //if(wand.replace){
+                //RenderSystem.disableDepthTest();
+            //}
             for(Direction dir: dirs) {
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
-
                 if (!bake_list.isEmpty() ) {
                     matrixStack2.setIdentity();
-                    matrixStack2.translate(x, y, z);
+                    if(wand.replace&& wand.mode!=Mode.COPY && wand.mode!=Mode.PASTE ){
+                        Vec3i n=wand.side.getNormal();
+                        matrixStack2.translate(
+                                x+(0.5f*(1.0f-n.getX()))+n.getX(),
+                                y+(0.5f*(1.0f-n.getY()))+n.getY(),
+                                z+(0.5f*(1.0f-n.getZ()))+n.getZ()
+                        );
+                        matrixStack2.scale(0.5f,0.5f,0.5f);
+                        matrixStack2.translate(-0.5f,-0.5f,-0.5f);
+                    }else{
+                        matrixStack2.translate(x, y, z);
+                    }
+
                     for (BakedQuad quad : bake_list) {
-                        if(Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp)) {
+                        if(wand.replace || Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp))
+                        {
                             MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
                             int[] verts = quad.getVertices();
                             int n = verts.length / 4;
                             int ii = -1;
                             if (quad.isTinted()) {
-                                ii = client.getBlockColors().getColor(state, wand.level, last_pos);
+                                if(state.getBlock() instanceof GrassBlock)
+                                    ii=BiomeColors.getAverageGrassColor(wand.level, bp);
+                                else if(state.getBlock() instanceof LeavesBlock)
+                                    ii=BiomeColors.getAverageFoliageColor(wand.level, bp);
+                                else
+                                    ii = client.getBlockColors().getColor(state, wand.level, last_pos);
                                 r = (float) (ii >> 16 & 255) / 255.0F;
                                 g = (float) (ii >> 8 & 255) / 255.0F;
                                 b = (float) (ii & 255) / 255.0F;
