@@ -10,19 +10,19 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
-/*//beginMC1_16_5
+//beginMC1_16_5
 import net.nicguzzo.wands.mcver.impl.MCVer1_16_5;
-//endMC1_16_5*/ 
-//beginMC1_17_1
+//endMC1_16_5  
+/*//beginMC1_17_1
 import net.nicguzzo.wands.mcver.impl.MCVer1_17_1;
-//endMC1_17_1 
+//endMC1_17_1*/ 
 public abstract class MCVer{
-    /*//beginMC1_16_5
+    //beginMC1_16_5
     public static final MCVer inst=new MCVer1_16_5();
-    //endMC1_16_5*/ 
-    //beginMC1_17_1
+    //endMC1_16_5  
+    /*//beginMC1_17_1
     public static final MCVer inst=new MCVer1_17_1();
-    //endMC1_17_1 
+    //endMC1_17_1*/ 
 	public abstract CreativeModeTab create_tab(ResourceLocation res);
     public abstract boolean is_creative(Player player);
     public abstract Inventory get_inventory(Player player);

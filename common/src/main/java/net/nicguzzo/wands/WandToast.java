@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.item.ItemStack;
+import net.nicguzzo.wands.mcver.MCVer;
 
 public class WandToast implements Toast {
     TextComponent text;
@@ -17,9 +18,12 @@ public class WandToast implements Toast {
     @Override
     public Visibility render(PoseStack poseStack, ToastComponent toastComponent, long l) {
         Minecraft client=Minecraft.getInstance();
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        MCVer.inst.set_pos_tex_shader();
+        MCVer.inst.set_texture(TEXTURE);
+        MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        //RenderSystem.setShaderTexture(0, TEXTURE);
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableTexture();
         toastComponent.blit(poseStack, 0, 0, 0, 96, this.width(), this.height());
         if(client.player!=null) {

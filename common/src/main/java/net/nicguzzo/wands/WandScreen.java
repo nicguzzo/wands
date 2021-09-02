@@ -71,8 +71,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             RenderSystem.defaultBlendFunc();
             Matrix4f matrix4f=poseStack.last().pose();
             BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            MCVer.inst.set_render_quads_pos_col(bufferBuilder);
+            //RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
             quad(bufferBuilder,x,y,w,h,r,g,b,a);
 
             if(selected) {

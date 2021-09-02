@@ -1146,13 +1146,15 @@ public class ClientRender {
 
         bakedModel = blockRenderer.getBlockModel(state);
         if(bakedModel!=null) {
-            //if(wand.replace){
-                //RenderSystem.disableDepthTest();
-            //}
             for(Direction dir: dirs) {
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
                 if (!bake_list.isEmpty() ) {
-                    matrixStack2.setIdentity();
+                    /*//beginMC1_17_1
+                    //matrixStack2.setIdentity();
+                    //endMC1_17_1*/
+                    //beginMC1_16_5
+                    matrixStack2.last().pose().setIdentity();
+                    //endMC1_16_5
                     if(wand.replace&& wand.mode!=Mode.COPY && wand.mode!=Mode.PASTE ){
                         Vec3i n=wand.side.getNormal();
                         matrixStack2.translate(
@@ -1167,7 +1169,14 @@ public class ClientRender {
                     }
 
                     for (BakedQuad quad : bake_list) {
-                        if(wand.replace || Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp))
+                        if(wand.replace ||
+                                /*//beginMC1_17_1
+                                //Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp)
+                                //endMC1_17_1*/
+                                //beginMC1_16_5
+                                Block.shouldRenderFace(state, wand.level, bp, quad.getDirection())
+                                //endMC1_16_5
+                        )
                         {
                             MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
                             int[] verts = quad.getVertices();

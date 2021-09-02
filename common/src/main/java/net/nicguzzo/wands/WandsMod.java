@@ -1,13 +1,13 @@
 package net.nicguzzo.wands;
 
-/*//beginMC1_16_5
+//beginMC1_16_5
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//endMC1_16_5*/ 
+//endMC1_16_5  
 
-//beginMC1_17_1
+/*//beginMC1_17_1
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
@@ -15,7 +15,7 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
-//endMC1_17_1 
+//endMC1_17_1*/ 
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;
@@ -207,13 +207,13 @@ public class WandsMod {
     }
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
         ItemStack item_stack=player.getMainHandItem();
+        ItemStack offhand_stack = player.getOffhandItem();
         boolean is_wand=item_stack.getItem() instanceof WandItem;
-        boolean is_palette=item_stack.getItem() instanceof PaletteItem;
+        boolean is_palette=item_stack.getItem() instanceof PaletteItem ||offhand_stack.getItem() instanceof PaletteItem;
         boolean creative=MCVer.inst.is_creative(player);
         if(is_palette){
             switch(key) {
                 case palette_menu_key: {
-                    ItemStack offhand_stack = player.getOffhandItem();
                     if (offhand_stack.getItem() instanceof PaletteItem) {
                         MCVer.inst.open_palette((ServerPlayer) player, offhand_stack);
                     } else {
@@ -225,10 +225,9 @@ public class WandsMod {
                 }
                 break;
                 case palette_mode_key:{
-                    ItemStack offhand_stack2 = player.getOffhandItem();
-                    if (!shift && !offhand_stack2.isEmpty() && offhand_stack2.getItem() instanceof PaletteItem) {
-                        PaletteItem.nextMode(offhand_stack2);
-                        player.displayClientMessage(new TextComponent("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
+                    if (!shift && !offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem) {
+                        PaletteItem.nextMode(offhand_stack);
+                        player.displayClientMessage(new TextComponent("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
                     }
                 }
                 break;

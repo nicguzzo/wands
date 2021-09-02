@@ -3,17 +3,17 @@ package net.nicguzzo.wands.forge;
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
 
-/*//beginMC1_16_5
+//beginMC1_16_5
 import me.shedaniel.architectury.platform.forge.EventBuses;
 import me.shedaniel.architectury.utils.Env;
 import me.shedaniel.architectury.utils.EnvExecutor;
-//endMC1_16_5*/ 
+//endMC1_16_5  
 
-//beginMC1_17_1
+/*//beginMC1_17_1
 import dev.architectury.platform.forge.EventBuses;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
-//endMC1_17_1 
+//endMC1_17_1*/ 
 
 
 

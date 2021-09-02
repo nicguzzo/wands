@@ -1,4 +1,4 @@
-//beginMC1_17_1
+/*//beginMC1_17_1
 package net.nicguzzo.wands.mcver.impl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -78,8 +78,8 @@ public class MCVer1_17_1 extends MCVer {
     public void set_render_quads_pos_tex(BufferBuilder bufferBuilder) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-        /*RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);*/
+        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
     }
     @Override
     public void set_render_lines(BufferBuilder bufferBuilder) {
@@ -89,7 +89,8 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void set_render_quads_pos_col(BufferBuilder bufferBuilder) {
-
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
     }
 
     @Override
@@ -164,4 +165,4 @@ public class MCVer1_17_1 extends MCVer {
         return menu.getCarried();
     }
 }
-//endMC1_17_1 
+//endMC1_17_1*/ 

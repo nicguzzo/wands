@@ -287,7 +287,7 @@ public class Wand {
                 has_palette = true;
             }
         }
-        if (offhand != null && offhand.getItem() instanceof DispensibleContainerItem) {
+        if (offhand != null && offhand.getItem() instanceof BucketItem) {
             if (mode != Mode.DIRECTION) {
                 bucket = offhand;
                 has_bucket = true;
@@ -1682,7 +1682,7 @@ public class Wand {
                         }
                     }
                     if(replace && !placed){
-                        if(digger_item.is(Items.AIR))
+                        if(digger_item.getItem()==Items.AIR)
                             player.displayClientMessage(new TextComponent("incorrect tool"),false);
                         stop=true;
                     }
@@ -1944,7 +1944,7 @@ public class Wand {
         if (block_buffer.get_length() < limit){
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
             if (destroy || replace||use) {
-                if(!st.isAir()) {
+                if(!st.isAir()||mode==Mode.AREA) {
                     block_buffer.add(x, y, z, this);
                 }
             } else {

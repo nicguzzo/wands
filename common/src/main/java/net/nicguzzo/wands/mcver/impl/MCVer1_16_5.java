@@ -1,4 +1,4 @@
-/*//beginMC1_16_5
+//beginMC1_16_5
 package net.nicguzzo.wands.mcver.impl;
 
 import java.util.function.Supplier;
@@ -23,6 +23,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
+import net.nicguzzo.wands.WandScreenHandler;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.WandsModClient;
 import net.nicguzzo.wands.mcver.MCVer;
@@ -68,11 +69,11 @@ public class MCVer1_16_5 extends MCVer{
 	}
 	@Override
 	public void set_render_quads_block(BufferBuilder bufferBuilder){
-		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+		bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
 	}
 	@Override
 	public void set_render_quads_pos_tex(BufferBuilder bufferBuilder){
-		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX);
+		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
 	}
 	@Override
 	public void set_render_quads_pos_col(BufferBuilder bufferBuilder) {
@@ -136,6 +137,24 @@ public class MCVer1_16_5 extends MCVer{
 	}
 
 	@Override
+	public void open_wand_menu(ServerPlayer player, ItemStack wandItemStack) {
+		MenuRegistry.openExtendedMenu(player, new ExtendedMenuProvider(){
+			@Override
+			public void saveExtraData(FriendlyByteBuf packetByteBuf) {
+				packetByteBuf.writeItem(wandItemStack);
+			}
+			@Override
+			public Component getDisplayName(){
+				return new TranslatableComponent(wandItemStack.getItem().getDescriptionId());
+			}
+			@Override
+			public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
+				return new WandScreenHandler(syncId, inv, wandItemStack);
+			}
+		});
+	}
+
+	@Override
 	public void set_carried(Player player, AbstractContainerMenu menu, ItemStack itemStack) {
 		player.inventory.setCarried(itemStack);
 	}
@@ -145,4 +164,4 @@ public class MCVer1_16_5 extends MCVer{
 		return player.inventory.getCarried();
 	}
 }
-//endMC1_16_5*/ 
+//endMC1_16_5  
