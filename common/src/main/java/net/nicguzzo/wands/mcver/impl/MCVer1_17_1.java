@@ -1,4 +1,4 @@
-/*//beginMC1_17_1
+//beginMC1_17_1
 package net.nicguzzo.wands.mcver.impl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -165,4 +165,4 @@ public class MCVer1_17_1 extends MCVer {
         return menu.getCarried();
     }
 }
-//endMC1_17_1*/ 
+//endMC1_17_1  

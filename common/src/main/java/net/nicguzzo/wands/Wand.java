@@ -639,35 +639,32 @@ public class Wand {
             }
             //log("a: " + a);
             //log("placed: " + placed);
-            if(!preview) {
-                if (no_tool) {
-                    no_tool = false;
-                    //player.displayClientMessage(new TextComponent("no tool"), true);
-                    Minecraft.getInstance().getToasts().addToast(new WandToast("no tool"));
-                }
-                if (damaged_tool) {
-                    damaged_tool = false;
-                    Minecraft.getInstance().getToasts().addToast(new WandToast("invalid or damaged"));
-                    //player.displayClientMessage(new TextComponent("wand/tool invalid or damaged"), true);
-                }
-            }
-            if (placed > 0 && !destroy) {
-                player.displayClientMessage(new TextComponent("Wand placed " + placed+ " blocks"), true);
+
+            if ((placed > 0 && !destroy)||(no_tool||damaged_tool)) {
+                //player.displayClientMessage(new TextComponent("Wand placed " + placed+ " blocks"), true);
                 //log("placed: " + placed);
 
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                 packet.writeBlockPos(pos);
                 packet.writeBoolean(destroy);
-                if (p1_state != null) {
-                    packet.writeItem(p1_state.getBlock().asItem().getDefaultInstance());
-                } else {
-                    if (block_state != null) {
-                        packet.writeItem(block_state.getBlock().asItem().getDefaultInstance());
+                if(!no_tool && !damaged_tool) {
+                    if (p1_state != null) {
+                        packet.writeItem(p1_state.getBlock().asItem().getDefaultInstance());
                     } else {
-                        packet.writeItem(ItemStack.EMPTY);
+                        if (block_state != null) {
+                            packet.writeItem(block_state.getBlock().asItem().getDefaultInstance());
+                        } else {
+                            packet.writeItem(ItemStack.EMPTY);
+                        }
                     }
+                }else{
+                    packet.writeItem(ItemStack.EMPTY);
                 }
+                packet.writeBoolean(no_tool);
+                packet.writeBoolean(damaged_tool);
                 MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
+                no_tool = false;
+                damaged_tool = false;
             }
         }
         if (p2) {
@@ -1537,30 +1534,16 @@ public class Wand {
                 return false;
             }
             boolean will_break=(wand_durability == 1 ) || (tool_durability == 1 );
-            if(will_break){
+            /*if(will_break){
                 if(WandsMod.config.allow_wand_to_break) {
                     if(WandsMod.config.allow_offhand_to_break){
-                        if(digger_item!=null && wand_durability == 1  && tool_durability >= 1) {
-                            //will_break = false;
-                            /*ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
-                            for (int i = 0; i < tag.size() && i<4; i++) {
-                                CompoundTag stackTag = (CompoundTag) tag.get(i);
-                                ItemStack s= ItemStack.of(stackTag.getCompound("Tool"));
-                                player.drop(s,true);
-                                //stackTag.put("Tool", ItemStack.EMPTY.getTag());
-                                //tag.setTag(i,stackTag);
-                            }
-                            wand_stack.getOrCreateTag().remove("Tools");*/
-                        }else{
-                            will_break=false;
-                        }
                     }
                 }else{
                     if(WandsMod.config.allow_offhand_to_break){
                         will_break = false;
                     }
                 }
-            }
+            }*/
             if(will_break) {
                 damaged_tool=true;
                 //stop = true;
