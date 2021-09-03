@@ -1150,7 +1150,7 @@ public class ClientRender {
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
                 if (!bake_list.isEmpty() ) {
                     //beginMC1_17_1
-                    //matrixStack2.setIdentity();
+                    matrixStack2.setIdentity();
                     //endMC1_17_1 
                     /*//beginMC1_16_5
                     matrixStack2.last().pose().setIdentity();
