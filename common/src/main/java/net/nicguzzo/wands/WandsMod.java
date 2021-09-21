@@ -1,13 +1,13 @@
 package net.nicguzzo.wands;
 
-/*//beginMC1_16_5
+//beginMC1_16_5
 import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//endMC1_16_5*/  
+//endMC1_16_5   
 
-//beginMC1_17_1
+/*//beginMC1_17_1
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
@@ -15,7 +15,7 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
-//endMC1_17_1  
+//endMC1_17_1*/  
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.Direction;

@@ -1,4 +1,4 @@
-/*//beginMC1_16_5
+//beginMC1_16_5
 package net.nicguzzo.wands.mcver.impl;
 
 import java.util.function.Supplier;
@@ -164,4 +164,4 @@ public class MCVer1_16_5 extends MCVer{
 		return player.inventory.getCarried();
 	}
 }
-//endMC1_16_5*/  
+//endMC1_16_5   
