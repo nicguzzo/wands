@@ -115,6 +115,7 @@ public class WandItem extends Item{
     }
     
     public int limit = 0;
+    public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
 
@@ -127,11 +128,12 @@ public class WandItem extends Item{
     static public final Rotation[] rotations=Rotation.values();
 
     
-    public WandItem(int limit,boolean removes_water,boolean removes_lava,Properties properties) {
+    public WandItem(int limit,boolean removes_water,boolean removes_lava,boolean unbreakable,Properties properties) {
         super(properties);
         this.limit=limit;
         this.removes_lava=removes_lava;
         this.removes_water=removes_water;
+        this.unbreakable=unbreakable;
     }
     static public Mode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()) {
