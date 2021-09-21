@@ -1148,7 +1148,7 @@ public class ClientRender {
         if(bakedModel!=null) {
             for(Direction dir: dirs) {
                 List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
-                if (!bake_list.isEmpty() ) {
+                if (bake_list !=null && !bake_list.isEmpty() ) {
                     //beginMC1_17_1
                     matrixStack2.setIdentity();
                     //endMC1_17_1 

@@ -51,20 +51,20 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
-            return new WandItem(config.stone_wand_limit,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
+            return new WandItem(config.stone_wand_limit,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register("iron_wand", () ->{
-        return new WandItem(config.iron_wand_limit,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(config.iron_wand_limit,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register("diamond_wand", () ->{
-        return new WandItem(config.diamond_wand_limit,true,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(config.diamond_wand_limit,true,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register("netherite_wand", () ->{
-        return new WandItem(config.netherite_wand_limit,true,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(config.netherite_wand_limit,true,true,false,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Wand.MAX_LIMIT,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Wand.MAX_LIMIT,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
