@@ -635,7 +635,7 @@ public class ClientRender {
                             random.setSeed(0);
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
-                                render_shape(matrixStack,tesselator, bufferBuilder, b.state, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                render_shape(matrixStack,tesselator, bufferBuilder,Wand.paste_rot(b.state,wand.rotation), b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();

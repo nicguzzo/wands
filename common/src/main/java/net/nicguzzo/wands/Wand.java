@@ -29,6 +29,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Fluids;
@@ -106,6 +107,7 @@ public class Wand {
     public boolean limit_reached=false;
     public WandItem.Plane plane=WandItem.Plane.XZ;
     public Direction.Axis axis= Direction.Axis.Y;
+    public Rotation rotation;
     private boolean no_tool;
     private boolean damaged_tool;
 
@@ -202,6 +204,7 @@ public class Wand {
         mode = WandItem.getMode(wand_stack);
         axis= WandItem.getAxis(wand_stack);
         plane= WandItem.getPlane(wand_stack);
+        rotation= WandItem.getRotation(wand_stack);
         this.player = player;
         this.level = level;
         this.block_state = block_state;
@@ -223,13 +226,14 @@ public class Wand {
         radius=0;
         limit_reached=false;
         random.setSeed(palette_seed);
-        if (!preview) {
-//            log("server");
-            stop = false;//only to place a breakpoint on server
-        }
+
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
+        //DONE paste do not rotate stairs.
+        //FIXED replace from palette is broken
+
+        //maybe
         //TODO paste should respect modes place replace destroy
         //TODO banner placement not working on sides
         wand_item = (WandItem) wand_stack.getItem();
@@ -346,7 +350,7 @@ public class Wand {
                 offhand_state = offhand_block.defaultBlockState();
             }
         }
-        if(replace && (Blocks.AIR == offhand_block || offhand_block==null)){
+        if(replace && !has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
             valid=false;
             return;
         }
@@ -1251,13 +1255,55 @@ public class Wand {
             //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             block_buffer.reset();
             for (CopyPasteBuffer b : copy_paste_buffer) {
-                Rotation rotation= WandItem.getRotation(wand_stack);
                 BlockPos p = b.pos.rotate(rotation);
-                block_buffer.add(b_pos.getX() + p.getX(),
+                BlockState st=paste_rot(b.state,rotation);
+                block_buffer.add(
+                        b_pos.getX() + p.getX(),
                         b_pos.getY() + p.getY(),
-                        b_pos.getZ() + p.getZ(), b.state.rotate(rotation), b.state.getBlock().asItem());
+                        b_pos.getZ() + p.getZ(),
+                        /*b.state.rotate( rotation)*/ st, b.state.getBlock().asItem());
             }
         }
+    }
+    static public BlockState paste_rot(BlockState st,Rotation rot){
+        Block blk=st.getBlock();
+        if(blk instanceof  StairBlock) {
+            Direction d;
+            switch (rot) {
+                case CLOCKWISE_90:
+                    d= st.getValue(StairBlock.FACING).getClockWise(Direction.Axis.Y);
+                    st = st.setValue(StairBlock.FACING, d);
+                break;
+                case CLOCKWISE_180:
+                    d = st.getValue(StairBlock.FACING).getOpposite();
+                    st = st.setValue(StairBlock.FACING, d);
+                    break;
+                case COUNTERCLOCKWISE_90:
+                    d= st.getValue(StairBlock.FACING).getCounterClockWise(Direction.Axis.Y);
+                    st = st.setValue(StairBlock.FACING, d);
+                    break;
+            }
+        }else{
+            if(blk instanceof RotatedPillarBlock){
+                Direction.Axis a= st.getValue(RotatedPillarBlock.AXIS);
+                if(a!=Direction.Axis.Y) {
+                    switch (rot) {
+                        case CLOCKWISE_90:
+                        case COUNTERCLOCKWISE_90:
+                            if(a==Direction.Axis.X)
+                                st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
+                            if(a==Direction.Axis.Z)
+                                st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.X);
+                            break;
+                    }
+                }
+                //st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
+
+            }else{
+                st=st.rotate(rot);
+            }
+        }
+        return st;
     }
 
     void drawCircleOctants(int xc, int yc, int zc, int x, int y, int z, int plane) {
@@ -1376,11 +1422,10 @@ public class Wand {
         } else{
             if (blk instanceof StairBlock) {
                 double hity = WandUtils.unitCoord(hit.y);
-                //st = blk.defaultBlockState().rotate(Rotation.values()[WandItem.getRotation(wand_stack)]);
                 if (hity > 0.5 || is_alt_pressed) {
-                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(WandItem.getRotation(wand_stack));
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(rotation);
                 } else {
-                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(WandItem.getRotation(wand_stack));
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(rotation);
                 }
             }else{
                 if(blk instanceof RotatedPillarBlock){
@@ -1597,7 +1642,9 @@ public class Wand {
             UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
             if( digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative) {
-                    wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
+                    if(!wand_item.unbreakable) {
+                        wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
+                    }
                     consume_xp();
                 }
             }

@@ -45,19 +45,19 @@ public class WandsModClient {
     public static KeyMapping wand_menu_km;
     public static KeyMapping palette_menu_km;
     public static void initialize() {
-        wand_menu_km=new KeyMapping("key.wands.wand_menu",WandsMod.wand_menu_key,"category.wands");
-        palette_menu_km=new KeyMapping("key.wands.palette_menu",WandsMod.palette_menu_key,"category.wands");
+        wand_menu_km=new KeyMapping("key.wands.wand_menu",WandsMod.wand_menu_key,"itemGroup.wands.wands_tab");
+        palette_menu_km=new KeyMapping("key.wands.palette_menu",WandsMod.palette_menu_key,"itemGroup.wands.wands_tab");
         KeyMapping[] km={
-            new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"category.wands"),
-            new KeyMapping("key.wands.wand_action",WandsMod.wand_action_key,"category.wands"),
+            new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_action",WandsMod.wand_action_key,"itemGroup.wands.wands_tab"),
             wand_menu_km,
-            new KeyMapping("key.wands.wand_orientation",WandsMod.wand_orientation_key,"category.wands"),
-            new KeyMapping("key.wands.wand_invert",WandsMod.wand_invert_key,"category.wands"),
-            new KeyMapping("key.wands.wand_fill_circle",WandsMod.wand_fill_circle_key,"category.wands"),
-            new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo_key,"category.wands"),
+            new KeyMapping("key.wands.wand_orientation",WandsMod.wand_orientation_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_invert",WandsMod.wand_invert_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_fill_circle",WandsMod.wand_fill_circle_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo_key,"itemGroup.wands.wands_tab"),
             palette_menu_km,
-            new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"category.wands"),
-            //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"category.wands"),
+            new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
+            //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
         };
         for(KeyMapping k: km){
             /*//beginMC1_16_5
