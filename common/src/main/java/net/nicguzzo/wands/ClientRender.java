@@ -415,7 +415,7 @@ public class ClientRender {
                 case RECT:
 
                     //preview_mode1(bufferBuilder);
-                    if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ||wand.has_empty_bucket) {
+                    if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ||(wand.valid && wand.has_empty_bucket)) {
                         //bbox
                         if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
                         {
