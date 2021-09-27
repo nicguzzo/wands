@@ -46,7 +46,3 @@ publishing {
         // Add repositories to publish to here.
     }
 }
-
-minecraft {
-    accessWidener = file("../fabric/src/main/resources/wands.accesswidener")
-}

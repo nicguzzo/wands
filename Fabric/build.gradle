@@ -96,7 +96,3 @@ publishing {
         // Add repositories to publish to here.
     }
 }
-
-minecraft {
-    accessWidener =  file("src/main/resources/wands.accesswidener")
-}
