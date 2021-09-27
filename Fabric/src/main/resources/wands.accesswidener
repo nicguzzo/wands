@@ -1,4 +1,0 @@
-accessWidener v1 named
-
-accessible method net/minecraft/client/gui/screens/inventory/AbstractContainerScreen findSlot (DD)Lnet/minecraft/world/inventory/Slot;
-accessible field net/minecraft/client/renderer/block/model/BakedQuad sprite Lnet/minecraft/client/renderer/texture/TextureAtlasSprite;

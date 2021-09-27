@@ -372,10 +372,11 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }*/
         return true;
     }
+
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if(show_inv) {
-            Slot slot = this.findSlot(mouseX, mouseY);
+            Slot slot = this.find_slot(mouseX, mouseY);
             if(slot!=null){
                 ItemStack itemStack = MCVer.inst.get_carried(Minecraft.getInstance().player,this.menu);
                 if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
