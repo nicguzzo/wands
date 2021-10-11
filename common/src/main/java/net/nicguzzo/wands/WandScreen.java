@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +20,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.mcver.MCVer;
 
+import java.util.Optional;
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
@@ -117,6 +119,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     BtnGroup inv_grp_btn;
     BtnGroup fill_grp_btn;
     BtnGroup rot_grp;
+    BtnGroup state_grp;
     Btn show_inv_btn;
 
     boolean show_inv=false;
@@ -148,7 +151,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         int h=WandItem.modes.length*h2;
         left=(width/2)-(img_w/2);
         right=(width/2)+(img_w/2);
-        bottom=(height/2)-(h/2);
+        bottom=(height/2)-(h/2)-12;
         top=(height/2)+(h/2);
         modes_grp=new BtnGroup();
         for (int i=0;i<WandItem.modes.length;i++) {
@@ -156,7 +159,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+35,bottom+h2*i +20,btn_w,btn_h,
                     new TextComponent(WandItem.modes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(finalI,-1,-1,-1,-1,-1,-1,-1);
+                    WandsModClient.send_wand(finalI,-1,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setMode(wand_stack, WandItem.modes[finalI]);
                 }
             };
@@ -165,10 +168,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         action_grp =new BtnGroup();
         for (int i=0;i<WandItem.actions.length;i++) {
             int finalp=i;
-            Btn b=new Btn(left+100,bottom+h2*i  +20,btn_w,btn_h,
+            Btn b=new Btn(left+100,bottom+h2*i  +20,btn_w+10,btn_h,
                     new TextComponent(WandItem.actions[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,finalp,-1,-1,-1,-1,-1,-1);
+                    WandsModClient.send_wand(-1,finalp,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setAction(wand_stack, WandItem.actions[finalp]);
                 }
             };
@@ -177,10 +180,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         orientation_grp=new BtnGroup();
         for (int i=0;i<WandItem.orientations.length;i++) {
             int finalo=i;
-            Btn b=new Btn(left+170,bottom+h2*i  +20,btn_w,btn_h,
+            Btn b=new Btn(left+180,bottom+h2*i  +20,btn_w,btn_h,
                     new TextComponent(WandItem.orientations[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,finalo,-1,-1,-1,-1,-1);
+                    WandsModClient.send_wand(-1,-1,finalo,-1,-1,-1,-1,-1,-1);
                     WandItem.setOrientation(wand_stack, WandItem.orientations[finalo]);
                 }
             };
@@ -189,27 +192,54 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         plane_grp=new BtnGroup();
         for (int i=0;i<WandItem.planes.length;i++) {
             int finalp=i;
-            Btn b=new Btn(left+170,bottom+h2*i +60 ,btn_w,btn_h,
+            Btn b=new Btn(left+180,bottom+h2*i +60 ,btn_w,btn_h,
                     new TextComponent(WandItem.planes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,finalp,-1,-1,-1,-1);
+                    WandsModClient.send_wand(-1,-1,-1,finalp,-1,-1,-1,-1,-1);
                     WandItem.setPlane(wand_stack, WandItem.planes[finalp]);
                 }
             };
             plane_grp.add(b);
         }
         axis_grp=new BtnGroup();
+        Btn a0=new Btn(left+180,bottom+h2 +110,btn_w,btn_h,
+                new TextComponent("no axis")){
+            void onClick(int mx,int my){
+                WandsModClient.send_wand(-1,-1,-1,-1,3,-1,-1,-1,-1);
+                WandItem.setAxis(wand_stack, 3);
+            }
+        };
+        axis_grp.add(a0);
         for (int i=0;i<WandItem.axes.length;i++) {
             int finala=i;
-            Btn b=new Btn(left+170,bottom+h2*i +115,btn_w,btn_h,
+            Btn b=new Btn(left+180,bottom+h2*i +110+h2+h2,btn_w,btn_h,
                     new TextComponent(WandItem.axes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1);
+                    WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);
                     WandItem.setAxis(wand_stack, WandItem.axes[finala]);
                 }
             };
             axis_grp.add(b);
         }
+        state_grp=new BtnGroup();
+        Btn b1=new Btn(left+100,bottom+h2 +70,btn_w+10,btn_h,
+                new TextComponent("keep state")){
+            void onClick(int mx,int my){
+                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,0);
+                WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
+            }
+        };
+        state_grp.add(b1);
+        Btn b2=new Btn(left+100,bottom+h2 +70+h2,btn_w+10,btn_h,
+                new TextComponent("use rot/axis")){
+            void onClick(int mx,int my){
+                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,1);
+                WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
+            }
+        };
+        state_grp.add(b2);
+
+
         rot_grp=new BtnGroup();
         for (int i=0;i<WandItem.rotations.length;i++) {
             int finalr=i;
@@ -225,10 +255,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                     rot="270°";
                     break;
             }
-            Btn b=new Btn(left+100,bottom+h2*i +80,btn_w,btn_h,
+            Btn b=new Btn(left+100,bottom+h2*i +110+h2,btn_w+10,btn_h,
                     new TextComponent(rot)){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,finalr);
+                    WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,finalr,-1);
                     WandItem.setRotation(wand_stack, WandItem.rotations[finalr]);
                 }
             };
@@ -243,20 +273,20 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         show_grp_btn.add(show_inv_btn);
 
         inv_grp_btn=new BtnGroup();
-        Btn inv_btn=new Btn(left+100,bottom+140,40,12,new TextComponent("Invert")){
+        Btn inv_btn=new Btn(left+35,bottom+148,40,12,new TextComponent("Invert")){
             void onClick(int mx,int my) {
                 boolean inv =!WandItem.isInverted(wand_stack);
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,(inv?1:0),-1,-1);
+                WandsModClient.send_wand(-1,-1,-1,-1,-1,(inv?1:0),-1,-1,-1);
                 WandItem.setInvert(wand_stack,inv);
             }
         };
         inv_grp_btn.add(inv_btn);
 
         fill_grp_btn=new BtnGroup();
-        Btn fill_btn=new Btn(left+100,bottom+160,40,12,new TextComponent("Fill")){
+        Btn fill_btn=new Btn(left+35,bottom+162,60,12,new TextComponent("Filled circle")){
             void onClick(int mx,int my) {
                 boolean fill =!WandItem.isCircleFill(wand_stack);
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,(fill?1:0),-1);
+                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,(fill?1:0),-1,-1);
                 WandItem.setFill(wand_stack,fill);
             }
         };
@@ -266,6 +296,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         buttons.add(action_grp);
         buttons.add(orientation_grp);
         buttons.add(plane_grp);
+        buttons.add(state_grp);
         buttons.add(axis_grp);
         buttons.add(rot_grp);
         buttons.add(show_grp_btn);
@@ -286,9 +317,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         blit(poseStack, x, y, 0, 0, img_w, img_h);
         font.draw(poseStack,text_mode ,left+35,bottom+10, 0xff000000);
         font.draw(poseStack,text_action ,left+100,bottom+10, 0xff000000);
-        font.draw(poseStack,text_orientation ,left+170,bottom+10, 0xff000000);
-        font.draw(poseStack,text_plane ,left+170,bottom+50, 0xff000000);
-        font.draw(poseStack,text_axis  ,left+170,bottom+105, 0xff000000);
+        font.draw(poseStack,text_orientation ,left+180,bottom+10, 0xff000000);
+        font.draw(poseStack,text_plane ,left+180,bottom+50, 0xff000000);
+        font.draw(poseStack,text_axis  ,left+180,bottom+115, 0xff000000);
+        font.draw(poseStack,text_rot  ,left+100,bottom+115, 0xff000000);
 
         for (int i=0;i<4;i++) {
             Slot s=this.menu.slots.get(36+i);
@@ -314,7 +346,13 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                 action_grp.selected=WandItem.getAction(wand_stack).ordinal();
                 orientation_grp.selected=WandItem.getOrientation(wand_stack).ordinal();
                 plane_grp.selected=WandItem.getPlane(wand_stack).ordinal();
-                axis_grp.selected=WandItem.getAxis(wand_stack).ordinal();
+                Optional<Direction.Axis> a=WandItem.getAxis(wand_stack);
+                if(a.isEmpty()){
+                    axis_grp.selected=0;
+                }else {
+                    axis_grp.selected =a.get().ordinal()+1;
+                }
+                state_grp.selected=WandItem.getStateMode(wand_stack).ordinal();
                 rot_grp.selected=WandItem.getRotation(wand_stack).ordinal();
                 inv_grp_btn.selected=(WandItem.isInverted(wand_stack)?0:-1);
                 fill_grp_btn.selected=(WandItem.isCircleFill(wand_stack)?0:-1);

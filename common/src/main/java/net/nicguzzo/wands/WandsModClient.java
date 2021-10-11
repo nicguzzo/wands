@@ -162,16 +162,17 @@ public class WandsModClient {
         NetworkManager.sendToServer(WandsMod.PALETTE_PACKET, packet);
     }
 
-    public static void send_wand(int mode,int pmode,int orientation,int plane,int axis,int invert,int fill,int rot){
+    public static void send_wand(int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
         FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(mode);
-        packet.writeInt(pmode);
+        packet.writeInt(action);
         packet.writeInt(orientation);
         packet.writeInt(plane);
         packet.writeInt(axis);
         packet.writeInt(invert);
         packet.writeInt(fill);
         packet.writeInt(rot);
+        packet.writeInt(state_mode);
         NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
     }
 
@@ -212,8 +213,9 @@ public class WandsModClient {
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                             break;
                         case RECT:
-                            Direction.Axis axis=wand_item.getAxis(stack);
-                            ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
+                            //Direction.Axis axis=wand_item.getAxis(stack);
+                            //ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
+                            ln1="Blocks: "+wand.block_buffer.get_length();
                             break;
                         case COPY:
                         case PASTE:

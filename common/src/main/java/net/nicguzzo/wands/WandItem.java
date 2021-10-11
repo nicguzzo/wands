@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 
 public class WandItem extends Item{
     public enum Mode{
@@ -79,19 +80,18 @@ public class WandItem extends Item{
         XZ,XY,YZ
     }
 
-    //TODO: state placement mode
-   /* public enum StateMode {
+   public enum StateMode {
         CLONE{
             public String toString() {
                 return "Clone";
             }
         },
-        DEFAULT{
+        APPLY{
             public String toString() {
-                return "Default";
+                return "Apply rotaion/axis";
             }
         }
-    }*/
+    }
     public enum Action{
         PLACE{
             public String toString() {
@@ -127,6 +127,7 @@ public class WandItem extends Item{
     static public final Plane[] planes=Plane.values();
     static public final Direction.Axis[] axes=Direction.Axis.values();
     static public final Rotation[] rotations=Rotation.values();
+    static public final StateMode[] state_modes=StateMode.values();
 
     
     public WandItem(int limit,boolean removes_water,boolean removes_lava,boolean unbreakable,Properties properties) {
@@ -322,12 +323,12 @@ public class WandItem extends Item{
         }
     }
 
-    static public Direction.Axis getAxis(ItemStack stack) {
-        Direction.Axis axis=Direction.Axis.Y;
+    static public Optional<Direction.Axis> getAxis(ItemStack stack) {
+        Optional<Direction.Axis> axis=Optional.empty();
         if(stack!=null && !stack.isEmpty()){
             int p=stack.getOrCreateTag().getInt("axis");
             if(p>=0 && p< axes.length)
-                axis=axes[p];
+                axis=Optional.of(axes[p]);
         }
         return axis;
     }
@@ -337,11 +338,31 @@ public class WandItem extends Item{
             tag.putInt("axis", axis.ordinal());
         }
     }
+    static public void setAxis(ItemStack stack,int a) {
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = stack.getOrCreateTag();
+            tag.putInt("axis", a);
+        }
+    }
     static public void nextAxis(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int axis=(tag.getInt("axis")+1) % 3;
+            int axis=(tag.getInt("axis")+1) % 4;//4th is no axis
             tag.putInt("axis", axis);
+        }
+    }
+    static public StateMode getStateMode(ItemStack stack) {
+        if(stack!=null && !stack.isEmpty()) {
+            int m=stack.getOrCreateTag().getInt("state_mode");
+            if(m<state_modes.length)
+                return state_modes[m];
+        }
+        return StateMode.CLONE;
+    }
+    static public void setStateMode(ItemStack stack,StateMode mode) {
+        if(stack!=null && !stack.isEmpty()) {
+            CompoundTag tag=stack.getOrCreateTag();
+            tag.putInt("state_mode", mode.ordinal());
         }
     }
     @Override
@@ -445,7 +466,11 @@ public class WandItem extends Item{
         list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
         list.add(new TextComponent("limit: " + this.limit ));
         list.add(new TextComponent("orientation: "+orientations[tag.getInt("orientation")].toString()));
-        list.add(new TextComponent("axis: "+axes[tag.getInt("axis")].toString()));
+        int a=tag.getInt("axis");
+        if(a<axes.length)
+            list.add(new TextComponent("axis: "+axes[a].toString()));
+        else
+            list.add(new TextComponent("axis: none"));
         list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
         list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));
