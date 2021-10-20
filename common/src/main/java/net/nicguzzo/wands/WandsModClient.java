@@ -92,11 +92,21 @@ public class WandsModClient {
         //endMC1_16_5*/  
         //beginMC1_17_1
         ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-        //endMC1_17_1  
-        ClientLifecycleEvent.CLIENT_SETUP.register(e->{
-            MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
-            MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
-        });
+        //endMC1_17_1
+
+        MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+        MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
+
+        /*ClientLifecycleEvent.CLIENT_SETUP.register(e->{
+            WandsMod.LOGGER.info("registering menues...");
+            try {
+                MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+                MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
+            }catch (Exception ex){
+                WandsMod.LOGGER.error(ex.getMessage());
+            }
+            WandsMod.LOGGER.info("registering menues.");
+        });*/
         NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
             boolean destroy=packet.readBoolean();
