@@ -4,8 +4,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "${java_compatibilityLevel}",
   "client": [    
-    "RenderWorldMixin",
-    "LevelRendererMixin"
+    "RenderWorldMixin"
   ],
   "server":[    
   ],

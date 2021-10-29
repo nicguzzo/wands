@@ -1,6 +1,6 @@
 package net.nicguzzo.wands;
 
-//beginMC1_16_5
+/*//beginMC1_16_5
 import me.shedaniel.architectury.event.events.GuiEvent;
 import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
 import me.shedaniel.architectury.event.events.client.ClientTickEvent;
@@ -8,8 +8,8 @@ import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
-//endMC1_16_5   
-/*//beginMC1_17_1
+//endMC1_16_5*/  
+//beginMC1_17_1
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
 import dev.architectury.event.events.client.ClientGuiEvent;
@@ -18,7 +18,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
-//endMC1_17_1*/  
+//endMC1_17_1  
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -60,12 +60,12 @@ public class WandsModClient {
             //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
         };
         for(KeyMapping k: km){
-            //beginMC1_16_5
+            /*//beginMC1_16_5
             KeyBindings.registerKeyBinding(k);
-            //endMC1_16_5   
-            /*//beginMC1_17_1
+            //endMC1_16_5*/  
+            //beginMC1_17_1
             KeyMappingRegistry.register(k);
-            //endMC1_17_1*/  
+            //endMC1_17_1  
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
@@ -87,16 +87,29 @@ public class WandsModClient {
             }
         });
         
-        //beginMC1_16_5
+        /*//beginMC1_16_5
         GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
-        //endMC1_16_5   
-        /*//beginMC1_17_1
+        //endMC1_16_5*/  
+        //beginMC1_17_1
         ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-        //endMC1_17_1*/  
-        ClientLifecycleEvent.CLIENT_SETUP.register(e->{
+        //endMC1_17_1
+
+
+        if(WandsModClient.is_forge) {
+            ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
+                WandsMod.LOGGER.info("registering menues...");
+                try {
+                    MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+                    MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
+                } catch (Exception ex) {
+                    WandsMod.LOGGER.error(ex.getMessage());
+                }
+                WandsMod.LOGGER.info("registering menues.");
+            });
+        }else {
             MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
             MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
-        });
+        }
         NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
             boolean destroy=packet.readBoolean();
@@ -162,16 +175,17 @@ public class WandsModClient {
         NetworkManager.sendToServer(WandsMod.PALETTE_PACKET, packet);
     }
 
-    public static void send_wand(int mode,int pmode,int orientation,int plane,int axis,int invert,int fill,int rot){
+    public static void send_wand(int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
         FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(mode);
-        packet.writeInt(pmode);
+        packet.writeInt(action);
         packet.writeInt(orientation);
         packet.writeInt(plane);
         packet.writeInt(axis);
         packet.writeInt(invert);
         packet.writeInt(fill);
         packet.writeInt(rot);
+        packet.writeInt(state_mode);
         NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
     }
 
@@ -212,8 +226,9 @@ public class WandsModClient {
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                             break;
                         case RECT:
-                            Direction.Axis axis=wand_item.getAxis(stack);
-                            ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
+                            //Direction.Axis axis=wand_item.getAxis(stack);
+                            //ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
+                            ln1="Blocks: "+wand.block_buffer.get_length();
                             break;
                         case COPY:
                         case PASTE:

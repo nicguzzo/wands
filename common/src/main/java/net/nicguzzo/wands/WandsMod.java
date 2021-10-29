@@ -36,6 +36,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.mcver.MCVer;
 
+import java.util.Optional;
+
 public class WandsMod {   
 
     public static final WandsConfig config=WandsConfig.get_instance();
@@ -124,8 +126,9 @@ public class WandsMod {
             int invert=packet.readInt();
             int fill=packet.readInt();
             int rot=packet.readInt();
+            int state_mode=packet.readInt();
             context.queue(()->{
-                process_wand(context.getPlayer(), mode,action,orientation,plane,axis,invert,fill,rot);
+                process_wand(context.getPlayer(), mode,action,orientation,plane,axis,invert,fill,rot,state_mode);
             });
         });
         PlayerEvent.PLAYER_QUIT.register((player)->{
@@ -176,7 +179,7 @@ public class WandsMod {
             }
         }
     }
-    public static void process_wand(Player player, int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot){
+    public static void process_wand(Player player, int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
         ItemStack wand_stack=player.getMainHandItem();
         if(!wand_stack.isEmpty() && wand_stack.getItem() instanceof WandItem ){
             if(mode >=0 && mode<WandItem.modes.length) {
@@ -192,7 +195,7 @@ public class WandsMod {
                 WandItem.setPlane(wand_stack, WandItem.planes[plane]);
             }
             if(axis >=0 && axis<WandItem.axes.length) {
-                WandItem.setAxis(wand_stack, WandItem.axes[axis]);
+                WandItem.setAxis(wand_stack,axis);
             }
             if(rot >=0 && rot<WandItem.rotations.length) {
                 WandItem.setRotation(wand_stack, WandItem.rotations[rot]);
@@ -202,6 +205,9 @@ public class WandsMod {
             }
             if(fill == 0 || fill ==1) {
                 WandItem.setFill(wand_stack, fill==1);
+            }
+            if(state_mode>=0) {
+                WandItem.setStateMode(wand_stack, WandItem.state_modes[state_mode]);
             }
         }
     }
@@ -267,7 +273,11 @@ public class WandsMod {
                     if (alt) {//change axis
                         if (wand != null) {
                             WandItem.nextAxis(item_stack);
-                            player.displayClientMessage(new TextComponent("Wand Axis: " + WandItem.getAxis(item_stack)), false);
+                            Optional<Direction.Axis> a=WandItem.getAxis(item_stack);
+                            if(a.isPresent())
+                                player.displayClientMessage(new TextComponent("Wand Axis: " + a.get()), false);
+                            else
+                                player.displayClientMessage(new TextComponent("Wand Axis: none"), false);
                             send_state((ServerPlayer) player, wand);
                         }
                     } else {

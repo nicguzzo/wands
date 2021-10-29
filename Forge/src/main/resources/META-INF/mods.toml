@@ -7,7 +7,7 @@ license = "Insert License Here"
 modId = "${modid}"
 version = "${version}"
 displayName = "Building Wands"
-authors = "Me!"
+authors = "nicguzzo"
 description = '''
 Building Wands!
 '''

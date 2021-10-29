@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -29,7 +28,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Fluids;
@@ -106,8 +104,9 @@ public class Wand {
     public boolean force_render = false;
     public boolean limit_reached=false;
     public WandItem.Plane plane=WandItem.Plane.XZ;
-    public Direction.Axis axis= Direction.Axis.Y;
+    public Optional<Direction.Axis> axis=Optional.empty(); //Direction.Axis.Y;
     public Rotation rotation;
+    private WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
 
@@ -205,6 +204,7 @@ public class Wand {
         axis= WandItem.getAxis(wand_stack);
         plane= WandItem.getPlane(wand_stack);
         rotation= WandItem.getRotation(wand_stack);
+        state_mode= WandItem.getStateMode(wand_stack);
         this.player = player;
         this.level = level;
         this.block_state = block_state;
@@ -232,7 +232,9 @@ public class Wand {
         }
         //DONE paste do not rotate stairs.
         //FIXED replace from palette is broken
-
+        //DONE add allowed blocks per tool
+        //DONE optional axis, use same state if no axis set
+        //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
         //TODO banner placement not working on sides
@@ -1412,32 +1414,36 @@ public class Wand {
     }
     BlockState state_for_placement(BlockState st){
         Block blk=st.getBlock();
-        if(blk instanceof SlabBlock){
-            double hity = WandUtils.unitCoord(hit.y);
-            if (hity > 0.5 || is_alt_pressed) {
-                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
-            } else {
-                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
-            }
-        } else{
-            if (blk instanceof StairBlock) {
+        if(state_mode== WandItem.StateMode.APPLY) {
+            if (blk instanceof SlabBlock) {
                 double hity = WandUtils.unitCoord(hit.y);
                 if (hity > 0.5 || is_alt_pressed) {
-                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(rotation);
+                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
                 } else {
-                    st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(rotation);
+                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
                 }
-            }else{
-                if(blk instanceof RotatedPillarBlock){
-                    st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
-                }else{
-                    //if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock)
-                    {
-                        BlockHitResult hit_res = new BlockHitResult(hit, side, pos, true);
-                        UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
-                        BlockPlaceContext pctx = new BlockPlaceContext(uctx);
-                        st = st.getBlock().getStateForPlacement(pctx);
-                        //is_door=true;
+            } else {
+                if (blk instanceof StairBlock) {
+                    double hity = WandUtils.unitCoord(hit.y);
+                    if (hity > 0.5 || is_alt_pressed) {
+                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(rotation);
+                    } else {
+                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(rotation);
+                    }
+                } else {
+                    if (blk instanceof RotatedPillarBlock) {
+                        if (this.axis.isPresent()) {
+                            st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis.get());
+                        }
+                    } else {
+                        //if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock)
+                        {
+                            BlockHitResult hit_res = new BlockHitResult(hit, side, pos, true);
+                            UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
+                            BlockPlaceContext pctx = new BlockPlaceContext(uctx);
+                            st = st.getBlock().getStateForPlacement(pctx);
+                            //is_door=true;
+                        }
                     }
                 }
             }
@@ -1513,11 +1519,15 @@ public class Wand {
         int    limit = wand_item.limit;
         int ll=0;
         block_buffer.reset();
+        Direction.Axis laxis= Direction.Axis.Y;
+        if(this.axis.isPresent()) {
+            laxis=this.axis.get();
+        }
         for (int z = zs; z <= ze; z++) {
             for (int y = ys; y <= ye; y++) {
                 for (int x = xs; x <= xe; x++) {
                     if(hollow) {
-                        switch (axis) {
+                        switch (laxis) {
                             case X:
                                 if (y > ys && y < ye && z > zs && z < ze)
                                     continue;
@@ -2044,14 +2054,33 @@ public class Wand {
     boolean can_dig(Player player,BlockState state,boolean check_speed,ItemStack digger){
         boolean is_glass=state.getBlock() instanceof AbstractGlassBlock;
         boolean is_snow_layer=false;
-        if(state.getBlock() instanceof SnowLayerBlock){
+        Block blk=state.getBlock();
+        if(blk instanceof SnowLayerBlock){
             is_snow_layer= state.getValue(SnowLayerBlock.LAYERS)==1;
         }
-        if(digger!=null && !digger.isEmpty() &&digger.getItem() instanceof DiggerItem){
+        Item item_digger=digger.getItem();
+        if(digger!=null && !digger.isEmpty() &&item_digger instanceof DiggerItem){
+            boolean is_allowed=false;
+            if(item_digger instanceof PickaxeItem){
+                is_allowed= is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
+            }else{
+                if(item_digger instanceof AxeItem){
+                    is_allowed= is_allowed || WandsConfig.axe_allowed.contains(blk);
+                }else {
+                    if (item_digger instanceof ShovelItem) {
+                        is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
+                    }else {
+                        if (item_digger instanceof HoeItem) {
+                            is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
+                        }
+                    }
+                }
+            }
             if(check_speed){
                 DiggerItem mt=(DiggerItem)digger.getItem();
                 if(mt!=null) {
-                    return  creative || mt.getDestroySpeed(null, state) > 1.0f || is_glass|| is_snow_layer;
+                    return  creative || mt.getDestroySpeed(digger, state) > 1.0f
+                            || is_glass|| is_snow_layer || is_allowed;
                 }
             }else{
                 return true;
