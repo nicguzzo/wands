@@ -273,11 +273,8 @@ public class WandsMod {
                     if (alt) {//change axis
                         if (wand != null) {
                             WandItem.nextAxis(item_stack);
-                            Optional<Direction.Axis> a=WandItem.getAxis(item_stack);
-                            if(a.isPresent())
-                                player.displayClientMessage(new TextComponent("Wand Axis: " + a.get()), false);
-                            else
-                                player.displayClientMessage(new TextComponent("Wand Axis: none"), false);
+                            Direction.Axis a=WandItem.getAxis(item_stack);
+                            player.displayClientMessage(new TextComponent("Wand Axis: " + a), false);
                             send_state((ServerPlayer) player, wand);
                         }
                     } else {

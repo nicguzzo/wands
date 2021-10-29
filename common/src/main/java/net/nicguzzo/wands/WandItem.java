@@ -298,12 +298,12 @@ public class WandItem extends Item{
         }
     }
 
-    static public Optional<Direction.Axis> getAxis(ItemStack stack) {
-        Optional<Direction.Axis> axis=Optional.empty();
+    static public Direction.Axis getAxis(ItemStack stack) {
+        Direction.Axis axis= Direction.Axis.Y;
         if(stack!=null && !stack.isEmpty()){
             int p=stack.getOrCreateTag().getInt("axis");
             if(p>=0 && p< axes.length)
-                axis=Optional.of(axes[p]);
+                axis=axes[p];
         }
         return axis;
     }
