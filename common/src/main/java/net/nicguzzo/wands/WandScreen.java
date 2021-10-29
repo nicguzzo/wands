@@ -202,17 +202,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             plane_grp.add(b);
         }
         axis_grp=new BtnGroup();
-        Btn a0=new Btn(left+180,bottom+h2 +110,btn_w,btn_h,
-                new TextComponent("no axis")){
-            void onClick(int mx,int my){
-                WandsModClient.send_wand(-1,-1,-1,-1,3,-1,-1,-1,-1);
-                WandItem.setAxis(wand_stack, 3);
-            }
-        };
-        axis_grp.add(a0);
+
         for (int i=0;i<WandItem.axes.length;i++) {
             int finala=i;
-            Btn b=new Btn(left+180,bottom+h2*i +110+h2+h2,btn_w,btn_h,
+            Btn b=new Btn(left+180,bottom+h2*i +110+h2,btn_w,btn_h,
                     new TextComponent(WandItem.axes[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);

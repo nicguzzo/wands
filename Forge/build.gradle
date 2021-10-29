@@ -1,22 +1,19 @@
 plugins {    
     id "com.github.johnrengelman.shadow" version "${shadow_version}"
 }
-configurations {
-    common
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    //developmentForge.extendsFrom common
-}
-
 architectury {
     platformSetupLoomIde()
     forge()
 }
 
-//loom {
-//    useFabricMixin = false
-//}
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+}
+
 
 
 dependencies {
@@ -24,11 +21,8 @@ dependencies {
     // Remove the next line if you don't want to depend on the API
     
     modApi "${rootProject.architectury}:architectury-forge:${rootProject.architectury_version}"
-    
-    implementation(project(path: ":common")) {
-        transitive = false
-    }
-    developmentForge(project(path: ":common")) {
+
+    common(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) {
@@ -52,7 +46,6 @@ processResources {
         )
     }
 }
-
 shadowJar {
     exclude "fabric.mod.json"
 
@@ -68,10 +61,6 @@ remapJar {
 
 jar {
     classifier "dev"
-}
-
-java {
-    withSourcesJar()
 }
 
 sourcesJar {
@@ -90,13 +79,7 @@ publishing {
     publications {
         mavenForge(MavenPublication) {
             artifactId = rootProject.archives_base_name + "-" + project.name
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                classifier null
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+            from components.java
         }
     }
 
@@ -105,3 +88,4 @@ publishing {
         // Add repositories to publish to here.
     }
 }
+

@@ -266,31 +266,6 @@ public class WandItem extends Item{
             tag.putInt("rotation", rot.ordinal());
         }
     }
-    /*static public StateMode getStateMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()) {
-            int m=stack.getOrCreateTag().getInt("state_mode");
-            if(m<state_modes.length)
-                return state_modes[m];
-        }
-        return StateMode.CLONE;
-    }
-    static public void nextStateMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
-            CompoundTag tag=stack.getOrCreateTag();
-            int mode=(tag.getInt("state_mode")+1) % (state_modes.length);
-            tag.putInt("state_mode", mode);
-        }
-    }
-    static public void prevStateMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
-            CompoundTag tag=stack.getOrCreateTag();
-            int mode=tag.getInt("state_mode")-1;
-            if(mode<0){
-                mode=state_modes.length-1;
-            }
-            tag.putInt("state_mode", mode);
-        }
-    }*/
     static public Action getAction(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()) {
             int m=stack.getOrCreateTag().getInt("action");
@@ -347,7 +322,7 @@ public class WandItem extends Item{
     static public void nextAxis(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
-            int axis=(tag.getInt("axis")+1) % 4;//4th is no axis
+            int axis=(tag.getInt("axis")+1) % 3;
             tag.putInt("axis", axis);
         }
     }

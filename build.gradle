@@ -43,12 +43,7 @@ allprojects {
     tasks.withType(JavaCompile) {   
         options.encoding = "UTF-8"
 
-        //def targetVersion = rootProject.java_version as int
-        //if (JavaVersion.current().isJava9Compatible()) {
-            //options.release = targetVersion
-        //}
         def targetVersion = rootProject.java_version as int
-        //def targetVersion = 8
         if (targetVersion > 11) {
             options.release = targetVersion
         }else{

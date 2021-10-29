@@ -5,39 +5,27 @@ dependencies {
     // Remove the next line if you don't want to depend on the API    
     modApi "${rootProject.architectury}:architectury:${rootProject.architectury_version}"
 }
-
-//sourceSets {
-//    main {
-//        java {
-//            //srcDir 'src'
-//            exclude 'net/nicguzzo/wands/mcver/impl/MCVer1_17_1/**'
-//        }
-//    }
-//}
 architectury {
     common()
 }
-
+configurations {
+    dev
+}
 processResources {
     inputs.property "java_compatibilityLevel", rootProject.java_compatibilityLevel    
     filesMatching("${rootProject.modid}.mixins.json") {
         expand "java_compatibilityLevel": rootProject.java_compatibilityLevel
     }
 }
-
-java {
-    withSourcesJar()
+artifacts {
+    dev(jar)
 }
 
 publishing {
     publications {
         mavenCommon(MavenPublication) {
             artifactId = rootProject.archives_base_name
-            // add all the jars that should be included when publishing to maven
-            artifact remapJar
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+            from components.java
         }
     }
 
