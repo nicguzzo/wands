@@ -94,19 +94,22 @@ public class WandsModClient {
         ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
         //endMC1_17_1
 
-        MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
-        MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
 
-        /*ClientLifecycleEvent.CLIENT_SETUP.register(e->{
-            WandsMod.LOGGER.info("registering menues...");
-            try {
-                MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
-                MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
-            }catch (Exception ex){
-                WandsMod.LOGGER.error(ex.getMessage());
-            }
-            WandsMod.LOGGER.info("registering menues.");
-        });*/
+        if(WandsModClient.is_forge) {
+            ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
+                WandsMod.LOGGER.info("registering menues...");
+                try {
+                    MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+                    MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
+                } catch (Exception ex) {
+                    WandsMod.LOGGER.error(ex.getMessage());
+                }
+                WandsMod.LOGGER.info("registering menues.");
+            });
+        }else {
+            MenuRegistry.registerScreenFactory(WandsMod.PALETTE_SCREEN_HANDLER.get(), PaletteScreen::new);
+            MenuRegistry.registerScreenFactory(WandsMod.WAND_SCREEN_HANDLER.get(), WandScreen::new);
+        }
         NetworkManager.registerReceiver(Side.S2C, WandsMod.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
             boolean destroy=packet.readBoolean();

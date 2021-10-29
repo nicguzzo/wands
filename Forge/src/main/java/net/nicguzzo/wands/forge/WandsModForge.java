@@ -29,13 +29,14 @@ public class WandsModForge {
     //public static final Logger LOGGER = LogManager.getLogger();
     
     public WandsModForge() {
+        WandsModClient.is_forge=true;
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(WandsMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
         WandsMod.init();        
         EnvExecutor.runInEnv(Env.CLIENT, () -> 
             ()-> {
                 WandsModClient.initialize();
-                WandsModClient.is_forge=true;
+
                 MinecraftForge.EVENT_BUS.register(new WandsForgeEventHandler());
             }
         );
