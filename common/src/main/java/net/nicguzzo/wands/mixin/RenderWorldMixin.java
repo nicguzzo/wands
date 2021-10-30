@@ -18,7 +18,7 @@ public class RenderWorldMixin {
     
     @Inject(method = "render", at = @At(value = "TAIL"))
     public void render(PoseStack matrices, BufferSource bufferIn, double camX, double camY, double camZ, CallbackInfo ci) {
-        if(!WandsModClient.is_forge)
+        if(!WandsMod.is_forge)
         {
             ClientRender.render(matrices,camX,camY,camZ, bufferIn);
         }

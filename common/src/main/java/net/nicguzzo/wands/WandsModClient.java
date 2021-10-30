@@ -41,7 +41,6 @@ public class WandsModClient {
     static boolean shift =false;
     static boolean alt =false;
     public static boolean has_optifine=false;
-    public static boolean is_forge=false;
     public static KeyMapping wand_menu_km;
     public static KeyMapping palette_menu_km;
     public static void initialize() {
@@ -95,7 +94,7 @@ public class WandsModClient {
         //endMC1_17_1
 
 
-        if(WandsModClient.is_forge) {
+        if(WandsMod.is_forge) {
             ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
                 WandsMod.LOGGER.info("registering menues...");
                 try {

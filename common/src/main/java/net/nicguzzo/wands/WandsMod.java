@@ -95,7 +95,7 @@ public class WandsMod {
     static final public int palette_mode_key     = GLFW.GLFW_KEY_R;
     static final public int palette_menu_key     = GLFW.GLFW_KEY_J;
     //static final public int wand_state_mode_key  = GLFW.GLFW_KEY_B;
-
+    public static boolean is_forge=false;
 	
     public static void init() {
         

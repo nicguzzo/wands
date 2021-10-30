@@ -1517,7 +1517,7 @@ public class Wand {
         int    limit = wand_item.limit;
         int ll=0;
         block_buffer.reset();
-        
+
         for (int z = zs; z <= ze; z++) {
             for (int y = ys; y <= ye; y++) {
                 for (int x = xs; x <= xe; x++) {

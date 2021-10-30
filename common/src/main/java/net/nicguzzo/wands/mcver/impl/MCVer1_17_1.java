@@ -101,7 +101,7 @@ public class MCVer1_17_1 extends MCVer {
 
         PoseStack poseStack2 = RenderSystem.getModelViewStack();
         poseStack2.pushPose();
-        if(WandsModClient.is_forge) {
+        if(WandsMod.is_forge) {
             poseStack2.mulPoseMatrix(poseStack.last().pose());
         }
         poseStack2.translate(-c.x,-c.y,-c.z);
