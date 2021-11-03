@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.mcver.MCVer;
@@ -30,7 +29,7 @@ public class WandToast implements Toast {
             ItemStack s = client.player.getMainHandItem();
             client.getItemRenderer().renderAndDecorateItem(s,10,6);
         }
-        toastComponent.getMinecraft().font.draw(poseStack,text ,30.0F, 12.0F, -11534256);
+        client.font.draw(poseStack,text ,30.0F, 12.0F, -11534256);
         return l >= 1000L ? Visibility.HIDE : Visibility.SHOW;
     }
 /*

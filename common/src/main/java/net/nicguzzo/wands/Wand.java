@@ -125,7 +125,7 @@ public class Wand {
 
     private static class BlockAccounting {
         public int placed = 0;
-        public int consumed = 0;
+        //public int consumed = 0;
         public int needed = 0;
         public int in_player = 0;
     }
@@ -170,9 +170,9 @@ public class Wand {
     public int limit=MAX_LIMIT;
     Inventory player_inv;
 
-    private void log(String s) {
-        WandsMod.log(s, prnt);
-    }
+    //private void log(String s) {
+        //WandsMod.log(s, prnt);
+    //}
 
     public void clear() {
         p1 = null;
@@ -230,6 +230,9 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
+        //TODO slab placemente sometimes can't place upper slab,
+        // TODO improve slab/stair placement
+        //DONE toggle outline
         //DONE paste do not rotate stairs.
         //FIXED replace from palette is broken
         //DONE add allowed blocks per tool
@@ -510,7 +513,7 @@ public class Wand {
             //log("block_state "+block_state);
             //log( "palette_slots "+palette_slots.size());
             //log("block_accounting " + block_accounting.size());
-            boolean missing_blocks = block_accounting.size() == 0;
+            //boolean missing_blocks = block_accounting.size() == 0;
             //for (var pa : block_accounting.entrySet()) {
 //                log(pa.getKey()+" in player "+pa.getValue().in_player+" needed: "+pa.getValue().needed +" placed: "+pa.getValue().placed);
 //            }
@@ -548,7 +551,7 @@ public class Wand {
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
                         player.displayClientMessage(mc, false);
-                        missing_blocks = true;
+                        //missing_blocks = true;
                     }
                     //log(pa.getKey().getDescriptionId()+" needed: "+pa.getValue().needed+" player has: "+pa.getValue().in_player);
                 }
@@ -683,16 +686,16 @@ public class Wand {
         if (pa != null && pa.placed > 0) {
             if(stack_item.getItem().equals(Fluids.LAVA.getBucket())){
                 pa.placed--;
-                pa.consumed++;
+                //pa.consumed++;
                 ItemStack ret=Items.BUCKET.getDefaultInstance();
                 return ret;
             }else{
                 if (pa.placed <= stack_item.getCount()) {
-                    pa.consumed+=stack_item.getCount();
+                    //pa.consumed+=stack_item.getCount();
                     stack_item.setCount(stack_item.getCount() - pa.placed);
                     pa.placed = 0;
                 } else {
-                    pa.consumed+=stack_item.getCount();
+                    //pa.consumed+=stack_item.getCount();
                     pa.placed -= stack_item.getCount();
                     stack_item.setCount(0);
                 }
@@ -953,7 +956,6 @@ public class Wand {
             int x2 = pos.getX();
             int y2 = pos.getY();
             int z2 = pos.getZ();
-            int n = 0;
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);
@@ -974,7 +976,6 @@ public class Wand {
                 zs = -1;
             }
             add_to_buffer(x1, y1, z1);
-            n++;
             // X
             if (dx >= dy && dx >= dz) {
                 lp1 = 2 * dy - dx;
@@ -992,7 +993,6 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dz;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             } else if (dy >= dx && dy >= dz) {
                 lp1 = 2 * dx - dy;
@@ -1010,7 +1010,6 @@ public class Wand {
                     lp1 += 2 * dx;
                     lp2 += 2 * dz;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             } else {
                 lp1 = 2 * dy - dz;
@@ -1028,7 +1027,6 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dx;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             }
         }
@@ -1272,6 +1270,8 @@ public class Wand {
         if(blk instanceof  StairBlock) {
             Direction d;
             switch (rot) {
+                case NONE:
+                break;
                 case CLOCKWISE_90:
                     d= st.getValue(StairBlock.FACING).getClockWise(Direction.Axis.Y);
                     st = st.setValue(StairBlock.FACING, d);
@@ -1296,6 +1296,10 @@ public class Wand {
                                 st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
                             if(a==Direction.Axis.Z)
                                 st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.X);
+                            break;
+                            case NONE:
+                            break;
+                            case CLOCKWISE_180:
                             break;
                     }
                 }
@@ -2074,7 +2078,7 @@ public class Wand {
             if(check_speed){
                 DiggerItem mt=(DiggerItem)digger.getItem();
                 if(mt!=null) {
-                    return  creative || mt.getDestroySpeed(digger, state) > 1.0f
+                    return  creative || (mt.getDestroySpeed(digger, state) > 1.0f && mt.isCorrectToolForDrops(state))
                             || is_glass|| is_snow_layer || is_allowed;
                 }
             }else{

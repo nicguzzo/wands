@@ -11,21 +11,17 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SpongeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 
-public class WandItem extends Item{
+public class WandItem extends TieredItem implements Vanishable {
     public enum Mode{
         DIRECTION{
             public String toString() {
@@ -130,8 +126,8 @@ public class WandItem extends Item{
     static public final StateMode[] state_modes=StateMode.values();
 
     
-    public WandItem(int limit,boolean removes_water,boolean removes_lava,boolean unbreakable,Properties properties) {
-        super(properties);
+    public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, Properties properties) {
+        super(tier,properties);
         this.limit=limit;
         this.removes_lava=removes_lava;
         this.removes_water=removes_water;
@@ -438,7 +434,7 @@ public class WandItem extends Item{
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
 
-        list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
+        list.add(new TextComponent("mode: " + WandItem.getMode(stack).toString() ));
         list.add(new TextComponent("limit: " + this.limit ));
         list.add(new TextComponent("orientation: "+orientations[tag.getInt("orientation")].toString()));
         int a=tag.getInt("axis");
@@ -450,5 +446,9 @@ public class WandItem extends Item{
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
         list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));
     }
-   
+    public int getEnchantmentValue() {
+
+        return this.getTier().getEnchantmentValue();
+
+    }
 }

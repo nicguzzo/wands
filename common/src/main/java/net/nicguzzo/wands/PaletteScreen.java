@@ -138,7 +138,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.find_slot(mouseX, mouseY);
         if(slot!=null){
-            ItemStack itemStack = MCVer.inst.get_carried(Minecraft.getInstance().player,this.menu);
+            Minecraft client=Minecraft.getInstance();
+            ItemStack itemStack = MCVer.inst.get_carried(client.player,this.menu);
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

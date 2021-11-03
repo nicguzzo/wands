@@ -4,7 +4,6 @@ import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.debug.DebugRenderer;
 import net.nicguzzo.wands.ClientRender;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsModClient;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 

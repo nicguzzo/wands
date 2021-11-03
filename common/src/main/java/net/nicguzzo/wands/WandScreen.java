@@ -2,17 +2,14 @@ package net.nicguzzo.wands;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Matrix4f;
+//import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -20,7 +17,6 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.mcver.MCVer;
 
-import java.util.Optional;
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
@@ -71,7 +67,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             }
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
-            Matrix4f matrix4f=poseStack.last().pose();
+            //Matrix4f matrix4f=poseStack.last().pose();
             BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
             MCVer.inst.set_render_quads_pos_col(bufferBuilder);
             //RenderSystem.setShader(GameRenderer::getPositionColorShader);
@@ -236,8 +232,11 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         rot_grp=new BtnGroup();
         for (int i=0;i<WandItem.rotations.length;i++) {
             int finalr=i;
-            String rot="0°";
+            String rot="";
             switch(WandItem.rotations[i]) {
+                case NONE:
+                    rot="0°";
+                    break;
                 case CLOCKWISE_90:
                     rot="90°";
                     break;
@@ -404,7 +403,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         if(show_inv) {
             Slot slot = this.find_slot(mouseX, mouseY);
             if(slot!=null){
-                ItemStack itemStack = MCVer.inst.get_carried(Minecraft.getInstance().player,this.menu);
+                Minecraft client=Minecraft.getInstance();
+                ItemStack itemStack = MCVer.inst.get_carried(client.player,this.menu);
                 if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                     this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
                 }

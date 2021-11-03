@@ -48,6 +48,11 @@ public class WandsConfig {
 	public float wand_mode_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
 	public boolean fancy_preview = true;
+	public boolean block_outlines=false;
+	public boolean fill_outlines=false;
+	public boolean copy_outlines=false;
+	public boolean paste_outlines=false;
+	public boolean no_lines=false;
 	public boolean fat_lines=true;
 	public float fat_lines_width=0.025f;
 	public String block_outline_color="220,220,220,255";
@@ -81,7 +86,7 @@ public class WandsConfig {
 		PASTE_BB,
 		BlOCK
 	}
-	static public HashMap<Colors,Color> colors=new HashMap();
+	static public HashMap<Colors,Color> colors=new HashMap<Colors,Color>();
 
 	void parse_colors(){
 		colors.put(Colors.BLOCK_OUTLINE,parse_color(block_outline_color));

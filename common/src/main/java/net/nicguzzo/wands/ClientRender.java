@@ -1,15 +1,11 @@
 package net.nicguzzo.wands;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.BiomeColors;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.Vec3i;
 import net.minecraft.client.gui.screens.Screen;
@@ -17,16 +13,9 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.FluidTags;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.client.Camera;
@@ -84,6 +73,11 @@ public class ClientRender {
     static float opacity=0.8f;
     static boolean fancy=true;
     static boolean fat_lines=true;
+    static boolean drawlines=true;
+    static boolean block_outlines=false;
+    static boolean fill_outlines=false;
+    static boolean copy_outlines=false;
+    static boolean paste_outlines=false;
     static float fat_lines_width=0.05f;
     static Minecraft client;
     private static final ResourceLocation GRID_TEXTURE = new ResourceLocation("wands", "textures/blocks/grid.png");
@@ -125,7 +119,12 @@ public class ClientRender {
             update_colors=false;
             update_colors();
         }
-        opacity=WandsMod.config.preview_opacity;
+        drawlines      = !WandsMod.config.no_lines;
+        block_outlines = WandsMod.config.block_outlines;
+        fill_outlines  = WandsMod.config.fill_outlines;
+        copy_outlines  = WandsMod.config.copy_outlines;
+        paste_outlines = WandsMod.config.paste_outlines;
+        opacity        = WandsMod.config.preview_opacity;
         //opacity=0.6f;
         /*if(WandsModClient.has_optifine){
             fancy=false;
@@ -262,11 +261,9 @@ public class ClientRender {
             double wand_x1=wand.x1;
             double wand_y1=wand.y1;
             double wand_z1=wand.z1;
-            double wand_x2=wand.x2;
-            double wand_y2=wand.y2;
-            double wand_z2=wand.z2;
+            
             float nx=0.0f,ny=0.0f,nz=0.0f;
-            float fr=1.0f,fg=1.0f,fb=1.0f,fa=1.0f;
+            
             float off2=0.05f;
             MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 0.8f);
             //WandsMod.log("mode "+mode.toString(),prnt);
@@ -278,7 +275,7 @@ public class ClientRender {
             switch (mode) {
                 case DIRECTION:
                     if (wand.valid) {
-                        boolean no_shape=false;
+                        //boolean no_shape=false;
                         //preview_shape=null;
                         if(preview_shape !=null && !preview_shape.isEmpty()) {
                             List<AABB> list = preview_shape.toAabbs();
@@ -391,10 +388,10 @@ public class ClientRender {
                                 }
 
                             }else{
-                                no_shape=true;
+                                //no_shape=true;
                             }
                         }else {
-                            no_shape=true;
+                            //no_shape=true;
                         }
                         /*if(no_shape) {
                             MCVer.inst.set_render_lines(bufferBuilder);
@@ -417,7 +414,7 @@ public class ClientRender {
                     //preview_mode1(bufferBuilder);
                     if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ||(wand.valid && wand.has_empty_bucket)) {
                         //bbox
-                        if(mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT)
+                        if( drawlines && fill_outlines && (mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT))
                         {
                             if(fat_lines) {
                                 //RenderSystem.disableCull();
@@ -497,44 +494,46 @@ public class ClientRender {
                                 c= tool_use_col;
                             }
                             //RenderSystem.enableDepthTest();
-                            if(fat_lines ) {
-                                //RenderSystem.disableCull();
-                                //RenderSystem.disableDepthTest();
-                                RenderSystem.enableTexture();
-                                MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+                            if( drawlines && block_outlines) {
+                                if (fat_lines) {
+                                    //RenderSystem.disableCull();
+                                    //RenderSystem.disableDepthTest();
+                                    RenderSystem.enableTexture();
+                                    MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
 
-                            }else{
-                                RenderSystem.enableCull();
-                                MCVer.inst.set_render_lines(bufferBuilder);
-                            }
-                            for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
-                                double x = wand.block_buffer.buffer_x[idx];
-                                double y = wand.block_buffer.buffer_y[idx];
-                                double z = wand.block_buffer.buffer_z[idx];
-                                if (wand.block_buffer.state[idx] != null) {
-                                    preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
-                                    List<AABB> list = preview_shape.toAabbs();
-                                    for (AABB aabb : list) {
-                                        if(fat_lines ){
-                                            preview_block_fat(bufferBuilder,
-                                                    x + aabb.minX, y + aabb.minY, z + aabb.minZ,
-                                                    x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
-                                                    c);
-                                        }else {
-                                            preview_block(bufferBuilder,
-                                                    x + aabb.minX, y + aabb.minY, z + aabb.minZ,
-                                                    x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
-                                                    c);
+                                } else {
+                                    RenderSystem.enableCull();
+                                    MCVer.inst.set_render_lines(bufferBuilder);
+                                }
+                                for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
+                                    double x = wand.block_buffer.buffer_x[idx];
+                                    double y = wand.block_buffer.buffer_y[idx];
+                                    double z = wand.block_buffer.buffer_z[idx];
+                                    if (wand.block_buffer.state[idx] != null) {
+                                        preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                                        List<AABB> list = preview_shape.toAabbs();
+                                        for (AABB aabb : list) {
+                                            if (fat_lines) {
+                                                preview_block_fat(bufferBuilder,
+                                                        x + aabb.minX, y + aabb.minY, z + aabb.minZ,
+                                                        x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
+                                                        c);
+                                            } else {
+                                                preview_block(bufferBuilder,
+                                                        x + aabb.minX, y + aabb.minY, z + aabb.minZ,
+                                                        x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
+                                                        c);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            tesselator.end();
-                            if(fat_lines ) {
-                                RenderSystem.disableTexture();
+                                tesselator.end();
+                                if (fat_lines) {
+                                    RenderSystem.disableTexture();
+                                }
                             }
                         }
-                        if ( wand.p1!=null && (mode == Mode.LINE || mode==Mode.CIRCLE )) {
+                        if ( drawlines&& wand.p1!=null && (mode == Mode.LINE || mode==Mode.CIRCLE )) {
 
                             if(fat_lines) {
                                 RenderSystem.enableTexture();
@@ -591,7 +590,7 @@ public class ClientRender {
                     break;
                 case COPY:
 
-                    if (wand.valid) {
+                    if ( drawlines && copy_outlines && wand.valid) {
 
                         x1=(wand.copy_x1>wand.copy_x2)? (wand.copy_x1+off2) : (wand.copy_x1-off2);
                         y1=(wand.copy_y1>wand.copy_y2)? (wand.copy_y1+off2) : (wand.copy_y1-off2);
@@ -630,80 +629,85 @@ public class ClientRender {
                             //RenderSystem.enableBlend();
                             //RenderSystem.defaultBlendFunc();
                             RenderSystem.enableTexture();
-                            MCVer.inst.set_color(1.0f,1.0f,1.0f,opacity);
+                            MCVer.inst.set_color(1.0f, 1.0f, 1.0f, opacity);
                             MCVer.inst.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
-                                render_shape(matrixStack,tesselator, bufferBuilder,Wand.paste_rot(b.state,wand.rotation), b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                render_shape(matrixStack, tesselator, bufferBuilder, Wand.paste_rot(b.state, wand.rotation), b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
                             //RenderSystem.disableBlend();
                         }
+                        if (drawlines && paste_outlines) {
+                            x1 = Integer.MAX_VALUE;
+                            y1 = Integer.MAX_VALUE;
+                            z1 = Integer.MAX_VALUE;
+                            x2 = Integer.MIN_VALUE;
+                            y2 = Integer.MIN_VALUE;
+                            z2 = Integer.MIN_VALUE;
 
-                        x1=Integer.MAX_VALUE;y1=Integer.MAX_VALUE;z1=Integer.MAX_VALUE;
-                        x2=Integer.MIN_VALUE;y2=Integer.MIN_VALUE;z2=Integer.MIN_VALUE;
-
-                        if(fat_lines) {
-                            //RenderSystem.disableCull();
-                            RenderSystem.enableTexture();
-                            MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-                        }else {
-                            MCVer.inst.set_render_lines(bufferBuilder);
-                        }
-                        for (CopyPasteBuffer b : wand.copy_paste_buffer) {
-                            BlockPos p = b.pos.rotate(last_rot);
-                            double x = b_pos.getX() + p.getX();
-                            double y = b_pos.getY() + p.getY();
-                            double z = b_pos.getZ() + p.getZ();
-                            if(fat_lines) {
-                                preview_block_fat(bufferBuilder,
-                                        x, y, z,
-                                        x + 1, y + 1, z + 1, bo_col
-                                );
-                            }else{
-                                preview_block(bufferBuilder,
-                                        x, y, z,
-                                        x + 1, y + 1, z + 1, bo_col
-                                );
+                            if (fat_lines) {
+                                //RenderSystem.disableCull();
+                                RenderSystem.enableTexture();
+                                MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+                            } else {
+                                MCVer.inst.set_render_lines(bufferBuilder);
                             }
+                            for (CopyPasteBuffer b : wand.copy_paste_buffer) {
+                                BlockPos p = b.pos.rotate(last_rot);
+                                double x = b_pos.getX() + p.getX();
+                                double y = b_pos.getY() + p.getY();
+                                double z = b_pos.getZ() + p.getZ();
+                                if (fat_lines) {
+                                    preview_block_fat(bufferBuilder,
+                                            x, y, z,
+                                            x + 1, y + 1, z + 1, bo_col
+                                    );
+                                } else {
+                                    preview_block(bufferBuilder,
+                                            x, y, z,
+                                            x + 1, y + 1, z + 1, bo_col
+                                    );
+                                }
 
-                            if(p.getX()<x1) x1=p.getX();
-                            if(p.getY()<y1) y1=p.getY();
-                            if(p.getZ()<z1) z1=p.getZ();
-                            if(p.getX()+1>x2) x2=p.getX()+1;
-                            if(p.getY()+1>y2) y2=p.getY()+1;
-                            if(p.getZ()+1>z2) z2=p.getZ()+1;
+                                if (p.getX() < x1) x1 = p.getX();
+                                if (p.getY() < y1) y1 = p.getY();
+                                if (p.getZ() < z1) z1 = p.getZ();
+                                if (p.getX() + 1 > x2) x2 = p.getX() + 1;
+                                if (p.getY() + 1 > y2) y2 = p.getY() + 1;
+                                if (p.getZ() + 1 > z2) z2 = p.getZ() + 1;
+                            }
+                            tesselator.end();
+                            RenderSystem.disableTexture();
+                            x1 = b_pos.getX() + x1 - off2;
+                            y1 = b_pos.getY() + y1 - off2;
+                            z1 = b_pos.getZ() + z1 - off2;
+                            x2 = b_pos.getX() + x2 + off2;
+                            y2 = b_pos.getY() + y2 + off2;
+                            z2 = b_pos.getZ() + z2 + off2;
+                            if (fat_lines) {
+                                //RenderSystem.disableCull();
+                                RenderSystem.enableTexture();
+                                MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+                            } else {
+                                MCVer.inst.set_render_lines(bufferBuilder);
+                            }
+                            if (fat_lines) {
+                                preview_block_fat(bufferBuilder,
+                                        x1, y1, z1,
+                                        x2, y2, z2,
+                                        paste_bb_col);
+                            } else {
+                                preview_block(bufferBuilder,
+                                        x1, y1, z1,
+                                        x2, y2, z2,
+                                        paste_bb_col);
+                            }
+                            tesselator.end();
+                            RenderSystem.disableTexture();
                         }
-                        tesselator.end();
-                        RenderSystem.disableTexture();
-                        x1 = b_pos.getX() + x1-off2;
-                        y1 = b_pos.getY() + y1-off2;
-                        z1 = b_pos.getZ() + z1-off2;
-                        x2 = b_pos.getX() + x2+off2;
-                        y2 = b_pos.getY() + y2+off2;
-                        z2 = b_pos.getZ() + z2+off2;
-                        if(fat_lines) {
-                            //RenderSystem.disableCull();
-                            RenderSystem.enableTexture();
-                            MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-                        }else {
-                            MCVer.inst.set_render_lines(bufferBuilder);
-                        }
-                        if(fat_lines) {
-                            preview_block_fat(bufferBuilder,
-                                    x1, y1, z1,
-                                    x2, y2, z2,
-                                    paste_bb_col);
-                        }else{
-                            preview_block(bufferBuilder,
-                                    x1, y1, z1,
-                                    x2, y2, z2,
-                                    paste_bb_col);
-                        }
-                        tesselator.end();
-                        RenderSystem.disableTexture();
                     }
                 break;
             }
@@ -1066,9 +1070,6 @@ public class ClientRender {
     }
 
     static void render_shape(PoseStack matrixStack,Tesselator tesselator,BufferBuilder bufferBuilder,BlockState state,double x, double y,double z){
-        float vx=0;
-        float vy=0;
-        float vz=0;
         float u1=0;
         float v1=0;
         float u0=0;

@@ -28,7 +28,6 @@ import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
 import net.nicguzzo.wands.WandScreenHandler;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsModClient;
 import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.function.Supplier;
@@ -95,7 +94,8 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void pre_render(PoseStack poseStack) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Minecraft client=Minecraft.getInstance();
+        Camera camera = client.gameRenderer.getMainCamera();
         Vec3 c = camera.getPosition();
         //RenderSystem.pushMatrix();
 
