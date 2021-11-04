@@ -48,10 +48,10 @@ public class WandsConfig {
 	public float wand_mode_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
 	public boolean fancy_preview = true;
-	public boolean block_outlines=false;
-	public boolean fill_outlines=false;
-	public boolean copy_outlines=false;
-	public boolean paste_outlines=false;
+	public boolean block_outlines=true;
+	public boolean fill_outlines=true;
+	public boolean copy_outlines=true;
+	public boolean paste_outlines=true;
 	public boolean no_lines=false;
 	public boolean fat_lines=true;
 	public float fat_lines_width=0.025f;
