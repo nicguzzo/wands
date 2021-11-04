@@ -125,7 +125,13 @@ public class WandsModClient {
                 }
                 if (damaged_tool) {
                     Minecraft.getInstance().getToasts().addToast(new WandToast("invalid or damaged"));
-                }
+                }                
+            });
+        });
+        NetworkManager.registerReceiver(Side.S2C, WandsMod.SLAB_PACKET, (packet, context)->{
+            boolean slab=packet.readBoolean();
+            context.queue(()->{
+                ClientRender.wand.slab_stair_bottom=slab;
             });
         });
         NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{

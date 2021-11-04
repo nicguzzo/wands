@@ -106,7 +106,7 @@ public class Wand {
     public WandItem.Plane plane=WandItem.Plane.XZ;
     public Direction.Axis axis=Direction.Axis.Y;
     public Rotation rotation;
-    private WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
+    public WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
 
@@ -169,7 +169,7 @@ public class Wand {
     boolean prnt = false;
     public int limit=MAX_LIMIT;
     Inventory player_inv;
-
+    public boolean slab_stair_bottom=true;
     //private void log(String s) {
         //WandsMod.log(s, prnt);
     //}
@@ -353,6 +353,7 @@ public class Wand {
             valid=false;
             return;
         }
+        
         switch (mode) {
             case DIRECTION: {
                 boolean invert = WandItem.isInverted(wand_stack);
@@ -665,6 +666,7 @@ public class Wand {
                 }
                 packet.writeBoolean(no_tool);
                 packet.writeBoolean(damaged_tool);
+                packet.writeBoolean(slab_stair_bottom);
                 MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
                 no_tool = false;
                 damaged_tool = false;
@@ -1413,39 +1415,38 @@ public class Wand {
     BlockState state_for_placement(BlockState st){
         Block blk=st.getBlock();
         if(state_mode== WandItem.StateMode.APPLY) {
+            /*if(is_alt_pressed){
+                slab_stair_bottom=!slab_stair_bottom;
+            }*/
             if (blk instanceof SlabBlock) {
-                double hity = WandUtils.unitCoord(hit.y);
-                
-                SlabType t;
+                /*double hity = WandUtils.unitCoord(hit.y);
                 if (hity > 0.5) {
                     t= SlabType.TOP;
                 } else {
                     t= SlabType.BOTTOM;
-                }
-                if ( is_alt_pressed) {
-                    if(t==SlabType.TOP) 
-                        t=SlabType.BOTTOM;
-                    else
-                        t= SlabType.TOP;
-                }
+                }*/
+                SlabType slab_type;
+                if(slab_stair_bottom) 
+                    slab_type=SlabType.BOTTOM;
+                else
+                    slab_type= SlabType.TOP;                
                 
-                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, t);
+                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
                 
             } else {
                 if (blk instanceof StairBlock) {
-                    double hity = WandUtils.unitCoord(hit.y);
-                    Half h;
+                    /*double hity = WandUtils.unitCoord(hit.y);                    
                     if (hity > 0.5) {
                         h= Half.TOP;
                     } else {
                         h= Half.BOTTOM;
-                    }
-                    if (is_alt_pressed) {
-                        if(h==Half.TOP) 
-                            h=Half.BOTTOM;
-                        else
-                            h= Half.TOP;
-                    }    
+                    }*/                    
+                    Half h;
+                    if (slab_stair_bottom) 
+                        h=Half.BOTTOM;
+                    else
+                        h= Half.TOP;
+
                     st = blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
                      
                 } else {

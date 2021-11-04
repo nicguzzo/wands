@@ -18,6 +18,7 @@ import dev.architectury.registry.registries.RegistrySupplier;
 //endMC1_17_1  
 
 import io.netty.buffer.Unpooled;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -82,6 +83,7 @@ public class WandsMod {
     static public ResourceLocation PALETTE_PACKET= new ResourceLocation(MOD_ID, "palette_packet");
     static public ResourceLocation STATE_PACKET= new ResourceLocation(MOD_ID, "state_packet");
     static public ResourceLocation WAND_PACKET= new ResourceLocation(MOD_ID, "wand_packet");
+    static public ResourceLocation SLAB_PACKET= new ResourceLocation(MOD_ID, "slab_packet");
 
 
     static final public int wand_menu_key        = GLFW.GLFW_KEY_Y;
@@ -361,7 +363,7 @@ public class WandsMod {
                 break;
             }
         }
-        if(key==-1){
+        if(key<0){
             Wand wand=null;
             if(!player.level.isClientSide()){
                 wand=PlayerWand.get(player);
@@ -371,6 +373,15 @@ public class WandsMod {
                 }
             }
             if(wand!=null){
+
+                if(WandItem.getStateMode(wand_stack)== WandItem.StateMode.APPLY) {
+                    if(!wand.is_alt_pressed && alt){
+                        wand.slab_stair_bottom=!wand.slab_stair_bottom;                        
+                        FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+                        packet.writeBoolean(wand.slab_stair_bottom);
+                        MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SLAB_PACKET, packet);
+                    }
+                }
                 wand.is_alt_pressed=alt;
                 wand.is_shift_pressed=shift;
                 //WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
