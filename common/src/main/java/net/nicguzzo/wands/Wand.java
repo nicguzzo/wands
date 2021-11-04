@@ -230,13 +230,7 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
-        //TODO slab placemente sometimes can't place upper slab,
-        // TODO improve slab/stair placement
-        //DONE toggle outline
-        //DONE paste do not rotate stairs.
-        //FIXED replace from palette is broken
-        //DONE add allowed blocks per tool
-        //DONE optional axis, use same state if no axis set
+                
         //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
@@ -1421,19 +1415,39 @@ public class Wand {
         if(state_mode== WandItem.StateMode.APPLY) {
             if (blk instanceof SlabBlock) {
                 double hity = WandUtils.unitCoord(hit.y);
-                if (hity > 0.5 || is_alt_pressed) {
-                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+                
+                SlabType t;
+                if (hity > 0.5) {
+                    t= SlabType.TOP;
                 } else {
-                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+                    t= SlabType.BOTTOM;
                 }
+                if ( is_alt_pressed) {
+                    if(t==SlabType.TOP) 
+                        t=SlabType.BOTTOM;
+                    else
+                        t= SlabType.TOP;
+                }
+                
+                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, t);
+                
             } else {
                 if (blk instanceof StairBlock) {
                     double hity = WandUtils.unitCoord(hit.y);
-                    if (hity > 0.5 || is_alt_pressed) {
-                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(rotation);
+                    Half h;
+                    if (hity > 0.5) {
+                        h= Half.TOP;
                     } else {
-                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(rotation);
+                        h= Half.BOTTOM;
                     }
+                    if (is_alt_pressed) {
+                        if(h==Half.TOP) 
+                            h=Half.BOTTOM;
+                        else
+                            h= Half.TOP;
+                    }    
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+                     
                 } else {
                     if (blk instanceof RotatedPillarBlock) {
                         st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);

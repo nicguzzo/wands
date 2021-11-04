@@ -212,7 +212,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }
         state_grp=new BtnGroup();
         Btn b1=new Btn(left+100,bottom+h2 +70,btn_w+10,btn_h,
-                new TextComponent("keep state")){
+                new TextComponent("same state")){
             void onClick(int mx,int my){
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,0);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
@@ -220,7 +220,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         state_grp.add(b1);
         Btn b2=new Btn(left+100,bottom+h2 +70+h2,btn_w+10,btn_h,
-                new TextComponent("use rot/axis")){
+                new TextComponent("rot/axis/slab")){
             void onClick(int mx,int my){
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,1);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
