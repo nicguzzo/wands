@@ -173,7 +173,7 @@ public class Wand {
     //private void log(String s) {
         //WandsMod.log(s, prnt);
     //}
-
+    static boolean once=true;
     public void clear() {
         p1 = null;
         p1_state = null;
@@ -231,6 +231,11 @@ public class Wand {
             return;
         }
                 
+        if(once){
+            once=false;
+            WandsMod.config.generate_lists();
+        }
+
         //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
@@ -1223,9 +1228,11 @@ public class Wand {
                             for (int x = xs; x <= xe; x++) {
                                 bp.set(x, y, z);
                                 BlockState bs = level.getBlockState(bp);
-                                if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
-                                    cp++;
-                                    copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
+                                if(!WandsConfig.denied.contains(bs.getBlock())){
+                                    if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
+                                        cp++;
+                                        copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
+                                    }
                                 }
                             }
                         }
@@ -1998,7 +2005,7 @@ public class Wand {
     }
     public void add_to_buffer(int x, int y, int z) {
         if (block_buffer.get_length() < limit){
-            BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
+            BlockState st = level.getBlockState(tmp_pos.set(x, y, z));            
             if (destroy || replace||use) {
                 if(!st.isAir()||mode==Mode.AREA) {
                     block_buffer.add(x, y, z, this);

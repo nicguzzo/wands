@@ -1144,83 +1144,86 @@ public class ClientRender {
 
             return;
         }
+        try {
+            bakedModel = blockRenderer.getBlockModel(state);
+            if(bakedModel!=null) {
+                for(Direction dir: dirs) {
+                    List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
+                    if (bake_list !=null && !bake_list.isEmpty() ) {
+                        //beginMC1_17_1
+                        matrixStack2.setIdentity();
+                        //endMC1_17_1 
+                        /*//beginMC1_16_5
+                        matrixStack2.last().pose().setIdentity();
+                        //endMC1_16_5*/
+                        if(wand.replace&& wand.mode!=Mode.COPY && wand.mode!=Mode.PASTE ){
+                            Vec3i n=wand.side.getNormal();
+                            matrixStack2.translate(
+                                    x+(0.5f*(1.0f-n.getX()))+n.getX(),
+                                    y+(0.5f*(1.0f-n.getY()))+n.getY(),
+                                    z+(0.5f*(1.0f-n.getZ()))+n.getZ()
+                            );
+                            matrixStack2.scale(0.5f,0.5f,0.5f);
+                            matrixStack2.translate(-0.5f,-0.5f,-0.5f);
+                        }else{
+                            matrixStack2.translate(x, y, z);
+                        }
 
-        bakedModel = blockRenderer.getBlockModel(state);
-        if(bakedModel!=null) {
-            for(Direction dir: dirs) {
-                List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
-                if (bake_list !=null && !bake_list.isEmpty() ) {
-                    //beginMC1_17_1
-                    matrixStack2.setIdentity();
-                    //endMC1_17_1 
-                    /*//beginMC1_16_5
-                    matrixStack2.last().pose().setIdentity();
-                    //endMC1_16_5*/
-                    if(wand.replace&& wand.mode!=Mode.COPY && wand.mode!=Mode.PASTE ){
-                        Vec3i n=wand.side.getNormal();
-                        matrixStack2.translate(
-                                x+(0.5f*(1.0f-n.getX()))+n.getX(),
-                                y+(0.5f*(1.0f-n.getY()))+n.getY(),
-                                z+(0.5f*(1.0f-n.getZ()))+n.getZ()
-                        );
-                        matrixStack2.scale(0.5f,0.5f,0.5f);
-                        matrixStack2.translate(-0.5f,-0.5f,-0.5f);
-                    }else{
-                        matrixStack2.translate(x, y, z);
-                    }
+                        for (BakedQuad quad : bake_list) {
+                            if(wand.replace ||
+                                    //beginMC1_17_1
+                                    Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp)
+                                    //endMC1_17_1 
+                                    /*//beginMC1_16_5
+                                    Block.shouldRenderFace(state, wand.level, bp, quad.getDirection())
+                                    //endMC1_16_5*/
+                            )
+                            {
+                                MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
+                                int[] verts = quad.getVertices();
+                                int n = verts.length / 4;
+                                int ii = -1;
+                                if (quad.isTinted()) {
+                                    if(state.getBlock() instanceof GrassBlock)
+                                        ii=BiomeColors.getAverageGrassColor(wand.level, bp);
+                                    else if(state.getBlock() instanceof LeavesBlock)
+                                        ii=BiomeColors.getAverageFoliageColor(wand.level, bp);
+                                    else
+                                        ii = client.getBlockColors().getColor(state, wand.level, last_pos);
+                                    r = (float) (ii >> 16 & 255) / 255.0F;
+                                    g = (float) (ii >> 8 & 255) / 255.0F;
+                                    b = (float) (ii & 255) / 255.0F;
+                                }else{
+                                    r= block_col.r;
+                                    g= block_col.g;
+                                    b= block_col.b;
+                                }
+                                float f = wand.level.getShade(quad.getDirection(), quad.isShade());
 
-                    for (BakedQuad quad : bake_list) {
-                        if(wand.replace ||
-                                //beginMC1_17_1
-                                Block.shouldRenderFace(state, wand.level, bp, quad.getDirection(), bp)
-                                //endMC1_17_1 
-                                /*//beginMC1_16_5
-                                Block.shouldRenderFace(state, wand.level, bp, quad.getDirection())
-                                //endMC1_16_5*/
-                        )
-                        {
-                            MCVer.inst.set_texture(TextureAtlas.LOCATION_BLOCKS);
-                            int[] verts = quad.getVertices();
-                            int n = verts.length / 4;
-                            int ii = -1;
-                            if (quad.isTinted()) {
-                                if(state.getBlock() instanceof GrassBlock)
-                                    ii=BiomeColors.getAverageGrassColor(wand.level, bp);
-                                else if(state.getBlock() instanceof LeavesBlock)
-                                    ii=BiomeColors.getAverageFoliageColor(wand.level, bp);
-                                else
-                                    ii = client.getBlockColors().getColor(state, wand.level, last_pos);
-                                r = (float) (ii >> 16 & 255) / 255.0F;
-                                g = (float) (ii >> 8 & 255) / 255.0F;
-                                b = (float) (ii & 255) / 255.0F;
-                            }else{
-                                r= block_col.r;
-                                g= block_col.g;
-                                b= block_col.b;
+                                bufferBuilder.putBulkData(matrixStack2.last(), quad, new float[]{f, f, f, f}, r, g, b, new int[]{-1, -1, -1, -1}, n, true);
+                                /*
+                                for (int i = 0; i < 4; ++i) {
+                                    int j = i * n;
+                                    vx = Float.intBitsToFloat(verts[j]);
+                                    vy = Float.intBitsToFloat(verts[j + 1]);
+                                    vz = Float.intBitsToFloat(verts[j + 2]);
+                                    u = Float.intBitsToFloat(verts[j + 4]);
+                                    v = Float.intBitsToFloat(verts[j + 5]);
+
+                                    bufferBuilder
+                                            .vertex(x + vx, y + vy, z + vz)
+                                            .uv(u, v)
+                                            .color(r, g, b, block_col.a)
+                                            .normal((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ())
+                                            .endVertex();
+                                }*/
                             }
-                            float f = wand.level.getShade(quad.getDirection(), quad.isShade());
-
-                            bufferBuilder.putBulkData(matrixStack2.last(), quad, new float[]{f, f, f, f}, r, g, b, new int[]{-1, -1, -1, -1}, n, true);
-                            /*
-                            for (int i = 0; i < 4; ++i) {
-                                int j = i * n;
-                                vx = Float.intBitsToFloat(verts[j]);
-                                vy = Float.intBitsToFloat(verts[j + 1]);
-                                vz = Float.intBitsToFloat(verts[j + 2]);
-                                u = Float.intBitsToFloat(verts[j + 4]);
-                                v = Float.intBitsToFloat(verts[j + 5]);
-
-                                bufferBuilder
-                                        .vertex(x + vx, y + vy, z + vz)
-                                        .uv(u, v)
-                                        .color(r, g, b, block_col.a)
-                                        .normal((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ())
-                                        .endVertex();
-                            }*/
                         }
                     }
                 }
             }
+        } catch (Exception e) {
+            //WandsMod.log("couldn't get model, blacklisting block...", true);
         }
     }
     static void update_colors(){
