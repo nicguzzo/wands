@@ -3,7 +3,7 @@ package net.nicguzzo.wands.forge;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.nicguzzo.wands.ClientRender;
 
@@ -11,7 +11,7 @@ import net.nicguzzo.wands.ClientRender;
 public class WandsForgeEventHandler {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public void onRenderWorldLast(RenderWorldLastEvent event) {
-        ClientRender.render(event.getMatrixStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
+    public void onRenderWorldLast(RenderLevelLastEvent event) {
+        ClientRender.render(event.getPoseStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
     }
 }

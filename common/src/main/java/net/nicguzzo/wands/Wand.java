@@ -235,7 +235,7 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-
+        //TODO don't preview outside y limits
         //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
