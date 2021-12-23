@@ -67,7 +67,7 @@ public class BlockBuffer{
             length++;
         }
     }
-    public void add(int x, int y, int z,Wand w){
+    public boolean add(int x, int y, int z,Wand w){
         if(length<max){
             BlockState st=w.get_state();
             if(st!=null){
@@ -78,10 +78,12 @@ public class BlockBuffer{
                     buffer_z[length]=z;
                     state[length]=st;
                     item[length]=it;
-                    length++;   
+                    length++;
+                    return true;
                 }
             }
         }
+        return false;
     }
     public void set(int i,BlockPos p){
         set(i,p.getX(),p.getY(),p.getZ());

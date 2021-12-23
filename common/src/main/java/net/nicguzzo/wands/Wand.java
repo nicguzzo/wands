@@ -235,7 +235,7 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-        //TODO don't preview outside y limits
+        
         //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
@@ -728,19 +728,18 @@ public class Wand {
                 dest = find_next_pos(block_state, d1, pos);
             }
             if (dest != null) {
-                //if (preview) {
+                
                 x1 = dest.getX();
                 y1 = dest.getY();
                 z1 = dest.getZ();
                 x2 = x1 + 1;
                 y2 = y1 + 1;
                 z2 = z1 + 1;
-                valid = true;
-                //} else {
+                //valid = true;
+                
                 block_buffer.reset();
-                add_to_buffer(dest.getX(),dest.getY(),dest.getZ());
-                //block_buffer.add(dest, this);
-                //}
+                valid=add_to_buffer(dest.getX(),dest.getY(),dest.getZ());
+                
             }
         }
     }
@@ -2003,20 +2002,21 @@ public class Wand {
             }
         }
     }
-    public void add_to_buffer(int x, int y, int z) {
-        if (block_buffer.get_length() < limit){
+    public boolean add_to_buffer(int x, int y, int z) {
+        if (!level.isOutsideBuildHeight(y)&& block_buffer.get_length() < limit){
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));            
             if (destroy || replace||use) {
                 if(!st.isAir()||mode==Mode.AREA) {
-                    block_buffer.add(x, y, z, this);
+                    return block_buffer.add(x, y, z, this);
                 }
             } else {
                 if (can_place(st))
-                    block_buffer.add(x, y, z, this);
-            }
+                    return block_buffer.add(x, y, z, this);
+            }            
         }else{
             limit_reached=true;
         }
+        return false;
     }
     void consume_xp(){
         float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
@@ -2116,7 +2116,7 @@ public class Wand {
             BlockState bs2 = level.getBlockState(pos2);
             if (block_buffer.get_length() < limit &&
                     (bs1.equals(state) || state_in_slot(bs1)) &&
-                    (destroy ||replace|| can_place(bs2)))
+                    (((destroy ||replace) && bs2.isAir()) || can_place(bs2)))
             {
                 //block_buffer.add(pos2, this);
                 add_to_buffer(pos2.getX(),pos2.getY(),pos2.getZ());

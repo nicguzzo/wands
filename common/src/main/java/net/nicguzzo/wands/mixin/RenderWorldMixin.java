@@ -19,7 +19,7 @@ public class RenderWorldMixin {
     public void render(PoseStack matrices, BufferSource bufferIn, double camX, double camY, double camZ, CallbackInfo ci) {
         if(!WandsMod.is_forge)
         {
-            ClientRender.render(matrices,camX,camY,camZ, bufferIn);
+            //ClientRender.render(matrices);
         }
     }
 }

@@ -12,6 +12,6 @@ public class WandsForgeEventHandler {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void onRenderWorldLast(RenderLevelLastEvent event) {
-        ClientRender.render(event.getPoseStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
+        ClientRender.render(event.getPoseStack());
     }
 }
