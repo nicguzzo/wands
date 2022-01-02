@@ -75,8 +75,10 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void set_render_quads_pos_tex(BufferBuilder bufferBuilder) {
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        //RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        RenderSystem.setShader(GameRenderer::getBlockShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
     }
     @Override
     public void set_render_lines(BufferBuilder bufferBuilder) {

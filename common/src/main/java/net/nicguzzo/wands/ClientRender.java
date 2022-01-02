@@ -262,9 +262,9 @@ public class ClientRender {
             float last_pos_x=last_pos.getX();
             float last_pos_y=last_pos.getY();
             float last_pos_z=last_pos.getZ();
-            double wand_x1=wand.x1;
-            double wand_y1=wand.y1;
-            double wand_z1=wand.z1;
+            float wand_x1=wand.x1;
+            float wand_y1=wand.y1;
+            float wand_z1=wand.z1;
             
             float nx=0.0f,ny=0.0f,nz=0.0f;
             
@@ -339,7 +339,7 @@ public class ClientRender {
                                                 case SOUTH:
                                                     x1 = last_pos_x + (float)aabb.minX;
                                                     y1 = last_pos_y + (float)aabb.minY;
-                                                    z1 = last_pos_z + (float)aabb.maxZ + 0.0f;
+                                                    z1 = last_pos_z + (float)aabb.maxZ + 0.02f;
                                                     x2 = last_pos_x + (float)aabb.maxX;
                                                     y2 = last_pos_y + (float)aabb.maxY;
 
@@ -539,17 +539,17 @@ public class ClientRender {
                                     MCVer.inst.set_render_lines(bufferBuilder);
                                 }
                                 for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
-                                    double x = wand.block_buffer.buffer_x[idx];
-                                    double y = wand.block_buffer.buffer_y[idx];
-                                    double z = wand.block_buffer.buffer_z[idx];
+                                    float x = wand.block_buffer.buffer_x[idx];
+                                    float y = wand.block_buffer.buffer_y[idx];
+                                    float z = wand.block_buffer.buffer_z[idx];
                                     if (wand.block_buffer.state[idx] != null) {
                                         preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
                                         List<AABB> list = preview_shape.toAabbs();
                                         for (AABB aabb : list) {
                                             if (fat_lines) {
                                                 preview_block_fat(bufferBuilder,
-                                                        x + aabb.minX, y + aabb.minY, z + aabb.minZ,
-                                                        x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
+                                                        x + (float)aabb.minX, y + (float)aabb.minY, z + (float)aabb.minZ,
+                                                        x + (float)aabb.maxX, y + (float)aabb.maxY, z + (float)aabb.maxZ,
                                                         c);
                                             } else {
                                                 preview_block(bufferBuilder,
@@ -590,9 +590,9 @@ public class ClientRender {
                                     RenderSystem.disableDepthTest();
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                                     player_facing_line(bufferBuilder,
-                                            camera.getPosition().x, camera.getPosition().y, camera.getPosition().z,
-                                            last_pos_x + 0.5, last_pos_y + 0.5, last_pos_z + 0.5,
-                                            wand_x1 + 0.5, wand_y1 + 0.5, wand_z1 + 0.5,
+                                            (float)camera.getPosition().x, (float)camera.getPosition().y, (float)camera.getPosition().z,
+                                            last_pos_x + 0.5f, last_pos_y + 0.5f, last_pos_z + 0.5f,
+                                            wand_x1 + 0.5f, wand_y1 + 0.5f, wand_z1 + 0.5f,
                                             line_col);
                                     tesselator.end();
                                 }
@@ -690,9 +690,9 @@ public class ClientRender {
                             }
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
-                                double x = b_pos.getX() + p.getX();
-                                double y = b_pos.getY() + p.getY();
-                                double z = b_pos.getZ() + p.getZ();
+                                float x = b_pos.getX() + p.getX();
+                                float y = b_pos.getY() + p.getY();
+                                float z = b_pos.getZ() + p.getZ();
                                 if (fat_lines) {
                                     preview_block_fat(bufferBuilder,
                                             x, y, z,
@@ -798,7 +798,7 @@ public class ClientRender {
         bufferBuilder.vertex(fx2, fy2, fz2).color(c.r,c.g,c.b,c.a).endVertex();
     }
 
-    static void preview_block_fat(BufferBuilder bufferBuilder,double fx1, double fy1, double fz1, double fx2, double fy2, double fz2,Color c) {
+    static void preview_block_fat(BufferBuilder bufferBuilder,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Color c) {
         float off=0.01f;
         fx1 -= off;
         fy1 -= off;
@@ -850,32 +850,38 @@ public class ClientRender {
 
     private static void quad_line(BufferBuilder bufferBuilder,
                                   float wx,float wy,float wz,
-                                  double lx1, double ly1,double lz1,
-                                  double lx2, double ly2,double lz2,
+                                  float lx1, float ly1,float lz1,
+                                  float lx2, float ly2,float lz2,
                                   float nx,float ny,float nz){
-        bufferBuilder.vertex(lx1, ly1, lz1         ).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
-        bufferBuilder.vertex(lx1+wx, ly1+wy, lz1+wz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
-        bufferBuilder.vertex(lx2+wx, ly2+wy, lz2+wz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
-        bufferBuilder.vertex(lx2, ly2, lz2         ).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+
+        bufferBuilder.vertex(lx1, ly1, lz1         , 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx1+wx, ly1+wy, lz1+wz, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx2+wx, ly2+wy, lz2+wz, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx2, ly2, lz2         , 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
+
+        //bufferBuilder.vertex(lx1, ly1, lz1         ).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        //bufferBuilder.vertex(lx1+wx, ly1+wy, lz1+wz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        //bufferBuilder.vertex(lx2+wx, ly2+wy, lz2+wz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
+        //bufferBuilder.vertex(lx2, ly2, lz2         ).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal(nx,ny,nz).endVertex();
     }
 
-    private static void player_facing_line(BufferBuilder bufferBuilder,double cx,double cy,double cz,double lx1, double ly1,double lz1,double lx2, double ly2,double lz2,Color c){
+    private static void player_facing_line(BufferBuilder bufferBuilder,float cx,float cy,float cz,float lx1, float ly1,float lz1,float lx2, float ly2,float lz2,Color c){
 
         float w=0.05f;
 
-        double p1x=cx-lx1;
-        double p1y=cy-ly1;
-        double p1z=cz-lz1;
+        float p1x=cx-lx1;
+        float p1y=cy-ly1;
+        float p1z=cz-lz1;
 
-        double p2x=lx2-lx1;
-        double p2y=ly2-ly1;
-        double p2z=lz2-lz1;
+        float p2x=lx2-lx1;
+        float p2y=ly2-ly1;
+        float p2z=lz2-lz1;
 
         //cross product
-        double nx = p2y * p1z - p2z * p1y;
-        double ny = p2z * p1x - p2x * p1z;
-        double nz = p2x * p1y - p2y * p1x;
-        double l=Math.sqrt(nx*nx+ny*ny+nz*nz);
+        float nx = p2y * p1z - p2z * p1y;
+        float ny = p2z * p1x - p2x * p1z;
+        float nz = p2x * p1y - p2y * p1x;
+        float l=(float)Math.sqrt(nx*nx+ny*ny+nz*nz);
         if(l!=0){
             nx=(nx/l)*w;
             ny=(ny/l)*w;
@@ -883,10 +889,18 @@ public class ClientRender {
         }
         MCVer.inst.set_texture(LINE_TEXTURE);
         MCVer.inst.set_color(c.r,c.g,c.b,c.a);
+
+        bufferBuilder.vertex(lx1-nx, ly1-ny, lz1-nz, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx1+nx, ly1+ny, lz1+nz, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
+        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
+
+
+        /*
         bufferBuilder.vertex(lx1-nx, ly1-ny, lz1-nz).uv(0,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
         bufferBuilder.vertex(lx1+nx, ly1+ny, lz1+nz).uv(0,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
         bufferBuilder.vertex(lx2+nx, ly2+ny, lz2+nz).uv(1,1).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
-        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();
+        bufferBuilder.vertex(lx2-nx, ly2-ny, lz2-nz).uv(1,0).color(1.0f,1.0f,1.0f,1.0f).normal((float)nx,(float)ny,(float)nz).endVertex();*/
 
     }
     private static void set_grid_v(int i,double x, double y,double z){
@@ -1147,6 +1161,7 @@ public class ClientRender {
             v1 = sprite.getV1();
             float o=0.1f;
             //up
+
             bufferBuilder.vertex(x  +o,y+h-o,z  +o).color(r,g,b, a).uv(u1, v1).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
             bufferBuilder.vertex(x  +o,y+h-o,z+1-o).color(r,g,b, a).uv(u1, v0).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();
             bufferBuilder.vertex(x+1-o,y+h-o,z+1-o).color(r,g,b, a).uv(u0, v0).uv2(bf).normal(0.0F, 1.0F, 0.0F).endVertex();

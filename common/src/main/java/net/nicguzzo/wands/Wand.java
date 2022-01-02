@@ -326,9 +326,9 @@ public class Wand {
         }
         if (offhand != null && !has_palette && !has_bucket && !destroy) {
             if (offhand.getTag() != null) {
-                if (!preview) {
+                /*if (!preview) {
                     player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED), false);
-                }
+                }*/
                 offhand = null;
                 has_offhand =false;
                 offhand_block=null;
