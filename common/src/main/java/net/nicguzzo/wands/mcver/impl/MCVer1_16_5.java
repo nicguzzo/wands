@@ -97,7 +97,7 @@ public class MCVer1_16_5 extends MCVer{
 		Vec3 c = camera.getPosition();
 
 		poseStack.pushPose();
-		if(WandsModClient.is_forge) {
+		if(WandsMod.is_forge) {
 			poseStack.translate(-c.x, -c.y, -c.z); // translate
 			GlStateManager._pushMatrix();
 			RenderSystem.multMatrix(poseStack.last().pose());

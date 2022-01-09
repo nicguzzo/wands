@@ -95,7 +95,7 @@ public class WandsMod {
     static final public int palette_mode_key     = GLFW.GLFW_KEY_R;
     static final public int palette_menu_key     = GLFW.GLFW_KEY_J;
     //static final public int wand_state_mode_key  = GLFW.GLFW_KEY_B;
-
+    public static boolean is_forge=false;
 	
     public static void init() {
         
@@ -273,11 +273,8 @@ public class WandsMod {
                     if (alt) {//change axis
                         if (wand != null) {
                             WandItem.nextAxis(item_stack);
-                            Optional<Direction.Axis> a=WandItem.getAxis(item_stack);
-                            if(a.isPresent())
-                                player.displayClientMessage(new TextComponent("Wand Axis: " + a.get()), false);
-                            else
-                                player.displayClientMessage(new TextComponent("Wand Axis: none"), false);
+                            Direction.Axis a=WandItem.getAxis(item_stack);
+                            player.displayClientMessage(new TextComponent("Wand Axis: " + a), false);
                             send_state((ServerPlayer) player, wand);
                         }
                     } else {

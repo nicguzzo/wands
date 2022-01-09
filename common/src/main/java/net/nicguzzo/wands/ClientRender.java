@@ -245,7 +245,7 @@ public class ClientRender {
         //client.gameRenderer.lightTexture().turnOffLightLayer();
         boolean fabulous_bug=false;
 
-        fabulous_bug=(WandsModClient.is_forge&& Minecraft.useShaderTransparency() );
+        fabulous_bug=(WandsMod.is_forge&& Minecraft.useShaderTransparency() );
 
         if(Screen.hasControlDown() || fabulous_bug){
             RenderSystem.disableDepthTest();

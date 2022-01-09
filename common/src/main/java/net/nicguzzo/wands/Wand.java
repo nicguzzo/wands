@@ -104,7 +104,7 @@ public class Wand {
     public boolean force_render = false;
     public boolean limit_reached=false;
     public WandItem.Plane plane=WandItem.Plane.XZ;
-    public Optional<Direction.Axis> axis=Optional.empty(); //Direction.Axis.Y;
+    public Direction.Axis axis=Direction.Axis.Y;
     public Rotation rotation;
     private WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
     private boolean no_tool;
@@ -1273,7 +1273,7 @@ public class Wand {
             Direction d;
             switch (rot) {
                 case CLOCKWISE_90:
-                    d= st.getValue(StairBlock.FACING).getClockWise(Direction.Axis.Y);
+                    d= st.getValue(StairBlock.FACING).getClockWise();
                     st = st.setValue(StairBlock.FACING, d);
                 break;
                 case CLOCKWISE_180:
@@ -1281,7 +1281,7 @@ public class Wand {
                     st = st.setValue(StairBlock.FACING, d);
                     break;
                 case COUNTERCLOCKWISE_90:
-                    d= st.getValue(StairBlock.FACING).getCounterClockWise(Direction.Axis.Y);
+                    d= st.getValue(StairBlock.FACING).getCounterClockWise();
                     st = st.setValue(StairBlock.FACING, d);
                     break;
             }
@@ -1432,9 +1432,7 @@ public class Wand {
                     }
                 } else {
                     if (blk instanceof RotatedPillarBlock) {
-                        if (this.axis.isPresent()) {
-                            st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis.get());
-                        }
+                        st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
                     } else {
                         //if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock)
                         {
@@ -1519,15 +1517,12 @@ public class Wand {
         int    limit = wand_item.limit;
         int ll=0;
         block_buffer.reset();
-        Direction.Axis laxis= Direction.Axis.Y;
-        if(this.axis.isPresent()) {
-            laxis=this.axis.get();
-        }
+
         for (int z = zs; z <= ze; z++) {
             for (int y = ys; y <= ye; y++) {
                 for (int x = xs; x <= xe; x++) {
                     if(hollow) {
-                        switch (laxis) {
+                        switch (this.axis) {
                             case X:
                                 if (y > ys && y < ye && z > zs && z < ze)
                                     continue;

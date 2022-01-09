@@ -2,11 +2,7 @@ plugins {
     id "com.github.johnrengelman.shadow" version "${shadow_version}"
 }
 configurations {
-    common
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
-    compileClasspath.extendsFrom common
-    runtimeClasspath.extendsFrom common
-    //developmentForge.extendsFrom common
 }
 
 architectury {
@@ -14,9 +10,9 @@ architectury {
     forge()
 }
 
-//loom {
-//    useFabricMixin = false
-//}
+loom {
+    useFabricMixin = true
+}
 
 
 dependencies {
@@ -63,7 +59,7 @@ shadowJar {
 remapJar {
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    classifier null
+    classifier "forge"
 }
 
 jar {
@@ -78,12 +74,6 @@ sourcesJar {
     def commonSources = project(":common").sourcesJar
     dependsOn commonSources
     from commonSources.archiveFile.map { zipTree(it) }
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
 }
 
 publishing {

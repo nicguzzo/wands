@@ -202,17 +202,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             plane_grp.add(b);
         }
         axis_grp=new BtnGroup();
-        Btn a0=new Btn(left+180,bottom+h2 +110,btn_w,btn_h,
-                new TextComponent("no axis")){
-            void onClick(int mx,int my){
-                WandsModClient.send_wand(-1,-1,-1,-1,3,-1,-1,-1,-1);
-                WandItem.setAxis(wand_stack, 3);
-            }
-        };
-        axis_grp.add(a0);
+
         for (int i=0;i<WandItem.axes.length;i++) {
             int finala=i;
-            Btn b=new Btn(left+180,bottom+h2*i +110+h2+h2,btn_w,btn_h,
+            Btn b=new Btn(left+180,bottom+h2*i +110+h2,btn_w,btn_h,
                     new TextComponent(WandItem.axes[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);
@@ -346,12 +339,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                 action_grp.selected=WandItem.getAction(wand_stack).ordinal();
                 orientation_grp.selected=WandItem.getOrientation(wand_stack).ordinal();
                 plane_grp.selected=WandItem.getPlane(wand_stack).ordinal();
-                Optional<Direction.Axis> a=WandItem.getAxis(wand_stack);
-                if(a.isEmpty()){
-                    axis_grp.selected=0;
-                }else {
-                    axis_grp.selected =a.get().ordinal()+1;
-                }
+                axis_grp.selected =WandItem.getAxis(wand_stack).ordinal();
                 state_grp.selected=WandItem.getStateMode(wand_stack).ordinal();
                 rot_grp.selected=WandItem.getRotation(wand_stack).ordinal();
                 inv_grp_btn.selected=(WandItem.isInverted(wand_stack)?0:-1);
