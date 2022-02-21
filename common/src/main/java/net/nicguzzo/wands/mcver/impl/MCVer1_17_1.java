@@ -7,13 +7,18 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.registry.CreativeTabRegistry;
+import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.ExtendedMenuProvider;
 import dev.architectury.registry.menu.MenuRegistry;
 import net.minecraft.client.Camera;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -24,10 +29,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
 import net.nicguzzo.wands.WandScreenHandler;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.WandsModClient;
 import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.function.Supplier;
@@ -75,15 +84,11 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void set_render_quads_pos_tex(BufferBuilder bufferBuilder) {
-        //RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
         RenderSystem.setShader(GameRenderer::getBlockShader);
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
     }
     @Override
     public void set_render_lines(BufferBuilder bufferBuilder) {
-        //RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        //bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
         RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
         RenderSystem.lineWidth(5.0f);
         bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
@@ -105,6 +110,7 @@ public class MCVer1_17_1 extends MCVer {
         PoseStack poseStack2 = RenderSystem.getModelViewStack();
         poseStack2.pushPose();
         //if(WandsMod.is_forge)
+        if(WandsMod.config.render_last)
         {
             poseStack2.mulPoseMatrix(poseStack.last().pose());
         }
@@ -168,5 +174,41 @@ public class MCVer1_17_1 extends MCVer {
     public ItemStack get_carried(Player player,AbstractContainerMenu menu){
         return menu.getCarried();
     }
+
+    @Override
+    public void set_identity(PoseStack m) {
+        m.setIdentity();
+    }
+
+    @Override
+    public boolean shouldRenderFace(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, Direction direction, BlockPos blockPos2) {
+        return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction, blockPos2);
+    }
+
+    @Override
+    public void register_key(KeyMapping k) {
+        KeyMappingRegistry.register(k);
+    }
+
+    @Override
+    public void render_info() {
+        ClientGuiEvent.RENDER_HUD.register((pose, delta)->{ WandsModClient.render_wand_info(pose);});
+    }
+
+    @Override
+    public boolean is_1_16() {
+        return false;
+    }
+
+    @Override
+    public boolean is_1_17() {
+        return true;
+    }
+
+    @Override
+    public boolean is_1_18() {
+        return false;
+    }
+
 }
 //endMC1_17_1  

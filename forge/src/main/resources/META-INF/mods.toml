@@ -5,7 +5,7 @@ license = "Insert License Here"
 
 [[mods]]
 modId = "wands"
-version = "2.3.1"
+version = "$version"
 displayName = "Building Wands"
 authors = "nicguzzo"
 description = '''
@@ -31,5 +31,12 @@ side = "BOTH"
 modId = "architectury"
 mandatory = true
 versionRange = "[3.2,)"
+ordering = "AFTER"
+side = "BOTH"
+
+[[dependencies.wands]]
+modId = "cloth_config"
+mandatory = true
+versionRange = "[6.1,)"
 ordering = "AFTER"
 side = "BOTH"

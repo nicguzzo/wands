@@ -6,7 +6,9 @@ plugins {
 architectury {
     minecraft = rootProject.minecraft_version
 }
-
+repositories {
+    maven { url "https://maven.shedaniel.me/" }
+}
 subprojects {
     apply plugin: "dev.architectury.loom"
 

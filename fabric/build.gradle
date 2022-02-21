@@ -5,7 +5,11 @@ architectury {
     platformSetupLoomIde()
     fabric()
 }
-
+repositories {
+    maven{
+        url "https://maven.terraformersmc.com/releases"
+    }
+}
 configurations {
     common
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
@@ -20,6 +24,11 @@ dependencies {
     // Remove the next line if you don't want to depend on the API    
     modApi "${rootProject.architectury}:architectury-fabric:${rootProject.architectury_version}"
 
+    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
     common(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
@@ -35,6 +44,8 @@ processResources {
     inputs.property "min_fabric_loader_version", rootProject.min_fabric_loader_version
     inputs.property "min_minecraft_version", rootProject.min_minecraft_version
     inputs.property "min_architectury", rootProject.min_architectury
+    inputs.property "modmenu_version", rootProject.modmenu_version
+    inputs.property "cloth_config", rootProject.cloth_config
 
     filesMatching("fabric.mod.json") {
         expand (
@@ -42,7 +53,9 @@ processResources {
             "version": project.version,
             "min_fabric_loader_version":  rootProject.min_fabric_loader_version,
             "min_minecraft_version": rootProject.min_minecraft_version,
-            "min_architectury": rootProject.min_architectury
+            "min_architectury": rootProject.min_architectury,
+            "modmenu_version":rootProject.modmenu_version,
+            "cloth_config":rootProject.cloth_config
         )
     }
 }

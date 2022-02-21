@@ -1,6 +1,12 @@
 plugins {    
     id "com.github.johnrengelman.shadow" version "${shadow_version}"
 }
+loom {
+    forge {
+        mixinConfig "wands-common.mixins.json"
+        mixinConfig "wands.mixins.json"
+    }
+}
 architectury {
     platformSetupLoomIde()
     forge()
@@ -21,13 +27,15 @@ dependencies {
     // Remove the next line if you don't want to depend on the API
     
     modApi "${rootProject.architectury}:architectury-forge:${rootProject.architectury_version}"
-
+    //api(fg.deobf("me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config}"))
+    modApi("me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config}")
     common(project(path: ":common", configuration: "dev")) {
         transitive = false
     }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) {
         transitive = false
     }
+
 }
 
 processResources {
@@ -48,6 +56,7 @@ processResources {
 }
 shadowJar {
     exclude "fabric.mod.json"
+    exclude "architectury.common.json"
 
     configurations = [project.configurations.shadowCommon]
     classifier "dev-shadow"

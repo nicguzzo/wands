@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "wands",
-  "version": "2.3.1",
+  "id": "${modid}",
+  "version": "${version}",
   "name": "Building Wands",
   "description": "Building Wands",
   "authors": [
@@ -20,19 +20,25 @@
     ],
     "client": [
       "net.nicguzzo.wands.fabric.WandsModClientFabric"
+    ],
+    "modmenu": [
+      "net.nicguzzo.wands.fabric.ModMenu"
     ]
   },
   "mixins": [
-    "wands.mixins.json"
+    "wands.mixins.json",
+    "wands-common.mixins.json"
   ],
 
   "depends": {
-    "fabricloader": ">=0.12.12",
+    "fabricloader": ">=${min_fabric_loader_version}",
     "fabric": "*",
-    "minecraft": ">=1.18.1",
-    "architectury": ">=3.2.44"
+    "minecraft": ">=${min_minecraft_version}",
+    "architectury": ">=${min_architectury}",
+    "cloth-config": ">=${cloth_config}"
   },
   "suggests": {
+    "modmenu": "*",
     "flamingo": "*"
   }
 }

@@ -2,19 +2,20 @@ package net.nicguzzo.wands;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-//import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screens.Screen;
 import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.Vector;
@@ -34,8 +35,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         int w;
         int h;
         Component text;
-        WandsConfig.Color c1=new WandsConfig.Color(0.1f,0.1f,0.1f,0.8f);
-        WandsConfig.Color c2=new WandsConfig.Color(0.4f,0.4f,0.40f,0.9f);
+        ClientRender.Colorf c1=new ClientRender.Colorf(0.1f,0.1f,0.1f,0.8f);
+        ClientRender.Colorf c2=new ClientRender.Colorf(0.4f,0.4f,0.40f,0.9f);
         boolean selected=false;
         Btn(int x,int y,int w,int h,Component text){
             this.text=text;
@@ -116,10 +117,12 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     BtnGroup fill_grp_btn;
     BtnGroup rot_grp;
     BtnGroup state_grp;
+    Btn conf_btn;
     Btn show_inv_btn;
 
     boolean show_inv=false;
-    Component text_mode=new TextComponent("Mode");
+
+    Component text_mode=new TranslatableComponent("screen.wands.mode");
     Component text_action=new TextComponent("Action");
     Component text_orientation=new TextComponent("Orientation");
     Component text_plane=new TextComponent("Plane");
@@ -283,6 +286,14 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             }
         };
         fill_grp_btn.add(fill_btn);
+
+        Screen parent=(Screen)this;
+        conf_btn=new Btn(left+210,bottom+175,27,12,new TextComponent("Conf")){
+            void onClick(int mx,int my) {
+                Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
+            }
+        };
+        show_grp_btn.add(conf_btn);
 
         buttons.add(modes_grp);
         buttons.add(action_grp);

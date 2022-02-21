@@ -3,16 +3,24 @@ package net.nicguzzo.wands;
 import java.util.*;
 import java.util.function.Consumer;
 
+import dev.architectury.event.events.common.PlayerEvent;
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementList;
+import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.data.advancements.AdvancementProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.PlayerAdvancements;
+import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
@@ -170,6 +178,7 @@ public class Wand {
     public int limit=MAX_LIMIT;
     Inventory player_inv;
     public boolean slab_stair_bottom=true;
+
     //private void log(String s) {
         //WandsMod.log(s, prnt);
     //}
@@ -191,6 +200,21 @@ public class Wand {
         }
     }
 
+    boolean check_advancement(ServerAdvancementManager server_advancements,PlayerAdvancements player_advancements,String a){
+        ResourceLocation res=ResourceLocation.tryParse(a);
+        if(res==null){
+            WandsMod.log("bad advancement: "+res,prnt);
+            return false;
+        }
+        Advancement adv= server_advancements.getAdvancement(res);
+        if(adv==null){
+            WandsMod.log("bad advancement: "+res,prnt);
+            return false;
+        }
+        AdvancementProgress prog=player_advancements.getOrStartProgress(adv);
+        return prog.isDone();
+    }
+
     public void do_or_preview(
             Player player,
             Level level,
@@ -200,6 +224,37 @@ public class Wand {
             Vec3 hit,
             ItemStack wand_stack,
             boolean prnt) {
+        creative = MCVer.inst.is_creative(player);
+        if(!creative && WandsMod.config.check_advancements && !level.isClientSide()) {
+            PlayerAdvancements advs=((ServerPlayer)player).getAdvancements();
+            ServerAdvancementManager advancements=player.getServer().getAdvancements();
+
+            if(!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((TieredItem )(wand_stack.getItem())).getTier()==Tiers.STONE ) {
+                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)){
+                    return;
+                }
+            }
+            if(!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((TieredItem )(wand_stack.getItem())).getTier()==Tiers.IRON ) {
+                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)){
+                    return;
+                }
+            }
+            if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((TieredItem )(wand_stack.getItem())).getTier()==Tiers.DIAMOND ) {
+                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)){
+                    WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
+                    return;
+                }
+            }
+            if(!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((TieredItem )(wand_stack.getItem())).getTier()==Tiers.NETHERITE ) {
+                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)){
+                    return;
+                }
+            }
+            //WandsMod.log("advancement_allow_diamond_wand: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
+            //WandsMod.log("prog: "+prog.isDone(),prnt);
+            //AdvancementList.advancements.get(ResourceLocation.tryParse(WandsMod.config.advancement_allow_diamond_wand));
+        }
+
         mode = WandItem.getMode(wand_stack);
         axis= WandItem.getAxis(wand_stack);
         plane= WandItem.getPlane(wand_stack);
@@ -230,22 +285,22 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
-                
+
         if(once){
             once=false;
             WandsMod.config.generate_lists();
         }
-        
-        //TODO palette pattern mode
-        //maybe
         //TODO paste should respect modes place replace destroy
+        //TODO support tags in allow/deny list
+        //TODO palette pattern mode
         //TODO banner placement not working on sides
+
         wand_item = (WandItem) wand_stack.getItem();
         limit = wand_item.limit;
         if(limit>MAX_LIMIT){
             limit=MAX_LIMIT;
         }
-        creative = MCVer.inst.is_creative(player);
+
 
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
@@ -263,11 +318,12 @@ public class Wand {
         has_hoe    = false;
         has_shovel = false;
         has_axe    = false;
+        update_tools();
         if(use) {
-            ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
-            for (int i = 0; i < tag.size() && i < 4; i++) {
-                CompoundTag stackTag = (CompoundTag) tag.get(i);
-                tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
+            //ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
+            for (int i = 0; i < 4; i++) {
+                //CompoundTag stackTag = (CompoundTag) tag.get(i);
+                //tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
                 has_hoe = has_hoe || tools[i].getItem() instanceof HoeItem;
                 has_shovel = has_shovel || tools[i].getItem() instanceof ShovelItem;
                 has_axe = has_axe || tools[i].getItem() instanceof AxeItem;
@@ -1578,7 +1634,7 @@ public class Wand {
     }
     boolean place_block(BlockPos block_pos,BlockState state) {
         boolean placed = false;
-        //log("place_block "+block_pos+" state: "+state + " destroy: " + destroy);
+        //WandsMod.log("place_block "+block_pos+" state: "+state + " destroy: " + destroy,true);
         Level level = player.level;
         if (level.isClientSide) {
             return false;
@@ -1587,26 +1643,30 @@ public class Wand {
             //log("state is null");
             return false;
         }
-        //if (state!=null && state.getBlock() instanceof CrossCollisionBlock) {
-            //state=state.getBlock().defaultBlockState();
-        //}
         Block blk=state.getBlock();
-
         if( WandsConfig.denied.contains(blk)){
-            //log("block is in the denied list");
+            //WandsMod.log("block ("+blk+") is in the denied list",true);
+            return false;
+        }
+        BlockState st = level.getBlockState(block_pos);
+        Block actual_blk = st.getBlock();
+        if( WandsConfig.denied.contains(actual_blk)){
+            //WandsMod.log("actual block ("+actual_blk+") is in the denied list",true);
             return false;
         }
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
-        int tool_durability = 1;
-        BlockState st = level.getBlockState(block_pos);
+        int tool_durability = -1;
+
         boolean _can_destroy=creative;
-        if(!creative && (destroy||replace ||use)){
-            _can_destroy = can_destroy(player, st, true);
-            if (digger_item !=null) {
-                tool_durability = digger_item.getMaxDamage() - digger_item.getDamageValue();
-            }else{
-                no_tool=true;
-                return false;
+        if(!creative ){
+            if (destroy||replace ||use) {
+                _can_destroy = can_destroy(player, st, true);
+                if (digger_item != null) {
+                    tool_durability = digger_item.getMaxDamage() - digger_item.getDamageValue();
+                } else {
+                    no_tool = true;
+                    return false;
+                }
             }
             boolean will_break=(wand_durability == 1 ) || (tool_durability == 1 );
             /*if(will_break){
@@ -1751,10 +1811,22 @@ public class Wand {
                         player.displayClientMessage(new TextComponent("not enough xp"),false);
                         stop=true;
                     }
-                    if((wand_durability == 1 && !WandsMod.config.allow_wand_to_break)){
+                    if(wand_durability == 1 ){
                         player.displayClientMessage(new TextComponent("wand damaged"),false);
-                        stop=true;
+                        if(WandsMod.config.allow_wand_to_break &&
+                                digger_item !=null && digger_item.getItem()==Items.AIR
+                        ) {
+
+                        }else {
+                            stop = true;
+                        }
                     }
+                    /*if((wand_durability == 1 && WandsMod.config.allow_wand_to_break)
+                        && digger_item !=null && digger_item.getItem()==Items.AIR)
+                    {
+
+                        stop=true;
+                    }*/
                 }
 
                 if (placed) {
@@ -2057,13 +2129,20 @@ public class Wand {
         }
         return cond;
     }
-    public boolean can_destroy(Player player,BlockState state,boolean check_speed){
+    public void update_tools(){
         ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
-        digger_item =null;
         for (int i = 0; i < tag.size() && i<4; i++) {
             CompoundTag stackTag = (CompoundTag) tag.get(i);
             tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
-            if(tools[i].getItem() instanceof DiggerItem) {
+        }
+    }
+    public boolean can_destroy(Player player,BlockState state,boolean check_speed){
+        //ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
+        digger_item =null;
+        for (int i = 0; i<4; i++) {
+            //CompoundTag stackTag = (CompoundTag) tag.get(i);
+            //tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
+            if(tools[i]!=null && tools[i].getItem() instanceof DiggerItem) {
                 if(can_dig(player, state, check_speed, tools[i])){
                     digger_item =tools[i];
                     return true;

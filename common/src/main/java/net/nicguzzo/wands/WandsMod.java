@@ -96,6 +96,7 @@ public class WandsMod {
     static final public int palette_mode_key     = GLFW.GLFW_KEY_R;
     static final public int palette_menu_key     = GLFW.GLFW_KEY_J;
     //static final public int wand_state_mode_key  = GLFW.GLFW_KEY_B;
+    static final public int wand_conf_key  = GLFW.GLFW_KEY_UNKNOWN;
     public static boolean is_forge=false;
 	
     public static void init() {
@@ -218,6 +219,7 @@ public class WandsMod {
         boolean is_wand=main_stack.getItem() instanceof WandItem;
         boolean is_palette=main_stack.getItem() instanceof PaletteItem ||offhand_stack.getItem() instanceof PaletteItem;
         boolean creative=MCVer.inst.is_creative(player);
+
         if(is_palette){
             switch(key) {
                 case palette_menu_key: {

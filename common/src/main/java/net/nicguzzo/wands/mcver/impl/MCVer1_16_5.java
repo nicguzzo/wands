@@ -10,7 +10,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.registry.*;
-
+import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -163,5 +163,21 @@ public class MCVer1_16_5 extends MCVer{
 	public ItemStack get_carried(Player player, AbstractContainerMenu menu) {
 		return player.inventory.getCarried();
 	}
+	@Override
+    public void set_identity(PoseStack m) {
+        m.last().pose().setIdentity();
+    }
+    @Override
+    public boolean shouldRenderFace(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, Direction direction, BlockPos blockPos2) {
+        return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction);
+    }
+    @Override
+    public void register_key(KeyMapping k) {
+        KeyBindings.registerKeyBinding(k);
+    }
+    @Override
+    public void render_info() {
+        GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
+    }
 }
 //endMC1_16_5*/  

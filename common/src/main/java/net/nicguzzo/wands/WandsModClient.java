@@ -54,25 +54,24 @@ public class WandsModClient {
             palette_menu_km,
             new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
             //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
         };
         for(KeyMapping k: km){
-            /*//beginMC1_16_5
-            KeyBindings.registerKeyBinding(k);
-            //endMC1_16_5*/  
-            //beginMC1_17_1
-            KeyMappingRegistry.register(k);
-            //endMC1_17_1  
+            MCVer.inst.register_key(k);
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
             for(KeyMapping k: km){
                 if (k.consumeClick()) {
                     if(!any) any=true;
+                    if(k.getDefaultKey().getValue()== WandsMod.wand_conf_key){
+                        
+                    }
                     send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
                 }
             }
+
             if(!any){
-                //WandsMod.LOGGER.info("ClientTickEvent");
                 if(alt !=Screen.hasAltDown() || shift !=Screen.hasShiftDown()){
                     alt =Screen.hasAltDown();
                     shift =Screen.hasShiftDown();
@@ -82,14 +81,8 @@ public class WandsModClient {
                 }
             }
         });
-        
-        /*//beginMC1_16_5
-        GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
-        //endMC1_16_5*/  
-        //beginMC1_17_1
-        ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-        //endMC1_17_1
 
+        MCVer.inst.render_info();
 
         if(WandsMod.is_forge) {
             ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
@@ -143,8 +136,6 @@ public class WandsModClient {
             float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    //ClientRender.wand.axis=Direction.Axis.values()[axis];
-                    //WandItem.setAxis(wand_stack);
                     ClientRender.wand.palette_seed = seed;
                     ClientRender.wand.mode= WandItem.Mode.values()[mode];
                     if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
@@ -153,8 +144,6 @@ public class WandsModClient {
                         context.getPlayer().experienceLevel=levels;
                         context.getPlayer().experienceProgress=prog;
                     }
-                    //WandsMod.log(" got palette_seed: "+seed,true);
-                    //WandsMod.log(" got axis "+axis,true);
                 }
             });
         });
@@ -162,7 +151,6 @@ public class WandsModClient {
     public static void send_key(int key,boolean shift, boolean alt){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
-            //WandsMod.LOGGER.info("send_key"+key+" shift "+shift +" alt "+alt);
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeInt(key);
             packet.writeBoolean(shift);
@@ -206,7 +194,6 @@ public class WandsModClient {
                 MCVer.inst.set_pos_tex_shader();
 
                 Wand wand=ClientRender.wand;
-                //WandItem wand_item=(WandItem)stack.getItem();
                 WandItem.Mode mode=WandItem.getMode(stack);
                 WandItem.Action action=WandItem.getAction(stack);
 
@@ -228,8 +215,6 @@ public class WandsModClient {
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                             break;
                         case RECT:
-                            //Direction.Axis axis=wand_item.getAxis(stack);
-                            //ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
                             ln1="Blocks: "+wand.block_buffer.get_length();
                             break;
                         case COPY:
@@ -238,7 +223,6 @@ public class WandsModClient {
                             break;
                     }
                 }
-                //int w=font.width(msg);
                 int h=3*font.lineHeight;
                 float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
                 float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
