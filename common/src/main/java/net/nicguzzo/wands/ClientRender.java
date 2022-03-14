@@ -40,50 +40,51 @@ import java.util.Random;
 public class ClientRender {
     public static final float p_o = -0.005f;// preview_block offset
     private static long t0 = 0;
-	private static long t1 = 0;
+    private static long t1 = 0;
     private static long t00 = 0;
-	private static boolean prnt;
+    private static boolean prnt;
     //public static Vec3 c=new Vec3(0,0,0);
-    static BlockPos last_pos=null;
-    static Direction last_side=null;
+    static BlockPos last_pos = null;
+    static Direction last_side = null;
     static Mode last_mode;
-    static Rotation last_rot=Rotation.NONE;
-    static boolean last_alt=false;
+    static Rotation last_rot = Rotation.NONE;
+    static boolean last_alt = false;
     //static int last_y=0;
-    static int last_buffer_size=-1;
-    static WandItem.Orientation last_orientation=null;
+    static int last_buffer_size = -1;
+    static WandItem.Orientation last_orientation = null;
     //private static boolean last_valid =false;
-    public static Wand wand=new Wand();
-    static VoxelShape preview_shape =null;
+    public static Wand wand = new Wand();
+    static VoxelShape preview_shape = null;
 
-    static AABB def_aabb=new AABB(0,0,0,1,1,1);
-    static private final int grid_n=16;
-    static private int grid_i=0;
-    static private final double[] grid_vx=new double[grid_n];
-    static private final double[] grid_vy=new double[grid_n];
-    static private final double[] grid_vz=new double[grid_n];
-    static boolean force=false;
-    static float x1=0;
-    static float y1=0;
-    static float z1=0;
-    static float x2=0;
-    static float y2=0;
-    static float z2=0;
-    static float opacity=0.8f;
-    static boolean fancy=true;
-    static boolean fat_lines=true;
-    static boolean drawlines=true;
-    static boolean block_outlines=false;
-    static boolean fill_outlines=false;
-    static boolean copy_outlines=false;
-    static boolean paste_outlines=false;
-    static float fat_lines_width=0.05f;
+    static AABB def_aabb = new AABB(0, 0, 0, 1, 1, 1);
+    static private final int grid_n = 16;
+    static private int grid_i = 0;
+    static private final double[] grid_vx = new double[grid_n];
+    static private final double[] grid_vy = new double[grid_n];
+    static private final double[] grid_vz = new double[grid_n];
+    static boolean force = false;
+    static float x1 = 0;
+    static float y1 = 0;
+    static float z1 = 0;
+    static float x2 = 0;
+    static float y2 = 0;
+    static float z2 = 0;
+    static float opacity = 0.8f;
+    static boolean fancy = true;
+    static boolean fat_lines = true;
+    static boolean drawlines = true;
+    static boolean block_outlines = false;
+    static boolean fill_outlines = false;
+    static boolean copy_outlines = false;
+    static boolean paste_outlines = false;
+    static float fat_lines_width = 0.05f;
     static Minecraft client;
     private static final ResourceLocation GRID_TEXTURE = new ResourceLocation("wands", "textures/blocks/grid.png");
     private static final ResourceLocation LINE_TEXTURE = new ResourceLocation("wands", "textures/blocks/line.png");
-    static Random random=new Random();
-    static Direction[] dirs={ Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST,null};
-    public enum Colors{
+    static Random random = new Random();
+    static Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null};
+
+    public enum Colors {
         BLOCK_OUTLINE,
         BOUNDING_BOX,
         DESTROY,
@@ -94,72 +95,80 @@ public class ClientRender {
         PASTE_BB,
         BlOCK
     }
-    static class Colorf{
+
+    static class Colorf {
         public float r;
         public float g;
         public float b;
         public float a;
-        Colorf(float rr,float gg,float bb,float aa){
-            r=rr; g=gg; b=bb; a=aa;
+
+        Colorf(float rr, float gg, float bb, float aa) {
+            r = rr;
+            g = gg;
+            b = bb;
+            a = aa;
         }
+
         void fromColor(Color c) {
-            r = c.getRed()/255.0f;
-            g = c.getGreen()/255.0f;
-            b = c.getBlue()/255.0f;
-            a = c.getAlpha()/255.0f;
+            r = c.getRed() / 255.0f;
+            g = c.getGreen() / 255.0f;
+            b = c.getBlue() / 255.0f;
+            a = c.getAlpha() / 255.0f;
         }
     }
-    public static boolean update_colors =true;
-    static Colorf block_col  =new Colorf(1.0f,1.0f,1.0f,1.0f);
-    static Colorf bo_col  =new Colorf(1.0f,1.0f,1.0f,1.0f);
-    static Colorf bbox_col=new Colorf(0.0f,0.0f,1.0f,1.0f);
-    static Colorf destroy_col =new Colorf(1.0f,0.0f,0.0f,1.0f);
-    static Colorf tool_use_col=new Colorf(0.0f,1.0f,1.0f,1.0f);
-    static Colorf start_col   =new Colorf(1.0f,1.0f,0.0f,1.0f);
-    static Colorf end_col     =new Colorf(1.0f,1.0f,0.0f,1.0f);
-    static Colorf line_col   =new Colorf(1.0f,0.0f,1.0f,1.0f);
-    static Colorf paste_bb_col=new Colorf(0.0f,0.0f,0.0f,1.0f);
 
-    public static boolean has_target=false;
-    static PoseStack matrixStack2=new PoseStack();
-    static BlockPos.MutableBlockPos bp=new BlockPos.MutableBlockPos();
-    static boolean water=false;
-    static BlockState AIR=Blocks.AIR.defaultBlockState();
+    public static boolean update_colors = true;
+    static Colorf block_col = new Colorf(1.0f, 1.0f, 1.0f, 1.0f);
+    static Colorf bo_col = new Colorf(1.0f, 1.0f, 1.0f, 1.0f);
+    static Colorf bbox_col = new Colorf(0.0f, 0.0f, 1.0f, 1.0f);
+    static Colorf destroy_col = new Colorf(1.0f, 0.0f, 0.0f, 1.0f);
+    static Colorf tool_use_col = new Colorf(0.0f, 1.0f, 1.0f, 1.0f);
+    static Colorf start_col = new Colorf(1.0f, 1.0f, 0.0f, 1.0f);
+    static Colorf end_col = new Colorf(1.0f, 1.0f, 0.0f, 1.0f);
+    static Colorf line_col = new Colorf(1.0f, 0.0f, 1.0f, 1.0f);
+    static Colorf paste_bb_col = new Colorf(0.0f, 0.0f, 0.0f, 1.0f);
+
+    public static boolean has_target = false;
+    static PoseStack matrixStack2 = new PoseStack();
+    static BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
+    static boolean water = false;
+    static BlockState AIR = Blocks.AIR.defaultBlockState();
+
     public static void render(PoseStack matrixStack) {
         client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null)
             return;
-        if(client.options.getCameraType()  != CameraType.FIRST_PERSON){
+        if (client.options.getCameraType() != CameraType.FIRST_PERSON) {
             return;
         }
-        if(update_colors){
-            update_colors =false;
+        if (update_colors) {
+            update_colors = false;
             WandsConfig.get_instance().parse_colors();
             update_colors();
         }
-        drawlines      = !WandsMod.config.no_lines;
+        drawlines = !WandsMod.config.no_lines;
         block_outlines = WandsMod.config.block_outlines;
-        fill_outlines  = WandsMod.config.fill_outlines;
-        copy_outlines  = WandsMod.config.copy_outlines;
+        fill_outlines = WandsMod.config.fill_outlines;
+        copy_outlines = WandsMod.config.copy_outlines;
         paste_outlines = WandsMod.config.paste_outlines;
-        opacity        = WandsMod.config.preview_opacity;
+        opacity = WandsMod.config.preview_opacity;
         //opacity=0.6f;
         /*if(WandsModClient.has_optifine){
             fancy=false;
         }else {*/
         fancy = WandsConfig.get_instance().fancy_preview;
 
-        fat_lines= WandsConfig.get_instance().fat_lines;
-        if(WandsConfig.get_instance().fat_lines_width>0 && WandsConfig.get_instance().fat_lines_width<0.5) {
+        fat_lines = WandsConfig.get_instance().fat_lines;
+        if (WandsConfig.get_instance().fat_lines_width > 0 && WandsConfig.get_instance().fat_lines_width < 0.5) {
             fat_lines_width = WandsConfig.get_instance().fat_lines_width;
         }
         //}
         ItemStack stack = player.getMainHandItem();
         prnt = false;
-        force=false;
-        if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-            
+        force = false;
+        if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
+
             t1 = System.currentTimeMillis();
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
@@ -168,21 +177,21 @@ public class ClientRender {
             }//else{
             if (t1 - t00 > 100) {
                 t00 = System.currentTimeMillis();
-               force=true;
+                force = true;
             }
-            HitResult hitResult=client.hitResult;
+            HitResult hitResult = client.hitResult;
             Mode mode = WandItem.getMode(stack);
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode==Mode.PASTE && wand.is_alt_pressed)) {
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode == Mode.PASTE && wand.is_alt_pressed)) {
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
-                has_target=true;
+                has_target = true;
                 Rotation rot = WandItem.getRotation(stack);
                 WandItem.Orientation orientation = WandItem.getOrientation(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
-                if ( force ) {
-                    wand.force_render=false;
-                    if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY||mode==Mode.RECT) {
+                if (force) {
+                    wand.force_render = false;
+                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY || mode == Mode.RECT) {
                         if (wand.is_alt_pressed) {
                             pos = pos.relative(side, 1);
                         }
@@ -191,31 +200,31 @@ public class ClientRender {
                     last_side = side;
                     last_mode = mode;
                     last_orientation = orientation;
-                    last_rot=rot;
-                    last_alt=wand.is_alt_pressed;
-                    last_buffer_size=wand.block_buffer.get_length();
+                    last_rot = rot;
+                    last_alt = wand.is_alt_pressed;
+                    last_buffer_size = wand.block_buffer.get_length();
 
                     wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack, prnt);
                 }
-                preview_shape =null;
-                if(block_state!=null) {
+                preview_shape = null;
+                if (block_state != null) {
                     preview_shape = block_state.getShape(client.level, last_pos);
                 }
-                preview_mode(wand.mode,matrixStack,block_state);
-            }else{
-                has_target=false;
-                if( ((wand.mode== Mode.LINE|| wand.mode== Mode.CIRCLE) && wand.p1!=null)||
-                        (wand.mode== WandItem.Mode.PASTE && wand.copy_paste_buffer.size()!=0 && wand.is_alt_pressed)) {
-                    preview_mode(wand.mode, matrixStack,null);
+                preview_mode(wand.mode, matrixStack, block_state);
+            } else {
+                has_target = false;
+                if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||
+                        (wand.mode == WandItem.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {
+                    preview_mode(wand.mode, matrixStack, null);
                 }
-                if(water){
-                    water=false;
+                if (water) {
+                    water = false;
                 }
             }
         }
     }
 
-    private static void preview_mode(Mode mode, PoseStack matrixStack,BlockState state) {
+    private static void preview_mode(Mode mode, PoseStack matrixStack, BlockState state) {
         //RenderSystem.clear(256, Minecraft.ON_OSX);
         MCVer.inst.pre_render(matrixStack);
         Camera camera = client.gameRenderer.getMainCamera();
@@ -223,28 +232,28 @@ public class ClientRender {
         Tesselator tesselator = Tesselator.getInstance();
 
         BufferBuilder bufferBuilder = tesselator.getBuilder();
-        boolean fabulous_depth_buffer=false;
+        boolean fabulous_depth_buffer = false;
 
         //fabulous_depth_buffer=(WandsMod.is_forge&& Minecraft.useShaderTransparency() );
-        fabulous_depth_buffer=WandsMod.config.render_last && Minecraft.useShaderTransparency();
+        fabulous_depth_buffer = WandsMod.config.render_last && Minecraft.useShaderTransparency();
 
-        if(Screen.hasControlDown() || fabulous_depth_buffer){
+        if (Screen.hasControlDown() || fabulous_depth_buffer) {
             RenderSystem.disableDepthTest();
-        }else{
+        } else {
             RenderSystem.enableDepthTest();
         }
 
-        if (camera.isInitialized() && last_pos!=null) {
-            float last_pos_x=last_pos.getX();
-            float last_pos_y=last_pos.getY();
-            float last_pos_z=last_pos.getZ();
-            float wand_x1=wand.x1;
-            float wand_y1=wand.y1;
-            float wand_z1=wand.z1;
-            
-            float nx=0.0f,ny=0.0f,nz=0.0f;
-            
-            float off2=0.05f;
+        if (camera.isInitialized() && last_pos != null) {
+            float last_pos_x = last_pos.getX();
+            float last_pos_y = last_pos.getY();
+            float last_pos_z = last_pos.getZ();
+            float wand_x1 = wand.x1;
+            float wand_y1 = wand.y1;
+            float wand_z1 = wand.z1;
+
+            float nx = 0.0f, ny = 0.0f, nz = 0.0f;
+
+            float off2 = 0.05f;
             MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 0.8f);
             RenderSystem.lineWidth(1.0f);
             RenderSystem.disableTexture();
@@ -253,10 +262,10 @@ public class ClientRender {
             switch (mode) {
                 case DIRECTION:
                     if (wand.valid) {
-                        if(preview_shape !=null && !preview_shape.isEmpty()) {
+                        if (preview_shape != null && !preview_shape.isEmpty()) {
                             List<AABB> list = preview_shape.toAabbs();
-                            if(!list.isEmpty() && wand.grid_voxel_index>=0 && wand.grid_voxel_index< list.size()) {
-                                if(fancy) {
+                            if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
+                                if (fancy) {
                                     RenderSystem.enableTexture();
                                     RenderSystem.disableCull();
                                     RenderSystem.enableCull();
@@ -266,83 +275,82 @@ public class ClientRender {
                                     MCVer.inst.set_texture(GRID_TEXTURE);
                                     int vi = 0;
                                     for (AABB aabb : list) {
-                                        if (vi == wand.grid_voxel_index)
-                                        {
-                                            nx=wand.side.getNormal().getX();
-                                            ny=wand.side.getNormal().getY();
-                                            nz=wand.side.getNormal().getZ();
+                                        if (vi == wand.grid_voxel_index) {
+                                            nx = wand.side.getNormal().getX();
+                                            ny = wand.side.getNormal().getY();
+                                            nz = wand.side.getNormal().getZ();
                                             switch (wand.side) {
                                                 case UP:
-                                                    x1 = last_pos_x + (float)aabb.minX;
-                                                    y1 = last_pos_y + (float)aabb.maxY + 0.02f;
-                                                    z1 = last_pos_z + (float)aabb.minZ;
-                                                    x2 = last_pos_x + (float)aabb.maxX;
-                                                    z2 = last_pos_z + (float)aabb.maxZ;
+                                                    x1 = last_pos_x + (float) aabb.minX;
+                                                    y1 = last_pos_y + (float) aabb.maxY + 0.02f;
+                                                    z1 = last_pos_z + (float) aabb.minZ;
+                                                    x2 = last_pos_x + (float) aabb.maxX;
+                                                    z2 = last_pos_z + (float) aabb.maxZ;
 
-                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1, z2, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
                                                     break;
                                                 case DOWN:
-                                                    x1 = last_pos_x + (float)aabb.minX;
-                                                    y1 = last_pos_y + (float)aabb.minY - 0.02f;
-                                                    z1 = last_pos_z + (float)aabb.minZ;
-                                                    x2 = last_pos_x + (float)aabb.maxX;
-                                                    z2 = last_pos_z + (float)aabb.maxZ;
+                                                    x1 = last_pos_x + (float) aabb.minX;
+                                                    y1 = last_pos_y + (float) aabb.minY - 0.02f;
+                                                    z1 = last_pos_z + (float) aabb.minZ;
+                                                    x2 = last_pos_x + (float) aabb.maxX;
+                                                    z2 = last_pos_z + (float) aabb.maxZ;
 
-                                                    bufferBuilder.vertex(x1, y1,z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1,z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1,z2, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y1,z2, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
                                                     break;
                                                 case SOUTH:
-                                                    x1 = last_pos_x + (float)aabb.minX;
-                                                    y1 = last_pos_y + (float)aabb.minY;
-                                                    z1 = last_pos_z + (float)aabb.maxZ + 0.02f;
-                                                    x2 = last_pos_x + (float)aabb.maxX;
-                                                    y2 = last_pos_y + (float)aabb.maxY;
+                                                    x1 = last_pos_x + (float) aabb.minX;
+                                                    y1 = last_pos_y + (float) aabb.minY;
+                                                    z1 = last_pos_z + (float) aabb.maxZ + 0.02f;
+                                                    x2 = last_pos_x + (float) aabb.maxX;
+                                                    y2 = last_pos_y + (float) aabb.maxY;
 
-                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
 
                                                     break;
                                                 case NORTH:
-                                                    x1 = last_pos_x + (float)aabb.minX;
-                                                    y1 = last_pos_y + (float)aabb.minY;
-                                                    z1 = last_pos_z + (float)aabb.minZ - 0.02f;
-                                                    x2 = last_pos_x + (float)aabb.maxX;
-                                                    y2 = last_pos_y + (float)aabb.maxY;
+                                                    x1 = last_pos_x + (float) aabb.minX;
+                                                    y1 = last_pos_y + (float) aabb.minY;
+                                                    z1 = last_pos_z + (float) aabb.minZ - 0.02f;
+                                                    x2 = last_pos_x + (float) aabb.maxX;
+                                                    y2 = last_pos_y + (float) aabb.maxY;
 
-                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x2, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
 
                                                     break;
                                                 case EAST:
-                                                    x1 = last_pos_x + (float)aabb.maxX + 0.02f;
-                                                    y1 = last_pos_y + (float)aabb.minY;
-                                                    z1 = last_pos_z + (float)aabb.minZ;
-                                                    y2 = last_pos_y + (float)aabb.maxY;
-                                                    z2 = last_pos_z + (float)aabb.maxZ;
-                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z2, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
+                                                    x1 = last_pos_x + (float) aabb.maxX + 0.02f;
+                                                    y1 = last_pos_y + (float) aabb.minY;
+                                                    z1 = last_pos_z + (float) aabb.minZ;
+                                                    y2 = last_pos_y + (float) aabb.maxY;
+                                                    z2 = last_pos_z + (float) aabb.maxZ;
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z2, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
                                                     break;
                                                 case WEST:
-                                                    x1 = last_pos_x + (float)aabb.minX - 0.02f;
-                                                    y1 = last_pos_y + (float)aabb.minY;
-                                                    z1 = last_pos_z + (float)aabb.minZ;
-                                                    y2 = last_pos_y + (float)aabb.maxY;
-                                                    z2 = last_pos_z + (float)aabb.maxZ;
-                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f,1.0f,1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z2, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx,ny,nz);
-                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f,1.0f,1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx,ny,nz);
+                                                    x1 = last_pos_x + (float) aabb.minX - 0.02f;
+                                                    y1 = last_pos_y + (float) aabb.minY;
+                                                    z1 = last_pos_z + (float) aabb.minZ;
+                                                    y2 = last_pos_y + (float) aabb.maxY;
+                                                    z2 = last_pos_z + (float) aabb.maxZ;
+                                                    bufferBuilder.vertex(x1, y1, z1, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y1, z2, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z2, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0, 0, nx, ny, nz);
+                                                    bufferBuilder.vertex(x1, y2, z1, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0, 0, nx, ny, nz);
                                                     break;
                                             }
                                         }
@@ -352,22 +360,22 @@ public class ClientRender {
                                     RenderSystem.enableBlend();
                                     RenderSystem.disableTexture();
                                 }
-                                if(!fancy || !fat_lines){
+                                if (!fancy || !fat_lines) {
                                     MCVer.inst.set_render_lines(bufferBuilder);
                                     int vi = 0;
                                     for (AABB aabb : list) {
                                         if (vi == wand.grid_voxel_index) {
-                                            grid(bufferBuilder, wand.side,last_pos_x,last_pos_y,last_pos_z,aabb);
+                                            grid(bufferBuilder, wand.side, last_pos_x, last_pos_y, last_pos_z, aabb);
                                         }
                                         vi++;
                                     }
                                     tesselator.end();
                                 }
 
-                            }else{
+                            } else {
                                 //no_shape=true;
                             }
-                        }else {
+                        } else {
                             //no_shape=true;
                         }
                     }
@@ -380,21 +388,20 @@ public class ClientRender {
                 case CIRCLE:
                 case RECT:
 
-                    if (wand.valid ||  (mode == Mode.LINE || mode==Mode.CIRCLE) ||(wand.valid && wand.has_empty_bucket)) {
+                    if (wand.valid || (mode == Mode.LINE || mode == Mode.CIRCLE) || (wand.valid && wand.has_empty_bucket)) {
                         //bbox
-                        if( drawlines && fill_outlines && (mode==Mode.ROW_COL || mode==Mode.FILL  || mode==Mode.RECT))
-                        {
-                            if(fat_lines) {
+                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.RECT)) {
+                            if (fat_lines) {
                                 RenderSystem.enableTexture();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                                 preview_block_fat(bufferBuilder,
                                         wand.bb1_x - off2, wand.bb1_y - off2, wand.bb1_z - off2,
                                         wand.bb2_x + off2, wand.bb2_y + off2, wand.bb2_z + off2,
-                                        bbox_col);
+                                        bbox_col,false);
                                 tesselator.end();
                                 RenderSystem.disableTexture();
                                 RenderSystem.enableCull();
-                            }else {
+                            } else {
                                 MCVer.inst.set_render_lines(bufferBuilder);
                                 preview_block(bufferBuilder,
                                         wand.bb1_x - off2, wand.bb1_y - off2, wand.bb1_z - off2,
@@ -404,44 +411,44 @@ public class ClientRender {
                             }
                         }
 
-                        if (wand.has_empty_bucket || (wand.valid && has_target&& wand.block_buffer != null )) {
+                        if (wand.has_empty_bucket || (wand.valid && has_target && wand.block_buffer != null)) {
                             random.setSeed(0);
-                            if(fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
+                            if (fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
                                 RenderSystem.enableTexture();
                                 RenderSystem.enableCull();
                                 //RenderSystem.enableBlend();
                                 //RenderSystem.defaultBlendFunc();
-                                MCVer.inst.set_color(1.0f,1.0f,1.0f,opacity);
+                                MCVer.inst.set_color(1.0f, 1.0f, 1.0f, opacity);
                                 MCVer.inst.set_render_quads_block(bufferBuilder);
                                 BlockState st;
                                 for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
                                     if (wand.block_buffer.state[idx] != null) {
                                         //preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
-                                        st= wand.block_buffer.state[idx];
-                                        if(wand.has_water_bucket) {
-                                            st=Blocks.WATER.defaultBlockState();
-                                        }else{
-                                            if(wand.has_lava_bucket) {
+                                        st = wand.block_buffer.state[idx];
+                                        if (wand.has_water_bucket) {
+                                            st = Blocks.WATER.defaultBlockState();
+                                        } else {
+                                            if (wand.has_lava_bucket) {
                                                 st = Blocks.LAVA.defaultBlockState();
                                             }
                                         }
-                                        render_shape(matrixStack,tesselator, bufferBuilder,st,
+                                        render_shape(matrixStack, tesselator, bufferBuilder, st,
                                                 wand.block_buffer.buffer_x[idx],
                                                 wand.block_buffer.buffer_y[idx],
                                                 wand.block_buffer.buffer_z[idx]);
 
                                         //TODO: all double blocks!!
-                                        if(wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)){
-                                            render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
+                                        if (wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)) {
+                                            render_shape(matrixStack, tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
                                                     wand.block_buffer.buffer_x[idx],
-                                                    wand.block_buffer.buffer_y[idx]+1,
+                                                    wand.block_buffer.buffer_y[idx] + 1,
                                                     wand.block_buffer.buffer_z[idx]);
-                                        }else{
-                                            if(wand.block_buffer.state[idx].getBlock() instanceof DoorBlock){
+                                        } else {
+                                            if (wand.block_buffer.state[idx].getBlock() instanceof DoorBlock) {
 
-                                                render_shape(matrixStack,tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                                render_shape(matrixStack, tesselator, bufferBuilder, wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
                                                         wand.block_buffer.buffer_x[idx],
-                                                        wand.block_buffer.buffer_y[idx]+1,
+                                                        wand.block_buffer.buffer_y[idx] + 1,
                                                         wand.block_buffer.buffer_z[idx]);
                                             }
                                         }
@@ -453,56 +460,11 @@ public class ClientRender {
                             }
 
 
-                            Colorf c=bo_col;
-                            if(wand.destroy || wand.has_empty_bucket){
-                                c= destroy_col;
-                            }
-                            if(wand.use &&  (wand.has_hoe|| wand.has_axe || wand.has_shovel)){
-                                c= tool_use_col;
-                            }
-                            //RenderSystem.enableDepthTest();
-                            if( drawlines && block_outlines) {
-                                if (fat_lines) {
-                                    //RenderSystem.disableCull();
-                                    //RenderSystem.disableDepthTest();
-                                    RenderSystem.enableTexture();
-                                    MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-
-                                } else {
-                                    RenderSystem.enableCull();
-                                    MCVer.inst.set_render_lines(bufferBuilder);
-                                }
-                                for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
-                                    float x = wand.block_buffer.buffer_x[idx];
-                                    float y = wand.block_buffer.buffer_y[idx];
-                                    float z = wand.block_buffer.buffer_z[idx];
-                                    if (wand.block_buffer.state[idx] != null) {
-                                        preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
-                                        List<AABB> list = preview_shape.toAabbs();
-                                        for (AABB aabb : list) {
-                                            if (fat_lines) {
-                                                preview_block_fat(bufferBuilder,
-                                                        x + (float)aabb.minX, y + (float)aabb.minY, z + (float)aabb.minZ,
-                                                        x + (float)aabb.maxX, y + (float)aabb.maxY, z + (float)aabb.maxZ,
-                                                        c);
-                                            } else {
-                                                preview_block(bufferBuilder,
-                                                        x + aabb.minX, y + aabb.minY, z + aabb.minZ,
-                                                        x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
-                                                        c);
-                                            }
-                                        }
-                                    }
-                                }
-                                tesselator.end();
-                                if (fat_lines) {
-                                    RenderSystem.disableTexture();
-                                }
-                            }
+                            render_mode_outline(tesselator,bufferBuilder);
                         }
-                        if ( drawlines&& wand.p1!=null && (mode == Mode.LINE || mode==Mode.CIRCLE )) {
+                        if (drawlines && wand.p1 != null && (mode == Mode.LINE || mode == Mode.CIRCLE)) {
 
-                            if(fat_lines) {
+                            if (fat_lines) {
                                 RenderSystem.enableTexture();
                                 //RenderSystem.disableCull();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
@@ -510,21 +472,21 @@ public class ClientRender {
                                 preview_block_fat(bufferBuilder,
                                         wand.p1.getX(), wand.p1.getY(), wand.p1.getZ(),
                                         wand.p1.getX() + 1, wand.p1.getY() + 1, wand.p1.getZ() + 1,
-                                        start_col
+                                        start_col,false
                                 );
                                 tesselator.end();
-                                if(has_target) {
+                                if (has_target) {
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                                     preview_block_fat(bufferBuilder,
-                                            last_pos_x , last_pos_y , last_pos_z,
-                                            last_pos_x + 1, last_pos_y + 1, last_pos_z + 1 ,
-                                            end_col);
+                                            last_pos_x, last_pos_y, last_pos_z,
+                                            last_pos_x + 1, last_pos_y + 1, last_pos_z + 1,
+                                            end_col,false);
                                     tesselator.end();
 
                                     RenderSystem.disableDepthTest();
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                                     player_facing_line(bufferBuilder,
-                                            (float)camera.getPosition().x, (float)camera.getPosition().y, (float)camera.getPosition().z,
+                                            (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
                                             last_pos_x + 0.5f, last_pos_y + 0.5f, last_pos_z + 0.5f,
                                             wand_x1 + 0.5f, wand_y1 + 0.5f, wand_z1 + 0.5f,
                                             line_col);
@@ -534,12 +496,12 @@ public class ClientRender {
                                 RenderSystem.disableTexture();
                                 RenderSystem.enableDepthTest();
                                 RenderSystem.enableCull();
-                            }else {
+                            } else {
                                 MCVer.inst.set_render_lines(bufferBuilder);
                                 bufferBuilder.vertex(last_pos_x + 0.5, last_pos_y + 0.5, last_pos_z + 0.5)
-                                        .color(line_col.r, line_col.g,line_col.b, line_col.a).endVertex();
+                                        .color(line_col.r, line_col.g, line_col.b, line_col.a).endVertex();
                                 bufferBuilder.vertex(wand_x1 + 0.5, wand_y1 + 0.5, wand_z1 + 0.5)
-                                        .color(line_col.r, line_col.g,line_col.b, line_col.a).endVertex();
+                                        .color(line_col.r, line_col.g, line_col.b, line_col.a).endVertex();
                                 RenderSystem.disableDepthTest();
                                 preview_block(bufferBuilder,
                                         wand.p1.getX(), wand.p1.getY(), wand.p1.getZ(),
@@ -556,27 +518,26 @@ public class ClientRender {
                     }
                     break;
                 case COPY:
+                    if (drawlines && copy_outlines && wand.valid) {
 
-                    if ( drawlines && copy_outlines && wand.valid) {
-
-                        x1=(wand.copy_x1>wand.copy_x2)? (wand.copy_x1+off2) : (wand.copy_x1-off2);
-                        y1=(wand.copy_y1>wand.copy_y2)? (wand.copy_y1+off2) : (wand.copy_y1-off2);
-                        z1=(wand.copy_z1>wand.copy_z2)? (wand.copy_z1+off2) : (wand.copy_z1-off2);
-                        x2=(wand.copy_x2>wand.copy_x1)? (wand.copy_x2+off2) : (wand.copy_x2-off2);
-                        y2=(wand.copy_y2>wand.copy_y1)? (wand.copy_y2+off2) : (wand.copy_y2-off2);
-                        z2=(wand.copy_z2>wand.copy_z1)? (wand.copy_z2+off2) : (wand.copy_z2-off2);
-                        if(fat_lines) {
+                        x1 = (wand.copy_x1 > wand.copy_x2) ? (wand.copy_x1 + off2) : (wand.copy_x1 - off2);
+                        y1 = (wand.copy_y1 > wand.copy_y2) ? (wand.copy_y1 + off2) : (wand.copy_y1 - off2);
+                        z1 = (wand.copy_z1 > wand.copy_z2) ? (wand.copy_z1 + off2) : (wand.copy_z1 - off2);
+                        x2 = (wand.copy_x2 > wand.copy_x1) ? (wand.copy_x2 + off2) : (wand.copy_x2 - off2);
+                        y2 = (wand.copy_y2 > wand.copy_y1) ? (wand.copy_y2 + off2) : (wand.copy_y2 - off2);
+                        z2 = (wand.copy_z2 > wand.copy_z1) ? (wand.copy_z2 + off2) : (wand.copy_z2 - off2);
+                        if (fat_lines) {
                             //RenderSystem.disableCull();
                             RenderSystem.enableTexture();
                             MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                             preview_block_fat(bufferBuilder,
                                     x1, y1, z1,
                                     x2, y2, z2,
-                                    bbox_col);
+                                    bbox_col,false);
                             tesselator.end();
                             RenderSystem.disableTexture();
                             RenderSystem.enableCull();
-                        }else {
+                        } else {
                             MCVer.inst.set_render_lines(bufferBuilder);
                             preview_block(bufferBuilder,
                                     x1, y1, z1,
@@ -585,13 +546,16 @@ public class ClientRender {
                             tesselator.end();
                         }
                     }
-
-                break;
+                    break;
                 case PASTE:
                     if (wand.copy_paste_buffer.size() > 0) {
-
-                        BlockPos b_pos = last_pos.relative(last_side, 1);
-                        if (fancy) {
+                        BlockPos b_pos = last_pos;
+                        if (!(wand.replace || wand.destroy)) {
+                            b_pos = last_pos.relative(last_side, 1);
+                        }
+                        if (wand.destroy) {
+                            //render_mode_outline( tesselator,bufferBuilder);
+                        } else if (fancy) {
                             RenderSystem.enableCull();
                             //RenderSystem.enableBlend();
                             //RenderSystem.defaultBlendFunc();
@@ -599,15 +563,22 @@ public class ClientRender {
                             MCVer.inst.set_color(1.0f, 1.0f, 1.0f, opacity);
                             MCVer.inst.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
+                            wand.random.setSeed(wand.palette_seed);
+                            //use block_buffer, previously copy copy_paste_buffer to block_buffer
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
-                                render_shape(matrixStack, tesselator, bufferBuilder, Wand.paste_rot(b.state, wand.rotation), b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                BlockState st = wand.paste_rot(b.state);
+                                if (wand.has_palette) {
+                                    st = wand.get_state();
+                                }
+                                render_shape(matrixStack, tesselator, bufferBuilder, st, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
                             //RenderSystem.disableBlend();
                         }
                         if (drawlines && paste_outlines) {
+                            Colorf c=(wand.destroy? destroy_col: paste_bb_col);
                             x1 = Integer.MAX_VALUE;
                             y1 = Integer.MAX_VALUE;
                             z1 = Integer.MAX_VALUE;
@@ -630,12 +601,12 @@ public class ClientRender {
                                 if (fat_lines) {
                                     preview_block_fat(bufferBuilder,
                                             x, y, z,
-                                            x + 1, y + 1, z + 1, bo_col
-                                    );
+                                            x + 1, y + 1, z + 1, c,
+                                    true);
                                 } else {
                                     preview_block(bufferBuilder,
                                             x, y, z,
-                                            x + 1, y + 1, z + 1, bo_col
+                                            x + 1, y + 1, z + 1, c
                                     );
                                 }
 
@@ -665,18 +636,18 @@ public class ClientRender {
                                 preview_block_fat(bufferBuilder,
                                         x1, y1, z1,
                                         x2, y2, z2,
-                                        paste_bb_col);
+                                        c,false);
                             } else {
                                 preview_block(bufferBuilder,
                                         x1, y1, z1,
                                         x2, y2, z2,
-                                        paste_bb_col);
+                                        c);
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
                         }
                     }
-                break;
+                    break;
             }
             //RenderSystem.enableBlend();
             //RenderSystem.enableTexture();
@@ -686,7 +657,56 @@ public class ClientRender {
         MCVer.inst.post_render(matrixStack);
         RenderSystem.depthMask(true);
     }
+    public static void render_mode_outline( Tesselator tesselator,BufferBuilder bufferBuilder){
+        Colorf mode_outline_color = bo_col;
+                                if(wand.destroy ||wand.has_empty_bucket)
 
+        {
+            mode_outline_color = destroy_col;
+        }
+                                if(wand.use &&(wand.has_hoe||wand.has_axe ||wand.has_shovel))
+
+        {
+            mode_outline_color = tool_use_col;
+        }
+                                if(drawlines &&block_outlines)
+
+        {
+            if (fat_lines) {
+                RenderSystem.enableTexture();
+                MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+            } else {
+                RenderSystem.enableCull();
+                MCVer.inst.set_render_lines(bufferBuilder);
+            }
+            for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
+                float x = wand.block_buffer.buffer_x[idx];
+                float y = wand.block_buffer.buffer_y[idx];
+                float z = wand.block_buffer.buffer_z[idx];
+                if (wand.block_buffer.state[idx] != null) {
+                    preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                    List<AABB> list = preview_shape.toAabbs();
+                    for (AABB aabb : list) {
+                        if (fat_lines) {
+                            preview_block_fat(bufferBuilder,
+                                    x + (float) aabb.minX, y + (float) aabb.minY, z + (float) aabb.minZ,
+                                    x + (float) aabb.maxX, y + (float) aabb.maxY, z + (float) aabb.maxZ,
+                                    mode_outline_color,wand.destroy);
+                        } else {
+                            preview_block(bufferBuilder,
+                                    x + aabb.minX, y + aabb.minY, z + aabb.minZ,
+                                    x + aabb.maxX, y + aabb.maxY, z + aabb.maxZ,
+                                    mode_outline_color);
+                        }
+                    }
+                }
+            }
+            tesselator.end();
+            if (fat_lines) {
+                RenderSystem.disableTexture();
+            }
+        }
+    }
     static void preview_block(BufferBuilder bufferBuilder,double fx1, double fy1, double fz1, double fx2, double fy2, double fz2,Colorf c) {
         fx1 += p_o;
         fy1 += p_o;
@@ -732,7 +752,7 @@ public class ClientRender {
         bufferBuilder.vertex(fx2, fy2, fz2).color(c.r,c.g,c.b,c.a).endVertex();
     }
 
-    static void preview_block_fat(BufferBuilder bufferBuilder,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
+    static void preview_block_fat(BufferBuilder bufferBuilder,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
         float off=0.01f;
         fx1 -= off;
         fy1 -= off;
@@ -749,37 +769,85 @@ public class ClientRender {
         quad_line(bufferBuilder,  0,-w,0, fx2, fy2  , fz1, fx1, fy2  , fz1,nx,ny,nz,c);
         quad_line(bufferBuilder,  w, 0,0, fx1, fy2-w, fz1, fx1, fy1+w, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1,nx,ny,nz,c);
+        if(cross) {
+            quad_line(bufferBuilder, -w, 0, 0,
+                    fx1+w, fy1, fz1,
+                    fx2, fy2, fz1, nx, ny, nz, c);
+            quad_line(bufferBuilder, w, 0, 0,
+                    fx1, fy2, fz1,
+                    fx2-w, fy1, fz1, nx, ny, nz, c);
+        }
+
         //south +z
         nx=0.0f;ny=0.0f;nz=1.0f;
         quad_line(bufferBuilder,  0, w,0,  fx2, fy1,   fz2,fx1, fy1  , fz2,nx,ny,nz,c);
         quad_line(bufferBuilder,  0,-w,0, fx1, fy2  , fz2, fx2, fy2,   fz2,nx,ny,nz,c);
         quad_line(bufferBuilder,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2,nx,ny,nz,c);
         quad_line(bufferBuilder, -w, 0,0,  fx2, fy2-w, fz2,fx2, fy1+w, fz2,nx,ny,nz,c);
+        if(cross) {
+            quad_line(bufferBuilder, w, 0, 0,
+                    fx1, fy1, fz2,
+                    fx2-w, fy2, fz2, nx, ny, nz, c);
+            quad_line(bufferBuilder, -w, 0, 0,
+                    fx1+w, fy2, fz2,
+                    fx2, fy1, fz2, nx, ny, nz, c);
+        }
         //up +y
         nx=0.0f;ny=1.0f;nz=0.0f;
         quad_line(bufferBuilder,  w,0, 0, fx1  , fy2, fz2, fx1 , fy2, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder, -w,0, 0, fx2  , fy2, fz1, fx2 , fy2, fz2,nx,ny,nz,c);
         quad_line(bufferBuilder,  0,0, w, fx1+w, fy2, fz1, fx2-w, fy2, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder,  0,0,-w, fx2-w, fy2, fz2, fx1+w, fy2, fz2,nx,ny,nz,c);
+        if(cross) {
+            quad_line(bufferBuilder, -w, 0, 0,
+                    fx1+w, fy2, fz1,
+                    fx2, fy2, fz2, nx, ny, nz, c);
+            quad_line(bufferBuilder, w, 0, 0,
+                    fx1, fy2, fz2,
+                    fx2-w, fy2, fz1, nx, ny, nz, c);
+        }
         //down -y
         nx=0.0f;ny=-1.0f;nz=0.0f;
         quad_line(bufferBuilder,  w,0, 0, fx1, fy1, fz1, fx1  , fy1, fz2,nx,ny,nz,c);
         quad_line(bufferBuilder, -w,0, 0, fx2  , fy1, fz2,fx2, fy1, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder,  0,0, w, fx2-w, fy1, fz1,fx1+w, fy1, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder,  0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2,nx,ny,nz,c);
+        if(cross) {
+            quad_line(bufferBuilder, w, 0, 0,
+                    fx1, fy1, fz1,
+                    fx2-w, fy1, fz2, nx, ny, nz, c);
+            quad_line(bufferBuilder, -w, 0, 0,
+                    fx1+w, fy1, fz2,
+                    fx2, fy1, fz1, nx, ny, nz, c);
+        }
         //east +x
         nx=1.0f;ny=0.0f;nz=0.0f;
         quad_line(bufferBuilder, 0, w, 0, fx2,   fy1, fz1, fx2,   fy1, fz2,nx,ny,nz,c);
-        quad_line(bufferBuilder, 0,-w, 0, fx2,   fy2, fz2, fx2, fy2  , fz1,nx,ny,nz,c);
+        quad_line(bufferBuilder, 0,-w, 0, fx2,   fy2, fz2, fx2,   fy2, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder, 0, 0, w, fx2, fy2-w, fz1, fx2, fy1+w, fz1,nx,ny,nz,c);
-        quad_line(bufferBuilder, 0,0,-w, fx2, fy1+w, fz2,  fx2, fy2-w, fz2,nx,ny,nz,c);
+        quad_line(bufferBuilder, 0, 0,-w, fx2, fy1+w, fz2, fx2, fy2-w, fz2,nx,ny,nz,c);
+        if(cross) {
+            quad_line(bufferBuilder, 0, 0, w,
+                    fx1, fy1, fz1,
+                    fx1, fy2, fz2-w, nx, ny, nz, c);
+            quad_line(bufferBuilder, 0, 0, w,
+                    fx1, fy1, fz2-w,
+                    fx1, fy2, fz1, nx, ny, nz, c);
+        }
         //west -x
         nx=-1.0f;ny=0.0f;nz=0.0f;
         quad_line(bufferBuilder, 0, w,0,   fx1,   fy1, fz2,fx1,   fy1, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder, 0,-w,0, fx1,   fy2, fz1,  fx1,   fy2, fz2,nx,ny,nz,c);
         quad_line(bufferBuilder, 0,0, w, fx1, fy1+w, fz1,  fx1, fy2-w, fz1,nx,ny,nz,c);
         quad_line(bufferBuilder, 0,0,-w,   fx1, fy2-w, fz2,fx1, fy1+w, fz2,nx,ny,nz,c);
-
+        if(cross) {
+            quad_line(bufferBuilder, 0, 0, -w,
+                    fx2, fy1, fz1+w,
+                    fx2, fy2, fz2, nx, ny, nz, c);
+            quad_line(bufferBuilder, 0, 0, -w,
+                    fx2, fy1, fz2,
+                    fx2, fy2, fz1+w, nx, ny, nz, c);
+        }
     }
 
     private static void quad_line(BufferBuilder bufferBuilder,
@@ -1120,7 +1188,7 @@ public class ClientRender {
                     List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
                     if (bake_list !=null && !bake_list.isEmpty() ) {
                         MCVer.inst.set_identity(matrixStack2);
-                        if(wand.replace&& wand.mode!=Mode.COPY && wand.mode!=Mode.PASTE ){
+                        if(wand.replace&& wand.mode!=Mode.COPY /*&& wand.mode!=Mode.PASTE */){
                             Vec3i n=wand.side.getNormal();
                             matrixStack2.translate(
                                     x+(0.5f*(1.0f-n.getX()))+n.getX(),

@@ -3,15 +3,12 @@ package net.nicguzzo.wands;
 import java.util.*;
 import java.util.function.Consumer;
 
-import dev.architectury.event.events.common.PlayerEvent;
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
-import net.minecraft.advancements.AdvancementList;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.data.advancements.AdvancementProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -91,7 +88,6 @@ public class Wand {
     boolean is_slab_bottom = false;
     boolean is_alt_pressed = false;
     boolean is_shift_pressed = false;
-    //public WandItem.Action place_mode;
     public boolean replace;
     public boolean destroy;
     public boolean use;
@@ -133,7 +129,6 @@ public class Wand {
 
     private static class BlockAccounting {
         public int placed = 0;
-        //public int consumed = 0;
         public int needed = 0;
         public int in_player = 0;
     }
@@ -170,7 +165,6 @@ public class Wand {
     public int copy_x2 = 0;
     public int copy_y2 = 0;
     public int copy_z2 = 0;
-    //public boolean  copied=false;
     boolean preview;
     boolean creative=true;
     public WandItem.Mode mode;
@@ -189,14 +183,10 @@ public class Wand {
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
-        //log("wand cleared");
         copy_pos1 = null;
         copy_pos2 = null;
-        //copied=false;
-        //copy_paste_buffer.clear();
         if (player != null && player.level!=null && !player.level.isClientSide()) {
             player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
-            //tally_copied_buffer();
         }
     }
 
@@ -241,7 +231,7 @@ public class Wand {
             }
             if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((TieredItem )(wand_stack.getItem())).getTier()==Tiers.DIAMOND ) {
                 if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)){
-                    WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
+                    //WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
                     return;
                 }
             }
@@ -290,7 +280,7 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-        //TODO paste should respect modes place replace destroy
+        //Done paste should respect modes place replace destroy
         //TODO support tags in allow/deny list
         //TODO palette pattern mode
         //TODO banner placement not working on sides
@@ -301,15 +291,12 @@ public class Wand {
             limit=MAX_LIMIT;
         }
 
-
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
         valid = false;
-        //this.place_mode=WandItem.getPlaceMode(wand_stack);
         this.replace=WandItem.getAction(wand_stack)== WandItem.Action.REPLACE;
         this.destroy=WandItem.getAction(wand_stack)== WandItem.Action.DESTROY;
         this.use=WandItem.getAction(wand_stack)== WandItem.Action.USE;
-        //this.destroy=can_destroy(player, block_state, false);
 
         //log("destroy: "+destroy);
         offhand = player.getOffhandItem();
@@ -329,8 +316,6 @@ public class Wand {
                 has_axe = has_axe || tools[i].getItem() instanceof AxeItem;
             }
         }
-
-
         if (offhand != null && WandUtils.is_shulker(offhand)) {
             /*if(!preview){
                 player.displayClientMessage(new TextComponent("offhand can't be a shulkerbox, use a palette! "),false);
@@ -401,7 +386,7 @@ public class Wand {
             }
         }
         block_accounting.clear();
-        if (has_palette && /*!destroy && */!is_copy_paste) {
+        if (has_palette /*&& !destroy && !is_copy_paste*/) {
             update_palette();
         }
 
@@ -410,8 +395,11 @@ public class Wand {
                 offhand_state = offhand_block.defaultBlockState();
             }
         }
-        if(replace && !has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
+        if(replace && (mode != Mode.PASTE) && !has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
             valid=false;
+            if (!preview) {
+                player.displayClientMessage(new TextComponent("you need a block or palette in the left hand"), false);
+            }
             return;
         }
         
@@ -550,7 +538,7 @@ public class Wand {
                 } else {
                     //copy paste
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                        if (!can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                        if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
                         } else {
@@ -1309,25 +1297,41 @@ public class Wand {
     void mode_paste() {
         if (!preview) {
             //log("mode6 paste "+copy_paste_buffer.size());
-            BlockPos b_pos = pos.relative(side, 1);
+            BlockPos b_pos = pos;
+            if(!(replace||destroy)){
+                b_pos = pos.relative(side, 1);
+            }
             //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             block_buffer.reset();
+            random.setSeed(palette_seed);
             for (CopyPasteBuffer b : copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(rotation);
-                BlockState st=paste_rot(b.state,rotation);
-                block_buffer.add(
-                        b_pos.getX() + p.getX(),
-                        b_pos.getY() + p.getY(),
-                        b_pos.getZ() + p.getZ(),
-                        /*b.state.rotate( rotation)*/ st, b.state.getBlock().asItem());
+                BlockState st=paste_rot(b.state);
+                if(has_palette) {
+                    block_buffer.add(
+                            b_pos.getX() + p.getX(),
+                            b_pos.getY() + p.getY(),
+                            b_pos.getZ() + p.getZ(),this);
+                }else {
+                    block_buffer.add(
+                            b_pos.getX() + p.getX(),
+                            b_pos.getY() + p.getY(),
+                            b_pos.getZ() + p.getZ(),
+                            st, st.getBlock().asItem());
+                }
             }
         }
     }
-    static public BlockState paste_rot(BlockState st,Rotation rot){
+    public BlockState paste_rot(BlockState st){
         Block blk=st.getBlock();
+        if(this.replace && this.offhand_block!=null && this.offhand_block.asItem()!=Items.AIR){
+            blk=this.offhand_block;
+            st=blk.defaultBlockState();
+            return st;
+        }
         if(blk instanceof  StairBlock) {
             Direction d;
-            switch (rot) {
+            switch (this.rotation) {
                 case NONE:
                 break;
                 case CLOCKWISE_90:
@@ -1347,7 +1351,7 @@ public class Wand {
             if(blk instanceof RotatedPillarBlock){
                 Direction.Axis a= st.getValue(RotatedPillarBlock.AXIS);
                 if(a!=Direction.Axis.Y) {
-                    switch (rot) {
+                    switch (this.rotation) {
                         case CLOCKWISE_90:
                         case COUNTERCLOCKWISE_90:
                             if(a==Direction.Axis.X)
@@ -1364,7 +1368,7 @@ public class Wand {
                 //st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
 
             }else{
-                st=st.rotate(rot);
+                st=st.rotate(this.rotation);
             }
         }
         return st;
