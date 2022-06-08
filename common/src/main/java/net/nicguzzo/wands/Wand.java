@@ -311,9 +311,11 @@ public class Wand {
             for (int i = 0; i < 4; i++) {
                 //CompoundTag stackTag = (CompoundTag) tag.get(i);
                 //tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
-                has_hoe = has_hoe || tools[i].getItem() instanceof HoeItem;
-                has_shovel = has_shovel || tools[i].getItem() instanceof ShovelItem;
-                has_axe = has_axe || tools[i].getItem() instanceof AxeItem;
+                if(tools[i]!=null) {
+                    has_hoe = has_hoe || tools[i].getItem() instanceof HoeItem;
+                    has_shovel = has_shovel || tools[i].getItem() instanceof ShovelItem;
+                    has_axe = has_axe || tools[i].getItem() instanceof AxeItem;
+                }
             }
         }
         if (offhand != null && WandUtils.is_shulker(offhand)) {
