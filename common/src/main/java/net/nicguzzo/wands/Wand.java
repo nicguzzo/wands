@@ -12,14 +12,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -134,7 +135,7 @@ public class Wand {
     }
 
     public int slot = 0;
-    public Random random = new Random();
+    public RandomSource random = RandomSource.create();
     public volatile long palette_seed = System.currentTimeMillis();
     public Vector<PaletteSlot> palette_slots = new Vector<>();
     public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
@@ -186,7 +187,7 @@ public class Wand {
         copy_pos1 = null;
         copy_pos2 = null;
         if (player != null && player.level!=null && !player.level.isClientSide()) {
-            player.displayClientMessage(new TextComponent("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
+            player.displayClientMessage(Component.literal("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
         }
     }
 
@@ -379,7 +380,7 @@ public class Wand {
             }
             if (offhand != null && !offhand.isStackable()) {
                 if (!preview) {
-                    player.displayClientMessage(new TextComponent("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
+                    player.displayClientMessage(Component.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
                 }
                 offhand = null;
                 has_offhand =false;
@@ -400,7 +401,7 @@ public class Wand {
         if(replace && (mode != Mode.PASTE) && !has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
             valid=false;
             if (!preview) {
-                player.displayClientMessage(new TextComponent("you need a block or palette in the left hand"), false);
+                player.displayClientMessage(Component.literal("you need a block or palette in the left hand"), false);
             }
             return;
         }
@@ -430,7 +431,7 @@ public class Wand {
         if (!preview) {
             //log(" using palette seed: " + palette_seed);
             if(limit_reached){
-                player.displayClientMessage(new TextComponent("wand limit reached"),false);
+                player.displayClientMessage(Component.literal("wand limit reached"),false);
             }
             //log("has_palette: "+has_palette);
             if (has_palette && !destroy && !use && !is_copy_paste) {
@@ -502,7 +503,7 @@ public class Wand {
                                         }
                                     }
                                     if (!has_bucket) {
-                                        player.displayClientMessage(new TextComponent("You need another water bucket in the inventory."), false);
+                                        player.displayClientMessage(Component.literal("You need another water bucket in the inventory."), false);
                                         return;
                                     }
                                 }
@@ -592,8 +593,8 @@ public class Wand {
                 }
                 for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                     if (pa.getValue().in_player < pa.getValue().needed) {
-                        TranslatableComponent name=new TranslatableComponent(pa.getKey().getDescriptionId());
-                        MutableComponent mc = new TextComponent("Not enough ").withStyle(ChatFormatting.RED).append(name);
+                        MutableComponent name=Component.literal(pa.getKey().getDescriptionId());
+                        MutableComponent mc = Component.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
                         player.displayClientMessage(mc, false);
@@ -1188,11 +1189,11 @@ public class Wand {
         if (preview) {
             valid = (block_buffer.get_length() > 0) && diameter< wand_item.limit;
             if(prnt && diameter>= wand_item.limit){
-                player.displayClientMessage (new TextComponent("limit reached"), true);
+                player.displayClientMessage (Component.literal("limit reached"), true);
             }
         }else{
             if(diameter>= wand_item.limit){
-                player.displayClientMessage(new TextComponent("limit reached"), false);
+                player.displayClientMessage(Component.literal("limit reached"), false);
             }
         }
     }
@@ -1287,9 +1288,9 @@ public class Wand {
 
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
                     if (!preview)
-                        player.displayClientMessage(new TextComponent("Copied: " + cp + " blocks"), false);
+                        player.displayClientMessage(Component.literal("Copied: " + cp + " blocks"), false);
                 } else {
-                    player.displayClientMessage(new TextComponent("Copy limit reached"), false);
+                    player.displayClientMessage(Component.literal("Copy limit reached"), false);
                     //log("max volume");
                 }
             }
@@ -1448,11 +1449,12 @@ public class Wand {
                 int bound = palette_slots.size();
                 if (palette_mode == PaletteMode.RANDOM) {
                     slot = random.nextInt(bound);
-                } else if (palette_mode == PaletteMode.ROUND_ROBIN ) {
+                }
+                PaletteSlot ps = palette_slots.get(slot);
+                if (palette_mode == PaletteMode.ROUND_ROBIN ) {
                     if(!(mode==Mode.DIRECTION && level.isClientSide()))
                         slot = (slot + 1) % bound;
                 }
-                PaletteSlot ps = palette_slots.get(slot);
                 st = ps.state;
                 Block blk = st.getBlock();
                 if (palette_mode == PaletteItem.PaletteMode.RANDOM) {
@@ -1809,16 +1811,16 @@ public class Wand {
                     }
                     if(replace && !placed){
                         if(digger_item.getItem()==Items.AIR)
-                            player.displayClientMessage(new TextComponent("incorrect tool"),false);
+                            player.displayClientMessage(Component.literal("incorrect tool"),false);
                         stop=true;
                     }
                 }else{
                     if(BLOCKS_PER_XP != 0 && (xp - dec) < 0){
-                        player.displayClientMessage(new TextComponent("not enough xp"),false);
+                        player.displayClientMessage(Component.literal("not enough xp"),false);
                         stop=true;
                     }
                     if(wand_durability == 1 ){
-                        player.displayClientMessage(new TextComponent("wand damaged"),false);
+                        player.displayClientMessage(Component.literal("wand damaged"),false);
                         if(WandsMod.config.allow_wand_to_break &&
                                 digger_item !=null && digger_item.getItem()==Items.AIR
                         ) {
@@ -2050,14 +2052,14 @@ public class Wand {
         }
         //player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
         for (Map.Entry<String, BlockAccounting> entry : ba_map.entrySet()){
-            TranslatableComponent name=new TranslatableComponent(entry.getKey());
-            TextComponent st=new TextComponent("   ");
+            MutableComponent name=Component.translatable(entry.getKey());
+            MutableComponent st=Component.literal("   ");
             st.append(name).append(" needed: "+entry.getValue().needed);
             player.displayClientMessage(st,false);
         }
     }
     void update_palette(){
-        if(mode!= Mode.DIRECTION)
+        //if(mode!= Mode.DIRECTION)
             slot=0;
         if(palette!=null) {
             palette_slots.clear();

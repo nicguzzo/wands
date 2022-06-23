@@ -61,7 +61,8 @@ public class WandsConfig {
 	public boolean check_advancements=false;
 	public String advancement_allow_stone_wand="";
 	public String advancement_allow_iron_wand="";
-	public String advancement_allow_diamond_wand="minecraft:mine_diamond";
+	//public String advancement_allow_diamond_wand="minecraft:mine_diamond";
+	public String advancement_allow_diamond_wand="";
 	public String advancement_allow_netherite_wand="";
 	public float fat_lines_width=0.025f;
 	public String block_outline_color="220,220,220,255";

@@ -21,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -141,7 +140,7 @@ public class MCVer1_17_1 extends MCVer {
             }
             @Override
             public Component getDisplayName(){
-                return new TranslatableComponent(paletteItemStack.getItem().getDescriptionId());
+                return Component.translatable(paletteItemStack.getItem().getDescriptionId());
             }
             @Override
             public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
@@ -158,7 +157,7 @@ public class MCVer1_17_1 extends MCVer {
             }
             @Override
             public Component getDisplayName(){
-                return new TranslatableComponent(wandItemStack.getItem().getDescriptionId());
+                return Component.translatable(wandItemStack.getItem().getDescriptionId());
             }
             @Override
             public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {

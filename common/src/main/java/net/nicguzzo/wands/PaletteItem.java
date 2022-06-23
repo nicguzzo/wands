@@ -8,8 +8,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -22,8 +20,8 @@ public class PaletteItem extends Item{
     public enum PaletteMode {
         RANDOM, ROUND_ROBIN
     }
-    static public Component mode_val_random=new TranslatableComponent("item.wands.random");
-    static public Component mode_val_rr=new TranslatableComponent("item.wands.round_robin");
+    static public Component mode_val_random=Component.translatable("item.wands.random");
+    static public Component mode_val_rr=Component.translatable("item.wands.round_robin");
     public PaletteItem(Properties properties) {
         super(properties);        
     }
@@ -37,18 +35,18 @@ public class PaletteItem extends Item{
             CompoundTag stackTag = (CompoundTag) inventory.get(i);
             ItemStack stack2 = ItemStack.of(stackTag.getCompound("Block"));
             if(!stack2.isEmpty()){
-                list.add( new TranslatableComponent(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
+                list.add( Component.translatable(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
             }
         }
         PaletteMode mode=PaletteItem.getMode(stack);            
         Component mode_val;
         if(mode==PaletteMode.ROUND_ROBIN){
-                mode_val=new TextComponent("mode: "+PaletteItem.mode_val_rr.getString());
+                mode_val=Component.literal("mode: "+PaletteItem.mode_val_rr.getString());
         }else{
-            mode_val=new TextComponent("mode: "+PaletteItem.mode_val_random.getString());
+            mode_val=Component.literal("mode: "+PaletteItem.mode_val_random.getString());
         }
         list.add( mode_val);
-        list.add(new TextComponent("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
+        list.add(Component.literal("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
     }
     static public PaletteMode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){

@@ -64,7 +64,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
         return wand.getItem() instanceof WandItem;
     }
     boolean can_pickup(ItemStack itemStack){
-        return itemStack.getItem() instanceof DiggerItem;
+        return itemStack.getItem() instanceof DiggerItem && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
         for(int o = s; o < e; ++o) {
