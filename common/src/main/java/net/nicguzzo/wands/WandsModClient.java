@@ -25,10 +25,14 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -106,7 +110,7 @@ public class WandsModClient {
             boolean no_tool=packet.readBoolean();
             boolean damaged_tool=packet.readBoolean();
             context.queue(()->{
-                //WandsMod.LOGGER.info("got sound msg "+item_stack);
+                WandsMod.LOGGER.info("got sound msg "+item_stack);
                 if(!item_stack.isEmpty()){
                     Block block=Block.byItem(item_stack.getItem());
                     SoundType sound_type = block.getSoundType(block.defaultBlockState());
@@ -229,6 +233,20 @@ public class WandsModClient {
                 font.draw(poseStack,ln1,x,y,0xffffff);
                 font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
                 font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
+                if(WandsMod.config.show_tools_info) {
+                    ItemRenderer itemRenderer = client.getItemRenderer();
+                    CompoundTag ctag = stack.getOrCreateTag();
+                    ListTag tag = ctag.getList("Tools", MCVer.NbtType.COMPOUND);
+                    int ix = 16;
+                    int iy = screenHeight-20;
+                    tag.forEach(element -> {
+                        CompoundTag stackTag = (CompoundTag) element;
+                        int slot = stackTag.getInt("Slot");
+                        ItemStack item = ItemStack.of(stackTag.getCompound("Tool"));
+                        itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy);
+                        itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                    });
+                }
             }
         }
     }

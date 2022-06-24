@@ -23,6 +23,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -33,9 +34,12 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -45,6 +49,7 @@ import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.WandItem.Orientation;
 import net.nicguzzo.wands.WandItem.Mode;
 import net.nicguzzo.wands.mcver.MCVer;
+import org.jetbrains.annotations.Nullable;
 
 public class Wand {
     public int x = 0;
@@ -593,7 +598,7 @@ public class Wand {
                 }
                 for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                     if (pa.getValue().in_player < pa.getValue().needed) {
-                        MutableComponent name=Component.literal(pa.getKey().getDescriptionId());
+                        MutableComponent name=Component.translatable(pa.getKey().getDescriptionId());
                         MutableComponent mc = Component.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
@@ -696,7 +701,7 @@ public class Wand {
             //log("a: " + a);
             //log("placed: " + placed);
 
-            if ((placed > 0 && !destroy)||(no_tool||damaged_tool)) {
+            if ((placed > 0 /*&& !destroy*/)||(no_tool||damaged_tool)) {
                 //player.displayClientMessage(new TextComponent("Wand placed " + placed+ " blocks"), true);
                 //log("placed: " + placed);
 
@@ -1750,7 +1755,7 @@ public class Wand {
         }
         if (creative) {
             if (destroy) {
-                if (level.destroyBlock(block_pos, false)) {
+                if (destroyBlock(block_pos, false)) {
                     if (undo_buffer != null) {
                         undo_buffer.put(block_pos,  level.getBlockState(block_pos), destroy);
                         //undo_buffer.print();
@@ -1784,7 +1789,7 @@ public class Wand {
 
                         if (_can_destroy) {
                             //log("can destroy: "+st);
-                            placed = level.destroyBlock(block_pos, false);
+                            placed = destroyBlock(block_pos, false);
                             //log("destroyed: "+placed);
                             if (placed && WandsMod.config.destroy_in_survival_drop && digger_item !=null) {
                                 int silk_touch = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,
@@ -1851,7 +1856,29 @@ public class Wand {
         //log("place_block placed: "+placed);
         return placed;
     }
+    public boolean destroyBlock(BlockPos blockPos, boolean bl) {
+        BlockState blockState = level.getBlockState(blockPos);
+        if (blockState.isAir()) {
+            return false;
+        } else {
+            FluidState fluidState = level.getFluidState(blockPos);
+            if (!(blockState.getBlock() instanceof BaseFireBlock)) {
+                //level.levelEvent(2001, blockPos, Block.getId(blockState));
+            }
 
+            if (bl) {
+                BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
+                Block.dropResources(blockState, level, blockPos, blockEntity, null, ItemStack.EMPTY);
+            }
+
+            boolean bl2 = level.setBlock(blockPos, fluidState.createLegacyBlock(), 3, 512);
+            if (bl2) {
+                //level.gameEvent(GameEvent.BLOCK_DESTROY, blockPos, GameEvent.Context.of(entity, blockState));
+            }
+
+            return bl2;
+        }
+    }
     Direction[] getDirMode0(Direction side, double hit_x, double hit_y, double hit_z) {
         Direction[] ret = new Direction[2];
         ret[0] = null;
@@ -2357,7 +2384,7 @@ public class Wand {
     }
 
     static public boolean is_plant(BlockState state) {
-        return (state.getBlock() instanceof BushBlock);
+        return (state.getBlock() instanceof BushBlock)|| (state.getBlock() instanceof VineBlock);
     }
     boolean replace_fluid(BlockState state){
         if(wand_item.removes_water && wand_item.removes_lava){
