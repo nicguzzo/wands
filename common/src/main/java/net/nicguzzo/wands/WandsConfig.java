@@ -13,6 +13,7 @@ import com.google.gson.GsonBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
 public class WandsConfig {
@@ -48,6 +49,11 @@ public class WandsConfig {
 	public float wand_mode_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
 	public boolean fancy_preview = true;
+	public boolean block_outlines=true;
+	public boolean fill_outlines=true;
+	public boolean copy_outlines=true;
+	public boolean paste_outlines=true;
+	public boolean no_lines=false;
 	public boolean fat_lines=true;
 	public float fat_lines_width=0.025f;
 	public String block_outline_color="220,220,220,255";
@@ -70,6 +76,7 @@ public class WandsConfig {
 	static public List<Block> shovel_allowed=new ArrayList<Block>();
 	static public List<Block> hoe_allowed=new ArrayList<Block>();
 	static public List<Block> denied=new ArrayList<Block>();
+	
 	public enum Colors{
 		BLOCK_OUTLINE,
 		BOUNDING_BOX,
@@ -81,7 +88,7 @@ public class WandsConfig {
 		PASTE_BB,
 		BlOCK
 	}
-	static public HashMap<Colors,Color> colors=new HashMap();
+	static public HashMap<Colors,Color> colors=new HashMap<Colors,Color>();
 
 	void parse_colors(){
 		colors.put(Colors.BLOCK_OUTLINE,parse_color(block_outline_color));
@@ -109,27 +116,36 @@ public class WandsConfig {
 				b = clamp(Integer.parseInt(temp[2]) / 255.0f);
 				a = clamp(Integer.parseInt(temp[3]) / 255.0f);
 			}catch (NumberFormatException e){
-				WandsMod.LOGGER.error("error parsing color, "+e.getMessage());
+				System.out.printf("error parsing color, "+e.getMessage());
 			}
 		}
 		return new Color(r,g,b,a);
 	}
 	public void generate_allow_list(List<Block> out,String[] str) {
-		for (String id : str) {
+		for (String id : str) {			
 			ResourceLocation res=ResourceLocation.tryParse(id);
-			Item item=Registry.ITEM.get(res);
-			Block blk=Block.byItem(item);
-			if(blk!=null)
-				out.add(blk);
+			if(res!=null){
+				Item item=Registry.ITEM.get(res);
+				if(item!=null && item!=Items.AIR){
+					Block blk=Block.byItem(item);
+					if(blk!=null){
+						out.add(blk);
+					}
+				}
+			}
 		}
 	}
 	public void generate_lists(){
-		//System.out.println("generating allow/deny lists");
+		System.out.println("generating allow/deny lists");
 		generate_allow_list(pickaxe_allowed,str_pickaxe_allowed);
 		generate_allow_list(axe_allowed,str_axe_allowed);
 		generate_allow_list(shovel_allowed,str_shovel_allowed);
 		generate_allow_list(hoe_allowed,str_hoe_allowed);
 		generate_allow_list(denied,str_denied);
+		System.out.println("denied "+denied.size());
+		for (Block b : denied) {
+			System.out.println("denied "+b);
+		}
 	}
 	//TODO: catch json errors
 	public static void load_config() {
@@ -162,7 +178,7 @@ public class WandsConfig {
 		if(INSTANCE==null){
 			load_config();
 			INSTANCE.parse_colors();
-			INSTANCE.generate_lists();
+			//INSTANCE.generate_lists();
 		}
 		return INSTANCE;
 	}

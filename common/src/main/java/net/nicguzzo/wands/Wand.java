@@ -106,7 +106,7 @@ public class Wand {
     public WandItem.Plane plane=WandItem.Plane.XZ;
     public Direction.Axis axis=Direction.Axis.Y;
     public Rotation rotation;
-    private WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
+    public WandItem.StateMode state_mode =WandItem.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
 
@@ -125,7 +125,7 @@ public class Wand {
 
     private static class BlockAccounting {
         public int placed = 0;
-        public int consumed = 0;
+        //public int consumed = 0;
         public int needed = 0;
         public int in_player = 0;
     }
@@ -169,11 +169,11 @@ public class Wand {
     boolean prnt = false;
     public int limit=MAX_LIMIT;
     Inventory player_inv;
-
-    private void log(String s) {
-        WandsMod.log(s, prnt);
-    }
-
+    public boolean slab_stair_bottom=true;
+    //private void log(String s) {
+        //WandsMod.log(s, prnt);
+    //}
+    static boolean once=true;
     public void clear() {
         p1 = null;
         p1_state = null;
@@ -230,10 +230,12 @@ public class Wand {
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
-        //DONE paste do not rotate stairs.
-        //FIXED replace from palette is broken
-        //DONE add allowed blocks per tool
-        //DONE optional axis, use same state if no axis set
+                
+        if(once){
+            once=false;
+            WandsMod.config.generate_lists();
+        }
+        
         //TODO palette pattern mode
         //maybe
         //TODO paste should respect modes place replace destroy
@@ -324,9 +326,9 @@ public class Wand {
         }
         if (offhand != null && !has_palette && !has_bucket && !destroy) {
             if (offhand.getTag() != null) {
-                if (!preview) {
+                /*if (!preview) {
                     player.displayClientMessage(new TextComponent("Wand offhand can't have tag! ").withStyle(ChatFormatting.RED), false);
-                }
+                }*/
                 offhand = null;
                 has_offhand =false;
                 offhand_block=null;
@@ -356,6 +358,7 @@ public class Wand {
             valid=false;
             return;
         }
+        
         switch (mode) {
             case DIRECTION: {
                 boolean invert = WandItem.isInverted(wand_stack);
@@ -510,7 +513,7 @@ public class Wand {
             //log("block_state "+block_state);
             //log( "palette_slots "+palette_slots.size());
             //log("block_accounting " + block_accounting.size());
-            boolean missing_blocks = block_accounting.size() == 0;
+            //boolean missing_blocks = block_accounting.size() == 0;
             //for (var pa : block_accounting.entrySet()) {
 //                log(pa.getKey()+" in player "+pa.getValue().in_player+" needed: "+pa.getValue().needed +" placed: "+pa.getValue().placed);
 //            }
@@ -548,7 +551,7 @@ public class Wand {
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
                         player.displayClientMessage(mc, false);
-                        missing_blocks = true;
+                        //missing_blocks = true;
                     }
                     //log(pa.getKey().getDescriptionId()+" needed: "+pa.getValue().needed+" player has: "+pa.getValue().in_player);
                 }
@@ -668,6 +671,7 @@ public class Wand {
                 }
                 packet.writeBoolean(no_tool);
                 packet.writeBoolean(damaged_tool);
+                packet.writeBoolean(slab_stair_bottom);
                 MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
                 no_tool = false;
                 damaged_tool = false;
@@ -683,16 +687,16 @@ public class Wand {
         if (pa != null && pa.placed > 0) {
             if(stack_item.getItem().equals(Fluids.LAVA.getBucket())){
                 pa.placed--;
-                pa.consumed++;
+                //pa.consumed++;
                 ItemStack ret=Items.BUCKET.getDefaultInstance();
                 return ret;
             }else{
                 if (pa.placed <= stack_item.getCount()) {
-                    pa.consumed+=stack_item.getCount();
+                    //pa.consumed+=stack_item.getCount();
                     stack_item.setCount(stack_item.getCount() - pa.placed);
                     pa.placed = 0;
                 } else {
-                    pa.consumed+=stack_item.getCount();
+                    //pa.consumed+=stack_item.getCount();
                     pa.placed -= stack_item.getCount();
                     stack_item.setCount(0);
                 }
@@ -724,19 +728,18 @@ public class Wand {
                 dest = find_next_pos(block_state, d1, pos);
             }
             if (dest != null) {
-                //if (preview) {
+                
                 x1 = dest.getX();
                 y1 = dest.getY();
                 z1 = dest.getZ();
                 x2 = x1 + 1;
                 y2 = y1 + 1;
                 z2 = z1 + 1;
-                valid = true;
-                //} else {
+                //valid = true;
+                
                 block_buffer.reset();
-                add_to_buffer(dest.getX(),dest.getY(),dest.getZ());
-                //block_buffer.add(dest, this);
-                //}
+                valid=add_to_buffer(dest.getX(),dest.getY(),dest.getZ());
+                
             }
         }
     }
@@ -953,7 +956,6 @@ public class Wand {
             int x2 = pos.getX();
             int y2 = pos.getY();
             int z2 = pos.getZ();
-            int n = 0;
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);
@@ -974,7 +976,6 @@ public class Wand {
                 zs = -1;
             }
             add_to_buffer(x1, y1, z1);
-            n++;
             // X
             if (dx >= dy && dx >= dz) {
                 lp1 = 2 * dy - dx;
@@ -992,7 +993,6 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dz;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             } else if (dy >= dx && dy >= dz) {
                 lp1 = 2 * dx - dy;
@@ -1010,7 +1010,6 @@ public class Wand {
                     lp1 += 2 * dx;
                     lp2 += 2 * dz;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             } else {
                 lp1 = 2 * dy - dz;
@@ -1028,7 +1027,6 @@ public class Wand {
                     lp1 += 2 * dy;
                     lp2 += 2 * dx;
                     add_to_buffer(x1, y1, z1);
-                    n++;
                 }
             }
         }
@@ -1229,9 +1227,11 @@ public class Wand {
                             for (int x = xs; x <= xe; x++) {
                                 bp.set(x, y, z);
                                 BlockState bs = level.getBlockState(bp);
-                                if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
-                                    cp++;
-                                    copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
+                                if(!WandsConfig.denied.contains(bs.getBlock())){
+                                    if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
+                                        cp++;
+                                        copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
+                                    }
                                 }
                             }
                         }
@@ -1272,6 +1272,8 @@ public class Wand {
         if(blk instanceof  StairBlock) {
             Direction d;
             switch (rot) {
+                case NONE:
+                break;
                 case CLOCKWISE_90:
                     d= st.getValue(StairBlock.FACING).getClockWise();
                     st = st.setValue(StairBlock.FACING, d);
@@ -1296,6 +1298,10 @@ public class Wand {
                                 st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
                             if(a==Direction.Axis.Z)
                                 st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.X);
+                            break;
+                            case NONE:
+                            break;
+                            case CLOCKWISE_180:
                             break;
                     }
                 }
@@ -1415,21 +1421,40 @@ public class Wand {
     BlockState state_for_placement(BlockState st){
         Block blk=st.getBlock();
         if(state_mode== WandItem.StateMode.APPLY) {
+            /*if(is_alt_pressed){
+                slab_stair_bottom=!slab_stair_bottom;
+            }*/
             if (blk instanceof SlabBlock) {
-                double hity = WandUtils.unitCoord(hit.y);
-                if (hity > 0.5 || is_alt_pressed) {
-                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
+                /*double hity = WandUtils.unitCoord(hit.y);
+                if (hity > 0.5) {
+                    t= SlabType.TOP;
                 } else {
-                    st = blk.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
-                }
+                    t= SlabType.BOTTOM;
+                }*/
+                SlabType slab_type;
+                if(slab_stair_bottom) 
+                    slab_type=SlabType.BOTTOM;
+                else
+                    slab_type= SlabType.TOP;                
+                
+                st = blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
+                
             } else {
                 if (blk instanceof StairBlock) {
-                    double hity = WandUtils.unitCoord(hit.y);
-                    if (hity > 0.5 || is_alt_pressed) {
-                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.TOP).rotate(rotation);
+                    /*double hity = WandUtils.unitCoord(hit.y);                    
+                    if (hity > 0.5) {
+                        h= Half.TOP;
                     } else {
-                        st = blk.defaultBlockState().setValue(StairBlock.HALF, Half.BOTTOM).rotate(rotation);
-                    }
+                        h= Half.BOTTOM;
+                    }*/                    
+                    Half h;
+                    if (slab_stair_bottom) 
+                        h=Half.BOTTOM;
+                    else
+                        h= Half.TOP;
+
+                    st = blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+                     
                 } else {
                     if (blk instanceof RotatedPillarBlock) {
                         st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
@@ -1722,7 +1747,7 @@ public class Wand {
                         stop=true;
                     }
                 }else{
-                    if(BLOCKS_PER_XP != 0 && (xp - dec) < 0){
+                    if(BLOCKS_PER_XP != 0.0f && (xp - dec) < 0){
                         player.displayClientMessage(new TextComponent("not enough xp"),false);
                         stop=true;
                     }
@@ -1977,20 +2002,21 @@ public class Wand {
             }
         }
     }
-    public void add_to_buffer(int x, int y, int z) {
-        if (block_buffer.get_length() < limit){
-            BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
+    public boolean add_to_buffer(int x, int y, int z) {
+        if (!level.isOutsideBuildHeight(y)&& block_buffer.get_length() < limit){
+            BlockState st = level.getBlockState(tmp_pos.set(x, y, z));            
             if (destroy || replace||use) {
                 if(!st.isAir()||mode==Mode.AREA) {
-                    block_buffer.add(x, y, z, this);
+                    return block_buffer.add(x, y, z, this);
                 }
             } else {
                 if (can_place(st))
-                    block_buffer.add(x, y, z, this);
-            }
+                    return block_buffer.add(x, y, z, this);
+            }            
         }else{
             limit_reached=true;
         }
+        return false;
     }
     void consume_xp(){
         float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
@@ -2074,7 +2100,7 @@ public class Wand {
             if(check_speed){
                 DiggerItem mt=(DiggerItem)digger.getItem();
                 if(mt!=null) {
-                    return  creative || mt.getDestroySpeed(digger, state) > 1.0f
+                    return  creative || (mt.getDestroySpeed(digger, state) > 1.0f && mt.isCorrectToolForDrops(state))
                             || is_glass|| is_snow_layer || is_allowed;
                 }
             }else{
@@ -2090,7 +2116,7 @@ public class Wand {
             BlockState bs2 = level.getBlockState(pos2);
             if (block_buffer.get_length() < limit &&
                     (bs1.equals(state) || state_in_slot(bs1)) &&
-                    (destroy ||replace|| can_place(bs2)))
+                    (((destroy ||replace) && bs2.isAir()) || can_place(bs2)))
             {
                 //block_buffer.add(pos2, this);
                 add_to_buffer(pos2.getX(),pos2.getY(),pos2.getZ());

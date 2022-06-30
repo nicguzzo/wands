@@ -46,11 +46,11 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
         //beginMC1_16_5
         this.addWidget(btn_mode);
         this.addWidget(btn_rotate);
-        //endMC1_16_5  
+        //endMC1_16_5
         /*//beginMC1_17_1
         this.addRenderableWidget(btn_mode);
         this.addRenderableWidget(btn_rotate);
-        //endMC1_17_1*/ 
+        //endMC1_17_1*/
 
     }
 
@@ -138,7 +138,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         Slot slot = this.find_slot(mouseX, mouseY);
         if(slot!=null){
-            ItemStack itemStack = MCVer.inst.get_carried(Minecraft.getInstance().player,this.menu);
+            Minecraft client=Minecraft.getInstance();
+            ItemStack itemStack = MCVer.inst.get_carried(client.player,this.menu);
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
             }

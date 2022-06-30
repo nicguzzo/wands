@@ -11,14 +11,13 @@ import me.shedaniel.architectury.registry.MenuRegistry;
 //endMC1_16_5
 /*//beginMC1_17_1
 import dev.architectury.event.events.client.ClientTickEvent;
-import dev.architectury.event.events.client.ClientGuiEvent.ScreenRenderPost;
 import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
-//endMC1_17_1*/
+//endMC1_17_1  */
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -26,9 +25,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -128,7 +125,13 @@ public class WandsModClient {
                 }
                 if (damaged_tool) {
                     Minecraft.getInstance().getToasts().addToast(new WandToast("invalid or damaged"));
-                }
+                }                
+            });
+        });
+        NetworkManager.registerReceiver(Side.S2C, WandsMod.SLAB_PACKET, (packet, context)->{
+            boolean slab=packet.readBoolean();
+            context.queue(()->{
+                ClientRender.wand.slab_stair_bottom=slab;
             });
         });
         NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{
@@ -203,9 +206,9 @@ public class WandsModClient {
                 MCVer.inst.set_pos_tex_shader();
 
                 Wand wand=ClientRender.wand;
-                WandItem wand_item=(WandItem)stack.getItem();
-                WandItem.Mode mode=wand_item.getMode(stack);
-                WandItem.Action action=wand_item.getAction(stack);
+                //WandItem wand_item=(WandItem)stack.getItem();
+                WandItem.Mode mode=WandItem.getMode(stack);
+                WandItem.Action action=WandItem.getAction(stack);
 
                 String ln1="";
                 String ln2="Action: "+action.toString();

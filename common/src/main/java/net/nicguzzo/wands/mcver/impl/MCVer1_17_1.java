@@ -28,7 +28,6 @@ import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
 import net.nicguzzo.wands.WandScreenHandler;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsModClient;
 import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.function.Supplier;
@@ -76,15 +75,18 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void set_render_quads_pos_tex(BufferBuilder bufferBuilder) {
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
-        //RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        //RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        //bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+        RenderSystem.setShader(GameRenderer::getBlockShader);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
     }
     @Override
     public void set_render_lines(BufferBuilder bufferBuilder) {
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        //RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        //bufferBuilder.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+        RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+        RenderSystem.lineWidth(5.0f);
+        bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
     }
 
     @Override
@@ -95,13 +97,15 @@ public class MCVer1_17_1 extends MCVer {
 
     @Override
     public void pre_render(PoseStack poseStack) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Minecraft client=Minecraft.getInstance();
+        Camera camera = client.gameRenderer.getMainCamera();
         Vec3 c = camera.getPosition();
         //RenderSystem.pushMatrix();
 
         PoseStack poseStack2 = RenderSystem.getModelViewStack();
         poseStack2.pushPose();
-        if(WandsModClient.is_forge) {
+        //if(WandsMod.is_forge)
+        {
             poseStack2.mulPoseMatrix(poseStack.last().pose());
         }
         poseStack2.translate(-c.x,-c.y,-c.z);
@@ -165,4 +169,4 @@ public class MCVer1_17_1 extends MCVer {
         return menu.getCarried();
     }
 }
-//endMC1_17_1*/  
+//endMC1_17_1*/

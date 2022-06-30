@@ -11,21 +11,17 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SpongeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Optional;
 
-public class WandItem extends Item{
+public class WandItem extends TieredItem implements Vanishable {
     public enum Mode{
         DIRECTION{
             public String toString() {
@@ -130,15 +126,18 @@ public class WandItem extends Item{
     static public final StateMode[] state_modes=StateMode.values();
 
     
-    public WandItem(int limit,boolean removes_water,boolean removes_lava,boolean unbreakable,Properties properties) {
-        super(properties);
+    public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, Properties properties) {
+        super(tier,properties);
         this.limit=limit;
         this.removes_lava=removes_lava;
         this.removes_water=removes_water;
-        this.unbreakable=unbreakable;
+        this.unbreakable=unbreakable;    
+    }
+    static public boolean is_wand(ItemStack stack) {
+        return stack.getItem() instanceof WandItem;
     }
     static public Mode getMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
             int m=stack.getOrCreateTag().getInt("mode");
             if(m<modes.length)
                 return modes[m];
@@ -146,20 +145,20 @@ public class WandItem extends Item{
         return Mode.DIRECTION;
     }
     static public void setMode(ItemStack stack,Mode mode) {
-        if(stack!=null && !stack.isEmpty()) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("mode", mode.ordinal());
         }
     }
     static public void nextMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int mode=(tag.getInt("mode")+1) % (modes.length);
             tag.putInt("mode", mode);
         }
     }
     static public void prevMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int mode=tag.getInt("mode")-1;
             if(mode<0){
@@ -169,38 +168,38 @@ public class WandItem extends Item{
         }
     }
     static public boolean isInverted(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty())
+        if(stack!=null && is_wand(stack) && !stack.isEmpty())
             return stack.getOrCreateTag().getBoolean("inverted");
         return false;
     }
     static public void invert(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             boolean inverted=tag.getBoolean("inverted");
             tag.putBoolean("inverted", !inverted);
         }
     }
     static public void setInvert(ItemStack stack,boolean i) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putBoolean("inverted", i);
         }
     }
     static public Orientation getOrientation(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             int o=stack.getOrCreateTag().getInt("orientation");
             return orientations[o];
         }
         return Orientation.ROW;
     }
     static public void setOrientation(ItemStack stack,Orientation o) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("orientation", o.ordinal());
         }
     }
     static public void nextOrientation(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int o=(tag.getInt("orientation")+1) %2;
             tag.putInt("orientation", o);
@@ -208,7 +207,7 @@ public class WandItem extends Item{
     }
     static public Plane getPlane(ItemStack stack) {
         Plane plane=Plane.XZ;
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             int p=stack.getOrCreateTag().getInt("plane");
             if(p>=0 && p<planes.length)
                 plane=planes[p];
@@ -216,58 +215,58 @@ public class WandItem extends Item{
         return plane;
     }
     static public void setPlane(ItemStack stack,Plane p) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("plane", p.ordinal());
         }
     }
     static public void nextPlane(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int plane=(tag.getInt("plane")+1) % 3;
             tag.putInt("plane", plane);
         }
     }
     static public void toggleCircleFill(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             boolean cfill=tag.getBoolean("cfill");
             tag.putBoolean("cfill", !cfill);
         }
     }
     static public void setFill(ItemStack stack,boolean cfill) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putBoolean("cfill",cfill);
         }
     }
     static public boolean isCircleFill(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             return stack.getOrCreateTag().getBoolean("cfill");
         }
         return false;
     }
 
     static public Rotation getRotation(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty())
+        if(stack!=null && is_wand(stack) && !stack.isEmpty())
             return rotations[stack.getOrCreateTag().getInt("rotation")];
         return Rotation.NONE;
     }
     static public void nextRotation(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int rot=(tag.getInt("rotation")+1) % rotations.length;
             tag.putInt("rotation", rot);
         }
     }
     static public void setRotation(ItemStack stack,Rotation rot) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("rotation", rot.ordinal());
         }
     }
     static public Action getAction(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
             int m=stack.getOrCreateTag().getInt("action");
             if(m<actions.length)
                 return actions[m];
@@ -275,20 +274,20 @@ public class WandItem extends Item{
         return Action.PLACE;
     }
     static public void setAction(ItemStack stack,Action a) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("action", a.ordinal());
         }
     }
     static public void nextAction(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int a=(tag.getInt("action")+1) % (actions.length);
             tag.putInt("action", a);
         }
     }
     static public void prevAction(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int a=tag.getInt("action")-1;
             if(a<0){
@@ -300,7 +299,7 @@ public class WandItem extends Item{
 
     static public Direction.Axis getAxis(ItemStack stack) {
         Direction.Axis axis= Direction.Axis.Y;
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             int p=stack.getOrCreateTag().getInt("axis");
             if(p>=0 && p< axes.length)
                 axis=axes[p];
@@ -308,26 +307,26 @@ public class WandItem extends Item{
         return axis;
     }
     static public void setAxis(ItemStack stack,Direction.Axis axis) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("axis", axis.ordinal());
         }
     }
     static public void setAxis(ItemStack stack,int a) {
-        if (stack != null && !stack.isEmpty()) {
+        if (stack != null && is_wand(stack) && !stack.isEmpty()) {
             CompoundTag tag = stack.getOrCreateTag();
             tag.putInt("axis", a);
         }
     }
     static public void nextAxis(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()){
             CompoundTag tag=stack.getOrCreateTag();
             int axis=(tag.getInt("axis")+1) % 3;
             tag.putInt("axis", axis);
         }
     }
     static public StateMode getStateMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
             int m=stack.getOrCreateTag().getInt("state_mode");
             if(m<state_modes.length)
                 return state_modes[m];
@@ -335,7 +334,7 @@ public class WandItem extends Item{
         return StateMode.CLONE;
     }
     static public void setStateMode(ItemStack stack,StateMode mode) {
-        if(stack!=null && !stack.isEmpty()) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("state_mode", mode.ordinal());
         }
@@ -438,7 +437,7 @@ public class WandItem extends Item{
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
 
-        list.add(new TextComponent("mode: " + this.getMode(stack).toString() ));
+        list.add(new TextComponent("mode: " + WandItem.getMode(stack).toString() ));
         list.add(new TextComponent("limit: " + this.limit ));
         list.add(new TextComponent("orientation: "+orientations[tag.getInt("orientation")].toString()));
         int a=tag.getInt("axis");
@@ -450,5 +449,9 @@ public class WandItem extends Item{
         list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
         list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));
     }
-   
+    public int getEnchantmentValue() {
+
+        return this.getTier().getEnchantmentValue();
+
+    }
 }

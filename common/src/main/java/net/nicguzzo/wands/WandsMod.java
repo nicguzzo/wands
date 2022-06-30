@@ -5,7 +5,7 @@ import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
-//endMC1_16_5   
+//endMC1_16_5
 
 /*//beginMC1_17_1
 import dev.architectury.event.events.common.PlayerEvent;
@@ -15,9 +15,10 @@ import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.Registries;
 import dev.architectury.registry.registries.RegistrySupplier;
-//endMC1_17_1*/  
+//endMC1_17_1 */
 
 import io.netty.buffer.Unpooled;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -34,9 +35,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Tiers;
 import net.nicguzzo.wands.mcver.MCVer;
-
-import java.util.Optional;
 
 public class WandsMod {   
 
@@ -53,20 +53,20 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
-            return new WandItem(config.stone_wand_limit,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
+            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register("iron_wand", () ->{
-        return new WandItem(config.iron_wand_limit,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register("diamond_wand", () ->{
-        return new WandItem(config.diamond_wand_limit,true,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register("netherite_wand", () ->{
-        return new WandItem(config.netherite_wand_limit,true,true,false,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Wand.MAX_LIMIT,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,Wand.MAX_LIMIT,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
@@ -83,6 +83,7 @@ public class WandsMod {
     static public ResourceLocation PALETTE_PACKET= new ResourceLocation(MOD_ID, "palette_packet");
     static public ResourceLocation STATE_PACKET= new ResourceLocation(MOD_ID, "state_packet");
     static public ResourceLocation WAND_PACKET= new ResourceLocation(MOD_ID, "wand_packet");
+    static public ResourceLocation SLAB_PACKET= new ResourceLocation(MOD_ID, "slab_packet");
 
 
     static final public int wand_menu_key        = GLFW.GLFW_KEY_Y;
@@ -212,10 +213,10 @@ public class WandsMod {
         }
     }
     public static void process_keys(Player player,int key,boolean shift,boolean alt){
-        ItemStack item_stack=player.getMainHandItem();
+        ItemStack main_stack=player.getMainHandItem();
         ItemStack offhand_stack = player.getOffhandItem();
-        boolean is_wand=item_stack.getItem() instanceof WandItem;
-        boolean is_palette=item_stack.getItem() instanceof PaletteItem ||offhand_stack.getItem() instanceof PaletteItem;
+        boolean is_wand=main_stack.getItem() instanceof WandItem;
+        boolean is_palette=main_stack.getItem() instanceof PaletteItem ||offhand_stack.getItem() instanceof PaletteItem;
         boolean creative=MCVer.inst.is_creative(player);
         if(is_palette){
             switch(key) {
@@ -245,11 +246,11 @@ public class WandsMod {
             switch(key) {
                 case wand_action_key:
                     if (shift) {
-                        WandItem.prevAction(item_stack);
+                        WandItem.prevAction(main_stack);
                     } else {
-                        WandItem.nextAction(item_stack);
+                        WandItem.nextAction(main_stack);
                     }
-                    player.displayClientMessage(new TextComponent("Wand PlaceMode: " + WandItem.getAction(item_stack)), false);
+                    player.displayClientMessage(new TextComponent("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
                     break;
                 /*case wand_state_mode_key:
                     if(shift){
@@ -259,30 +260,31 @@ public class WandsMod {
                     }
                     break;*/
                 case wand_menu_key:
-                    MCVer.inst.open_wand_menu((ServerPlayer) player, item_stack);
+                    MCVer.inst.open_wand_menu((ServerPlayer) player, main_stack);
                     break;
                 case wand_mode_key:
                     if (shift) {
-                        WandItem.prevMode(item_stack);
+                        WandItem.prevMode(main_stack);
                     } else {
-                        WandItem.nextMode(item_stack);
+                        WandItem.nextMode(main_stack);
                     }
                     //player.displayClientMessage(new TextComponent("Wand mode: "+WandItem.getMode(item_stack).toString()),false);
                     break;
                 case wand_orientation_key:
                     if (alt) {//change axis
                         if (wand != null) {
-                            WandItem.nextAxis(item_stack);
-                            Direction.Axis a=WandItem.getAxis(item_stack);
+                            WandItem.nextAxis(main_stack);
+                            WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
+                            Direction.Axis a=WandItem.getAxis(main_stack);
                             player.displayClientMessage(new TextComponent("Wand Axis: " + a), false);
                             send_state((ServerPlayer) player, wand);
                         }
                     } else {
-                        switch (WandItem.getMode(item_stack)) {
+                        switch (WandItem.getMode(main_stack)) {
                             case CIRCLE:
                             case RECT:
-                                WandItem.nextPlane(item_stack);
-                                player.displayClientMessage(new TextComponent("Wand Plane: " + WandItem.getPlane(item_stack)), false);
+                                WandItem.nextPlane(main_stack);
+                                player.displayClientMessage(new TextComponent("Wand Plane: " + WandItem.getPlane(main_stack)), false);
                                 send_state((ServerPlayer) player, wand);
                                 break;
                             case DIRECTION:
@@ -290,20 +292,20 @@ public class WandsMod {
 
                                 break;
                             default:
-                                WandItem.nextOrientation(item_stack);
-                                player.displayClientMessage(new TextComponent("Wand Orientation: " + WandItem.getOrientation(item_stack).toString().toLowerCase()), false);
+                                WandItem.nextOrientation(main_stack);
+                                player.displayClientMessage(new TextComponent("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
                                 break;
                         }
                     }
 
                     break;
                 case wand_invert_key:
-                    WandItem.invert(item_stack);
-                    player.displayClientMessage(new TextComponent("Wand inverted: " + WandItem.isInverted(item_stack)), false);
+                    WandItem.invert(main_stack);
+                    player.displayClientMessage(new TextComponent("Wand inverted: " + WandItem.isInverted(main_stack)), false);
                     break;
                 case wand_fill_circle_key:
-                    WandItem.toggleCircleFill(item_stack);
-                    player.displayClientMessage(new TextComponent("Wand circle fill: " + WandItem.isCircleFill(item_stack)), false);
+                    WandItem.toggleCircleFill(main_stack);
+                    player.displayClientMessage(new TextComponent("Wand circle fill: " + WandItem.isCircleFill(main_stack)), false);
                     break;
                 case palette_mode_key:
                     ItemStack offhand_stack2 = player.getOffhandItem();
@@ -311,10 +313,14 @@ public class WandsMod {
                         PaletteItem.nextMode(offhand_stack2);
                         player.displayClientMessage(new TextComponent("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
                     } else {
-                        WandItem.nextRotation(item_stack);
-                        Rotation r = WandItem.getRotation(item_stack);
-                        String rot = "0°";
+                        WandItem.nextRotation(main_stack);
+                        WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
+                        Rotation r = WandItem.getRotation(main_stack);
+                        String rot = "";
                         switch (r) {
+                            case NONE:
+                                rot = "0°";
+                                break;
                             case CLOCKWISE_90:
                                 rot = "90°";
                                 break;
@@ -348,28 +354,41 @@ public class WandsMod {
             }
             //LOGGER.info("wand tag: "+ item_stack.getTag());
         }
-        if(!item_stack.isEmpty() && item_stack.getItem() instanceof PaletteItem){
+        
+        
+        if(!main_stack.isEmpty() && main_stack.getItem() instanceof PaletteItem){
             switch(key){
                 case palette_mode_key:
-                    PaletteItem.nextMode(item_stack);
-                    player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(item_stack)),false);
+                    PaletteItem.nextMode(main_stack);
+                    player.displayClientMessage(new TextComponent("Palette mode: "+PaletteItem.getMode(main_stack)),false);
                     //LOGGER.info("2 palette tag: "+ item_stack.getTag());
                 break;
             }
         }
-        if(key==-1){
-            Wand wand=null;
-            if(!player.level.isClientSide()){
-                wand=PlayerWand.get(player);
-                if(wand==null){
-                    PlayerWand.add_player(player);
+        if(is_wand){
+            if(key<0){
+                Wand wand=null;
+                if(!player.level.isClientSide()){
                     wand=PlayerWand.get(player);
+                    if(wand==null){
+                        PlayerWand.add_player(player);
+                        wand=PlayerWand.get(player);
+                    }
                 }
-            }
-            if(wand!=null){
-                wand.is_alt_pressed=alt;
-                wand.is_shift_pressed=shift;
-                //WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
+                if(wand!=null){
+
+                    if(WandItem.getStateMode(main_stack)== WandItem.StateMode.APPLY) {
+                        if(!wand.is_alt_pressed && alt){
+                            wand.slab_stair_bottom=!wand.slab_stair_bottom;                        
+                            FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+                            packet.writeBoolean(wand.slab_stair_bottom);
+                            MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SLAB_PACKET, packet);
+                        }
+                    }
+                    wand.is_alt_pressed=alt;
+                    wand.is_shift_pressed=shift;
+                    //WandsMod.LOGGER.info("got shift "+shift +" alt "+alt);
+                }
             }
         }
     }

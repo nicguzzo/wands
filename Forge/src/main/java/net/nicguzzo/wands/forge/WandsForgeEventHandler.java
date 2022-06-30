@@ -39,6 +39,6 @@ public class WandsForgeEventHandler {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        ClientRender.render(event.getMatrixStack(), 0, 0, 0, Minecraft.getInstance().renderBuffers().bufferSource());
+        ClientRender.render(event.getMatrixStack());
     }
 }

@@ -73,7 +73,8 @@ public class MCVer1_16_5 extends MCVer{
 	}
 	@Override
 	public void set_render_quads_pos_tex(BufferBuilder bufferBuilder){
-		bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
+		bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
+		//bufferBuilder.begin(7, DefaultVertexFormat.POSITION_TEX_COLOR_NORMAL);
 	}
 	@Override
 	public void set_render_quads_pos_col(BufferBuilder bufferBuilder) {
@@ -97,14 +98,14 @@ public class MCVer1_16_5 extends MCVer{
 		Vec3 c = camera.getPosition();
 
 		poseStack.pushPose();
-		if(WandsMod.is_forge) {
+		//if(WandsMod.is_forge) {
 			poseStack.translate(-c.x, -c.y, -c.z); // translate
 			GlStateManager._pushMatrix();
 			RenderSystem.multMatrix(poseStack.last().pose());
-		}else{
-			GlStateManager._pushMatrix();
-			RenderSystem.translated(-c.x, -c.y, -c.z);
-		}
+		//}else{
+//			GlStateManager._pushMatrix();
+			//RenderSystem.translated(-c.x, -c.y, -c.z);
+		//}
 	}
 
 	@Override
