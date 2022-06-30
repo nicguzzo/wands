@@ -69,7 +69,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
     boolean insert(ItemStack itemStack,int s,int e){
         for(int o = s; o < e; ++o) {
             Slot slot = this.slots.get(o);
-            if(!slot.hasItem()){
+            if(!slot.hasItem() && can_pickup(itemStack)){
                 slot.set(itemStack);
                 slot.setChanged();
                 return true;
@@ -85,10 +85,12 @@ public class WandScreenHandler extends AbstractContainerMenu {
         }
     }
     void put(Player player,Slot slot){
-        if(!slot.hasItem()) {
+        if(!slot.hasItem() ) {
             ItemStack itemStack = MCVer.inst.get_carried(player, this);
-            slot.set(itemStack);
-            MCVer.inst.set_carried(player, this, ItemStack.EMPTY);
+            if(can_pickup(itemStack)) {
+                slot.set(itemStack);
+                MCVer.inst.set_carried(player, this, ItemStack.EMPTY);
+            }
         }
     }
 

@@ -47,6 +47,7 @@ public class WandsConfig {
 	public boolean survival_unenchanted_drops=false;
 	public boolean allow_wand_to_break=false;
 	public boolean allow_offhand_to_break=false;
+	public boolean mend_tools=true;
 	public float wand_mode_display_x_pos = 80.0f;
 	public float wand_mode_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
