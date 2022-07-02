@@ -1,9 +1,5 @@
 plugins {
-    id "com.github.johnrengelman.shadow" version "${shadow_version}"
-}
-
-configurations {
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 architectury {
@@ -11,83 +7,82 @@ architectury {
     fabric()
 }
 
-dependencies {
-    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
-    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
-    // Remove the next line if you don't want to depend on the API    
-    modApi "${rootProject.architectury}:architectury-fabric:${rootProject.architectury_version}"
+loom {
+    accessWidenerPath = project(":common").loom.accessWidenerPath
+}
 
-    implementation(project(path: ":common")) {
-        transitive = false
-    }
-    developmentFabric(project(path: ":common")) {
-        transitive = false
-    }
-    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) {
-        transitive = false
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+repositories {
+    maven{
+        url "https://maven.terraformersmc.com/releases"
     }
 }
 
-processResources {
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "me.shedaniel:architectury-fabric:${rootProject.architectury_version}"
     
-    inputs.property "modid", rootProject.modid
+    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+}
+
+processResources {
     inputs.property "version", project.version
-    inputs.property "min_fabric_loader_version", rootProject.min_fabric_loader_version
-    inputs.property "min_minecraft_version", rootProject.min_minecraft_version
-    inputs.property "min_architectury", rootProject.min_architectury
 
     filesMatching("fabric.mod.json") {
-        expand (
-            "modid": rootProject.modid,
-            "version": project.version,
-            "min_fabric_loader_version":  rootProject.min_fabric_loader_version,
-            "min_minecraft_version": rootProject.min_minecraft_version,
-            "min_architectury": rootProject.min_architectury
-        )
+        expand "version": project.version
     }
 }
 
 shadowJar {
+    exclude "architectury.common.json"
+
     configurations = [project.configurations.shadowCommon]
     classifier "dev-shadow"
 }
 
 remapJar {
+    injectAccessWidener = true
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    classifier "fabric"
+    classifier null
 }
 
 jar {
     classifier "dev"
 }
 
-java {
-    withSourcesJar()
-}
-
 sourcesJar {
     def commonSources = project(":common").sourcesJar
     dependsOn commonSources
     from commonSources.archiveFile.map { zipTree(it) }
-    classifier "source"
-    version "v${project.version}"
+}
 
-    //baseName fileName
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
 }
 
 publishing {
     publications {
         mavenFabric(MavenPublication) {
             artifactId = rootProject.archives_base_name + "-" + project.name
-            // add all the jars that should be included when publishing to maven
-            artifact(remapJar) {
-                classifier null
-            }
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
+            from components.java
         }
     }
 
