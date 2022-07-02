@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "wands",
+  "version": "${version}",
+  "name": "Building Wands",
+  "description": "This is an example description! Tell everyone what your mod is about!",
+  "authors": [
+    "Me!"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/building-wands",
+    "sources": "https://github.com/nicguzzo/wands"
+  },
+  "license": "Insert License Here",
+  "icon": "assets/wands/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.nicguzzo.wands.fabric.WandsModFabric"
+    ],
+    "client": [
+      "net.nicguzzo.wands.fabric.WandsModClientFabric"
+    ],
+    "modmenu": [
+      "net.nicguzzo.wands.fabric.ModMenu"
+    ]
+  },
+  "mixins": [
+    "wands.mixins.json",
+    "wands-common.mixins.json"
+  ],
+  "depends": {
+    "fabric": "*",
+<<<<<<< HEAD:Fabric/src/main/resources/fabric.mod.json
+    "minecraft": ">=1.16.5",
+    "architectury": ">=1.32.63",
+    "cloth-config": ">=4.14.64"
+  },
+  "suggests": {
+    "modmenu": "*"
+=======
+    "minecraft": ">=${min_minecraft_version}",
+    "architectury": ">=${min_architectury}",
+    "cloth-config": ">=${cloth_config}"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "flamingo": "*"
+>>>>>>> origin/1.19:fabric/src/main/resources/fabric.mod.json
+  }
+}

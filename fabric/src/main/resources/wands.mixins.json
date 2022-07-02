@@ -1,0 +1,24 @@
+{
+  "required": true,
+<<<<<<< HEAD:Fabric/src/main/resources/wands.mixins.json
+  "package": "net.examplemod.mixin.fabric",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+  ],
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+=======
+  "package": "net.nicguzzo.wands.mixin.fabric",
+  "compatibilityLevel": "JAVA_16",
+  "minVersion": "0.8",
+  "client": [],
+  "server":[ ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
+>>>>>>> origin/1.19:fabric/src/main/resources/wands.mixins.json

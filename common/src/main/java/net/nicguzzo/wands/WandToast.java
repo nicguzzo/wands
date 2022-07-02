@@ -5,14 +5,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.mcver.MCVer;
 
 public class WandToast implements Toast {
-    TextComponent text;
+    Component text;
     WandToast(String s){
-        text=new TextComponent(s);
+        text=Component.literal(s);
     }
     @Override
     public Visibility render(PoseStack poseStack, ToastComponent toastComponent, long l) {

@@ -4,9 +4,9 @@ package net.nicguzzo.wands;
 import me.shedaniel.architectury.ExpectPlatform;
 import me.shedaniel.architectury.platform.Platform;
 //endMC1_16_5
-/*//beginMC1_17_1
+/*/*//beginMC1_17_1
 import dev.architectury.platform.Platform;
-//endMC1_17_1*/
+//endMC1_17_1*/*/
 
 import java.nio.file.Path;
 

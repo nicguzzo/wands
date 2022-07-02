@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -427,7 +426,7 @@ public class WandItem extends TieredItem implements Vanishable {
         /*if(!world.isClientSide()) {
             ItemStack stack = player.getMainHandItem();//check anyway...
             if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-                player.displayClientMessage(new TextComponent("Wand mode: " + getModeString(stack)), false);
+                player.displayClientMessage(Component.literal("Wand mode: " + getModeString(stack)), false);
             }
         }*/
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
@@ -437,17 +436,17 @@ public class WandItem extends TieredItem implements Vanishable {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
 
-        list.add(new TextComponent("mode: " + WandItem.getMode(stack).toString() ));
-        list.add(new TextComponent("limit: " + this.limit ));
-        list.add(new TextComponent("orientation: "+orientations[tag.getInt("orientation")].toString()));
+        list.add(Component.literal("mode: " + WandItem.getMode(stack).toString() ));
+        list.add(Component.literal("limit: " + this.limit ));
+        list.add(Component.literal("orientation: "+orientations[tag.getInt("orientation")].toString()));
         int a=tag.getInt("axis");
         if(a<axes.length)
-            list.add(new TextComponent("axis: "+axes[a].toString()));
+            list.add(Component.literal("axis: "+axes[a].toString()));
         else
-            list.add(new TextComponent("axis: none"));
-        list.add(new TextComponent("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
-        list.add(new TextComponent("fill circle: "+ tag.getBoolean("cfill")));
-        list.add(new TextComponent("rotation: "+ tag.getInt("rotation")));
+            list.add(Component.literal("axis: none"));
+        list.add(Component.literal("plane: "+ Plane.values()[tag.getInt("plane")].toString()));
+        list.add(Component.literal("fill circle: "+ tag.getBoolean("cfill")));
+        list.add(Component.literal("rotation: "+ tag.getInt("rotation")));
     }
     public int getEnchantmentValue() {
 

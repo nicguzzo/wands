@@ -5,7 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
@@ -22,8 +21,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     
     
     Component mode_val;
-    Component rot_on =new TextComponent("rotate: on");
-    Component rot_off=new TextComponent("rotate: off");
+    Component rot_on =Component.literal("rotate: on");
+    Component rot_off=Component.literal("rotate: off");
     
     public PaletteScreen(PaletteScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
@@ -31,26 +30,26 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     @Override
     public void init(){
         super.init();
-        btn_mode = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, new TextComponent("mode"), (button) -> {
+        btn_mode = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, Component.literal("mode"), (button) -> {
             if(this.menu.palette!=null){
                 PaletteItem.nextMode(this.menu.palette);
                 WandsModClient.send_palette(true,false);
             }
         });
-        btn_rotate = new Button((width/2)+(imageWidth/2),(height/2)-60 , 40, 20, new TextComponent("rotate"), (button) -> {
+        btn_rotate = new Button((width/2)+(imageWidth/2),(height/2)-60 , 40, 20, Component.literal("rotate"), (button) -> {
             if(this.menu.palette!=null){
                 PaletteItem.toggleRotate(this.menu.palette);
                 WandsModClient.send_palette(false,true);
             }
         });
-        //beginMC1_16_5
-        this.addWidget(btn_mode);
-        this.addWidget(btn_rotate);
-        //endMC1_16_5
-        /*//beginMC1_17_1
-        this.addRenderableWidget(btn_mode);
-        this.addRenderableWidget(btn_rotate);
-        //endMC1_17_1*/
+
+        if(MCVer.inst.is_1_16()){
+            this.addWidget(btn_mode);
+            this.addWidget(btn_rotate);
+        }else{
+            this.addRenderableWidget(btn_mode);
+            this.addRenderableWidget(btn_rotate);
+        }
 
     }
 

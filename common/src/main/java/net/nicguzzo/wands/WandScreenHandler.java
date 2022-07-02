@@ -64,12 +64,12 @@ public class WandScreenHandler extends AbstractContainerMenu {
         return wand.getItem() instanceof WandItem;
     }
     boolean can_pickup(ItemStack itemStack){
-        return itemStack.getItem() instanceof DiggerItem;
+        return itemStack.getItem() instanceof DiggerItem && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
         for(int o = s; o < e; ++o) {
             Slot slot = this.slots.get(o);
-            if(!slot.hasItem()){
+            if(!slot.hasItem() && can_pickup(itemStack)){
                 slot.set(itemStack);
                 slot.setChanged();
                 return true;
@@ -85,10 +85,12 @@ public class WandScreenHandler extends AbstractContainerMenu {
         }
     }
     void put(Player player,Slot slot){
-        if(!slot.hasItem()) {
+        if(!slot.hasItem() ) {
             ItemStack itemStack = MCVer.inst.get_carried(player, this);
-            slot.set(itemStack);
-            MCVer.inst.set_carried(player, this, ItemStack.EMPTY);
+            if(can_pickup(itemStack)) {
+                slot.set(itemStack);
+                MCVer.inst.set_carried(player, this, ItemStack.EMPTY);
+            }
         }
     }
 
@@ -96,9 +98,9 @@ public class WandScreenHandler extends AbstractContainerMenu {
     //beginMC1_16_5
     public ItemStack clicked(int slotIndex, int button, ClickType actionType, Player player) {
     //endMC1_16_5
-    /*//beginMC1_17_1
+    /*/*//beginMC1_17_1
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-    //endMC1_17_1*/
+    //endMC1_17_1*/*/
         try {
             if(slotIndex>=0 && slotIndex<40){
                 Slot slot = this.slots.get(slotIndex);
@@ -146,9 +148,9 @@ public class WandScreenHandler extends AbstractContainerMenu {
         //beginMC1_16_5
         return ItemStack.EMPTY;
         //endMC1_16_5
-        /*//beginMC1_17_1
+        /*/*//beginMC1_17_1
         return;
-        //endMC1_17_1*/
+        //endMC1_17_1*/*/
     }
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

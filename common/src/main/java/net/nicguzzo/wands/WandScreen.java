@@ -2,19 +2,18 @@ package net.nicguzzo.wands;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-//import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screens.Screen;
 import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.Vector;
@@ -34,8 +33,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         int w;
         int h;
         Component text;
-        WandsConfig.Color c1=new WandsConfig.Color(0.1f,0.1f,0.1f,0.8f);
-        WandsConfig.Color c2=new WandsConfig.Color(0.4f,0.4f,0.40f,0.9f);
+        ClientRender.Colorf c1=new ClientRender.Colorf(0.1f,0.1f,0.1f,0.8f);
+        ClientRender.Colorf c2=new ClientRender.Colorf(0.4f,0.4f,0.40f,0.9f);
         boolean selected=false;
         Btn(int x,int y,int w,int h,Component text){
             this.text=text;
@@ -116,15 +115,17 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     BtnGroup fill_grp_btn;
     BtnGroup rot_grp;
     BtnGroup state_grp;
+    Btn conf_btn;
     Btn show_inv_btn;
 
     boolean show_inv=false;
-    Component text_mode=new TextComponent("Mode");
-    Component text_action=new TextComponent("Action");
-    Component text_orientation=new TextComponent("Orientation");
-    Component text_plane=new TextComponent("Plane");
-    Component text_axis=new TextComponent("Axis");
-    Component text_rot=new TextComponent("Rotation");
+
+    Component text_mode=Component.translatable("screen.wands.mode");
+    Component text_action=Component.literal("Action");
+    Component text_orientation=Component.literal("Orientation");
+    Component text_plane=Component.literal("Plane");
+    Component text_axis=Component.literal("Axis");
+    Component text_rot=Component.literal("Rotation");
     int left;
     int right;
     int bottom;
@@ -153,7 +154,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<WandItem.modes.length;i++) {
             int finalI=i;
             Btn b=new Btn(left+35,bottom+h2*i +20,btn_w,btn_h,
-                    new TextComponent(WandItem.modes[i].toString())){
+                    Component.literal(WandItem.modes[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(finalI,-1,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setMode(wand_stack, WandItem.modes[finalI]);
@@ -165,7 +166,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<WandItem.actions.length;i++) {
             int finalp=i;
             Btn b=new Btn(left+100,bottom+h2*i  +20,btn_w+10,btn_h,
-                    new TextComponent(WandItem.actions[i].toString())){
+                    Component.literal(WandItem.actions[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,finalp,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setAction(wand_stack, WandItem.actions[finalp]);
@@ -177,7 +178,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<WandItem.orientations.length;i++) {
             int finalo=i;
             Btn b=new Btn(left+180,bottom+h2*i  +20,btn_w,btn_h,
-                    new TextComponent(WandItem.orientations[i].toString())){
+                    Component.literal(WandItem.orientations[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,finalo,-1,-1,-1,-1,-1,-1);
                     WandItem.setOrientation(wand_stack, WandItem.orientations[finalo]);
@@ -189,7 +190,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<WandItem.planes.length;i++) {
             int finalp=i;
             Btn b=new Btn(left+180,bottom+h2*i +60 ,btn_w,btn_h,
-                    new TextComponent(WandItem.planes[i].toString())){
+                    Component.literal(WandItem.planes[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,-1,finalp,-1,-1,-1,-1,-1);
                     WandItem.setPlane(wand_stack, WandItem.planes[finalp]);
@@ -202,7 +203,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<WandItem.axes.length;i++) {
             int finala=i;
             Btn b=new Btn(left+180,bottom+h2*i +110+h2,btn_w,btn_h,
-                    new TextComponent(WandItem.axes[i].toString())){
+                    Component.literal(WandItem.axes[i].toString())){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);
                     WandItem.setAxis(wand_stack, WandItem.axes[finala]);
@@ -212,7 +213,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }
         state_grp=new BtnGroup();
         Btn b1=new Btn(left+100,bottom+h2 +70,btn_w+10,btn_h,
-                new TextComponent("same state")){
+                Component.literal("same state")){
             void onClick(int mx,int my){
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,0);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
@@ -220,7 +221,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         state_grp.add(b1);
         Btn b2=new Btn(left+100,bottom+h2 +70+h2,btn_w+10,btn_h,
-                new TextComponent("rot/axis/slab")){
+                Component.literal("rot/axis/slab")){
             void onClick(int mx,int my){
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,1);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
@@ -248,7 +249,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                     break;
             }
             Btn b=new Btn(left+100,bottom+h2*i +110+h2,btn_w+10,btn_h,
-                    new TextComponent(rot)){
+                    Component.literal(rot)){
                 void onClick(int mx,int my){
                     WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,finalr,-1);
                     WandItem.setRotation(wand_stack, WandItem.rotations[finalr]);
@@ -257,7 +258,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             rot_grp.add(b);
         }
         BtnGroup show_grp_btn=new BtnGroup();
-        show_inv_btn=new Btn(right-70,bottom-21,60,12,new TextComponent("Pick Tools")){
+        show_inv_btn=new Btn(right-70,bottom-21,60,12,Component.literal("Pick Tools")){
             void onClick(int mx,int my) {
                 show_inv=!show_inv;
             }
@@ -265,7 +266,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         show_grp_btn.add(show_inv_btn);
 
         inv_grp_btn=new BtnGroup();
-        Btn inv_btn=new Btn(left+35,bottom+148,40,12,new TextComponent("Invert")){
+        Btn inv_btn=new Btn(left+35,bottom+148,40,12,Component.literal("Invert")){
             void onClick(int mx,int my) {
                 boolean inv =!WandItem.isInverted(wand_stack);
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,(inv?1:0),-1,-1,-1);
@@ -275,7 +276,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         inv_grp_btn.add(inv_btn);
 
         fill_grp_btn=new BtnGroup();
-        Btn fill_btn=new Btn(left+35,bottom+162,60,12,new TextComponent("Filled circle")){
+        Btn fill_btn=new Btn(left+35,bottom+162,60,12,Component.literal("Filled circle")){
             void onClick(int mx,int my) {
                 boolean fill =!WandItem.isCircleFill(wand_stack);
                 WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,(fill?1:0),-1,-1);
@@ -283,6 +284,14 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             }
         };
         fill_grp_btn.add(fill_btn);
+
+        Screen parent=(Screen)this;
+        conf_btn=new Btn(left+210,bottom+175,27,12,Component.literal("Conf")){
+            void onClick(int mx,int my) {
+                Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
+            }
+        };
+        show_grp_btn.add(conf_btn);
 
         buttons.add(modes_grp);
         buttons.add(action_grp);

@@ -1,7 +1,9 @@
 package net.nicguzzo.wands.mcver;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -10,10 +12,15 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.client.KeyMapping;
 //beginMC1_16_5
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.mcver.impl.MCVer1_16_5;
 //endMC1_16_5   
 /*//beginMC1_17_1
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.mcver.impl.MCVer1_17_1;
 //endMC1_17_1*/  
 public abstract class MCVer{
@@ -40,6 +47,13 @@ public abstract class MCVer{
     public abstract void open_wand_menu(ServerPlayer player, ItemStack wandItemStack);
     public abstract void set_carried(Player player, AbstractContainerMenu menu, ItemStack itemStack);
     public abstract ItemStack get_carried(Player player,AbstractContainerMenu menu);
+    public abstract void set_identity(PoseStack m);
+    public abstract boolean shouldRenderFace(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, Direction direction, BlockPos blockPos2);
+    public abstract void register_key(KeyMapping k);
+    public abstract void render_info();
+    public abstract boolean is_1_16();
+    public abstract boolean is_1_17();
+    public abstract boolean is_1_18();
     public final class NbtType {
         public static final int END = 0;
         public static final int BYTE = 1;

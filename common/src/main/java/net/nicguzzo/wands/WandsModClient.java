@@ -8,7 +8,7 @@ import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
-//endMC1_16_5
+//endMC1_16_5   
 /*//beginMC1_17_1
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientGuiEvent;
@@ -17,7 +17,7 @@ import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
 import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
-//endMC1_17_1  */
+//endMC1_17_1*/  
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -25,10 +25,14 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -54,25 +58,24 @@ public class WandsModClient {
             palette_menu_km,
             new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
             //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
         };
         for(KeyMapping k: km){
-            //beginMC1_16_5
-            KeyBindings.registerKeyBinding(k);
-            //endMC1_16_5
-            /*//beginMC1_17_1
-            KeyMappingRegistry.register(k);
-            //endMC1_17_1*/
+            MCVer.inst.register_key(k);
         }
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
             for(KeyMapping k: km){
                 if (k.consumeClick()) {
                     if(!any) any=true;
+                    if(k.getDefaultKey().getValue()== WandsMod.wand_conf_key){
+                        
+                    }
                     send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
                 }
             }
+
             if(!any){
-                //WandsMod.LOGGER.info("ClientTickEvent");
                 if(alt !=Screen.hasAltDown() || shift !=Screen.hasShiftDown()){
                     alt =Screen.hasAltDown();
                     shift =Screen.hasShiftDown();
@@ -82,14 +85,8 @@ public class WandsModClient {
                 }
             }
         });
-        
-        //beginMC1_16_5
-        GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
-        //endMC1_16_5
-        /*//beginMC1_17_1
-        ClientGuiEvent.RENDER_HUD.register((pose,delta)->{ render_wand_info(pose);});
-        //endMC1_17_1*/
 
+        MCVer.inst.render_info();
 
         if(WandsMod.is_forge) {
             ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
@@ -113,7 +110,7 @@ public class WandsModClient {
             boolean no_tool=packet.readBoolean();
             boolean damaged_tool=packet.readBoolean();
             context.queue(()->{
-                //WandsMod.LOGGER.info("got sound msg "+item_stack);
+                WandsMod.LOGGER.info("got sound msg "+item_stack);
                 if(!item_stack.isEmpty()){
                     Block block=Block.byItem(item_stack.getItem());
                     SoundType sound_type = block.getSoundType(block.defaultBlockState());
@@ -143,8 +140,6 @@ public class WandsModClient {
             float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    //ClientRender.wand.axis=Direction.Axis.values()[axis];
-                    //WandItem.setAxis(wand_stack);
                     ClientRender.wand.palette_seed = seed;
                     ClientRender.wand.mode= WandItem.Mode.values()[mode];
                     if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
@@ -153,8 +148,6 @@ public class WandsModClient {
                         context.getPlayer().experienceLevel=levels;
                         context.getPlayer().experienceProgress=prog;
                     }
-                    //WandsMod.log(" got palette_seed: "+seed,true);
-                    //WandsMod.log(" got axis "+axis,true);
                 }
             });
         });
@@ -162,7 +155,6 @@ public class WandsModClient {
     public static void send_key(int key,boolean shift, boolean alt){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
-            //WandsMod.LOGGER.info("send_key"+key+" shift "+shift +" alt "+alt);
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeInt(key);
             packet.writeBoolean(shift);
@@ -206,7 +198,6 @@ public class WandsModClient {
                 MCVer.inst.set_pos_tex_shader();
 
                 Wand wand=ClientRender.wand;
-                //WandItem wand_item=(WandItem)stack.getItem();
                 WandItem.Mode mode=WandItem.getMode(stack);
                 WandItem.Action action=WandItem.getAction(stack);
 
@@ -228,8 +219,6 @@ public class WandsModClient {
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                             break;
                         case RECT:
-                            //Direction.Axis axis=wand_item.getAxis(stack);
-                            //ln1="Blocks: "+wand.block_buffer.get_length()+" Axis: "+axis;
                             ln1="Blocks: "+wand.block_buffer.get_length();
                             break;
                         case COPY:
@@ -238,13 +227,26 @@ public class WandsModClient {
                             break;
                     }
                 }
-                //int w=font.width(msg);
                 int h=3*font.lineHeight;
                 float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
                 float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
                 font.draw(poseStack,ln1,x,y,0xffffff);
                 font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
                 font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
+                if(WandsMod.config.show_tools_info) {
+                    ItemRenderer itemRenderer = client.getItemRenderer();
+                    CompoundTag ctag = stack.getOrCreateTag();
+                    ListTag tag = ctag.getList("Tools", MCVer.NbtType.COMPOUND);
+                    int ix = 16;
+                    int iy = screenHeight-20;
+                    tag.forEach(element -> {
+                        CompoundTag stackTag = (CompoundTag) element;
+                        int slot = stackTag.getInt("Slot");
+                        ItemStack item = ItemStack.of(stackTag.getCompound("Tool"));
+                        itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy);
+                        itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                    });
+                }
             }
         }
     }

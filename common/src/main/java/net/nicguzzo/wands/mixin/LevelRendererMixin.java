@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.nicguzzo.wands.ClientRender;
 
+import net.nicguzzo.wands.WandsMod;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class LevelRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void renderLevel(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-        //ClientRender.render2(poseStack,f,l,bl,camera,gameRenderer,lightTexture,matrix4f);
-        ClientRender.render(poseStack);
+        if(WandsMod.config.render_last) {
+            ClientRender.render(poseStack);
+        }
     }
 }
