@@ -20,8 +20,8 @@ public class PaletteItem extends Item{
     public enum PaletteMode {
         RANDOM, ROUND_ROBIN
     }
-    static public Component mode_val_random=Component.translatable("item.wands.random");
-    static public Component mode_val_rr=Component.translatable("item.wands.round_robin");
+    static public Component mode_val_random=MCVer.inst.translatable("item.wands.random");
+    static public Component mode_val_rr=MCVer.inst.translatable("item.wands.round_robin");
     public PaletteItem(Properties properties) {
         super(properties);        
     }
@@ -35,18 +35,18 @@ public class PaletteItem extends Item{
             CompoundTag stackTag = (CompoundTag) inventory.get(i);
             ItemStack stack2 = ItemStack.of(stackTag.getCompound("Block"));
             if(!stack2.isEmpty()){
-                list.add( Component.translatable(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
+                list.add( MCVer.inst.translatable(stack2.getDescriptionId()).withStyle(ChatFormatting.GREEN) );
             }
         }
         PaletteMode mode=PaletteItem.getMode(stack);            
         Component mode_val;
         if(mode==PaletteMode.ROUND_ROBIN){
-                mode_val=Component.literal("mode: "+PaletteItem.mode_val_rr.getString());
+                mode_val=MCVer.inst.literal("mode: "+PaletteItem.mode_val_rr.getString());
         }else{
-            mode_val=Component.literal("mode: "+PaletteItem.mode_val_random.getString());
+            mode_val=MCVer.inst.literal("mode: "+PaletteItem.mode_val_random.getString());
         }
         list.add( mode_val);
-        list.add(Component.literal("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
+        list.add(MCVer.inst.literal("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
     }
     static public PaletteMode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){

@@ -236,7 +236,7 @@ public class WandsMod {
                 case palette_mode_key:{
                     if (!shift && !offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem) {
                         PaletteItem.nextMode(offhand_stack);
-                        player.displayClientMessage(Component.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
+                        player.displayClientMessage(MCVer.inst.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
                     }
                 }
                 break;
@@ -252,7 +252,7 @@ public class WandsMod {
                     } else {
                         WandItem.nextAction(main_stack);
                     }
-                    player.displayClientMessage(Component.literal("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
+                    player.displayClientMessage(MCVer.inst.literal("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
                     break;
                 /*case wand_state_mode_key:
                     if(shift){
@@ -270,7 +270,7 @@ public class WandsMod {
                     } else {
                         WandItem.nextMode(main_stack);
                     }
-                    //player.displayClientMessage(Component.literal("Wand mode: "+WandItem.getMode(item_stack).toString()),false);
+                    //player.displayClientMessage(MCVer.inst.literal("Wand mode: "+WandItem.getMode(item_stack).toString()),false);
                     break;
                 case wand_orientation_key:
                     if (alt) {//change axis
@@ -278,7 +278,7 @@ public class WandsMod {
                             WandItem.nextAxis(main_stack);
                             WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
                             Direction.Axis a=WandItem.getAxis(main_stack);
-                            player.displayClientMessage(Component.literal("Wand Axis: " + a), false);
+                            player.displayClientMessage(MCVer.inst.literal("Wand Axis: " + a), false);
                             send_state((ServerPlayer) player, wand);
                         }
                     } else {
@@ -286,7 +286,7 @@ public class WandsMod {
                             case CIRCLE:
                             case RECT:
                                 WandItem.nextPlane(main_stack);
-                                player.displayClientMessage(Component.literal("Wand Plane: " + WandItem.getPlane(main_stack)), false);
+                                player.displayClientMessage(MCVer.inst.literal("Wand Plane: " + WandItem.getPlane(main_stack)), false);
                                 send_state((ServerPlayer) player, wand);
                                 break;
                             case DIRECTION:
@@ -295,7 +295,7 @@ public class WandsMod {
                                 break;
                             default:
                                 WandItem.nextOrientation(main_stack);
-                                player.displayClientMessage(Component.literal("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
+                                player.displayClientMessage(MCVer.inst.literal("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
                                 break;
                         }
                     }
@@ -303,17 +303,17 @@ public class WandsMod {
                     break;
                 case wand_invert_key:
                     WandItem.invert(main_stack);
-                    player.displayClientMessage(Component.literal("Wand inverted: " + WandItem.isInverted(main_stack)), false);
+                    player.displayClientMessage(MCVer.inst.literal("Wand inverted: " + WandItem.isInverted(main_stack)), false);
                     break;
                 case wand_fill_circle_key:
                     WandItem.toggleCircleFill(main_stack);
-                    player.displayClientMessage(Component.literal("Wand circle fill: " + WandItem.isCircleFill(main_stack)), false);
+                    player.displayClientMessage(MCVer.inst.literal("Wand circle fill: " + WandItem.isCircleFill(main_stack)), false);
                     break;
                 case palette_mode_key:
                     ItemStack offhand_stack2 = player.getOffhandItem();
                     if (!shift && !offhand_stack2.isEmpty() && offhand_stack2.getItem() instanceof PaletteItem) {
                         PaletteItem.nextMode(offhand_stack2);
-                        player.displayClientMessage(Component.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
+                        player.displayClientMessage(MCVer.inst.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
                     } else {
                         WandItem.nextRotation(main_stack);
                         WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
@@ -333,7 +333,7 @@ public class WandsMod {
                                 rot = "270°";
                                 break;
                         }
-                        player.displayClientMessage(Component.literal("Wand Rotation: " + rot), false);
+                        player.displayClientMessage(MCVer.inst.literal("Wand Rotation: " + rot), false);
                     }
 
                 break;
@@ -362,7 +362,7 @@ public class WandsMod {
             switch(key){
                 case palette_mode_key:
                     PaletteItem.nextMode(main_stack);
-                    player.displayClientMessage(Component.literal("Palette mode: "+PaletteItem.getMode(main_stack)),false);
+                    player.displayClientMessage(MCVer.inst.literal("Palette mode: "+PaletteItem.getMode(main_stack)),false);
                     //LOGGER.info("2 palette tag: "+ item_stack.getTag());
                 break;
             }

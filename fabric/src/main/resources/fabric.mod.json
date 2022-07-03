@@ -31,21 +31,10 @@
   ],
   "depends": {
     "fabric": "*",
-<<<<<<< HEAD:Fabric/src/main/resources/fabric.mod.json
     "minecraft": ">=1.16.5",
-    "architectury": ">=1.32.63",
-    "cloth-config": ">=4.14.64"
+    "architectury": ">=1.32.63"
   },
   "suggests": {
     "modmenu": "*"
-=======
-    "minecraft": ">=${min_minecraft_version}",
-    "architectury": ">=${min_architectury}",
-    "cloth-config": ">=${cloth_config}"
-  },
-  "suggests": {
-    "modmenu": "*",
-    "flamingo": "*"
->>>>>>> origin/1.19:fabric/src/main/resources/fabric.mod.json
   }
 }

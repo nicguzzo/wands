@@ -12,6 +12,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.mcver.MCVer;
+import net.nicguzzo.wands.mcver.impl.MCVer1_16_5;
 
 public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler> {
     
@@ -21,8 +22,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     
     
     Component mode_val;
-    Component rot_on =Component.literal("rotate: on");
-    Component rot_off=Component.literal("rotate: off");
+    Component rot_on =MCVer.inst.literal("rotate: on");
+    Component rot_off=MCVer.inst.literal("rotate: off");
     
     public PaletteScreen(PaletteScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
@@ -30,26 +31,27 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteScreenHandler>
     @Override
     public void init(){
         super.init();
-        btn_mode = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, Component.literal("mode"), (button) -> {
+        btn_mode = new Button((width/2)+(imageWidth/2),(height/2)-80 , 40, 20, MCVer.inst.literal("mode"), (button) -> {
             if(this.menu.palette!=null){
                 PaletteItem.nextMode(this.menu.palette);
                 WandsModClient.send_palette(true,false);
             }
         });
-        btn_rotate = new Button((width/2)+(imageWidth/2),(height/2)-60 , 40, 20, Component.literal("rotate"), (button) -> {
+        btn_rotate = new Button((width/2)+(imageWidth/2),(height/2)-60 , 40, 20, MCVer.inst.literal("rotate"), (button) -> {
             if(this.menu.palette!=null){
                 PaletteItem.toggleRotate(this.menu.palette);
                 WandsModClient.send_palette(false,true);
             }
         });
 
-        if(MCVer.inst.is_1_16()){
+        //beginMC1_16_5
             this.addWidget(btn_mode);
             this.addWidget(btn_rotate);
-        }else{
+        //endMC1_16_5
+        /*//beginMC1_17_1
             this.addRenderableWidget(btn_mode);
             this.addRenderableWidget(btn_rotate);
-        }
+        //endMC1_17_1*/
 
     }
 

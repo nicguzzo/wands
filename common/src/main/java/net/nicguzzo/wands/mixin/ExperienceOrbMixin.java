@@ -14,21 +14,31 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ExperienceOrb.class)
 public class  ExperienceOrbMixin{
     @Shadow
     private int value;
+    private int throwTime;
     private int xpToDurability(int i) {
         return i * 2;
     }
     private int durabilityToXp(int i) {
         return i / 2;
     }
+    //target ="Lnet/minecraft/world/entity/player/Player;take(Lnet/minecraft/world/entity/Entity;I)V" )
+    @Inject(method = "playerTouch",
+            at = @At(value = "INVOKE",
+            target=/*"Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getRandomItemWith(" +
+                    "Lnet/minecraft/world/item/enchantment/Enchantment;" +
+                    "Lnet/minecraft/world/entity/LivingEntity" +
+                    "Ljava/util/function/Predicate;<L/net/minecraft/world/item/ItemStack>" +*/
+                    "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;getRandomItemWith(Lnet/minecraft/world/item/enchantment/Enchantment;Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/Predicate;)Ljava/util/Map$Entry;")
+            )
 
-    @Inject(method = "repairPlayerItems", at = @At(value = "HEAD"), cancellable = true)
-    public void repairPlayerItems(Player player, int i, CallbackInfoReturnable ci) {
+    public void playerTouch(Player player, CallbackInfo ci) {
         if(WandsMod.config.mend_tools) {
             ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
             if (stack.getItem() instanceof WandItem) {
@@ -42,10 +52,7 @@ public class  ExperienceOrbMixin{
                     ) {
                         int j = Math.min(this.xpToDurability(this.value), tool.getDamageValue());
                         tool.setDamageValue(tool.getDamageValue() - j);
-                        int k = i - this.durabilityToXp(j);
-                        int ret = k > 0 ? k : 0;
-                        ci.setReturnValue(ret);
-                        ci.cancel();
+                        this.value = this.value - this.durabilityToXp(j);
                     }
                 });
             }

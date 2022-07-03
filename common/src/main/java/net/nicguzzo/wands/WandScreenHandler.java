@@ -98,9 +98,9 @@ public class WandScreenHandler extends AbstractContainerMenu {
     //beginMC1_16_5
     public ItemStack clicked(int slotIndex, int button, ClickType actionType, Player player) {
     //endMC1_16_5
-    /*/*//beginMC1_17_1
+    /*//beginMC1_17_1
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-    //endMC1_17_1*/*/
+    //endMC1_17_1*/
         try {
             if(slotIndex>=0 && slotIndex<40){
                 Slot slot = this.slots.get(slotIndex);
@@ -148,9 +148,9 @@ public class WandScreenHandler extends AbstractContainerMenu {
         //beginMC1_16_5
         return ItemStack.EMPTY;
         //endMC1_16_5
-        /*/*//beginMC1_17_1
+        /*//beginMC1_17_1
         return;
-        //endMC1_17_1*/*/
+        //endMC1_17_1*/
     }
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

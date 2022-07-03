@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import me.shedaniel.math.Color;
+
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
 public class WandsConfig {
+
 
 	private static WandsConfig INSTANCE=null;
 	final public static String[] default_pickaxe_allowed={"minecraft:sea_lantern"};
@@ -44,7 +46,7 @@ public class WandsConfig {
 	public int diamond_wand_durability = def_diamond_wand_durability;
 	public int netherite_wand_durability = def_netherite_wand_durability;
 	public boolean destroy_in_survival_drop=true;
-	public boolean survival_unenchanted_drops=false;
+	public boolean survival_unenchanted_drops=true;
 	public boolean allow_wand_to_break=false;
 	public boolean allow_offhand_to_break=false;
 	public boolean mend_tools=true;

@@ -195,19 +195,7 @@ public class MCVer1_17_1 extends MCVer {
     }
 
     @Override
-    public boolean is_1_16() {
-        return false;
-    }
-
-    @Override
-    public boolean is_1_17() {
-        return true;
-    }
-
-    @Override
-    public boolean is_1_18() {
-        return false;
-    }
+	public int mcversion(){return 117;}
 
 }
 //endMC1_17_1*/  

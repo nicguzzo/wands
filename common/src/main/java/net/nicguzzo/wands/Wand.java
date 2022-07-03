@@ -20,7 +20,7 @@ import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -38,7 +38,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import net.minecraft.world.level.gameevent.GameEvent;
+//import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -49,7 +49,12 @@ import net.nicguzzo.wands.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.WandItem.Orientation;
 import net.nicguzzo.wands.WandItem.Mode;
 import net.nicguzzo.wands.mcver.MCVer;
+import net.nicguzzo.wands.mcver.impl.MCVer1_16_5;
 import org.jetbrains.annotations.Nullable;
+
+/*//beginMC1_17_1
+    import net.minecraft.util.RandomSource;
+//endMC1_17_1*/
 
 public class Wand {
     public int x = 0;
@@ -140,7 +145,12 @@ public class Wand {
     }
 
     public int slot = 0;
-    public RandomSource random = RandomSource.create();
+    /*//beginMC1_17_1
+    //public RandomSource random = RandomSource.create();
+    //endMC1_17_1*/
+    //beginMC1_16_5
+    public Random random = new Random();
+    //endMC1_16_5
     public volatile long palette_seed = System.currentTimeMillis();
     public Vector<PaletteSlot> palette_slots = new Vector<>();
     public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
@@ -192,7 +202,7 @@ public class Wand {
         copy_pos1 = null;
         copy_pos2 = null;
         if (player != null && player.level!=null && !player.level.isClientSide()) {
-            player.displayClientMessage(Component.literal("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
+            player.displayClientMessage(MCVer.inst.literal("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
         }
     }
 
@@ -385,7 +395,7 @@ public class Wand {
             }
             if (offhand != null && !offhand.isStackable()) {
                 if (!preview) {
-                    player.displayClientMessage(Component.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
+                    player.displayClientMessage(MCVer.inst.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
                 }
                 offhand = null;
                 has_offhand =false;
@@ -406,7 +416,7 @@ public class Wand {
         if(replace && (mode != Mode.PASTE) && !has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
             valid=false;
             if (!preview) {
-                player.displayClientMessage(Component.literal("you need a block or palette in the left hand"), false);
+                player.displayClientMessage(MCVer.inst.literal("you need a block or palette in the left hand"), false);
             }
             return;
         }
@@ -436,7 +446,7 @@ public class Wand {
         if (!preview) {
             //log(" using palette seed: " + palette_seed);
             if(limit_reached){
-                player.displayClientMessage(Component.literal("wand limit reached"),false);
+                player.displayClientMessage(MCVer.inst.literal("wand limit reached"),false);
             }
             //log("has_palette: "+has_palette);
             if (has_palette && !destroy && !use && !is_copy_paste) {
@@ -508,7 +518,7 @@ public class Wand {
                                         }
                                     }
                                     if (!has_bucket) {
-                                        player.displayClientMessage(Component.literal("You need another water bucket in the inventory."), false);
+                                        player.displayClientMessage(MCVer.inst.literal("You need another water bucket in the inventory."), false);
                                         return;
                                     }
                                 }
@@ -598,8 +608,8 @@ public class Wand {
                 }
                 for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                     if (pa.getValue().in_player < pa.getValue().needed) {
-                        MutableComponent name=Component.translatable(pa.getKey().getDescriptionId());
-                        MutableComponent mc = Component.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
+                        MutableComponent name=MCVer.inst.translatable(pa.getKey().getDescriptionId());
+                        MutableComponent mc = MCVer.inst.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
                         mc.append(". Needed: " + pa.getValue().needed);
                         mc.append(" player: " + pa.getValue().in_player);
                         player.displayClientMessage(mc, false);
@@ -1194,11 +1204,11 @@ public class Wand {
         if (preview) {
             valid = (block_buffer.get_length() > 0) && diameter< wand_item.limit;
             if(prnt && diameter>= wand_item.limit){
-                player.displayClientMessage (Component.literal("limit reached"), true);
+                player.displayClientMessage (MCVer.inst.literal("limit reached"), true);
             }
         }else{
             if(diameter>= wand_item.limit){
-                player.displayClientMessage(Component.literal("limit reached"), false);
+                player.displayClientMessage(MCVer.inst.literal("limit reached"), false);
             }
         }
     }
@@ -1293,9 +1303,9 @@ public class Wand {
 
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
                     if (!preview)
-                        player.displayClientMessage(Component.literal("Copied: " + cp + " blocks"), false);
+                        player.displayClientMessage(MCVer.inst.literal("Copied: " + cp + " blocks"), false);
                 } else {
-                    player.displayClientMessage(Component.literal("Copy limit reached"), false);
+                    player.displayClientMessage(MCVer.inst.literal("Copy limit reached"), false);
                     //log("max volume");
                 }
             }
@@ -1343,7 +1353,13 @@ public class Wand {
                 case NONE:
                 break;
                 case CLOCKWISE_90:
+                    //beginMC1_16_5
+                    d= st.getValue(StairBlock.FACING).getClockWise();
+                    //endMC1_16_5
+                    /*//beginMC1_17_1
                     d= st.getValue(StairBlock.FACING).getClockWise(Direction.Axis.Y);
+                    //endMC1_17_1*/
+
                     st = st.setValue(StairBlock.FACING, d);
                 break;
                 case CLOCKWISE_180:
@@ -1351,7 +1367,12 @@ public class Wand {
                     st = st.setValue(StairBlock.FACING, d);
                     break;
                 case COUNTERCLOCKWISE_90:
+                    //beginMC1_16_5
+                    d= st.getValue(StairBlock.FACING).getCounterClockWise();
+                    //endMC1_16_5
+                    /*//beginMC1_17_1
                     d= st.getValue(StairBlock.FACING).getCounterClockWise(Direction.Axis.Y);
+                    //endMC1_17_1*/
                     st = st.setValue(StairBlock.FACING, d);
                     break;
             }
@@ -1816,16 +1837,16 @@ public class Wand {
                     }
                     if(replace && !placed){
                         if(digger_item.getItem()==Items.AIR)
-                            player.displayClientMessage(Component.literal("incorrect tool"),false);
+                            player.displayClientMessage(MCVer.inst.literal("incorrect tool"),false);
                         stop=true;
                     }
                 }else{
                     if(BLOCKS_PER_XP != 0 && (xp - dec) < 0){
-                        player.displayClientMessage(Component.literal("not enough xp"),false);
+                        player.displayClientMessage(MCVer.inst.literal("not enough xp"),false);
                         stop=true;
                     }
                     if(wand_durability == 1 ){
-                        player.displayClientMessage(Component.literal("wand damaged"),false);
+                        player.displayClientMessage(MCVer.inst.literal("wand damaged"),false);
                         if(WandsMod.config.allow_wand_to_break &&
                                 digger_item !=null && digger_item.getItem()==Items.AIR
                         ) {
@@ -1866,10 +1887,10 @@ public class Wand {
                 //level.levelEvent(2001, blockPos, Block.getId(blockState));
             }
 
-            if (bl) {
+            /*if (bl) {
                 BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
                 Block.dropResources(blockState, level, blockPos, blockEntity, null, ItemStack.EMPTY);
-            }
+            }*/
 
             boolean bl2 = level.setBlock(blockPos, fluidState.createLegacyBlock(), 3, 512);
             if (bl2) {
@@ -2079,8 +2100,8 @@ public class Wand {
         }
         //player.displayClientMessage(new TextComponent("Copy buffer tally"),false);
         for (Map.Entry<String, BlockAccounting> entry : ba_map.entrySet()){
-            MutableComponent name=Component.translatable(entry.getKey());
-            MutableComponent st=Component.literal("   ");
+            MutableComponent name=MCVer.inst.translatable(entry.getKey());
+            MutableComponent st=MCVer.inst.literal("   ");
             st.append(name).append(" needed: "+entry.getValue().needed);
             player.displayClientMessage(st,false);
         }

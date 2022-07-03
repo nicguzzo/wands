@@ -8,19 +8,27 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.shedaniel.architectury.event.events.GuiEvent;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.PaletteScreenHandler;
 import net.nicguzzo.wands.WandScreenHandler;
@@ -31,6 +39,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class MCVer1_16_5 extends MCVer{
 	
@@ -93,25 +103,24 @@ public class MCVer1_16_5 extends MCVer{
 
 	@Override
 	public void pre_render(PoseStack poseStack) {
-
 		Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
 		Vec3 c = camera.getPosition();
-
-		poseStack.pushPose();
-		//if(WandsMod.is_forge) {
+		if(WandsMod.config.render_last) {
+			poseStack.pushPose();
 			poseStack.translate(-c.x, -c.y, -c.z); // translate
 			GlStateManager._pushMatrix();
 			RenderSystem.multMatrix(poseStack.last().pose());
-		//}else{
-//			GlStateManager._pushMatrix();
-			//RenderSystem.translated(-c.x, -c.y, -c.z);
-		//}
+		}else{
+			RenderSystem.translated(-c.x, -c.y, -c.z);
+		}
 	}
 
 	@Override
 	public void post_render(PoseStack poseStack) {
-		GlStateManager._popMatrix();
-		poseStack.popPose();
+		if(WandsMod.config.render_last) {
+			GlStateManager._popMatrix();
+			poseStack.popPose();
+		}
 	}
 
 	@Override
@@ -178,7 +187,16 @@ public class MCVer1_16_5 extends MCVer{
     }
     @Override
     public void render_info() {
-        GuiEvent.RENDER_HUD.register((pose,delta)->{render_wand_info(pose);});
+        GuiEvent.RENDER_HUD.register((pose, delta)->{WandsModClient.render_wand_info(pose);});
     }
+	@Override
+	public  MutableComponent translatable(String key){
+		return new TranslatableComponent(key);
+	}
+	@Override
+	public  MutableComponent literal(String msg){
+		return new TextComponent(msg);
+	}
+
 }
 //endMC1_16_5   

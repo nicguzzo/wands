@@ -12,7 +12,7 @@ import net.nicguzzo.wands.mcver.MCVer;
 public class WandToast implements Toast {
     Component text;
     WandToast(String s){
-        text=Component.literal(s);
+        text=MCVer.inst.literal(s);
     }
     @Override
     public Visibility render(PoseStack poseStack, ToastComponent toastComponent, long l) {

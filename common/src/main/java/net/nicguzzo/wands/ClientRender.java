@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
-import me.shedaniel.math.Color;
+
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -22,7 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
+
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +37,10 @@ import net.nicguzzo.wands.mcver.MCVer;
 
 import java.util.List;
 import java.util.Random;
+
+
+//import net.minecraft.util.RandomSource;
+import me.shedaniel.math.Color;
 
 public class ClientRender {
     public static final float p_o = -0.005f;// preview_block offset
@@ -82,7 +86,13 @@ public class ClientRender {
     static Minecraft client;
     private static final ResourceLocation GRID_TEXTURE = new ResourceLocation("wands", "textures/blocks/grid.png");
     private static final ResourceLocation LINE_TEXTURE = new ResourceLocation("wands", "textures/blocks/line.png");
-    static RandomSource random = RandomSource.create();
+
+    /*//beginMC1_17_1
+    //public RandomSource random = RandomSource.create();
+    //endMC1_17_1*/
+    //beginMC1_16_5
+    static public Random random = new Random();
+    //endMC1_16_5
     static Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null};
 
     public enum Colors {

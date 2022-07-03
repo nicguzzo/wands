@@ -22,7 +22,7 @@ configurations {
 repositories {
     maven{
         url "https://maven.terraformersmc.com/releases"
-    }
+    }    
 }
 
 dependencies {
@@ -59,7 +59,7 @@ remapJar {
     injectAccessWidener = true
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    classifier null
+    classifier "fabric"
 }
 
 jar {

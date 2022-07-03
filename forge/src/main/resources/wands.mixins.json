@@ -1,7 +1,6 @@
 {
   "required": true,
   "package": "net.nicguzzo.wands.mixin.forge",
-<<<<<<< HEAD:Forge/src/main/resources/wands.mixins.json
   "compatibilityLevel": "JAVA_8",
   "client": [
   ],
@@ -11,13 +10,3 @@
     "defaultRequire": 1
   }
 }
-=======
-  "compatibilityLevel": "JAVA_16",
-  "minVersion": "0.8",
-  "client": [],
-  "server":[ ],
-  "injectors": {
-    "defaultRequire": 1
-  }
-}
->>>>>>> origin/1.19:forge/src/main/resources/wands.mixins.json
