@@ -18,3 +18,9 @@ classes/
 .vscode
 .settings
 *.launch
+
+common/src/main/java/net/nicguzzo/wands
+common/src/main/resources/assets
+common/src/main/resources/data      
+fabric/src/main/java/net/nicguzzo/wands/fabric
+fabric/src/main/java/net/nicguzzo/wands/forge      
