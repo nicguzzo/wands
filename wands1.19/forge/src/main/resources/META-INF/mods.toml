@@ -1,0 +1,35 @@
+modLoader = "javafml"
+loaderVersion = "[39,)"
+#issueTrackerURL = ""
+license = "Insert License Here"
+
+[[mods]]
+modId = "wands"
+version = "${version}"
+displayName = "Building Wands"
+authors = "nicguzzo"
+description = '''
+Building Wands!
+'''
+#logoFile = ""
+
+[[dependencies.wands]]
+modId = "forge"
+mandatory = true
+versionRange = "[39,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.wands]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.18.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.wands]]
+modId = "architectury"
+mandatory = true
+versionRange = "[3.9.66,)"
+ordering = "AFTER"
+side = "BOTH"

@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.nicguzzo.wands.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "client": [
+    "RenderWorldMixin",
+    "LevelRendererMixin"
+  ],
+  "mixins":[
+    "ExperienceOrbMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
