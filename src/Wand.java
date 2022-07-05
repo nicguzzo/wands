@@ -311,19 +311,14 @@ public class Wand {
         this.destroy=WandItem.getAction(wand_stack)== WandItem.Action.DESTROY;
         this.use=WandItem.getAction(wand_stack)== WandItem.Action.USE;
 
-        //log("destroy: "+destroy);
         offhand = player.getOffhandItem();
         has_offhand = false;
-        //ItemStack item_stack = null;
         has_hoe    = false;
         has_shovel = false;
         has_axe    = false;
         update_tools();
         if(use) {
-            //ListTag tag = wand_stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
             for (int i = 0; i < 4; i++) {
-                //CompoundTag stackTag = (CompoundTag) tag.get(i);
-                //tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
                 if(tools[i]!=null) {
                     has_hoe = has_hoe || tools[i].getItem() instanceof HoeItem;
                     has_shovel = has_shovel || tools[i].getItem() instanceof ShovelItem;
@@ -332,10 +327,6 @@ public class Wand {
             }
         }
         if (offhand != null && WandUtils.is_shulker(offhand)) {
-            /*if(!preview){
-                player.displayClientMessage(new TextComponent("offhand can't be a shulkerbox, use a palette! "),false);
-            }
-            return;*/
             offhand = null;
         }
         palette = null;
@@ -421,7 +412,7 @@ public class Wand {
         switch (mode) {
             case DIRECTION: {
                 boolean invert = WandItem.isInverted(wand_stack);
-                mode_direction(invert);
+                mode_direction(invert,WandItem.getMultiplier(wand_stack));
             }break;
             case ROW_COL: {
                 Orientation orientation = WandItem.getOrientation(wand_stack);
@@ -764,7 +755,7 @@ public class Wand {
         }
         return null;
     }
-    void mode_direction(boolean invert) {
+    void mode_direction(boolean invert, int multiplier) {
         Direction[] dirs = getDirMode0(side, hit.x, hit.y, hit.z);
         if (invert) {
             if (dirs[0] != null)
@@ -781,24 +772,36 @@ public class Wand {
         }
         if (d1 != null) {
             BlockPos dest;
+            block_buffer.reset();
+            boolean diag=false;
             if (d2 != null) {
                 dest = find_next_diag(block_state, d1, d2, pos);
+                diag=true;
             } else {
                 dest = find_next_pos(block_state, d1, pos);
             }
-            if (dest != null) {
-                
-                x1 = dest.getX();
-                y1 = dest.getY();
-                z1 = dest.getZ();
-                x2 = x1 + 1;
-                y2 = y1 + 1;
-                z2 = z1 + 1;
-                //valid = true;
-                
-                block_buffer.reset();
-                valid=add_to_buffer(dest.getX(),dest.getY(),dest.getZ());
-                
+            for(int i=0;i<multiplier;i++) {
+                if (dest != null) {
+                    x1 = dest.getX();
+                    y1 = dest.getY();
+                    z1 = dest.getZ();
+                    x2 = x1 + 1;
+                    y2 = y1 + 1;
+                    z2 = z1 + 1;
+                    valid = add_to_buffer(dest.getX(), dest.getY(), dest.getZ());
+                    if(diag) {
+                        dest=dest.relative(d1,1);
+                        dest=dest.relative(d2,1);
+                    }else{
+                        dest=dest.relative(d1,1);
+                    }
+                    BlockState bs = level.getBlockState(dest);
+                    if (!can_place(bs)) {
+                        break;
+                    }
+                }else{
+                    break;
+                }
             }
         }
     }
@@ -2450,7 +2453,7 @@ public class Wand {
             BlockState bs = level.getBlockState(pos2);
 
             if (bs != null) {
-                if (!(bs.is(state.getBlock())|| state_in_slot(bs)/*||  (offhand_state!=null&&  bs.is(offhand_state.getBlock()))*/  )) {
+                if (!(bs.is(state.getBlock())|| state_in_slot(bs) )) {
                     if(destroy || use || replace){
                         pos2=bpos.relative(dir, i);
                         if(pos2!=pos)

@@ -110,7 +110,7 @@ public class WandItem extends TieredItem implements Vanishable {
             }
         }
     }
-    
+
     public int limit = 0;
     public boolean unbreakable;
     public boolean removes_water;
@@ -338,6 +338,28 @@ public class WandItem extends TieredItem implements Vanishable {
             CompoundTag tag=stack.getOrCreateTag();
             tag.putInt("state_mode", mode.ordinal());
         }
+    }
+    static public void setMultiplier(ItemStack stack,int m) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
+            CompoundTag tag=stack.getOrCreateTag();
+            WandItem w=(WandItem)stack.getItem();
+            if(m>=1 && m<=w.limit){
+                tag.putInt("multiplier", m);
+            }
+        }
+    }
+    static public int getMultiplier(ItemStack stack) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty())
+        {
+            WandItem w=(WandItem)stack.getItem();
+            int m=stack.getOrCreateTag().getInt("multiplier");
+            if(m>=1 && m<=w.limit){
+                return m;
+            }else{
+                setMultiplier(stack,1);
+            }
+        }
+        return 1;
     }
     @Override
     public InteractionResult useOn(UseOnContext context) {    

@@ -17,6 +17,8 @@
     "key.wands.wand_menu": "Wand Menu",
     "key.wands.wand_action": "Action",
     "key.wands.wand_conf": "Configuration",
+    "key.wands.mult_inc": "Multiplier Increase",
+    "key.wands.mult_dec": "Multiplier Decrease",
     "itemGroup.wands.wands_tab": "Building Wands",
     "title.wands.config": "Building Wands Configuration",
     "category.wands.general": "General",

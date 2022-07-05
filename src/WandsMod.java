@@ -18,6 +18,7 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -95,6 +96,8 @@ public class WandsMod {
     static final public int palette_menu_key     = GLFW.GLFW_KEY_J;
     //static final public int wand_state_mode_key  = GLFW.GLFW_KEY_B;
     static final public int wand_conf_key  = GLFW.GLFW_KEY_UNKNOWN;
+    static final public int wand_mult_inc_key  = GLFW.GLFW_KEY_KP_ADD;
+    static final public int wand_mult_dec_key  = GLFW.GLFW_KEY_KP_SUBTRACT;
     public static boolean is_forge=false;
 	
     public static void init() {
@@ -118,7 +121,8 @@ public class WandsMod {
             });
         });
         NetworkManager.registerReceiver(Side.C2S, WAND_PACKET, (packet,context)->{
-            int mode=packet.readInt();
+            ItemStack item=packet.readItem();
+            /*int mode=packet.readInt();
             int action=packet.readInt();
             int orientation=packet.readInt();
             int plane=packet.readInt();
@@ -126,9 +130,14 @@ public class WandsMod {
             int invert=packet.readInt();
             int fill=packet.readInt();
             int rot=packet.readInt();
-            int state_mode=packet.readInt();
+            int state_mode=packet.readInt();*/
             context.queue(()->{
-                process_wand(context.getPlayer(), mode,action,orientation,plane,axis,invert,fill,rot,state_mode);
+                ItemStack wand_stack=context.getPlayer().getMainHandItem();
+                CompoundTag tag=item.getTag();
+                if(tag!=null) {
+                    wand_stack.setTag(tag);
+                }
+                //process_wand(context.getPlayer(), mode,action,orientation,plane,axis,invert,fill,rot,state_mode);
             });
         });
         PlayerEvent.PLAYER_QUIT.register((player)->{
@@ -244,6 +253,12 @@ public class WandsMod {
         if(is_wand){
             Wand wand=PlayerWand.get(player);
             switch(key) {
+                case wand_mult_inc_key:
+                    WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)+1);
+                break;
+                case wand_mult_dec_key:
+                    WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)-1);
+                break;
                 case wand_action_key:
                     if (shift) {
                         WandItem.prevAction(main_stack);

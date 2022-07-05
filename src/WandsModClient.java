@@ -57,6 +57,10 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
             //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
             new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.mult_inc",WandsMod.wand_mult_inc_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.mult_dec",WandsMod.wand_mult_dec_key,"itemGroup.wands.wands_tab"),
+
+
         };
         for(KeyMapping k: km){
             MCVer.inst.register_key(k);
@@ -167,7 +171,12 @@ public class WandsModClient {
         NetworkManager.sendToServer(WandsMod.PALETTE_PACKET, packet);
     }
 
-    public static void send_wand(int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
+    public static void send_wand(ItemStack item) {
+        FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+        packet.writeItem(item);
+        NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
+    }
+    /*public static void send_wand(int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
         FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(mode);
         packet.writeInt(action);
@@ -179,7 +188,7 @@ public class WandsModClient {
         packet.writeInt(rot);
         packet.writeInt(state_mode);
         NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
-    }
+    }*/
 
     public static void render_wand_info(PoseStack poseStack){
         
@@ -205,7 +214,8 @@ public class WandsModClient {
                 if(wand.valid) {
                     switch(mode){
                         case DIRECTION:
-                            ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"]";
+                            int mult=WandItem.getMultiplier(stack);
+                            ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
                             break;
                         case ROW_COL:
                         case FILL:

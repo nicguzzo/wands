@@ -106,6 +106,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }
     };
     Vector<BtnGroup> buttons=new Vector<>();
+
     BtnGroup modes_grp;
     BtnGroup action_grp;
     BtnGroup orientation_grp;
@@ -117,7 +118,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     BtnGroup state_grp;
     Btn conf_btn;
     Btn show_inv_btn;
-
+    Btn button_mult_p;
+    Btn button_mult_m;
     boolean show_inv=false;
 
     Component text_mode=MCVer.inst.translatable("screen.wands.mode");
@@ -133,14 +135,17 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     public WandScreen(WandScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
     }
+    int multiplier=1;
     @Override
     public void init(){
         super.init();
         wand_stack=this.menu.wand;
         if(wand_stack!=null && wand_stack.getItem() instanceof WandItem){
             wand=(WandItem)wand_stack.getItem();
+        }else{
+            return;
         }
-
+        multiplier=WandItem.getMultiplier(wand_stack);
         int btn_h=12;
         int btn_w=60;
         int btn_margin=2;
@@ -150,14 +155,38 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         right=(width/2)+(img_w/2);
         bottom=(height/2)-(h/2)-12;
         top=(height/2)+(h/2);
+
+        //mult_grp=new BtnGroup();
+
+        button_mult_p=new Btn(left+22,bottom+20,10,12,MCVer.inst.literal("+"))
+        {
+            void onClick(int mx,int my){
+                if(multiplier+1<= wand.limit) {
+                    multiplier++;
+                    WandItem.setMultiplier(wand_stack, multiplier);
+                    WandsModClient.send_wand(wand_stack);
+                }
+            }
+        };
+        button_mult_m=new Btn(left,bottom+20,10,12,MCVer.inst.literal("-"))
+        {
+            void onClick(int mx,int my){
+                if(multiplier-1>=1) {
+                    multiplier--;
+                    WandItem.setMultiplier(wand_stack, multiplier);
+                    WandsModClient.send_wand(wand_stack);
+                }
+            }
+        };
         modes_grp=new BtnGroup();
         for (int i=0;i<WandItem.modes.length;i++) {
             int finalI=i;
             Btn b=new Btn(left+35,bottom+h2*i +20,btn_w,btn_h,
                     MCVer.inst.literal(WandItem.modes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(finalI,-1,-1,-1,-1,-1,-1,-1,-1);
+                    //WandsModClient.send_wand(finalI,-1,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setMode(wand_stack, WandItem.modes[finalI]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             modes_grp.add(b);
@@ -168,8 +197,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+100,bottom+h2*i  +20,btn_w+10,btn_h,
                     MCVer.inst.literal(WandItem.actions[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,finalp,-1,-1,-1,-1,-1,-1,-1);
+                    //WandsModClient.send_wand(-1,finalp,-1,-1,-1,-1,-1,-1,-1);
                     WandItem.setAction(wand_stack, WandItem.actions[finalp]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             action_grp.add(b);
@@ -180,8 +210,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+180,bottom+h2*i  +20,btn_w,btn_h,
                     MCVer.inst.literal(WandItem.orientations[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,finalo,-1,-1,-1,-1,-1,-1);
+                    //WandsModClient.send_wand(-1,-1,finalo,-1,-1,-1,-1,-1,-1);
                     WandItem.setOrientation(wand_stack, WandItem.orientations[finalo]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             orientation_grp.add(b);
@@ -192,8 +223,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+180,bottom+h2*i +60 ,btn_w,btn_h,
                     MCVer.inst.literal(WandItem.planes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,finalp,-1,-1,-1,-1,-1);
+                    //WandsModClient.send_wand(-1,-1,-1,finalp,-1,-1,-1,-1,-1);
                     WandItem.setPlane(wand_stack, WandItem.planes[finalp]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             plane_grp.add(b);
@@ -205,8 +237,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+180,bottom+h2*i +110+h2,btn_w,btn_h,
                     MCVer.inst.literal(WandItem.axes[i].toString())){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);
+                    //WandsModClient.send_wand(-1,-1,-1,-1,finala,-1,-1,-1,-1);
                     WandItem.setAxis(wand_stack, WandItem.axes[finala]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             axis_grp.add(b);
@@ -215,16 +248,18 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         Btn b1=new Btn(left+100,bottom+h2 +70,btn_w+10,btn_h,
                 MCVer.inst.literal("same state")){
             void onClick(int mx,int my){
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,0);
+                //WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,0);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
+                WandsModClient.send_wand(wand_stack);
             }
         };
         state_grp.add(b1);
         Btn b2=new Btn(left+100,bottom+h2 +70+h2,btn_w+10,btn_h,
                 MCVer.inst.literal("rot/axis/slab")){
             void onClick(int mx,int my){
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,1);
+                //WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,-1,1);
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
+                WandsModClient.send_wand(wand_stack);
             }
         };
         state_grp.add(b2);
@@ -251,8 +286,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             Btn b=new Btn(left+100,bottom+h2*i +110+h2,btn_w+10,btn_h,
                     MCVer.inst.literal(rot)){
                 void onClick(int mx,int my){
-                    WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,finalr,-1);
+                    //WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,-1,finalr,-1);
                     WandItem.setRotation(wand_stack, WandItem.rotations[finalr]);
+                    WandsModClient.send_wand(wand_stack);
                 }
             };
             rot_grp.add(b);
@@ -269,8 +305,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         Btn inv_btn=new Btn(left+35,bottom+148,40,12,MCVer.inst.literal("Invert")){
             void onClick(int mx,int my) {
                 boolean inv =!WandItem.isInverted(wand_stack);
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,(inv?1:0),-1,-1,-1);
+                //WandsModClient.send_wand(-1,-1,-1,-1,-1,(inv?1:0),-1,-1,-1);
                 WandItem.setInvert(wand_stack,inv);
+                WandsModClient.send_wand(wand_stack);
             }
         };
         inv_grp_btn.add(inv_btn);
@@ -279,8 +316,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         Btn fill_btn=new Btn(left+35,bottom+162,60,12,MCVer.inst.literal("Filled circle")){
             void onClick(int mx,int my) {
                 boolean fill =!WandItem.isCircleFill(wand_stack);
-                WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,(fill?1:0),-1,-1);
+                //WandsModClient.send_wand(-1,-1,-1,-1,-1,-1,(fill?1:0),-1,-1);
                 WandItem.setFill(wand_stack,fill);
+                WandsModClient.send_wand(wand_stack);
             }
         };
         fill_grp_btn.add(fill_btn);
@@ -316,6 +354,10 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         int x = (width - img_w) / 2;
         int y = (height - img_h) / 2;
         blit(poseStack, x, y, 0, 0, img_w, img_h);
+
+        button_mult_m.render(poseStack,this.font,mouseX,mouseY);
+        font.draw(poseStack,"x"+multiplier ,left+12,bottom+24, 0xff000000);
+        button_mult_p.render(poseStack,this.font,mouseX,mouseY);
         font.draw(poseStack,text_mode ,left+35,bottom+10, 0xff000000);
         font.draw(poseStack,text_action ,left+100,bottom+10, 0xff000000);
         font.draw(poseStack,text_orientation ,left+180,bottom+10, 0xff000000);
@@ -376,6 +418,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                     grp.selections.get(j).click((int)mouseX,(int)mouseY);
                 }
             }
+            button_mult_p.click((int)mouseX,(int)mouseY);
+            button_mult_m.click((int)mouseX,(int)mouseY);
         }else{
             Slot slot = this.find_slot(mouseX, mouseY);
             if(slot!=null){
