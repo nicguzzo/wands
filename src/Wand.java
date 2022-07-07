@@ -77,7 +77,7 @@ public class Wand {
 
     public boolean valid = false;
     public static final int MAX_UNDO = 2048;
-    public static final int MAX_LIMIT = 2048;
+    public static final int MAX_LIMIT = 16536;
     Player player;
     Level level;
     BlockState block_state;
@@ -416,10 +416,11 @@ public class Wand {
             }break;
             case ROW_COL: {
                 Orientation orientation = WandItem.getOrientation(wand_stack);
-                mode_row_col(orientation);
+                mode_row_col(orientation,3);
             }break;
             case FILL: mode_fill_rect(false); break;
             case AREA: mode_area(); break;
+            case GRID: mode_grid(WandItem.getGridNxM(wand_stack,false)-1,WandItem.getGridNxM(wand_stack,true)-1); break;
             case LINE: mode_line(); break;
             case CIRCLE: {
                 int plane = WandItem.getPlane(wand_stack).ordinal();
@@ -806,7 +807,7 @@ public class Wand {
         }
     }
 
-    void mode_row_col(Orientation orientation) {
+    void mode_row_col(Orientation orientation, int n) {
         boolean preview = player.level.isClientSide();
         Direction dir = Direction.EAST;
         BlockPos pos_m = pos.relative(side, 1);
@@ -873,45 +874,60 @@ public class Wand {
 
             boolean dont_check_state = false;
             boolean eq;
-            while (k < wand.limit && i > 0) {
-                if (!stop1 && i > 0) {
-                    BlockState bs0 = player.level.getBlockState(pos0.relative(dir));
-                    BlockState bs1 = player.level.getBlockState(pos1.relative(dir));
-                    if (dont_check_state) {
-                        eq = bs0.getBlock().equals(block_state.getBlock());
-                    } else {
-                        eq = bs0.equals(block_state);
+            if(n==0) {
+                while (k < wand.limit && i > 0) {
+                    if (!stop1 && i > 0) {
+                        BlockState bs0 = player.level.getBlockState(pos0.relative(dir));
+                        BlockState bs1 = player.level.getBlockState(pos1.relative(dir));
+                        if (dont_check_state) {
+                            eq = bs0.getBlock().equals(block_state.getBlock());
+                        } else {
+                            eq = bs0.equals(block_state);
+                        }
+                        eq = eq || state_in_slot(bs0);
+                        if (eq && (bs1.isAir() || replace_fluid(bs1))) {
+                            pos0 = pos0.relative(dir);
+                            pos1 = pos1.relative(dir);
+                            i--;
+                        } else {
+                            stop1 = true;
+                        }
                     }
-                    eq=eq || state_in_slot(bs0);
-                    if (eq && (bs1.isAir() || replace_fluid(bs1))) {
-                        pos0 = pos0.relative(dir);
-                        pos1 = pos1.relative(dir);
-                        i--;
-                    } else {
-                        stop1 = true;
+                    if (!stop2 && i > 0) {
+                        BlockState bs2 = player.level.getBlockState(pos2.relative(op));
+                        BlockState bs3 = player.level.getBlockState(pos3.relative(op));
+                        if (dont_check_state) {
+                            eq = bs2.getBlock().equals(block_state.getBlock());
+                        } else {
+                            eq = bs2.equals(block_state);
+                        }
+                        eq = eq || state_in_slot(bs2);
+                        if (eq && (bs3.isAir() || replace_fluid(bs3))) {
+                            pos2 = pos2.relative(op);
+                            pos3 = pos3.relative(op);
+                            i--;
+                        } else {
+                            stop2 = true;
+                        }
+                    }
+                    k++;
+                    if (stop1 && stop2) {
+                        k = 1000000;
                     }
                 }
-                if (!stop2 && i > 0) {
-                    BlockState bs2 = player.level.getBlockState(pos2.relative(op));
-                    BlockState bs3 = player.level.getBlockState(pos3.relative(op));
-                    if (dont_check_state) {
-                        eq = bs2.getBlock().equals(block_state.getBlock());
-                    } else {
-                        eq = bs2.equals(block_state);
-                    }
-                    eq=eq || state_in_slot(bs2);
-                    if (eq && (bs3.isAir() || replace_fluid(bs3))) {
-                        pos2 = pos2.relative(op);
-                        pos3 = pos3.relative(op);
-                        i--;
-                    } else {
-                        stop2 = true;
+            }else{
+                pos1=pos0.relative(side);
+                pos2=pos0;
+                for(int m=0;m<n-1;m++) {
+                    pos2 = pos2.relative(dir);
+                    BlockState bs = player.level.getBlockState(pos2.relative(side));
+                    if(can_place(bs)){
+                        pos3=pos2;
+                    }else{
+                        break;
                     }
                 }
-                k++;
-                if (stop1 && stop2) {
-                    k = 1000000;
-                }
+                pos3=pos3.relative(side);
             }
             if (destroy || replace ||use) {
                 pos1 = pos1.relative(side.getOpposite());
@@ -989,7 +1005,6 @@ public class Wand {
     }
     void mode_area() {
         block_buffer.reset();
-        //BlockState st=get_state();
         add_neighbour(pos, block_state);
         int i = 0;
         int found = 1;
@@ -1000,7 +1015,6 @@ public class Wand {
             }
             i++;
         }
-        //log("found: "+found);
         if (destroy || replace ||use) {
             for (int a = 0; a < block_buffer.get_length(); a++) {
                 block_buffer.set(a, block_buffer.get(a).relative(side, -1));
@@ -1008,7 +1022,69 @@ public class Wand {
         }
         validate_buffer();
     }
-
+    void mode_grid(int n, int m) {
+        block_buffer.reset();
+        Direction dir1=Direction.SOUTH;
+        Direction dir2= Direction.EAST;
+        switch (side) {
+            case UP:
+            case DOWN:
+                switch (this.rotation) {
+                    case NONE:
+                        dir1=player.getDirection().getClockWise();
+                        dir2=player.getDirection();
+                        break;
+                    case CLOCKWISE_90:
+                        dir1=player.getDirection().getClockWise().getClockWise();
+                        dir2=player.getDirection().getClockWise();
+                        break;
+                    case CLOCKWISE_180:
+                        dir1=player.getDirection().getClockWise().getClockWise().getClockWise();
+                        dir2=player.getDirection().getClockWise().getClockWise();
+                        break;
+                    case COUNTERCLOCKWISE_90:
+                        dir1=player.getDirection();
+                        dir2=player.getDirection().getClockWise().getClockWise().getClockWise();
+                        break;
+                }
+                break;
+            case SOUTH:
+            case NORTH:
+            case EAST:
+            case WEST:
+                switch (this.rotation) {
+                    case NONE:
+                        dir1=player.getDirection().getClockWise();
+                        dir2 = Direction.UP;
+                        break;
+                    case CLOCKWISE_90:
+                        dir1=player.getDirection().getClockWise();
+                        dir2 = Direction.DOWN;
+                        break;
+                    case CLOCKWISE_180:
+                        dir1=player.getDirection().getClockWise().getOpposite();
+                        dir2 = Direction.DOWN;
+                        break;
+                    case COUNTERCLOCKWISE_90:
+                        dir1=player.getDirection().getClockWise().getOpposite();
+                        dir2 = Direction.UP;
+                        break;
+                }
+                break;
+        }
+        if (destroy || replace ||use) {
+            BlockPos pos1=pos.relative(side, -1).relative(side);
+            BlockPos pos2=pos.relative(side, -1).relative(dir1,n).relative(dir2,m).relative(side);
+            calc_pv_bbox(pos1,pos2);
+            fill(pos1, pos2,false);
+        }else{
+            BlockPos pos1=pos.relative(side);
+            BlockPos pos2=pos.relative(dir1,n).relative(dir2,m).relative(side);
+            calc_pv_bbox(pos1,pos2);
+            fill(pos1, pos2,false);
+        }
+        validate_buffer();
+    }
     void mode_line() {
         block_buffer.reset();
         if (p1 != null && (p2 || preview)) {

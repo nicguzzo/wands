@@ -101,6 +101,8 @@
     "option.wands.advancement_allow_diamond_wand_tt":"",
     "option.wands.advancement_allow_netherite_wand":"Allow netherite wand",
     "option.wands.advancement_allow_netherite_wand_tt":"",
+    "screen.wands.multiplier":"Multiplier",
+    "screen.wands.grid_nxm": "Grid",
     "screen.wands.mode":"Mode",
     "screen.wands.action":"Action",
     "screen.wands.orientation":"Orientation",
@@ -112,6 +114,8 @@
     "screen.wands.rot":"rot",
     "screen.wands.pick_tools":"Pick Tools",
     "screen.wands.invert":"Invert",
-    "screen.wands.filled_circle":"Filled circle",
-    "screen.wands.conf":"Conf"
+    "screen.wands.filled_circle":"Filled",
+    "screen.wands.conf":"Conf",
+    "screen.wands.same_state": "Same State",
+    "screen.wands.diff_state": "Different State"
   }

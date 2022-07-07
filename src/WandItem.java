@@ -43,6 +43,11 @@ public class WandItem extends TieredItem implements Vanishable {
                 return "Area";
             }
         },
+        GRID{
+            public String toString() {
+                return "Grid";
+            }
+        },
         LINE{
             public String toString() {
                 return "Line";
@@ -356,7 +361,38 @@ public class WandItem extends TieredItem implements Vanishable {
             if(m>=1 && m<=w.limit){
                 return m;
             }else{
-                setMultiplier(stack,1);
+                setMultiplier(stack,3);
+            }
+        }
+        return 3;
+    }
+    static public void setGridNxM(ItemStack stack,int n,boolean m) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty()) {
+            CompoundTag tag=stack.getOrCreateTag();
+            WandItem w=(WandItem)stack.getItem();
+            if(n>=1 && n<=w.limit){
+                if(m){
+                    tag.putInt("grid_m", n);
+                }else {
+                    tag.putInt("grid_n", n);
+                }
+            }
+        }
+    }
+    static public int getGridNxM(ItemStack stack,boolean m) {
+        if(stack!=null && is_wand(stack) && !stack.isEmpty())
+        {
+            WandItem w=(WandItem)stack.getItem();
+            int nm=-1;
+            if(m) {
+                nm=stack.getOrCreateTag().getInt("grid_m");
+            }else{
+                nm=stack.getOrCreateTag().getInt("grid_n");
+            }
+            if(nm>=1 && nm<=w.limit){
+                return nm;
+            }else{
+                setGridNxM(stack,1,m);
             }
         }
         return 1;

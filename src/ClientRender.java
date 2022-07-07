@@ -396,6 +396,7 @@ public class ClientRender {
                 case ROW_COL:
                 case FILL:
                 case AREA:
+                case GRID:
                 case LINE:
                 case CIRCLE:
                 case RECT:
