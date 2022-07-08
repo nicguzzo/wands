@@ -32,6 +32,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -196,11 +197,11 @@ public class Wand {
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
-        copy_pos1 = null;
-        copy_pos2 = null;
-        if (player != null && player.level!=null && !player.level.isClientSide()) {
+        /*if (player != null && player.level!=null && !player.level.isClientSide() && mode==Mode.COPY) {
+            copy_pos1 = null;
+            copy_pos2 = null;
             player.displayClientMessage(MCVer.inst.literal("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
-        }
+        }*/
     }
 
     boolean check_advancement(ServerAdvancementManager server_advancements,PlayerAdvancements player_advancements,String a){
@@ -430,6 +431,7 @@ public class Wand {
             case RECT: mode_fill_rect(true); break;
             case COPY: mode_copy(); break;
             case PASTE: mode_paste(); break;
+            case BLAST: mode_blast(); break;
         }
 
         if (!preview) {
@@ -438,148 +440,138 @@ public class Wand {
                 player.displayClientMessage(MCVer.inst.literal("wand limit reached"),false);
             }
             //log("has_palette: "+has_palette);
-            if (has_palette && !destroy && !use && !is_copy_paste) {
-                //log("palette: "+palette_slots);
-                //log("block_accounting: "+ block_accounting);
+            if(mode!=Mode.BLAST) {
+                if (has_palette && !destroy && !use && !is_copy_paste) {
+                    //log("palette: "+palette_slots);
+                    //log("block_accounting: "+ block_accounting);
 
-                for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                    if (!replace&& !can_place(player.level.getBlockState(block_buffer.get(a)))) {
-                        block_buffer.state[a] = null;
-                        block_buffer.item[a] = null;
-                        continue;
-                    }
-                    BlockState st = block_buffer.state[a];
-                    if (st == null) {
-                        continue;
-                    }
-                    Item it = block_buffer.item[a];
-                    if (it == null) {
-                        continue;
-                    }
-                    BlockAccounting pa = block_accounting.get(it);
-                    if (pa == null) {
-                        //log("no palette accounting found for "+ps.stack.getItem());
-                        continue;
-                    }
-                    pa.needed++;
-
-                    if (st.getBlock() instanceof SlabBlock) {
-                        if (st.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
-                            pa.needed++;
-                        }
-                    } else {
-                        if (st.getBlock() instanceof SnowLayerBlock) {
-                            int sn = st.getValue(SnowLayerBlock.LAYERS);
-                            pa.needed += sn - 1;
-                        }
-                    }
-                }
-            } else {
-                if (!is_copy_paste) {
-                    if (has_bucket) {
-
-                        has_bucket = false;
-                        //log("bucket " + bucket);
-                        //boolean is_water_bucket=bucket.is(Fluids.WATER.getBucket()));
-                        //boolean is_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
-                        if (has_water_bucket||has_lava_bucket) {
-                            //log("bucket is water");
-                            if(creative){
-                                has_bucket = true;
-                                if(has_water_bucket) {
-                                    block_state = Blocks.WATER.defaultBlockState();
-                                }
-                                if(has_lava_bucket) {
-                                    block_state = Blocks.LAVA.defaultBlockState();
-                                }
-                                //block_state = Blocks.WATER.defaultBlockState();
-                            }else {
-                                if(has_water_bucket) {
-                                    //in survival check if player has another water bucket part from the one in the offhand
-                                    for (int i = 0; i < 36; ++i) {
-                                        ItemStack stack = player_inv.getItem(i);
-                                        boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
-                                        if (stack.getItem() instanceof BucketItem && is_water_bucket) {
-                                            has_bucket = true;
-                                            has_water_bucket = true;
-                                            block_state = Blocks.WATER.defaultBlockState();
-                                            break;
-                                        }
-                                    }
-                                    if (!has_bucket) {
-                                        player.displayClientMessage(MCVer.inst.literal("You need another water bucket in the inventory."), false);
-                                        return;
-                                    }
-                                }
-                                if(has_lava_bucket) {
-                                    block_state = Blocks.LAVA.defaultBlockState();
-                                }
-                            }
-                        }
-                        if (has_empty_bucket) {
-                            has_bucket = true;
-                            block_state = Blocks.AIR.defaultBlockState();
-                        }
-                    }
-
-                    BlockAccounting pa = new BlockAccounting();
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                        if(has_empty_bucket||has_water_bucket||has_lava_bucket){
-                            block_buffer.state[a]=block_state;
-                            if(has_lava_bucket){
-                                block_buffer.item[a] = bucket.getItem();
-                                pa.needed++;
-                            }
-                        }else{
-                            if (!replace && !destroy && !use && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
-                                block_buffer.state[a] = null;
-                                block_buffer.item[a] = null;
-                            }else {
-                                pa.needed++;
-                            }
-                        }
-                    }
-                    if(block_buffer.get_length()>0 && pa.needed>0) {
-                        block_accounting.put(block_buffer.item[0], pa);
-                    }
-                } else {
-                    //copy paste
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                        if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                        if (!replace && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
+                            continue;
+                        }
+                        BlockState st = block_buffer.state[a];
+                        if (st == null) {
+                            continue;
+                        }
+                        Item it = block_buffer.item[a];
+                        if (it == null) {
+                            continue;
+                        }
+                        BlockAccounting pa = block_accounting.get(it);
+                        if (pa == null) {
+                            //log("no palette accounting found for "+ps.stack.getItem());
+                            continue;
+                        }
+                        pa.needed++;
+
+                        if (st.getBlock() instanceof SlabBlock) {
+                            if (st.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
+                                pa.needed++;
+                            }
                         } else {
-                            BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
-                            if (pa == null) {
-                                pa = new BlockAccounting();
-                                pa.needed++;
-                                block_accounting.put(block_buffer.item[a], pa);
+                            if (st.getBlock() instanceof SnowLayerBlock) {
+                                int sn = st.getValue(SnowLayerBlock.LAYERS);
+                                pa.needed += sn - 1;
+                            }
+                        }
+                    }
+                } else {
+                    if (!is_copy_paste) {
+                        if (has_bucket) {
+
+                            has_bucket = false;
+                            //log("bucket " + bucket);
+                            //boolean is_water_bucket=bucket.is(Fluids.WATER.getBucket()));
+                            //boolean is_water_bucket=bucket.getItem().equals(Fluids.WATER.getBucket());
+                            if (has_water_bucket || has_lava_bucket) {
+                                //log("bucket is water");
+                                if (creative) {
+                                    has_bucket = true;
+                                    if (has_water_bucket) {
+                                        block_state = Blocks.WATER.defaultBlockState();
+                                    }
+                                    if (has_lava_bucket) {
+                                        block_state = Blocks.LAVA.defaultBlockState();
+                                    }
+                                    //block_state = Blocks.WATER.defaultBlockState();
+                                } else {
+                                    if (has_water_bucket) {
+                                        //in survival check if player has another water bucket part from the one in the offhand
+                                        for (int i = 0; i < 36; ++i) {
+                                            ItemStack stack = player_inv.getItem(i);
+                                            boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
+                                            if (stack.getItem() instanceof BucketItem && is_water_bucket) {
+                                                has_bucket = true;
+                                                has_water_bucket = true;
+                                                block_state = Blocks.WATER.defaultBlockState();
+                                                break;
+                                            }
+                                        }
+                                        if (!has_bucket) {
+                                            player.displayClientMessage(MCVer.inst.literal("You need another water bucket in the inventory."), false);
+                                            return;
+                                        }
+                                    }
+                                    if (has_lava_bucket) {
+                                        block_state = Blocks.LAVA.defaultBlockState();
+                                    }
+                                }
+                            }
+                            if (has_empty_bucket) {
+                                has_bucket = true;
+                                block_state = Blocks.AIR.defaultBlockState();
+                            }
+                        }
+
+                        BlockAccounting pa = new BlockAccounting();
+                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                            if (has_empty_bucket || has_water_bucket || has_lava_bucket) {
+                                block_buffer.state[a] = block_state;
+                                if (has_lava_bucket) {
+                                    block_buffer.item[a] = bucket.getItem();
+                                    pa.needed++;
+                                }
                             } else {
-                                pa.needed++;
+                                if (!replace && !destroy && !use && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                                    block_buffer.state[a] = null;
+                                    block_buffer.item[a] = null;
+                                } else {
+                                    pa.needed++;
+                                }
+                            }
+                        }
+                        if (block_buffer.get_length() > 0 && pa.needed > 0) {
+                            block_accounting.put(block_buffer.item[0], pa);
+                        }
+                    } else {
+                        //copy paste
+                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                            if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                                block_buffer.state[a] = null;
+                                block_buffer.item[a] = null;
+                            } else {
+                                BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
+                                if (pa == null) {
+                                    pa = new BlockAccounting();
+                                    pa.needed++;
+                                    block_accounting.put(block_buffer.item[a], pa);
+                                } else {
+                                    pa.needed++;
+                                }
                             }
                         }
                     }
                 }
             }
-            //log("block_state "+block_state);
-            //log( "palette_slots "+palette_slots.size());
-            //log("block_accounting " + block_accounting.size());
-            //boolean missing_blocks = block_accounting.size() == 0;
-            //for (var pa : block_accounting.entrySet()) {
-//                log(pa.getKey()+" in player "+pa.getValue().in_player+" needed: "+pa.getValue().needed +" placed: "+pa.getValue().placed);
-//            }
-
             //deal with inventory
-            if (!creative && !destroy && !use && !has_water_bucket && mode != Mode.COPY) {
-                //for (var pa : block_accounting.entrySet()) {
-                //    log(pa.getKey()+" in player "+pa.getValue().in_player+" needed: "+pa.getValue().needed +" placed: "+pa.getValue().placed);
-                //}
+            if ((!creative||mode == Mode.BLAST) && !destroy && !use && !has_water_bucket && mode != Mode.COPY) {
                 ItemStack stack;
                 for (int i = 0; i < 36; ++i) {
                     stack = player_inv.getItem(i);
                     if(stack.getItem()!= Items.AIR) {
                         if (WandUtils.is_shulker(stack)) {
-                            //count_in_shulker += count_in_shulker(stack, item_stack);
                             for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                                 pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
                             }
@@ -649,8 +641,30 @@ public class Wand {
                         break;
                     }
                 }
-
-                if (!creative && !destroy && placed > 0) {
+                if(mode==Mode.BLAST && wand_item.can_blast) {
+                    boolean do_explode=false;
+                    BlockAccounting ba=null;
+                    if(creative) {
+                        do_explode=true;
+                    }else{
+                        ba=block_accounting.get(Items.TNT);
+                        if(ba!=null) {
+                            do_explode = (ba.needed <= ba.in_player);
+                        }
+                    }
+                    if(do_explode) {
+                        float radius=(float)WandItem.getBlastRadius(wand_stack);
+                        float eo=1.0625f;
+                        if(side==Direction.DOWN){
+                            eo=0.0625f;
+                        }
+                        this.level.explode(player, pos.getX(), pos.getY() + eo, pos.getZ(), radius, Explosion.BlockInteraction.BREAK);
+                        if(!creative && ba!=null){
+                            ba.placed=ba.needed;
+                        }
+                    }
+                }
+                if (!creative && ((!destroy && placed > 0)||mode==Mode.BLAST)) {
                     ItemStack stack;
                     ItemStack stack_item;
                     //look for items on shulker boxes first
@@ -1288,7 +1302,19 @@ public class Wand {
             }
         }
     }
-
+    void mode_blast(){
+        block_buffer.reset();
+        if(!preview){
+            if(!creative) {
+                block_accounting.clear();
+                BlockAccounting ba=new BlockAccounting();
+                int rad=WandItem.getBlastRadius(wand_stack);
+                int extra_cost=rad-4;
+                ba.needed=1+extra_cost;
+                block_accounting.put(Items.TNT,ba);
+            }
+        }
+    }
     void mode_copy() {
         //if (!preview) {
             //WandsMod.log("mode6 copy_pos1: "+copy_pos1+" copy_pos2: "+copy_pos2 + " copy_paste_buffer: "+copy_paste_buffer.size(),prnt);

@@ -33,6 +33,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
 import net.nicguzzo.wands.mcver.MCVer;
 
@@ -207,10 +208,25 @@ public class WandsModClient {
                 Wand wand=ClientRender.wand;
                 WandItem.Mode mode=WandItem.getMode(stack);
                 WandItem.Action action=WandItem.getAction(stack);
-
+                Rotation r = WandItem.getRotation(stack);
+                String rot = "";
+                switch (r) {
+                    case NONE:
+                        rot = "0°";
+                        break;
+                    case CLOCKWISE_90:
+                        rot = "90°";
+                        break;
+                    case CLOCKWISE_180:
+                        rot = "180°";
+                        break;
+                    case COUNTERCLOCKWISE_90:
+                        rot = "270°";
+                        break;
+                }
                 String ln1="";
                 String ln2="Action: "+action.toString();
-                String ln3="Mode: "+mode.toString();
+                String ln3="Mode: "+mode.toString()+" Rot:"+rot;
                 if(wand.valid) {
                     switch(mode){
                         case DIRECTION:

@@ -117,5 +117,6 @@
     "screen.wands.filled_circle":"Filled",
     "screen.wands.conf":"Conf",
     "screen.wands.same_state": "Same State",
-    "screen.wands.diff_state": "Different State"
+    "screen.wands.diff_state": "Different State",
+    "screen.wands.blast_radius": "Blast Radius"
   }

@@ -110,6 +110,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     }
     class Spinner  extends Wdgt{
         int value;
+        int inc_val=1;
         int min;
         int max;
         Btn inc;
@@ -128,8 +129,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             inc=new Btn(x+w-10,y,10,h/2,MCVer.inst.literal("+"))
             {
                 void onClick(int mx,int my){
-                    if(value+1<= max) {
-                        value++;
+                    if(value+inc_val<= max) {
+                        value+=inc_val;
                         onInc(mx,my,value);
                     }
                 }
@@ -139,8 +140,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             dec=new Btn(x+w-10,y+h/2,10,h/2,MCVer.inst.literal("-"))
             {
                 void onClick(int mx,int my){
-                    if(value-1>=min) {
-                        value--;
+                    if(value-inc_val>=min) {
+                        value-=inc_val;
                         onDec(mx,my,value);
                     }
                 }
@@ -233,8 +234,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     Spinner mult_spn;
     Spinner grid_n_spn;
     Spinner grid_m_spn;
-    //Btn button_mult_p;
-    //Btn button_mult_m;
+    Spinner blast_radius_spn;
+
     boolean show_inv=false;
     int left;
     int right;
@@ -243,7 +244,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     public WandScreen(WandScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
     }
-    //int multiplier=1;
+
     @Override
     public void init(){
         super.init();
@@ -253,7 +254,6 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }else{
             return;
         }
-//
         int btn_h=12;
         int btn_w=60;
         int btn_margin=2;
@@ -264,9 +264,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         bottom=(height/2)-(h/2)-12;
         top=(height/2)+(h/2);
 
-        //mult_grp=new BtnGroup();
         int multiplier=WandItem.getMultiplier(wand_stack);
-        mult_spn=new Spinner(multiplier,1,wand.limit,left+200,bottom+25,25,14,MCVer.inst.translatable("screen.wands.multiplier"))
+        mult_spn=new Spinner(multiplier,1,16,left+200,bottom+25,25,14,MCVer.inst.translatable("screen.wands.multiplier"))
         {
             void onInc(int mx,int my,int value){
                 WandItem.setMultiplier(wand_stack, value);
@@ -278,8 +277,22 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             }
         };
         mult_spn.label_side=true;
+        int blast_radius=WandItem.getBlastRadius(wand_stack);
+        blast_radius_spn=new Spinner(blast_radius,4,16,left+210,bottom+25,25,14,MCVer.inst.translatable("screen.wands.blast_radius"))
+        {
+            void onInc(int mx,int my,int value){
+                WandItem.setBlastRadius(wand_stack, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+            void onDec(int mx,int my,int value){
+                WandItem.setBlastRadius(wand_stack, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        blast_radius_spn.label_side=true;
+        blast_radius_spn.inc_val=2;
         int grid_n=WandItem.getGridNxM(wand_stack,false);
-        grid_n_spn=new Spinner(grid_n,1,wand.limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_nxm"))
+        grid_n_spn=new Spinner(grid_n,1,wand.grid_limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_nxm"))
         {
             void onInc(int mx,int my,int value){
                 WandItem.setGridNxM(wand_stack, value,false);
@@ -292,7 +305,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         grid_n_spn.label_side=true;
         int grid_m=WandItem.getGridNxM(wand_stack,true);
-        grid_m_spn=new Spinner(grid_m,1,wand.limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
+        grid_m_spn=new Spinner(grid_m,1,wand.grid_limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
         {
             void onInc(int mx,int my,int value){
                 WandItem.setGridNxM(wand_stack, value,true);
@@ -305,7 +318,11 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         grid_m_spn.label_side=true;
         modes_grp=new Select(left+80,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.mode"));
-        for (int i=0;i<WandItem.modes.length;i++) {
+        int l=WandItem.modes.length-1;
+        if(wand.can_blast){
+            l+=1;
+        }
+        for (int i=0;i<l;i++) {
             int finalI=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.modes[i].toString())){
                 void onClick(int mx,int my){
@@ -359,7 +376,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             };
             axis_grp.add(b);
         }
-        state_grp=new Select(left+80,bottom+160,btn_w+10,btn_h,null);
+        state_grp=new Select(left+80,bottom+160,btn_w+20,btn_h,null);
         Btn b1=new Btn(MCVer.inst.translatable("screen.wands.same_state")){
             void onClick(int mx,int my){
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
@@ -450,25 +467,27 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         wdgets.add(mult_spn);
         wdgets.add(grid_n_spn);
         wdgets.add(grid_m_spn);
+        wdgets.add(blast_radius_spn);
 
     }
     void update_selections(){
         if(wand!=null && wand_stack!=null) {
             modes_grp.selected=WandItem.getMode(wand_stack).ordinal();
-            mult_spn.visible=modes_grp.selected==0;
+            mult_spn.visible=modes_grp.selected==WandItem.Mode.DIRECTION.ordinal();
             action_grp.selected=WandItem.getAction(wand_stack).ordinal();
             orientation_grp.selected=WandItem.getOrientation(wand_stack).ordinal();
-            orientation_grp.visible=modes_grp.selected==1;
+            orientation_grp.visible=modes_grp.selected==WandItem.Mode.ROW_COL.ordinal();
             plane_grp.selected=WandItem.getPlane(wand_stack).ordinal();
-            plane_grp.visible=modes_grp.selected==6;
+            plane_grp.visible=modes_grp.selected==WandItem.Mode.CIRCLE.ordinal();
             axis_grp.selected =WandItem.getAxis(wand_stack).ordinal();
             state_grp.selected=WandItem.getStateMode(wand_stack).ordinal();
             rot_grp.selected=WandItem.getRotation(wand_stack).ordinal();
             inv_grp_btn.selected=(WandItem.isInverted(wand_stack)?0:-1);
             fill_grp_btn.selected=(WandItem.isCircleFill(wand_stack)?0:-1);
-            fill_grp_btn.visible=modes_grp.selected==6||modes_grp.selected==7;
-            grid_n_spn.visible=modes_grp.selected==4;
-            grid_m_spn.visible=modes_grp.selected==4;
+            fill_grp_btn.visible=modes_grp.selected==WandItem.Mode.CIRCLE.ordinal()||modes_grp.selected==WandItem.Mode.RECT.ordinal();
+            grid_n_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            grid_m_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            blast_radius_spn.visible=modes_grp.selected==WandItem.Mode.BLAST.ordinal();
         }
     }
     @Override 

@@ -52,20 +52,20 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
-            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
+            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register("iron_wand", () ->{
-        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register("diamond_wand", () ->{
-        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register("netherite_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,Wand.MAX_LIMIT,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,Wand.MAX_LIMIT,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
@@ -330,7 +330,7 @@ public class WandsMod {
                     } else {
                         WandItem.nextRotation(main_stack);
                         WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
-                        Rotation r = WandItem.getRotation(main_stack);
+                        /*Rotation r = WandItem.getRotation(main_stack);
                         String rot = "";
                         switch (r) {
                             case NONE:
@@ -345,8 +345,8 @@ public class WandsMod {
                             case COUNTERCLOCKWISE_90:
                                 rot = "270°";
                                 break;
-                        }
-                        player.displayClientMessage(MCVer.inst.literal("Wand Rotation: " + rot), false);
+                        }*/
+                        //player.displayClientMessage(MCVer.inst.literal("Wand Rotation: " + rot), false);
                     }
 
                 break;
