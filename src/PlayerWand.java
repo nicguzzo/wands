@@ -9,14 +9,20 @@ public class PlayerWand{
     
     static public void add_player(Player player){
         WandsMod.log("add_player wand",true);
-        player_wand.put(player.getStringUUID(), new Wand()) ;
+        Wand wand=new Wand();
+        wand.player=player;
+        player_wand.put(player.getStringUUID(), wand) ;
     }
     static public void remove_player(Player player){
         WandsMod.log("remove player wand",true);
         player_wand.remove(player.getStringUUID());
     }
     static public Wand get(Player player){
-        return player_wand.get(player.getStringUUID());
+        Wand wand=player_wand.get(player.getStringUUID());
+        if(wand!=null) {
+            wand.player = player;
+        }
+        return wand;
     }
 }
     

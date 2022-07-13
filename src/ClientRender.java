@@ -165,27 +165,19 @@ public class ClientRender {
         copy_outlines = WandsMod.config.copy_outlines;
         paste_outlines = WandsMod.config.paste_outlines;
         opacity = WandsMod.config.preview_opacity;
-        //opacity=0.6f;
-        /*if(WandsModClient.has_optifine){
-            fancy=false;
-        }else {*/
         fancy = WandsConfig.get_instance().fancy_preview;
-
         fat_lines = WandsConfig.get_instance().fat_lines;
         if (WandsConfig.get_instance().fat_lines_width > 0 && WandsConfig.get_instance().fat_lines_width < 0.5) {
             fat_lines_width = WandsConfig.get_instance().fat_lines_width;
         }
-        //}
         ItemStack stack = player.getMainHandItem();
         prnt = false;
         force = false;
         if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-
             t1 = System.currentTimeMillis();
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
                 prnt = true;
-
             }//else{
             if (t1 - t00 > 100) {
                 t00 = System.currentTimeMillis();
@@ -193,9 +185,10 @@ public class ClientRender {
             }
             HitResult hitResult = client.hitResult;
             Mode mode = WandItem.getMode(stack);
-            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !(mode == Mode.PASTE && wand.is_alt_pressed)) {
-                BlockHitResult block_hit = (BlockHitResult) hitResult;
+            if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
+                BlockHitResult block_hit = (BlockHitResult) hitResult;
+                wand.lastHitResult=block_hit;
                 Rotation rot = WandItem.getRotation(stack);
                 WandItem.Orientation orientation = WandItem.getOrientation(stack);
                 Direction side = block_hit.getDirection();
@@ -204,7 +197,7 @@ public class ClientRender {
                 if (force) {
                     wand.force_render = false;
                     if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY || mode == Mode.RECT) {
-                        if (wand.is_alt_pressed) {
+                        if (WandItem.getIncSelBlock(stack)) {
                             pos = pos.relative(side, 1);
                         }
                     }
@@ -223,11 +216,20 @@ public class ClientRender {
                     preview_shape = block_state.getShape(client.level, last_pos);
                 }
                 preview_mode(wand.mode, matrixStack, block_state);
+                //WandsMod.log("p1 "+wand.p1,prnt);
             } else {
                 has_target = false;
-                if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||
-                        (wand.mode == WandItem.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {
+                /*if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||
+                        (wand.mode == WandItem.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {*/
+                if (wand.is_alt_pressed && (wand.copy_paste_buffer.size() > 0 || wand.block_buffer.get_length()>0) ) {
+                    if (!((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE))) {
+                        wand.p1 = last_pos;
+                    }
+                    //WandsMod.log("alt pv "+wand.block_buffer.get_length(),prnt);
+                    //WandsMod.log("p1 "+wand.p1,prnt);
                     preview_mode(wand.mode, matrixStack, null);
+                }else{
+                    //wand.p1=null;
                 }
                 if (water) {
                     water = false;
@@ -424,7 +426,7 @@ public class ClientRender {
                             }
                         }
 
-                        if (wand.has_empty_bucket || (wand.valid && has_target && wand.block_buffer != null)) {
+                        if (wand.has_empty_bucket || (wand.valid && (has_target || wand.is_alt_pressed) && wand.block_buffer != null)) {
                             random.setSeed(0);
                             if (fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
                                 RenderSystem.enableTexture();

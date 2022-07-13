@@ -1,9 +1,13 @@
 package net.nicguzzo.wands;
+import dev.architectury.networking.NetworkManager;
+import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -383,6 +387,28 @@ public class WandItem extends TieredItem implements Vanishable {
         }
         return 1;
     }
+    static public void setRowColLimit(ItemStack stack,int m) {
+        if(is_wand(stack)) {
+            CompoundTag tag=stack.getOrCreateTag();
+            WandItem w=(WandItem)stack.getItem();
+            if(m>=0 && m<w.limit){
+                tag.putInt("row_col_limit", m);
+            }
+        }
+    }
+    static public int getRowColLimit(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            int m=stack.getOrCreateTag().getInt("row_col_limit");
+            if(m>=0 && m<w.limit){
+                return m;
+            }else{
+                setRowColLimit(stack,0);
+            }
+        }
+        return 0;
+    }
     static public void setBlastRadius(ItemStack stack,int r) {
         if(is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
@@ -405,7 +431,7 @@ public class WandItem extends TieredItem implements Vanishable {
         }
         return 4;
     }
-    static public void setGridNxM(ItemStack stack,int n,boolean m) {
+    static public void setGridMxN(ItemStack stack, int n, boolean m) {
         if(is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
             WandItem w=(WandItem)stack.getItem();
@@ -418,7 +444,7 @@ public class WandItem extends TieredItem implements Vanishable {
             }
         }
     }
-    static public int getGridNxM(ItemStack stack,boolean m) {
+    static public int getGridMxN(ItemStack stack, boolean m) {
         if(is_wand(stack))
         {
             WandItem w=(WandItem)stack.getItem();
@@ -431,10 +457,49 @@ public class WandItem extends TieredItem implements Vanishable {
             if(nm>=1 && nm<=w.grid_limit){
                 return nm;
             }else{
-                setGridNxM(stack,3,m);
+                setGridMxN(stack,3,m);
             }
         }
         return 3;
+    }
+    static public void setAreaDiagonalSpread(ItemStack stack,boolean s) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean("diag_spread", s);
+        }
+    }
+    static public boolean getAreaDiagonalSpread(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            return stack.getOrCreateTag().getBoolean("diag_spread");
+        }
+        return false;
+    }
+    static public void setIncSelBlock(ItemStack stack,boolean s) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean("inc_sel_block", s);
+        }
+    }
+    static public boolean getIncSelBlock(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            return stack.getOrCreateTag().getBoolean("inc_sel_block");
+        }
+        return false;
+    }
+    static public void setStairSlab(ItemStack stack,boolean s) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean("stair_slab", s);
+        }
+    }
+    static public boolean getStairSlab(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            return stack.getOrCreateTag().getBoolean("stair_slab");
+        }
+        return false;
     }
     @Override
     public InteractionResult useOn(UseOnContext context) {    
@@ -455,7 +520,8 @@ public class WandItem extends TieredItem implements Vanishable {
         }
         wand.force_render=true;
         ItemStack stack = context.getPlayer().getMainHandItem();//check anyway...
-        if (stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
+        if (!wand.is_alt_pressed && stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
+
             Vec3 hit = context.getClickLocation();
             BlockPos pos = context.getClickedPos();
             Direction side = context.getClickedFace();
@@ -464,7 +530,7 @@ public class WandItem extends TieredItem implements Vanishable {
             //WandsMod.log("mode "+mode,true);
 
             if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY||mode==Mode.RECT){
-                if(wand.is_alt_pressed){
+                if (WandItem.getIncSelBlock(stack)) {
                     pos=pos.relative(side,1);
                 }
                 if(mode==Mode.COPY) {
@@ -499,13 +565,17 @@ public class WandItem extends TieredItem implements Vanishable {
                 wand.copy_pos1=null;
                 wand.copy_pos2=null;
             }
+        }else{
+            if(world.isClientSide()) {
+                send_placement(wand);
+            }
         }
         
         return InteractionResult.SUCCESS;
     }
     @Override
     public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {   
-        //WandsMod.LOGGER.info("use");     
+        //WandsMod.LOGGER.info("use");
         Wand wand=null;
         if(!world.isClientSide()){
             wand=PlayerWand.get(player);
@@ -519,15 +589,37 @@ public class WandItem extends TieredItem implements Vanishable {
         }else{
             wand=ClientRender.wand;
             wand.force_render=true;
-        }
-        wand.clear();
-        /*if(!world.isClientSide()) {
-            ItemStack stack = player.getMainHandItem();//check anyway...
-            if (stack != null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
-                player.displayClientMessage(MCVer.inst.literal("Wand mode: " + getModeString(stack)), false);
+            if(wand.is_alt_pressed) {
+                send_placement(wand);
             }
-        }*/
+            //wand.clear();
+        }
+        if(!wand.is_alt_pressed) {
+            wand.clear();
+        }
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
+    }
+    public void send_placement(Wand wand){
+        Minecraft client=Minecraft.getInstance();
+        if(client.getConnection() != null) {
+            if(wand.lastHitResult!=null){
+                FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+                packet.writeBlockHitResult(wand.lastHitResult);
+                if(wand.p1!=null)
+                    packet.writeBlockPos(wand.p1);
+                else
+                    packet.writeBlockPos(wand.lastHitResult.getBlockPos());
+                if(wand.mode==Mode.FILL||wand.mode==Mode.LINE||wand.mode==Mode.CIRCLE
+                        ||wand.mode==Mode.COPY||wand.mode==Mode.RECT) {
+                    if (ClientRender.last_pos != null) {
+                        wand.p2 = true;
+                    }
+                }
+                packet.writeBlockPos(ClientRender.last_pos);
+                packet.writeBoolean(wand.p2);
+                NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
+            }
+        }
     }
     @Environment(EnvType.CLIENT)
     @Override

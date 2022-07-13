@@ -12,7 +12,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import net.minecraft.resources.ResourceLocation;
@@ -23,7 +22,6 @@ import net.minecraft.tags.FluidTags;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -35,7 +33,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
@@ -75,6 +72,7 @@ public class Wand {
     public BlockPos p1 = null;
     public boolean p2 = false;
     public BlockState p1_state = null;
+    public BlockHitResult lastHitResult=null;
 
     public boolean valid = false;
     public static final int MAX_UNDO = 2048;
@@ -197,10 +195,14 @@ public class Wand {
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
-        /*if (player != null && player.level!=null && !player.level.isClientSide() && mode==Mode.COPY) {
+
+        /*if (player != null && player.level!=null && mode==Mode.COPY) {
             copy_pos1 = null;
             copy_pos2 = null;
-            player.displayClientMessage(MCVer.inst.literal("Wand Cleared").withStyle(ChatFormatting.GREEN), false);
+            copy_paste_buffer.clear();
+            if(!player.level.isClientSide()) {
+                player.displayClientMessage(MCVer.inst.literal("Copied blocks cleared").withStyle(ChatFormatting.GREEN), false);
+            }
         }*/
     }
 
@@ -228,6 +230,23 @@ public class Wand {
             Vec3 hit,
             ItemStack wand_stack,
             boolean prnt) {
+        //if(!use_previous) {
+            this.player = player;
+            this.level = level;
+            this.block_state = block_state;
+            this.pos = pos;
+            this.side = side;
+            this.hit = hit;
+            this.wand_stack = wand_stack;
+            this.prnt = prnt;
+       // }
+        if(this.player==null || this.level==null||this.pos==null
+                || this.side==null||this.hit==null||this.wand_stack==null){
+            return;
+        }
+        //if(use_previous && block_buffer.get_length()>0){
+//            return;
+//        }
         creative = MCVer.inst.is_creative(player);
         if(!creative && WandsMod.config.check_advancements && !level.isClientSide()) {
             PlayerAdvancements advs=((ServerPlayer)player).getAdvancements();
@@ -264,14 +283,8 @@ public class Wand {
         plane= WandItem.getPlane(wand_stack);
         rotation= WandItem.getRotation(wand_stack);
         state_mode= WandItem.getStateMode(wand_stack);
-        this.player = player;
-        this.level = level;
-        this.block_state = block_state;
-        this.pos = pos;
-        this.side = side;
-        this.hit = hit;
-        this.wand_stack = wand_stack;
-        this.prnt = prnt;
+        slab_stair_bottom=WandItem.getStairSlab(wand_stack);
+
         player_inv= MCVer.inst.get_inventory(player);
         y0 = 0.0f;
         block_height = 1.0f;
@@ -417,11 +430,11 @@ public class Wand {
             }break;
             case ROW_COL: {
                 Orientation orientation = WandItem.getOrientation(wand_stack);
-                mode_row_col(orientation,3);
+                mode_row_col(orientation,WandItem.getRowColLimit(wand_stack));
             }break;
             case FILL: mode_fill_rect(false); break;
             case AREA: mode_area(); break;
-            case GRID: mode_grid(WandItem.getGridNxM(wand_stack,false)-1,WandItem.getGridNxM(wand_stack,true)-1); break;
+            case GRID: mode_grid(WandItem.getGridMxN(wand_stack,true)-1,WandItem.getGridMxN(wand_stack,false)-1); break;
             case LINE: mode_line(); break;
             case CIRCLE: {
                 int plane = WandItem.getPlane(wand_stack).ordinal();
@@ -658,6 +671,7 @@ public class Wand {
                         if(side==Direction.DOWN){
                             eo=0.0625f;
                         }
+                        //Explosion.BlockInteraction bi=(creative?Explosion.BlockInteraction.DESTROY: Explosion.BlockInteraction.BREAK);
                         this.level.explode(player, pos.getX(), pos.getY() + eo, pos.getZ(), radius, Explosion.BlockInteraction.BREAK);
                         if(!creative && ba!=null){
                             ba.placed=ba.needed;
@@ -736,7 +750,7 @@ public class Wand {
                 }
                 packet.writeBoolean(no_tool);
                 packet.writeBoolean(damaged_tool);
-                packet.writeBoolean(slab_stair_bottom);
+                //packet.writeBoolean(slab_stair_bottom);
                 MCVer.inst.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
                 no_tool = false;
                 damaged_tool = false;
@@ -931,17 +945,21 @@ public class Wand {
                 }
             }else{
                 pos1=pos0.relative(side);
-                pos2=pos0;
-                for(int m=0;m<n-1;m++) {
-                    pos2 = pos2.relative(dir);
-                    BlockState bs = player.level.getBlockState(pos2.relative(side));
-                    if(can_place(bs)){
-                        pos3=pos2;
-                    }else{
-                        break;
+                if(n==1) {
+                    pos3 = pos1;
+                }else {
+                    pos2=pos0;
+                    for(int m=0;m<n-1;m++) {
+                        pos2 = pos2.relative(dir);
+                        BlockState bs = player.level.getBlockState(pos2.relative(side));
+                        if(can_place(bs)){
+                            pos3=pos2;
+                        }else{
+                            break;
+                        }
                     }
+                    pos3 = pos3.relative(side);
                 }
-                pos3=pos3.relative(side);
             }
             if (destroy || replace ||use) {
                 pos1 = pos1.relative(side.getOpposite());
@@ -1358,8 +1376,8 @@ public class Wand {
         if (copy_pos1 != null && copy_pos2 != null) {
             //if(!preview )
             {
-                int xs, ys, zs, xe, ye, ze;
-                if (copy_pos1.getX() >= copy_pos2.getX()) {
+                int xs, ys, zs, xe, ye, ze,lx,ly,lz;
+                /*if (copy_pos1.getX() >= copy_pos2.getX()) {
                     xs = copy_pos2.getX();
                     xe = copy_pos1.getX();
                 } else {
@@ -1379,30 +1397,41 @@ public class Wand {
                 } else {
                     zs = copy_pos1.getZ();
                     ze = copy_pos2.getZ();
-                }
+                }*/
+                xs=copy_pos1.getX();
+                xe=copy_pos2.getX();
+                ys=copy_pos1.getY();
+                ye=copy_pos2.getY();
+                zs=copy_pos1.getZ();
+                ze=copy_pos2.getZ();
+                int xsgn=(xs>=xe?-1:1);
+                int ysgn=(ys>=ye?-1:1);
+                int zsgn=(zs>=ze?-1:1);
+                lx=Math.abs(xe - xs);
+                ly=Math.abs(ye - ys);
+                lz=Math.abs(ze - zs);
                 //log("copy");
-                int ll = ((xe - xs) + 1) * ((ye - ys) + 1) * ((ze - zs) + 1);
+                int ll = (lx + 1) * (ly + 1) * (lz + 1);
+                //int ll = lx * ly* lz);
+                WandsMod.log("copy volume "+ll,prnt);
                 if (ll <= MAX_COPY_VOL) {
                     BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
                     copy_paste_buffer.clear();
                     int cp = 0;
-                    for (int z = zs; z <= ze; z++) {
-                        for (int y = ys; y <= ye; y++) {
-                            for (int x = xs; x <= xe; x++) {
-                                bp.set(x, y, z);
+                    for (int z = 0; z <= lz; z++) {
+                        for (int y = 0; y <= ly; y++) {
+                            for (int x = 0; x <= lx; x++) {
+                                bp.set(xs+x*xsgn, ys+y*ysgn, zs+z*zsgn);
                                 BlockState bs = level.getBlockState(bp);
                                 if(!WandsConfig.denied.contains(bs.getBlock())){
                                     if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
                                         cp++;
-                                        copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x - xs, y - ys, z - zs), bs));
+                                        copy_paste_buffer.add(new CopyPasteBuffer(new BlockPos(x*xsgn , y*ysgn , z*zsgn ), bs));
                                     }
                                 }
                             }
                         }
                     }
-                    //copied_pos1=new BlockPos(copy_pos1.getX() - xs, copy_pos1.getY() - ys,copy_pos1.getZ() - zs);
-                    //copied_pos2=new BlockPos(copy_pos2.getX() - xs, copy_pos2.getY() - ys,copy_pos2.getZ() - zs);
-
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
                     if (!preview)
                         player.displayClientMessage(MCVer.inst.literal("Copied: " + cp + " blocks"), false);
@@ -1611,38 +1640,23 @@ public class Wand {
     BlockState state_for_placement(BlockState st){
         Block blk=st.getBlock();
         if(state_mode== WandItem.StateMode.APPLY) {
-            /*if(is_alt_pressed){
-                slab_stair_bottom=!slab_stair_bottom;
-            }*/
             if (blk instanceof SlabBlock) {
-                /*double hity = WandUtils.unitCoord(hit.y);
-                if (hity > 0.5) {
-                    t= SlabType.TOP;
-                } else {
-                    t= SlabType.BOTTOM;
-                }*/
                 SlabType slab_type;
-                if(slab_stair_bottom) 
-                    slab_type=SlabType.BOTTOM;
-                else
-                    slab_type= SlabType.TOP;                
-                
+                if(slab_stair_bottom) {
+                    slab_type = SlabType.BOTTOM;
+                }else {
+                    slab_type = SlabType.TOP;
+                }
                 st = blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
                 
             } else {
                 if (blk instanceof StairBlock) {
-                    /*double hity = WandUtils.unitCoord(hit.y);                    
-                    if (hity > 0.5) {
-                        h= Half.TOP;
-                    } else {
-                        h= Half.BOTTOM;
-                    }*/                    
                     Half h;
-                    if (slab_stair_bottom) 
-                        h=Half.BOTTOM;
-                    else
-                        h= Half.TOP;
-
+                    if (slab_stair_bottom) {
+                        h = Half.BOTTOM;
+                    }else {
+                        h = Half.TOP;
+                    }
                     st = blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
                      
                 } else {
@@ -2362,6 +2376,7 @@ public class Wand {
     }
     int find_neighbours(BlockPos bpos, BlockState state) {
         int found=0;
+        boolean diag=WandItem.getAreaDiagonalSpread(wand_stack);
         if (side == Direction.UP || side == Direction.DOWN) {
             BlockPos p0 = bpos.relative( Direction.EAST, 1);
             found+=add_neighbour(p0, state);
@@ -2382,7 +2397,7 @@ public class Wand {
             found+=add_neighbour(p0, state);
             if(found>= limit)
                 return found;
-            if(!is_alt_pressed) {
+            if(!diag) {
                 p0 = bpos.relative(Direction.EAST, 1);
                 BlockPos p1 = p0.relative(Direction.NORTH, 1);
                 found += add_neighbour(p1, state);
@@ -2430,7 +2445,7 @@ public class Wand {
                 if(found>= limit)
                     return found;
 
-                if(!is_alt_pressed) {
+                if(!diag) {
                     p0 = bpos.relative( Direction.UP, 1);
                     BlockPos p1 = p0.relative( Direction.NORTH, 1);
                     found+=add_neighbour(p1, state);
@@ -2477,7 +2492,7 @@ public class Wand {
                 if(found>= limit)
                     return found;
 
-                if(!is_alt_pressed) {
+                if(!diag) {
                     p0 = bpos.relative( Direction.EAST, 1);
                     BlockPos p1 = p0.relative( Direction.UP, 1);
                     found+=add_neighbour(p1, state);

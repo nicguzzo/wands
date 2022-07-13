@@ -10,11 +10,9 @@ import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
 #else
 import dev.architectury.event.events.client.ClientTickEvent;
-import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
 import dev.architectury.registry.menu.MenuRegistry;
 #endif
 import io.netty.buffer.Unpooled;
@@ -58,9 +56,13 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
             //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
             new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.mult_inc",WandsMod.wand_mult_inc_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.mult_dec",WandsMod.wand_mult_dec_key,"itemGroup.wands.wands_tab"),
-
+            new KeyMapping("key.wands.m_inc",WandsMod.wand_m_inc_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.m_dec",WandsMod.wand_m_dec_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.n_inc",WandsMod.wand_n_inc_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.n_dec",WandsMod.wand_n_dec_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.toggle_stair_slab",WandsMod.toggle_stair_slab_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.area_diagonal_spread",WandsMod.area_diagonal_spread,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.inc_sel_block",WandsMod.inc_sel_block,"itemGroup.wands.wands_tab"),
 
         };
         for(KeyMapping k: km){
@@ -128,12 +130,6 @@ public class WandsModClient {
                 }                
             });
         });
-        NetworkManager.registerReceiver(Side.S2C, WandsMod.SLAB_PACKET, (packet, context)->{
-            boolean slab=packet.readBoolean();
-            context.queue(()->{
-                ClientRender.wand.slab_stair_bottom=slab;
-            });
-        });
         NetworkManager.registerReceiver(Side.S2C,WandsMod.STATE_PACKET, (packet,context)->{
             long seed=packet.readLong();
             int  mode=packet.readInt();
@@ -177,19 +173,6 @@ public class WandsModClient {
         packet.writeItem(item);
         NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
     }
-    /*public static void send_wand(int mode,int action,int orientation,int plane,int axis,int invert,int fill,int rot,int state_mode){
-        FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
-        packet.writeInt(mode);
-        packet.writeInt(action);
-        packet.writeInt(orientation);
-        packet.writeInt(plane);
-        packet.writeInt(axis);
-        packet.writeInt(invert);
-        packet.writeInt(fill);
-        packet.writeInt(rot);
-        packet.writeInt(state_mode);
-        NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
-    }*/
 
     public static void render_wand_info(PoseStack poseStack){
         
@@ -232,6 +215,11 @@ public class WandsModClient {
                         case DIRECTION:
                             int mult=WandItem.getMultiplier(stack);
                             ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
+                            break;
+                        case GRID:
+                            int gm=WandItem.getGridMxN(stack,true);
+                            int gn=WandItem.getGridMxN(stack,false);
+                            ln1="Grid "+gm+"x"+gn;
                             break;
                         case ROW_COL:
                         case FILL:

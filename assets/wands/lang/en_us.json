@@ -17,8 +17,13 @@
     "key.wands.wand_menu": "Wand Menu",
     "key.wands.wand_action": "Action",
     "key.wands.wand_conf": "Configuration",
-    "key.wands.mult_inc": "Multiplier Increase",
-    "key.wands.mult_dec": "Multiplier Decrease",
+    "key.wands.m_inc": "GridM/Mult Increase",
+    "key.wands.m_dec": "GridM/Mult Decrease",
+    "key.wands.n_inc": "GridN Increase",
+    "key.wands.n_dec": "GridN Decrease",
+    "key.wands.toggle_stair_slab":"Toggle Stairs/Slabs",
+    "key.wands.area_diagonal_spread": "Area Diagonal Spread",
+    "key.wands.inc_sel_block": "Include block in selection",
     "itemGroup.wands.wands_tab": "Building Wands",
     "title.wands.config": "Building Wands Configuration",
     "category.wands.general": "General",
@@ -101,8 +106,8 @@
     "option.wands.advancement_allow_diamond_wand_tt":"",
     "option.wands.advancement_allow_netherite_wand":"Allow netherite wand",
     "option.wands.advancement_allow_netherite_wand_tt":"",
-    "screen.wands.multiplier":"Multiplier",
-    "screen.wands.grid_nxm": "Grid",
+    "screen.wands.multiplier": "Multiplier",
+    "screen.wands.grid_mxn": "Grid",
     "screen.wands.mode":"Mode",
     "screen.wands.action":"Action",
     "screen.wands.orientation":"Orientation",
@@ -118,5 +123,9 @@
     "screen.wands.conf":"Conf",
     "screen.wands.same_state": "Same State",
     "screen.wands.diff_state": "Different State",
-    "screen.wands.blast_radius": "Blast Radius"
-  }
+    "screen.wands.blast_radius": "Blast Radius",
+    "screen.wands.slab": "Stairs/Slabs",
+    "screen.wands.row_col": "Limit",
+    "screen.wands.diagonal_spread": "Diagonal Spread",
+    "screen.wands.inc_sel": "Include in sel"
+}
