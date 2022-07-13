@@ -459,7 +459,7 @@ public class Wand {
                     //log("block_accounting: "+ block_accounting);
 
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                        if (!replace && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                        if (!replace && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
                             continue;
@@ -547,7 +547,7 @@ public class Wand {
                                     pa.needed++;
                                 }
                             } else {
-                                if (!replace && !destroy && !use && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                                if (!replace && !destroy && !use && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
                                     block_buffer.item[a] = null;
                                 } else {
@@ -561,7 +561,7 @@ public class Wand {
                     } else {
                         //copy paste
                         for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
-                            if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)))) {
+                            if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                             } else {
@@ -825,7 +825,7 @@ public class Wand {
                         dest=dest.relative(d1,1);
                     }
                     BlockState bs = level.getBlockState(dest);
-                    if (!can_place(bs)) {
+                    if (!can_place(bs,dest)) {
                         break;
                     }
                 }else{
@@ -952,7 +952,7 @@ public class Wand {
                     for(int m=0;m<n-1;m++) {
                         pos2 = pos2.relative(dir);
                         BlockState bs = player.level.getBlockState(pos2.relative(side));
-                        if(can_place(bs)){
+                        if(can_place(bs,pos2.relative(side))){
                             pos3=pos2;
                         }else{
                             break;
@@ -2252,7 +2252,7 @@ public class Wand {
                     return block_buffer.add(x, y, z, this);
                 }
             } else {
-                if (can_place(st))
+                if (can_place(st,tmp_pos))
                     return block_buffer.add(x, y, z, this);
             }            
         }else{
@@ -2365,7 +2365,7 @@ public class Wand {
             BlockState bs2 = level.getBlockState(pos2);
             if (block_buffer.get_length() < limit &&
                     (bs1.equals(state) || state_in_slot(bs1)) &&
-                    (((destroy ||replace) && bs2.isAir()) || can_place(bs2)))
+                    (((destroy ||replace) && bs2.isAir()) || can_place(bs2,pos2)))
             {
                 //block_buffer.add(pos2, this);
                 add_to_buffer(pos2.getX(),pos2.getY(),pos2.getZ());
@@ -2530,15 +2530,19 @@ public class Wand {
         }
         return false;
     }
-    boolean can_place(BlockState state) {
-        return (state.isAir() ||
-                replace_fluid(state) ||
-                is_plant(state) ||
-                state.getBlock() instanceof SnowLayerBlock||
-                (has_empty_bucket && state.getFluidState().is(FluidTags.WATER) ||
-                (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA) )
-                )
-        );
+    boolean can_place(BlockState state,BlockPos p) {
+        if(offhand_state!=null && is_plant(offhand_state)){
+            return (state.isAir() || replace_fluid(state)) && offhand_state.canSurvive(level,p);
+        }else{
+            return (state.isAir() ||
+                    replace_fluid(state) ||
+                    is_plant(state) ||
+                    state.getBlock() instanceof SnowLayerBlock||
+                    (has_empty_bucket && state.getFluidState().is(FluidTags.WATER) ||
+                    (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA) )
+                    )
+            );
+        }
     }
 
     BlockPos find_next_diag(BlockState state, Direction dir1, Direction dir2, BlockPos bpos) {
@@ -2552,7 +2556,7 @@ public class Wand {
                     if (p0!=pos && !(bs.equals(state) || state_in_slot(bs) /* ||(offhand_state!=null&&  bs.is(offhand_state.getBlock()))*/)&& p0!=null)
                         return p0;
                 }else{
-                    if (can_place(bs)) {
+                    if (can_place(bs,bpos)) {
                         return bpos;
                     } else {
                         if (!(bs.equals(state) || state_in_slot(bs) ||(offhand_state!=null&&  bs.is(offhand_state.getBlock()))))
@@ -2576,7 +2580,7 @@ public class Wand {
                         if(pos2!=pos)
                             return pos2;
                     }else{
-                        if (can_place(bs)) {
+                        if (can_place(bs,pos2)) {
                             return pos2;
                         } else {
                             return null;

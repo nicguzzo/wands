@@ -148,7 +148,7 @@ public class WandsMod {
                     if(player!=null) {
                         Wand wand = PlayerWand.get(player);
                         if(wand!=null) {
-                            Level level=player.getLevel();
+                            Level level=player.level;
                             BlockState block_state=level.getBlockState(pos);
                             wand.p1=p1;
                             WandItem.Mode mode=wand.mode;

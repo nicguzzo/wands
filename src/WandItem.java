@@ -1,5 +1,9 @@
 package net.nicguzzo.wands;
+#if MC=="1165"
+import me.shedaniel.architectury.networking.NetworkManager;
+#else
 import dev.architectury.networking.NetworkManager;
+#endif
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
