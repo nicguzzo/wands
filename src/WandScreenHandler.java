@@ -15,6 +15,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShearsItem;
 import net.nicguzzo.wands.mcver.MCVer;
 
 public class WandScreenHandler extends AbstractContainerMenu {
@@ -32,7 +33,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
         this.wand=_wand;
         this.playerInventory=playerInventory;
         ListTag tag = wand.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
-        this.simplecontainer= new SimpleContainer(4){
+        this.simplecontainer= new SimpleContainer(9){
             @Override
             public void setChanged() {
                 wand.getOrCreateTag().put("Tools", toTag(this));
@@ -43,7 +44,6 @@ public class WandScreenHandler extends AbstractContainerMenu {
         int o;
         int n;
         int k=0;
-
         for(o = 0; o < 9; ++o) {
             this.addSlot(new Slot(playerInventory, k++, 8 + o * 18, 142));
         }
@@ -51,11 +51,10 @@ public class WandScreenHandler extends AbstractContainerMenu {
             for(n = 0; n < 9; ++n) {
                 this.addSlot(new Slot(playerInventory, k++, 8 + n * 18, 84 + o * 18));
             }
+        }        
+        for(o = 0; o < 9; ++o) {
+            this.addSlot(new Slot(simplecontainer, o, 8+o*18,32));
         }
-        this.addSlot(new Slot(simplecontainer, 0, 35 ,41));
-        this.addSlot(new Slot(simplecontainer, 1, 65,41));
-        this.addSlot(new Slot(simplecontainer, 2, 95,41));
-        this.addSlot(new Slot(simplecontainer, 3, 125,41));
 
     }
 
@@ -64,7 +63,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
         return wand.getItem() instanceof WandItem;
     }
     boolean can_pickup(ItemStack itemStack){
-        return itemStack.getItem() instanceof DiggerItem && !(itemStack.getItem() instanceof WandItem);
+        return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
         for(int o = s; o < e; ++o) {
@@ -102,7 +101,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
 #endif
     {
         try {
-            if(slotIndex>=0 && slotIndex<40){
+            if(slotIndex>=0 && slotIndex<45){
                 Slot slot = this.slots.get(slotIndex);
                 if (actionType == ClickType.PICKUP) {
                     if (slot.hasItem()) {
@@ -115,12 +114,12 @@ public class WandScreenHandler extends AbstractContainerMenu {
             if(slotIndex>=0 && slotIndex<36) { //player inv
                 Slot slot = this.slots.get(slotIndex);
                 if (actionType == ClickType.QUICK_MOVE) {
-                    if (insert(slot.getItem(), 36, 40)) {
+                    if (insert(slot.getItem(), 36, 45)) {
                         slot.set(ItemStack.EMPTY);
                     }
                 }
             }else{
-                if(slotIndex>=36 && slotIndex<40){
+                if(slotIndex>=36 && slotIndex<45){
                     Slot slot = this.slots.get(slotIndex);
                     if (actionType == ClickType.QUICK_MOVE) {
                         if (insert(slot.getItem(), 0, 36)) {

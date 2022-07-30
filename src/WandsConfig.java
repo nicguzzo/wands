@@ -25,7 +25,9 @@ public class WandsConfig {
 	final public static String[] default_pickaxe_allowed={"minecraft:sea_lantern"};
 	final public static String[] default_axe_allowed={};
 	final public static String[] default_shovel_allowed={};
-	final public static String[] default_hoe_allowed={};
+	//final public static String[] default_hoe_allowed={"minecraft:moss_block","minecraft:vine"};
+	final public static String[] default_hoe_allowed={"minecraft:moss_block"};
+	final public static String[] default_shears_allowed={};
 	final public static String[] default_denied={};
 	static public float def_blocks_per_xp=0.0f;
 	static public int def_stone_wand_limit = 16;
@@ -83,11 +85,13 @@ public class WandsConfig {
 	public String[] str_axe_allowed=default_axe_allowed;
 	public String[] str_shovel_allowed=default_shovel_allowed;
 	public String[] str_hoe_allowed=default_hoe_allowed;
+	public String[] str_shears_allowed=default_hoe_allowed;
 	public String[] str_denied=default_denied;
 	static public List<Block> pickaxe_allowed=new ArrayList<Block>();
 	static public List<Block> axe_allowed=new ArrayList<Block>();
 	static public List<Block> shovel_allowed=new ArrayList<Block>();
 	static public List<Block> hoe_allowed=new ArrayList<Block>();
+	static public List<Block> shears_allowed=new ArrayList<Block>();
 	static public List<Block> denied=new ArrayList<Block>();
 	static public Color c_block_outline;
 	static public Color c_bounding_box;
@@ -145,6 +149,7 @@ public class WandsConfig {
 		generate_allow_list(axe_allowed,str_axe_allowed);
 		generate_allow_list(shovel_allowed,str_shovel_allowed);
 		generate_allow_list(hoe_allowed,str_hoe_allowed);
+		generate_allow_list(shears_allowed,str_shears_allowed);
 		generate_allow_list(denied,str_denied);
 		System.out.println("denied "+denied.size());
 		for (Block b : denied) {
@@ -160,6 +165,7 @@ public class WandsConfig {
 		try (FileReader reader = new FileReader(configFile)) {
 			INSTANCE = gson.fromJson(reader, WandsConfig.class);
 			System.out.println("Config: "+INSTANCE);
+			INSTANCE.parse_colors();
 			try (FileWriter writer = new FileWriter(configFile)) {
 				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(INSTANCE));
 				System.out.println("Config updated!");
@@ -171,13 +177,14 @@ public class WandsConfig {
 		} catch (IOException e) {
 			System.out.println("No config found, generating!");
 			INSTANCE = new WandsConfig();
+			INSTANCE.parse_colors();
 			try (FileWriter writer = new FileWriter(configFile)) {
 				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(INSTANCE));
 			} catch (IOException e2) {
 				System.out.println("Failed to generate config file!");
 			}
 		}
-		INSTANCE.parse_colors();
+		
 	}
 	public static String save_color(Color c) {
 		return c.getRed()+","+c.getGreen()+","+c.getBlue()+","+c.getAlpha();

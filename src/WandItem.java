@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -130,7 +131,7 @@ public class WandItem extends TieredItem implements Vanishable {
     }
 
     public int limit = 0;
-    public int grid_limit=1;
+    //public int grid_limit=1;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;
@@ -153,7 +154,7 @@ public class WandItem extends TieredItem implements Vanishable {
         this.removes_water=removes_water;
         this.unbreakable=unbreakable;
         this.can_blast=can_blast;
-        this.grid_limit=(int)Math.sqrt(limit);
+        //this.grid_limit=(int)Math.sqrt(limit);
     }
     static public boolean is_wand(ItemStack stack) {
         return stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem;
@@ -413,6 +414,28 @@ public class WandItem extends TieredItem implements Vanishable {
         }
         return 0;
     }
+    static public void setAreaLimit(ItemStack stack,int m) {
+        if(is_wand(stack)) {
+            CompoundTag tag=stack.getOrCreateTag();
+            WandItem w=(WandItem)stack.getItem();
+            if(m>=0 && m<w.limit){
+                tag.putInt("area_limit", m);
+            }
+        }
+    }
+    static public int getAreaLimit(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            int m=stack.getOrCreateTag().getInt("area_limit");
+            if(m>=0 && m<w.limit){
+                return m;
+            }else{
+                setAreaLimit(stack,0);
+            }
+        }
+        return 0;
+    }
     static public void setBlastRadius(ItemStack stack,int r) {
         if(is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
@@ -435,34 +458,50 @@ public class WandItem extends TieredItem implements Vanishable {
         }
         return 4;
     }
-    static public void setGridMxN(ItemStack stack, int n, boolean m) {
+    static public void setGridM(ItemStack stack, int m) {
         if(is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
             WandItem w=(WandItem)stack.getItem();
-            if(n>=1 && n<=w.grid_limit){
-                if(m){
-                    tag.putInt("grid_m", n);
-                }else {
+            if(m>=1){
+                int n=stack.getOrCreateTag().getInt("grid_n");
+                if( (m*n)<=w.limit) {
+                    tag.putInt("grid_m", m);
+                }
+            }
+        }
+    }
+    static public void setGridN(ItemStack stack, int n) {
+        if(is_wand(stack)) {
+            CompoundTag tag=stack.getOrCreateTag();
+            WandItem w=(WandItem)stack.getItem();
+            if(n>=1){
+                int m=stack.getOrCreateTag().getInt("grid_m");
+                if( (m*n)<=w.limit) {
                     tag.putInt("grid_n", n);
                 }
             }
         }
     }
-    static public int getGridMxN(ItemStack stack, boolean m) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            int nm=-1;
-            if(m) {
-                nm=stack.getOrCreateTag().getInt("grid_m");
-            }else{
-                nm=stack.getOrCreateTag().getInt("grid_n");
+
+    static public int getGridM(ItemStack stack) {
+        if(is_wand(stack)) {
+            CompoundTag tag = stack.getOrCreateTag();
+            int m = tag.getInt("grid_m");
+            if (m <= 0) {
+                tag.putInt("grid_m", 3);
             }
-            if(nm>=1 && nm<=w.grid_limit){
-                return nm;
-            }else{
-                setGridMxN(stack,3,m);
+            return m;
+        }
+        return 3;
+    }
+    static public int getGridN(ItemStack stack) {
+        if(is_wand(stack)) {
+            CompoundTag tag = stack.getOrCreateTag();
+            int n = tag.getInt("grid_n");
+            if (n <= 0) {
+                tag.putInt("grid_n", 3);
             }
+            return n;
         }
         return 3;
     }
@@ -476,6 +515,19 @@ public class WandItem extends TieredItem implements Vanishable {
         {
             WandItem w=(WandItem)stack.getItem();
             return stack.getOrCreateTag().getBoolean("diag_spread");
+        }
+        return false;
+    }
+    static public void setMatchState(ItemStack stack,boolean s) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean("match_state", s);
+        }
+    }
+    static public boolean getMatchState(ItemStack stack) {
+        if(is_wand(stack))
+        {
+            WandItem w=(WandItem)stack.getItem();
+            return stack.getOrCreateTag().getBoolean("match_state");
         }
         return false;
     }
@@ -625,6 +677,18 @@ public class WandItem extends TieredItem implements Vanishable {
             }
         }
     }
+    static public boolean has_tools(ItemStack stack){
+        ListTag tag = stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
+        for (int i = 0; i < tag.size() && i<9; i++) {
+            CompoundTag stackTag = (CompoundTag) tag.get(i);
+            ItemStack itemStack = ItemStack.of(stackTag.getCompound("Tool"));
+            if(!itemStack.isEmpty()){
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Environment(EnvType.CLIENT)
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {

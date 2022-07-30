@@ -187,6 +187,7 @@ public class ClientRender {
             Mode mode = WandItem.getMode(stack);
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
+                //wand.digger_item_slot=-1;
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 wand.lastHitResult=block_hit;
                 Rotation rot = WandItem.getRotation(stack);
@@ -1135,6 +1136,7 @@ public class ClientRender {
         bp.set(x,y,z);
         boolean is_water=state==Blocks.WATER.defaultBlockState();
         boolean is_lava=state==Blocks.LAVA.defaultBlockState();
+        boolean invalid=false;
         if(is_water||is_lava||
            (wand.mode!=Mode.PASTE && wand.has_water_bucket && wand.level.getBlockState(bp).isAir())) {
             water=true;
@@ -1199,6 +1201,12 @@ public class ClientRender {
         try {
             bakedModel = blockRenderer.getBlockModel(state);
             if(bakedModel!=null) {
+                if(!state.canSurvive(client.level, bp)){
+                     r=1.0f;
+                     g=0.0f;
+                     b=0.0f;
+                    invalid=true;
+                }
                 for(Direction dir: dirs) {
                     List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
                     if (bake_list !=null && !bake_list.isEmpty() ) {
@@ -1226,20 +1234,22 @@ public class ClientRender {
                                 int[] verts = quad.getVertices();
                                 int n = verts.length / 4;
                                 int ii = -1;
-                                if (quad.isTinted()) {
-                                    if(state.getBlock() instanceof GrassBlock)
-                                        ii=BiomeColors.getAverageGrassColor(wand.level, bp);
-                                    else if(state.getBlock() instanceof LeavesBlock)
-                                        ii=BiomeColors.getAverageFoliageColor(wand.level, bp);
-                                    else
-                                        ii = client.getBlockColors().getColor(state, wand.level, last_pos);
-                                    r = (float) (ii >> 16 & 255) / 255.0F;
-                                    g = (float) (ii >> 8 & 255) / 255.0F;
-                                    b = (float) (ii & 255) / 255.0F;
-                                }else{
-                                    r= block_col.r;
-                                    g= block_col.g;
-                                    b= block_col.b;
+                                if(!invalid) {
+                                    if (quad.isTinted()) {
+                                        if (state.getBlock() instanceof GrassBlock)
+                                            ii = BiomeColors.getAverageGrassColor(wand.level, bp);
+                                        else if (state.getBlock() instanceof LeavesBlock)
+                                            ii = BiomeColors.getAverageFoliageColor(wand.level, bp);
+                                        else
+                                            ii = client.getBlockColors().getColor(state, wand.level, last_pos);
+                                        r = (float) (ii >> 16 & 255) / 255.0F;
+                                        g = (float) (ii >> 8 & 255) / 255.0F;
+                                        b = (float) (ii & 255) / 255.0F;
+                                    } else {
+                                        r = block_col.r;
+                                        g = block_col.g;
+                                        b = block_col.b;
+                                    }
                                 }
                                 float f = wand.level.getShade(quad.getDirection(), quad.isShade());
                                 bufferBuilder.putBulkData(matrixStack2.last(), quad, new float[]{f, f, f, f}, r, g, b, new int[]{-1, -1, -1, -1}, n, true);

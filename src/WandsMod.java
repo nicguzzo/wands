@@ -39,7 +39,7 @@ import net.minecraft.world.item.Tiers;
 import net.nicguzzo.wands.mcver.MCVer;
 
 public class WandsMod {   
-
+    public static int platform=-1; // 0=forge; 1=fabric; 2=quilt
     public static final WandsConfig config=WandsConfig.get_instance();
     public static final String MOD_ID = "wands";
     
@@ -168,9 +168,10 @@ public class WandsMod {
             });
         });
         PlayerEvent.PLAYER_QUIT.register((player)->{
-            LOGGER.info("PLAYER_QUIT");
+            //LOGGER.info("PLAYER_QUIT");
             PlayerWand.remove_player(player);
         });
+
     }
     public static void send_state(ServerPlayer player,Wand wand){
         if(wand!=null && player!=null && !player.level.isClientSide()) {
@@ -259,38 +260,44 @@ public class WandsMod {
                 break;
                 case wand_n_inc_key:
                     if(mode==WandItem.Mode.GRID) {
-                        WandItem.setGridMxN(main_stack, WandItem.getGridMxN(main_stack, false) + 1, false);
+                        WandItem.setGridN(main_stack, WandItem.getGridN(main_stack) + 1);
                     }
                 break;
                 case wand_n_dec_key:
                     if(mode==WandItem.Mode.GRID) {
-                        WandItem.setGridMxN(main_stack, WandItem.getGridMxN(main_stack, false) - 1, false);
+                        WandItem.setGridN(main_stack, WandItem.getGridN(main_stack) - 1);
                     }
                 break;
                 case wand_m_inc_key:
-                    if(mode==WandItem.Mode.DIRECTION) {
-                        WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)+1);
-                    }else {
-                        if(mode==WandItem.Mode.ROW_COL) {
+                    switch(mode) {
+                        case DIRECTION:
+                            WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)+1);
+                        break;
+                        case ROW_COL:
                             WandItem.setRowColLimit(main_stack,WandItem.getRowColLimit(main_stack)+1);
-                        }else {
-                            if (mode == WandItem.Mode.GRID) {
-                                WandItem.setGridMxN(main_stack, WandItem.getGridMxN(main_stack, true) + 1, true);
-                            }
-                        }
+                        break;
+                        case GRID:
+                            WandItem.setGridM(main_stack, WandItem.getGridM(main_stack) + 1);
+                        break;
+                        case AREA:
+                            WandItem.setAreaLimit(main_stack, WandItem.getAreaLimit(main_stack) + 1);
+                        break;
                     }
                     break;
                 case wand_m_dec_key:
-                    if(mode==WandItem.Mode.DIRECTION) {
-                        WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)-1);
-                    }else {
-                        if(mode==WandItem.Mode.ROW_COL) {
+                    switch(mode) {
+                        case DIRECTION:
+                            WandItem.setMultiplier(main_stack,WandItem.getMultiplier(main_stack)-1);
+                            break;
+                        case ROW_COL:
                             WandItem.setRowColLimit(main_stack,WandItem.getRowColLimit(main_stack)-1);
-                        }else {
-                            if (mode == WandItem.Mode.GRID) {
-                                WandItem.setGridMxN(main_stack, WandItem.getGridMxN(main_stack, true) - 1, true);
-                            }
-                        }
+                            break;
+                        case GRID:
+                            WandItem.setGridM(main_stack, WandItem.getGridM(main_stack) - 1);
+                            break;
+                        case AREA:
+                            WandItem.setAreaLimit(main_stack, WandItem.getAreaLimit(main_stack) - 1);
+                            break;
                     }
                     break;
                 case wand_action_key:

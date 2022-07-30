@@ -217,15 +217,20 @@ public class WandsModClient {
                             ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
                             break;
                         case GRID:
-                            int gm=WandItem.getGridMxN(stack,true);
-                            int gn=WandItem.getGridMxN(stack,false);
+                            int gm=WandItem.getGridM(stack);
+                            int gn=WandItem.getGridN(stack);
                             ln1="Grid "+gm+"x"+gn;
                             break;
+
                         case ROW_COL:
-                        case FILL:
-                        case AREA:
-                        case LINE:
                             ln1="Blocks: "+wand.block_buffer.get_length();
+                        case FILL:
+                        case LINE:
+                        case AREA:
+                            int arealim=WandItem.getAreaLimit(stack);
+                            if(arealim>0){
+                                ln1+=" Limit: "+arealim;
+                            }
                             break;
                         case CIRCLE:
                             ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
@@ -249,13 +254,18 @@ public class WandsModClient {
                     ItemRenderer itemRenderer = client.getItemRenderer();
                     CompoundTag ctag = stack.getOrCreateTag();
                     ListTag tag = ctag.getList("Tools", MCVer.NbtType.COMPOUND);
-                    int ix = 16;
+                    int ix = 4;
                     int iy = screenHeight-20;
+
                     tag.forEach(element -> {
                         CompoundTag stackTag = (CompoundTag) element;
                         int slot = stackTag.getInt("Slot");
                         ItemStack item = ItemStack.of(stackTag.getCompound("Tool"));
-                        itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy);
+                        int yoff=0;
+                        if(ClientRender.has_target && slot==ClientRender.wand.digger_item_slot){
+                            yoff=-5;
+                        }
+                        itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
                         itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
                     });
                 }

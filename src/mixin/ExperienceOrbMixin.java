@@ -36,8 +36,18 @@ public class  ExperienceOrbMixin{
             )
     public void playerTouch(Player player, CallbackInfo ci) {
         if(WandsMod.config.mend_tools) {
-            ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
-            if (stack.getItem() instanceof WandItem) {
+            ItemStack stack=null;
+            ItemStack stack1 = player.getItemInHand(InteractionHand.MAIN_HAND);
+            ItemStack stack2 = player.getItemInHand(InteractionHand.OFF_HAND);
+            boolean valid=false;
+            if (stack1.getItem() instanceof WandItem) {
+                stack=stack1;
+            }else{
+                if(stack2.getItem() instanceof WandItem){
+                    stack=stack2;
+                }
+            }
+            if (stack!=null) {
                 ListTag tag = stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
                 tag.forEach(element -> {
                     CompoundTag stackTag = (CompoundTag) element;
@@ -58,8 +68,18 @@ public class  ExperienceOrbMixin{
     @Inject(method = "repairPlayerItems", at = @At(value = "HEAD"), cancellable = true)
     public void repairPlayerItems(Player player, int i, CallbackInfoReturnable ci) {
         if(WandsMod.config.mend_tools) {
-            ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
-            if (stack.getItem() instanceof WandItem) {
+            ItemStack stack=null;
+            ItemStack stack1 = player.getItemInHand(InteractionHand.MAIN_HAND);
+            ItemStack stack2 = player.getItemInHand(InteractionHand.OFF_HAND);
+            boolean valid=false;
+            if (stack1.getItem() instanceof WandItem) {
+                stack=stack1;
+            }else{
+                if(stack2.getItem() instanceof WandItem){
+                    stack=stack2;
+                }
+            }
+            if (stack!=null) {
                 ListTag tag = stack.getOrCreateTag().getList("Tools", MCVer.NbtType.COMPOUND);
                 tag.forEach(element -> {
                     CompoundTag stackTag = (CompoundTag) element;

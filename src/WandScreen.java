@@ -248,6 +248,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     Spinner grid_m_spn;
     Spinner blast_radius_spn;
     Spinner row_col_spn;
+    Spinner arealim_spn;
+    Select match_state_sel;
 
     boolean show_inv=false;
     int left;
@@ -292,7 +294,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         mult_spn.label_side=true;
 
         int row_col=WandItem.getRowColLimit(wand_stack);
-        row_col_spn=new Spinner(row_col,0,wand.limit,left+200,bottom+60,25,14,MCVer.inst.translatable("screen.wands.row_col"))
+        row_col_spn=new Spinner(row_col,0,wand.limit,left+200,bottom+60,25,14,MCVer.inst.translatable("screen.wands.limit"))
         {
             void onInc(int mx,int my,int value){
                 WandItem.setRowColLimit(wand_stack, value);
@@ -320,32 +322,56 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         blast_radius_spn.label_side=true;
         blast_radius_spn.inc_val=2;
         blast_radius_spn.shift_inc_val=4;
-        int grid_m=WandItem.getGridMxN(wand_stack,true);
-        grid_m_spn=new Spinner(grid_m,1,wand.grid_limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
+        int grid_m=WandItem.getGridM(wand_stack);
+        grid_m_spn=new Spinner(grid_m,1,wand.limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
         {
             void onInc(int mx,int my,int value){
-                WandItem.setGridMxN(wand_stack, value,true);
+                WandItem.setGridM(wand_stack, value);
                 WandsModClient.send_wand(wand_stack);
             }
             void onDec(int mx,int my,int value){
-                WandItem.setGridMxN(wand_stack, value,true);
+                WandItem.setGridM(wand_stack, value);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         grid_m_spn.label_side=true;
-        int grid_n=WandItem.getGridMxN(wand_stack,false);
-        grid_n_spn=new Spinner(grid_n,1,wand.grid_limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
+        int grid_n=WandItem.getGridN(wand_stack);
+        grid_n_spn=new Spinner(grid_n,1,wand.limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
         {
             void onInc(int mx,int my,int value){
-                WandItem.setGridMxN(wand_stack, value,false);
+                WandItem.setGridN(wand_stack, value);
                 WandsModClient.send_wand(wand_stack);
             }
             void onDec(int mx,int my,int value){
-                WandItem.setGridMxN(wand_stack, value,false);
+                WandItem.setGridN(wand_stack, value);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         grid_n_spn.label_side=true;
+
+        int arealim=WandItem.getAreaLimit(wand_stack);
+        arealim_spn=new Spinner(arealim,0, wand.limit, left+200,bottom+50,25,14,MCVer.inst.translatable("screen.wands.limit"))
+        {
+            void onInc(int mx,int my,int value){
+                WandItem.setAreaLimit(wand_stack, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+            void onDec(int mx,int my,int value){
+                WandItem.setAreaLimit(wand_stack, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        arealim_spn.label_side=true;
+
+        match_state_sel=new Select(left+170,bottom+100,80,12,null);
+        Btn match_state_btn=new Btn(MCVer.inst.translatable("screen.wands.match_state")){
+            void onClick(int mx,int my) {                
+                WandItem.setMatchState(wand_stack,!WandItem.getMatchState(wand_stack));
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        match_state_sel.add(match_state_btn);
+
         modes_grp=new Select(left+80,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.mode"));
         int l=WandItem.modes.length-1;
         if(wand.can_blast){
@@ -372,7 +398,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             };
             action_grp.add(b);
         }
-        orientation_grp=new Select(left+170,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.orientation"));
+        orientation_grp=new Select(left+170,bottom+30,btn_w,btn_h,MCVer.inst.translatable("screen.wands.orientation"));
         for (int i=0;i<WandItem.orientations.length;i++) {
             int finalo=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.orientations[i].toString())){
@@ -406,14 +432,14 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             axis_grp.add(b);
         }
         state_grp=new Select(left+80,bottom+160,btn_w+20,btn_h,null);
-        Btn b1=new Btn(MCVer.inst.translatable("screen.wands.same_state")){
+        Btn b1=new Btn(MCVer.inst.translatable("screen.wands.use_same_state")){
             void onClick(int mx,int my){
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         state_grp.add(b1);
-        Btn b2=new Btn(MCVer.inst.translatable("screen.wands.diff_state")){
+        Btn b2=new Btn(MCVer.inst.translatable("screen.wands.apply_rot")){
             void onClick(int mx,int my){
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
                 WandsModClient.send_wand(wand_stack);
@@ -448,7 +474,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             rot_grp.add(b);
         }
         //Select show_grp_btn=new Select(null);
-        show_inv_btn=new Btn(right-70,bottom-21,60,12,MCVer.inst.literal("Pick Tools")){
+        show_inv_btn=new Btn(right-100,bottom+5,60,12,MCVer.inst.literal("Pick Tools")){
             void onClick(int mx,int my) {
                 show_inv=!show_inv;
             }
@@ -483,7 +509,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         slab_grp_btn.add(slab_btn);
 
-        diag_grp_btn=new Select(left+160,bottom+20,60,12,null);
+        diag_grp_btn=new Select(left+150,bottom+20,100,12,null);
         Btn diag_btn=new Btn(MCVer.inst.translatable("screen.wands.diagonal_spread")){
             void onClick(int mx,int my) {
                 WandItem.setAreaDiagonalSpread(wand_stack,!WandItem.getAreaDiagonalSpread(wand_stack));
@@ -502,13 +528,17 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         };
         fill_grp_btn.add(fill_btn);
 
-        Screen parent=this;
-        conf_btn=new Btn(left+210,bottom+175,27,12,MCVer.inst.literal("Conf")){
-            void onClick(int mx,int my) {
-                Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
-            }
-        };
-        //show_grp_btn.add(conf_btn);
+#if USE_CLOTHCONFIG
+        if(WandsMod.platform!=2){
+            Screen parent=this;
+            conf_btn=new Btn(left+210,bottom+175,27,12,MCVer.inst.literal("Conf")){
+                void onClick(int mx,int my) {
+                    Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
+                }
+            };
+            wdgets.add(conf_btn);
+        }
+#endif
 
         wdgets.add(modes_grp);
         wdgets.add(action_grp);
@@ -517,7 +547,6 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         wdgets.add(state_grp);
         wdgets.add(axis_grp);
         wdgets.add(rot_grp);
-        wdgets.add(conf_btn);
         wdgets.add(inv_grp_btn);
         wdgets.add(fill_grp_btn);
         wdgets.add(mult_spn);
@@ -528,6 +557,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         wdgets.add(row_col_spn);
         wdgets.add(diag_grp_btn);
         wdgets.add(inc_sel_grp_btn);
+        wdgets.add(arealim_spn);
+        wdgets.add(show_inv_btn);
+        wdgets.add(match_state_sel);
     }
     void update_selections(){
         if(wand!=null && wand_stack!=null) {
@@ -537,6 +569,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             orientation_grp.selected=WandItem.getOrientation(wand_stack).ordinal();
             orientation_grp.visible=modes_grp.selected==WandItem.Mode.ROW_COL.ordinal();
             row_col_spn.visible=modes_grp.selected==WandItem.Mode.ROW_COL.ordinal();
+            arealim_spn.visible=modes_grp.selected==WandItem.Mode.AREA.ordinal();
             plane_grp.selected=WandItem.getPlane(wand_stack).ordinal();
             plane_grp.visible=modes_grp.selected==WandItem.Mode.CIRCLE.ordinal();
             axis_grp.selected =WandItem.getAxis(wand_stack).ordinal();
@@ -551,8 +584,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             blast_radius_spn.visible=modes_grp.selected==WandItem.Mode.BLAST.ordinal();
             slab_grp_btn.selected=(WandItem.getStairSlab(wand_stack)?0:-1);
             diag_grp_btn.visible=modes_grp.selected==WandItem.Mode.AREA.ordinal();
-            diag_grp_btn.selected=(WandItem.getAreaDiagonalSpread(wand_stack)?0:-1);
-
+            diag_grp_btn.selected=(!WandItem.getAreaDiagonalSpread(wand_stack)?0:-1);
+            match_state_sel.selected=(WandItem.getMatchState(wand_stack)?0:-1);
         }
     }
     @Override 
@@ -565,23 +598,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         RenderSystem.disableDepthTest();
         int x = (width - img_w) / 2;
         int y = (height - img_h) / 2;
-        blit(poseStack, x, y, 0, 0, img_w, img_h);
-
-        /*font.draw(poseStack,text_mode ,left+35,bottom+10, 0xff000000);
-        font.draw(poseStack,text_action ,left+100,bottom+10, 0xff000000);
-        font.draw(poseStack,text_orientation ,left+180,bottom+10, 0xff000000);
-        font.draw(poseStack,text_plane ,left+180,bottom+50, 0xff000000);
-        font.draw(poseStack,text_axis  ,left+180,bottom+115, 0xff000000);
-        font.draw(poseStack,text_rot  ,left+100,bottom+115, 0xff000000);*/
-
-        for (int i=0;i<4;i++) {
-            Slot s=this.menu.slots.get(36+i);
-            x = (width - img_w)/2 +75;
-            y = (height - img_h) / 2;
-            this.itemRenderer.renderAndDecorateItem(s.getItem(),x+i*30, y+24);
-            this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),x+i*30, y+24 , null);
-        }
-        show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
+        
+        //show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
         if(show_inv) {
             RenderSystem.depthMask(true);
             RenderSystem.enableDepthTest();
@@ -589,9 +607,17 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             x = (width - imageWidth) / 2;
             y = (height - imageHeight) / 2;
             blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
-            super.render(poseStack,mouseX,mouseY,delta);
-            this.renderTooltip(poseStack, mouseX,mouseY);
+            super.render(poseStack,mouseX,mouseY,delta);            
+            show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
         }else{
+            blit(poseStack, x, y, 0, 0, img_w, img_h);
+            for (int i=0;i<9;i++) {
+                Slot s=this.menu.slots.get(36+i);
+                x = (width - img_w)/2 +48;
+                y = (height - img_h) / 2;
+                this.itemRenderer.renderAndDecorateItem(s.getItem(),x+i*18, y+22);
+                this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),x+i*18, y+48 , null);
+            }
             update_selections();
             for (int i = 0; i< wdgets.size(); i++) {
                 if(wdgets.get(i).visible) {
@@ -599,6 +625,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                 }
             }
         }
+        this.renderTooltip(poseStack, mouseX,mouseY);
         RenderSystem.depthMask(true);
     }
     @Override
@@ -610,8 +637,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         if(!show_inv) {
             for (int i = 0; i< wdgets.size(); i++) {
                 wdgets.get(i).click((int)mouseX,(int)mouseY);
-            }
-            show_inv_btn.click((int)mouseX,(int)mouseY);
+            }            
         }else{
             Slot slot = this.find_slot(mouseX, mouseY);
             if(slot!=null){
@@ -631,8 +657,9 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                         break;
                 }
             }
-
+            show_inv_btn.click((int)mouseX,(int)mouseY);
         }
+        
         return true;
     }
     @Override

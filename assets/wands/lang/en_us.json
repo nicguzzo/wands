@@ -121,11 +121,13 @@
     "screen.wands.invert":"Invert",
     "screen.wands.filled_circle":"Filled",
     "screen.wands.conf":"Conf",
-    "screen.wands.same_state": "Same State",
+    "screen.wands.use_same_state": "Use Same State",
+    "screen.wands.apply_rot": "Apply Rotation",
     "screen.wands.diff_state": "Different State",
     "screen.wands.blast_radius": "Blast Radius",
     "screen.wands.slab": "Stairs/Slabs",
-    "screen.wands.row_col": "Limit",
+    "screen.wands.limit": "Limit",
     "screen.wands.diagonal_spread": "Diagonal Spread",
-    "screen.wands.inc_sel": "Include in sel"
+    "screen.wands.inc_sel": "Include in sel",
+    "screen.wands.match_state": "Match State"
 }
