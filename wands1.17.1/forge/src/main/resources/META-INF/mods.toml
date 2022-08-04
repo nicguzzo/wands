@@ -33,3 +33,8 @@ mandatory = true
 versionRange = "[2.10.12,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[dependencies.wands]]
+modId = "cloth-config"
+mandatory = true
+versionRange = "[5.3.63,)"

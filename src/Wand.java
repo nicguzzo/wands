@@ -191,31 +191,32 @@ public class Wand {
         }
     }
 
-    class HoeAccess extends  HoeItem{
+    static class HoeAccess extends  HoeItem{
         public HoeAccess(Tier tier, int i, float f, Properties properties) {
             super(tier, i, f, properties);
         }
         static boolean is_tillable(BlockState state){
-            Pair<Predicate<UseOnContext>, Consumer<UseOnContext>> pair = TILLABLES.get(state.getBlock());
-            return pair!=null;
+            return TILLABLES.get(state.getBlock())!=null;
         }
     }
-    class AxeAccess extends      AxeItem{
+    static class AxeAccess extends      AxeItem{
         public AxeAccess(Tier tier, int i, float f, Properties properties) {
             super(tier, i, f, properties);
         }
         static boolean is_stripable(BlockState state){
-            Block blk = STRIPPABLES.get(state.getBlock());
-            return blk!=null;
+            #if MC=="1165"
+            return STRIPABLES.get(state.getBlock())!=null;
+            #else
+            return STRIPPABLES.get(state.getBlock())!=null;
+            #endif
         }
     }
-    class ShovelAccess extends  ShovelItem{
+    static class ShovelAccess extends  ShovelItem{
         public ShovelAccess(Tier tier, int i, float f, Properties properties) {
             super(tier, i, f, properties);
         }
         static boolean is_flattenable(BlockState state){
-            BlockState blks = FLATTENABLES.get(state.getBlock());
-            return blks!=null;
+            return FLATTENABLES.get(state.getBlock())!=null;
         }
     }
 
@@ -2623,15 +2624,19 @@ public class Wand {
         if(digger!=null && !digger.isEmpty() &&(item_digger instanceof DiggerItem ||item_digger instanceof ShearsItem) ){
             boolean is_allowed=false;
             if (item_digger instanceof ShearsItem) {
-                can_shear=state.is(BlockTags.LEAVES) ||
+                can_shear=(
+                        state.is(BlockTags.LEAVES) ||
                         state.is(Blocks.COBWEB) ||
                         state.is(Blocks.GRASS) ||
                         state.is(Blocks.FERN) ||
                         state.is(Blocks.DEAD_BUSH) ||
-                        state.is(Blocks.HANGING_ROOTS) ||
                         state.is(Blocks.VINE) ||
                         state.is(Blocks.TRIPWIRE) ||
-                        state.is(BlockTags.WOOL);
+                        state.is(BlockTags.WOOL)
+#if MC>="1181"
+                        || state.is(Blocks.HANGING_ROOTS)
+#endif
+                        );
                 is_allowed = is_allowed || WandsConfig.shears_allowed.contains(blk);
             }else{
                 if(item_digger instanceof PickaxeItem){

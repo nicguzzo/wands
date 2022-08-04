@@ -32,7 +32,8 @@
   "depends": {
     "fabric": "*",
     "minecraft": ">=1.16.5",
-    "architectury": ">=1.32.63"
+    "architectury": ">=1.32.63",
+    "cloth-config": ">=4.14.64"
   },
   "suggests": {
     "modmenu": "*"
