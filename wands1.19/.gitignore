@@ -23,3 +23,4 @@ common/src/main/resources/assets
 common/src/main/resources/data      
 fabric/src/main/java/net/nicguzzo/wands/fabric
 forge/src/main/java/net/nicguzzo/wands/forge
+quilt/src/main/java/net/nicguzzo/wands

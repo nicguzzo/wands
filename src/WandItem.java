@@ -31,62 +31,19 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class WandItem extends TieredItem implements Vanishable {
-    public enum Mode{
-        DIRECTION{
-            public String toString() {
-                return "Direction";
-            }
-        },
-        ROW_COL{
-            public String toString() {
-                return "Row/Column";
-            }
-        },
-        FILL{
-            public String toString() {
-                return "Fill";
-            }
-        },
-        AREA{
-            public String toString() {
-                return "Area";
-            }
-        },
-        GRID{
-            public String toString() {
-                return "Grid";
-            }
-        },
-        LINE{
-            public String toString() {
-                return "Line";
-            }
-        },
-        CIRCLE{
-            public String toString() {
-                return "Circle";
-            }
-        },
-        RECT{
-            public String toString() {
-                return "Rectangle";
-            }
-        },
-        COPY{
-            public String toString() {
-                return "Copy";
-            }
-        },
-        PASTE{
-            public String toString() {
-                return "Paste";
-            }
-        },
-        BLAST{
-            public String toString() {
-                return "Blast";
-            }
-        }
+
+      public enum Mode{
+        DIRECTION { public String toString() {return "Direction"; }},
+        ROW_COL   { public String toString() {return "Row/Column";}},
+        FILL      { public String toString() {return "Fill";      }},
+        AREA      { public String toString() {return "Area";      }},
+        GRID      { public String toString() {return "Grid";      }},
+        LINE      { public String toString() {return "Line";      }},
+        CIRCLE    { public String toString() {return "Circle";    }},
+        RECT      { public String toString() {return "Rectangle"; }},
+        COPY      { public String toString() {return "Copy";      }},
+        PASTE     { public String toString() {return "Paste";     }},
+        BLAST     { public String toString() {return "Blast";     }},
     }
     public enum Orientation {
         ROW, COL
@@ -94,51 +51,59 @@ public class WandItem extends TieredItem implements Vanishable {
     public enum Plane {
         XZ,XY,YZ
     }
-
-   public enum StateMode {
-        CLONE{
-            public String toString() {
-                return "Clone";
-            }
-        },
-        APPLY{
-            public String toString() {
-                return "Apply rotaion/axis";
-            }
-        }
+    public enum StateMode {
+        CLONE  { public String toString() { return "Clone";             }},
+        APPLY  { public String toString() { return "Apply rotaion/axis";}},
+        TARGET { public String toString() { return "Use Target";}}
     }
     public enum Action{
-        PLACE{
-            public String toString() {
-                return "Place";
-            }
-        },
-        REPLACE{
-            public String toString() {
-                return "Replace";
-            }
-        },
-        DESTROY{
-            public String toString() {
-                return "Destroy";
-            }
-        },
-        USE{
-            public String toString() {
-                return "Use";
-            }
-        }
+        PLACE  { public String toString() { return "Place";   }},
+        REPLACE{ public String toString() { return "Replace"; }},
+        DESTROY{ public String toString() { return "Destroy"; }},
+        USE    { public String toString() { return "Use";     }}
+    }
+    public enum Flag{
+        INVERTED    { public String toString() {return "inverted";}},
+        FILLED      { public String toString() {return "cfill";}},
+        EVEN        { public String toString() {return "circle_even";}},
+        DIAGSPREAD  { public String toString() {return "diag_spread";}},
+        MATCHSTATE  { public String toString() {return "match_state";}},
+        INCSELBLOCK { public String toString() {return "inc_sel_block";}},
+        STAIRSLAB   { public String toString() {return "stair_slab";}}
+    }
+    public enum Value{
+        MULTIPLIER { public String toString() {return  "multiplier" ;}},
+        ROWCOLLIM  { public String toString() {return  "row_col_limit" ;}},
+        AREALIM    { public String toString() {return  "area_limit" ;}},
+        BLASTRAD   { public String toString() {return  "blast_radius" ;}},
+        GRIDM      { public String toString() {return  "grid_m" ;}},
+        GRIDN      { public String toString() {return  "grid_n" ;}},
+        GRIDMS     { public String toString() {return  "grid_msp" ;}},
+        GRIDNS     { public String toString() {return  "grid_nsp" ;}},
+        GRIDMOFF   { public String toString() {return  "grid_moff" ;}},
+        GRIDNOFF   { public String toString() {return  "grid_noff" ;}};
+        public int def=0;
+        public int min=0;
+        public int max=Integer.MAX_VALUE;
+        public Value coval=null;
+        static{
+            MULTIPLIER.def=1; MULTIPLIER.min=1; MULTIPLIER.max=16;
+            ROWCOLLIM.def=0; ROWCOLLIM.min=0;
+            BLASTRAD.def=4; BLASTRAD.min=4; BLASTRAD.max=16;
+            GRIDM.coval=GRIDN;
+            GRIDN.coval=GRIDM;
+            GRIDM.min=1;
+            GRIDN.min=1;
+        }        
     }
 
     public int limit = 0;
-    //public int grid_limit=1;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
 
     static public final Mode[] modes=Mode.values();
-    //static public final StateMode[] state_modes=StateMode.values();
     static public final Action[] actions=Action.values();
     static public final Orientation[] orientations=Orientation.values();
     static public final Plane[] planes=Plane.values();
@@ -146,7 +111,6 @@ public class WandItem extends TieredItem implements Vanishable {
     static public final Rotation[] rotations=Rotation.values();
     static public final StateMode[] state_modes=StateMode.values();
 
-    
     public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
         super(tier,properties);
         this.limit=limit;
@@ -154,11 +118,59 @@ public class WandItem extends TieredItem implements Vanishable {
         this.removes_water=removes_water;
         this.unbreakable=unbreakable;
         this.can_blast=can_blast;
-        //this.grid_limit=(int)Math.sqrt(limit);
     }
     static public boolean is_wand(ItemStack stack) {
         return stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem;
     }
+    static public boolean getFlag(ItemStack stack,Flag flag) {
+        if(is_wand(stack)) {
+            return stack.getOrCreateTag().getBoolean(flag.toString());
+        }
+        return false;
+    }
+    static public void setFlag(ItemStack stack,Flag flag,boolean f) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean(flag.toString(), f);
+        }
+    }
+    static public void toggleFlag(ItemStack stack,Flag flag) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putBoolean(flag.toString(), !stack.getOrCreateTag().getBoolean(flag.toString()));
+        }
+    }
+
+    static public void setVal(ItemStack stack,Value v, int n) {
+        if(is_wand(stack)) {
+            stack.getOrCreateTag().putInt(v.toString(), n);
+        }
+    }
+    static public void incVal(ItemStack stack,Value v, int inc,int max) {
+        if(is_wand(stack)) {
+            int n=stack.getOrCreateTag().getInt(v.toString());
+            if(n+inc<=max)
+                stack.getOrCreateTag().putInt(v.toString(), n+inc);
+        }
+    }
+    static public void incVal(ItemStack stack,Value v, int inc) {
+        incVal(stack,v,inc,v.max);
+    }
+    static public void decVal(ItemStack stack,Value v, int inc,int min) {
+        if(is_wand(stack)) {
+            int n=stack.getOrCreateTag().getInt(v.toString());
+            if(n-inc>=min)
+                stack.getOrCreateTag().putInt(v.toString(), n-inc);
+        }
+    }
+    static public void decVal(ItemStack stack,Value v, int dec) {
+        decVal(stack,v,dec,v.min);
+    }
+    static public int getVal(ItemStack stack,Value v) {
+        if(is_wand(stack)) {
+            return stack.getOrCreateTag().getInt(v.toString());
+        }
+        return -1;
+    }
+
     static public Mode getMode(ItemStack stack) {
         if(is_wand(stack)) {
             int m=stack.getOrCreateTag().getInt("mode");
@@ -198,24 +210,7 @@ public class WandItem extends TieredItem implements Vanishable {
             tag.putInt("mode", mode);
         }
     }
-    static public boolean isInverted(ItemStack stack) {
-        if(is_wand(stack))
-            return stack.getOrCreateTag().getBoolean("inverted");
-        return false;
-    }
-    static public void invert(ItemStack stack) {
-        if(is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            boolean inverted=tag.getBoolean("inverted");
-            tag.putBoolean("inverted", !inverted);
-        }
-    }
-    static public void setInvert(ItemStack stack,boolean i) {
-        if(is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putBoolean("inverted", i);
-        }
-    }
+    
     static public Orientation getOrientation(ItemStack stack) {
         if(is_wand(stack)){
             int o=stack.getOrCreateTag().getInt("orientation");
@@ -258,26 +253,7 @@ public class WandItem extends TieredItem implements Vanishable {
             tag.putInt("plane", plane);
         }
     }
-    static public void toggleCircleFill(ItemStack stack) {
-        if(is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            boolean cfill=tag.getBoolean("cfill");
-            tag.putBoolean("cfill", !cfill);
-        }
-    }
-    static public void setFill(ItemStack stack,boolean cfill) {
-        if(is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putBoolean("cfill",cfill);
-        }
-    }
-    static public boolean isCircleFill(ItemStack stack) {
-        if(is_wand(stack)){
-            return stack.getOrCreateTag().getBoolean("cfill");
-        }
-        return false;
-    }
-
+    
     static public Rotation getRotation(ItemStack stack) {
         if(is_wand(stack))
             return rotations[stack.getOrCreateTag().getInt("rotation")];
@@ -362,7 +338,7 @@ public class WandItem extends TieredItem implements Vanishable {
             if(m<state_modes.length)
                 return state_modes[m];
         }
-        return StateMode.CLONE;
+        return StateMode.TARGET;
     }
     static public void setStateMode(ItemStack stack,StateMode mode) {
         if(is_wand(stack)) {
@@ -370,193 +346,20 @@ public class WandItem extends TieredItem implements Vanishable {
             tag.putInt("state_mode", mode.ordinal());
         }
     }
-    static public void setMultiplier(ItemStack stack,int m) {
+    static public void incGrid(ItemStack stack,Value v, int n) {
         if(is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
             WandItem w=(WandItem)stack.getItem();
-            if(m>=1 && m<=16){
-                tag.putInt("multiplier", m);
-            }
-        }
-    }
-    static public int getMultiplier(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            int m=stack.getOrCreateTag().getInt("multiplier");
-            if(m>=1 && m<=16){
-                return m;
-            }else{
-                setMultiplier(stack,1);
-            }
-        }
-        return 1;
-    }
-    static public void setRowColLimit(ItemStack stack,int m) {
-        if(is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
-            if(m>=0 && m<w.limit){
-                tag.putInt("row_col_limit", m);
-            }
-        }
-    }
-    static public int getRowColLimit(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            int m=stack.getOrCreateTag().getInt("row_col_limit");
-            if(m>=0 && m<w.limit){
-                return m;
-            }else{
-                setRowColLimit(stack,0);
-            }
-        }
-        return 0;
-    }
-    static public void setAreaLimit(ItemStack stack,int m) {
-        if(is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
-            if(m>=0 && m<w.limit){
-                tag.putInt("area_limit", m);
-            }
-        }
-    }
-    static public int getAreaLimit(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            int m=stack.getOrCreateTag().getInt("area_limit");
-            if(m>=0 && m<w.limit){
-                return m;
-            }else{
-                setAreaLimit(stack,0);
-            }
-        }
-        return 0;
-    }
-    static public void setBlastRadius(ItemStack stack,int r) {
-        if(is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
-            if(r>=4 && r<=16){
-                tag.putInt("blast_radius", r);
-            }
-        }
-    }
-    static public int getBlastRadius(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            int r=stack.getOrCreateTag().getInt("blast_radius");
-            if(r>=4 && r<=16){
-                return r;
-            }else{
-                setMultiplier(stack,4);
-            }
-        }
-        return 4;
-    }
-    static public void setGridM(ItemStack stack, int m) {
-        if(is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
-            if(m>=1){
-                int n=stack.getOrCreateTag().getInt("grid_n");
-                if( (m*n)<=w.limit) {
-                    tag.putInt("grid_m", m);
-                }
-            }
-        }
-    }
-    static public void setGridN(ItemStack stack, int n) {
-        if(is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
-            if(n>=1){
-                int m=stack.getOrCreateTag().getInt("grid_m");
-                if( (m*n)<=w.limit) {
-                    tag.putInt("grid_n", n);
+            if(v.coval!=null){
+                int c=stack.getOrCreateTag().getInt(v.coval.toString());
+                if( (c*n)<=w.limit) {
+                    int nn=stack.getOrCreateTag().getInt(v.toString());
+                    tag.putInt(v.toString(), nn+n);
                 }
             }
         }
     }
 
-    static public int getGridM(ItemStack stack) {
-        if(is_wand(stack)) {
-            CompoundTag tag = stack.getOrCreateTag();
-            int m = tag.getInt("grid_m");
-            if (m <= 0) {
-                tag.putInt("grid_m", 3);
-            }
-            return m;
-        }
-        return 3;
-    }
-    static public int getGridN(ItemStack stack) {
-        if(is_wand(stack)) {
-            CompoundTag tag = stack.getOrCreateTag();
-            int n = tag.getInt("grid_n");
-            if (n <= 0) {
-                tag.putInt("grid_n", 3);
-            }
-            return n;
-        }
-        return 3;
-    }
-    static public void setAreaDiagonalSpread(ItemStack stack,boolean s) {
-        if(is_wand(stack)) {
-            stack.getOrCreateTag().putBoolean("diag_spread", s);
-        }
-    }
-    static public boolean getAreaDiagonalSpread(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            return stack.getOrCreateTag().getBoolean("diag_spread");
-        }
-        return false;
-    }
-    static public void setMatchState(ItemStack stack,boolean s) {
-        if(is_wand(stack)) {
-            stack.getOrCreateTag().putBoolean("match_state", s);
-        }
-    }
-    static public boolean getMatchState(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            return stack.getOrCreateTag().getBoolean("match_state");
-        }
-        return false;
-    }
-    static public void setIncSelBlock(ItemStack stack,boolean s) {
-        if(is_wand(stack)) {
-            stack.getOrCreateTag().putBoolean("inc_sel_block", s);
-        }
-    }
-    static public boolean getIncSelBlock(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            return stack.getOrCreateTag().getBoolean("inc_sel_block");
-        }
-        return false;
-    }
-    static public void setStairSlab(ItemStack stack,boolean s) {
-        if(is_wand(stack)) {
-            stack.getOrCreateTag().putBoolean("stair_slab", s);
-        }
-    }
-    static public boolean getStairSlab(ItemStack stack) {
-        if(is_wand(stack))
-        {
-            WandItem w=(WandItem)stack.getItem();
-            return stack.getOrCreateTag().getBoolean("stair_slab");
-        }
-        return false;
-    }
     @Override
     public InteractionResult useOn(UseOnContext context) {    
         //WandsMod.LOGGER.info("UseOn");
@@ -586,7 +389,8 @@ public class WandItem extends TieredItem implements Vanishable {
             //WandsMod.log("mode "+mode,true);
 
             if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY||mode==Mode.RECT){
-                if (WandItem.getIncSelBlock(stack)) {
+                //if (WandItem.getIncSelBlock(stack)) {
+                if (WandItem.getFlag(stack,Flag.INCSELBLOCK)) {
                     pos=pos.relative(side,1);
                 }
                 if(mode==Mode.COPY) {
@@ -612,6 +416,7 @@ public class WandItem extends TieredItem implements Vanishable {
                     }
                 }
             }
+            wand.lastPlayerDirection=context.getPlayer().getDirection();
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
             if(!world.isClientSide()) {
                 wand.palette_seed = world.random.nextInt(20000000);
@@ -673,6 +478,7 @@ public class WandItem extends TieredItem implements Vanishable {
                 }
                 packet.writeBlockPos(ClientRender.last_pos);
                 packet.writeBoolean(wand.p2);
+                packet.writeInt(ClientRender.wand.lastPlayerDirection.ordinal());
                 NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
             }
         }

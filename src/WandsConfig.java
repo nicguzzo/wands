@@ -22,6 +22,7 @@ public class WandsConfig {
 
 
 	private static WandsConfig INSTANCE=null;
+	//Server options
 	final public static String[] default_pickaxe_allowed={"minecraft:sea_lantern"};
 	final public static String[] default_axe_allowed={};
 	final public static String[] default_shovel_allowed={};
@@ -52,8 +53,12 @@ public class WandsConfig {
 	public boolean allow_wand_to_break=false;
 	public boolean allow_offhand_to_break=false;
 	public boolean mend_tools=true;
+
+	//Client options
 	public float wand_mode_display_x_pos = 75.0f;
 	public float wand_mode_display_y_pos = 100.0f;
+	public float wand_tools_display_x_pos = 0.0f;
+	public float wand_tools_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
 	public boolean fancy_preview = true;
 	public boolean block_outlines=true;

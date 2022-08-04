@@ -84,6 +84,7 @@ public class ClientRender {
     static boolean fill_outlines = false;
     static boolean copy_outlines = false;
     static boolean paste_outlines = false;
+
     static float fat_lines_width = 0.05f;
     static Minecraft client;
     private static final ResourceLocation GRID_TEXTURE = new ResourceLocation("wands", "textures/blocks/grid.png");
@@ -108,26 +109,7 @@ public class ClientRender {
         BlOCK
     }
 
-    static class Colorf {
-        public float r;
-        public float g;
-        public float b;
-        public float a;
 
-        Colorf(float rr, float gg, float bb, float aa) {
-            r = rr;
-            g = gg;
-            b = bb;
-            a = aa;
-        }
-
-        void fromColor(Color c) {
-            r = c.getRed() / 255.0f;
-            g = c.getGreen() / 255.0f;
-            b = c.getBlue() / 255.0f;
-            a = c.getAlpha() / 255.0f;
-        }
-    }
 
     public static boolean update_colors = true;
     static Colorf block_col = new Colorf(1.0f, 1.0f, 1.0f, 1.0f);
@@ -187,6 +169,8 @@ public class ClientRender {
             Mode mode = WandItem.getMode(stack);
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
+
+                wand.lastPlayerDirection=player.getDirection();
                 //wand.digger_item_slot=-1;
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 wand.lastHitResult=block_hit;
@@ -196,9 +180,10 @@ public class ClientRender {
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
                 if (force) {
+
                     wand.force_render = false;
                     if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY || mode == Mode.RECT) {
-                        if (WandItem.getIncSelBlock(stack)) {
+                        if (WandItem.getFlag(stack, WandItem.Flag.INCSELBLOCK)) {
                             pos = pos.relative(side, 1);
                         }
                     }
@@ -213,7 +198,7 @@ public class ClientRender {
                     wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack, prnt);
                 }
                 preview_shape = null;
-                if (block_state != null) {
+                if (block_state != null && last_pos!=null) {
                     preview_shape = block_state.getShape(client.level, last_pos);
                 }
                 preview_mode(wand.mode, matrixStack, block_state);
@@ -230,6 +215,7 @@ public class ClientRender {
                     //WandsMod.log("p1 "+wand.p1,prnt);
                     preview_mode(wand.mode, matrixStack, null);
                 }else{
+                    wand.block_buffer.reset();
                     //wand.p1=null;
                 }
                 if (water) {
@@ -483,16 +469,18 @@ public class ClientRender {
                             if (fat_lines) {
                                 RenderSystem.enableTexture();
                                 //RenderSystem.disableCull();
+                                //even_circle=true;
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
-
+                                float off=(mode == Mode.CIRCLE && wand.even_circle)? -1.0f:0.0f;
                                 preview_block_fat(bufferBuilder,
-                                        wand.p1.getX(), wand.p1.getY(), wand.p1.getZ(),
+                                        wand.p1.getX()+off, wand.p1.getY()+off, wand.p1.getZ()+off,
                                         wand.p1.getX() + 1, wand.p1.getY() + 1, wand.p1.getZ() + 1,
                                         start_col,false
                                 );
                                 tesselator.end();
                                 if (has_target) {
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+                                    //off=(mode == Mode.CIRCLE && even_circle)? 1.0f:0.0f;
                                     preview_block_fat(bufferBuilder,
                                             last_pos_x, last_pos_y, last_pos_z,
                                             last_pos_x + 1, last_pos_y + 1, last_pos_z + 1,
@@ -501,10 +489,13 @@ public class ClientRender {
 
                                     RenderSystem.disableDepthTest();
                                     MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
+
+                                    off=(mode == Mode.CIRCLE && wand.even_circle)? 0.0f:0.5f;
+
                                     player_facing_line(bufferBuilder,
                                             (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
-                                            last_pos_x + 0.5f, last_pos_y + 0.5f, last_pos_z + 0.5f,
-                                            wand_x1 + 0.5f, wand_y1 + 0.5f, wand_z1 + 0.5f,
+                                            last_pos_x + off, last_pos_y + off, last_pos_z + off,
+                                            wand_x1 + off, wand_y1 + off, wand_z1 + off,
                                             line_col);
                                     tesselator.end();
                                 }

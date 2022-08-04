@@ -22,6 +22,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
 import net.nicguzzo.wands.mcver.MCVer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class WandsModClient {
     static boolean shift =false;
@@ -41,6 +44,7 @@ public class WandsModClient {
     public static boolean has_optifine=false;
     public static KeyMapping wand_menu_km;
     public static KeyMapping palette_menu_km;
+    public static final Logger LOGGER = LogManager.getLogger();
     public static void initialize() {
         wand_menu_km=new KeyMapping("key.wands.wand_menu",WandsMod.wand_menu_key,"itemGroup.wands.wands_tab");
         palette_menu_km=new KeyMapping("key.wands.palette_menu",WandsMod.palette_menu_key,"itemGroup.wands.wands_tab");
@@ -54,7 +58,7 @@ public class WandsModClient {
             new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo_key,"itemGroup.wands.wands_tab"),
             palette_menu_km,
             new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
-            //new KeyMapping("key.wands.wand_state_mode",WandsMod.wand_state_mode_key,"itemGroup.wands.wands_tab"),
+            new KeyMapping("key.wands.wand_rotate",WandsMod.wand_rotate,"itemGroup.wands.wands_tab"),
             new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
             new KeyMapping("key.wands.m_inc",WandsMod.wand_m_inc_key,"itemGroup.wands.wands_tab"),
             new KeyMapping("key.wands.m_dec",WandsMod.wand_m_dec_key,"itemGroup.wands.wands_tab"),
@@ -114,13 +118,20 @@ public class WandsModClient {
             ItemStack item_stack=packet.readItem();
             boolean no_tool=packet.readBoolean();
             boolean damaged_tool=packet.readBoolean();
+            int i_sound=packet.readInt();
             context.queue(()->{
                 //WandsMod.LOGGER.info("got sound msg "+item_stack);
-                if(!item_stack.isEmpty()){
-                    Block block=Block.byItem(item_stack.getItem());
-                    SoundType sound_type = block.getSoundType(block.defaultBlockState());
-                    SoundEvent sound=(destroy? sound_type.getBreakSound() : sound_type.getPlaceSound());
-                    context.getPlayer().level.playSound(context.getPlayer(),pos,sound,SoundSource.BLOCKS, 1.0f, 1.0f);
+                if(i_sound> -1 && i_sound< Wand.Sounds.values().length){
+                    Wand.Sounds snd=Wand.Sounds.values()[i_sound];
+                    SoundEvent sound = snd.get_sound();
+                    context.getPlayer().level.playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
+                }else {
+                    if (!item_stack.isEmpty()) {
+                        Block block = Block.byItem(item_stack.getItem());
+                        SoundType sound_type = block.getSoundType(block.defaultBlockState());
+                        SoundEvent sound = (destroy ? sound_type.getBreakSound() : sound_type.getPlaceSound());
+                        context.getPlayer().level.playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
+                    }
                 }
                 if(no_tool){
                     Minecraft.getInstance().getToasts().addToast(new WandToast("no tool"));
@@ -150,6 +161,33 @@ public class WandsModClient {
                 }
             });
         });
+
+        NetworkManager.registerReceiver(Side.S2C,WandsMod.CONF_PACKET, (packet,context)->{
+            ServerData srv = Minecraft.getInstance().getCurrentServer();
+            if(srv!=null && WandsMod.config!=null){
+                WandsMod.config.blocks_per_xp=packet.readFloat();
+                /*WandsMod.config.stone_wand_limit=packet.readInt();
+                WandsMod.config.iron_wand_limit=packet.readInt();
+                WandsMod.config.diamond_wand_limit=packet.readInt();
+                WandsMod.config.netherite_wand_limit=packet.readInt();
+                WandsMod.config.stone_wand_durability=packet.readInt();
+                WandsMod.config.iron_wand_durability=packet.readInt();
+                WandsMod.config.diamond_wand_durability=packet.readInt();
+                WandsMod.config.netherite_wand_durability=packet.readInt();*/
+                WandsMod.config.destroy_in_survival_drop=packet.readBoolean();
+                WandsMod.config.survival_unenchanted_drops=packet.readBoolean();
+                WandsMod.config.allow_wand_to_break=packet.readBoolean();
+                WandsMod.config.allow_offhand_to_break=packet.readBoolean();
+                WandsMod.config.mend_tools=packet.readBoolean();
+                LOGGER.info("got config");
+                context.queue(()->{
+
+
+                });
+            }
+        });
+
+        
     }
     public static void send_key(int key,boolean shift, boolean alt){
         Minecraft client=Minecraft.getInstance();
@@ -213,13 +251,19 @@ public class WandsModClient {
                 if(wand.valid) {
                     switch(mode){
                         case DIRECTION:
-                            int mult=WandItem.getMultiplier(stack);
+                            int mult=WandItem.getVal(stack, WandItem.Value.MULTIPLIER);
                             ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
                             break;
                         case GRID:
-                            int gm=WandItem.getGridM(stack);
-                            int gn=WandItem.getGridN(stack);
-                            ln1="Grid "+gm+"x"+gn;
+                            int gm=WandItem.getVal(stack, WandItem.Value.GRIDM);
+                            int gn=WandItem.getVal(stack, WandItem.Value.GRIDN);
+                            int gms=WandItem.getVal(stack, WandItem.Value.GRIDMS);
+                            int gns=WandItem.getVal(stack, WandItem.Value.GRIDNS);
+                            String skp="";
+                            if(gms>0||gns>0){
+                                skp=" - ("+gms+"x"+gns+")";
+                            }
+                            ln1="Grid "+gm+"x"+gn+ skp;
                             break;
 
                         case ROW_COL:
@@ -227,7 +271,7 @@ public class WandsModClient {
                         case FILL:
                         case LINE:
                         case AREA:
-                            int arealim=WandItem.getAreaLimit(stack);
+                            int arealim=WandItem.getVal(stack, WandItem.Value.AREALIM);
                             if(arealim>0){
                                 ln1+=" Limit: "+arealim;
                             }
@@ -254,8 +298,11 @@ public class WandsModClient {
                     ItemRenderer itemRenderer = client.getItemRenderer();
                     CompoundTag ctag = stack.getOrCreateTag();
                     ListTag tag = ctag.getList("Tools", MCVer.NbtType.COMPOUND);
-                    int ix = 4;
-                    int iy = screenHeight-20;
+                    //int ix = 4;
+                    //int iy = screenHeight-20;
+                    int ix=(int)(screenWidth* (((float)WandsMod.config.wand_tools_display_x_pos)/100.0f));
+                    int iy=(int)((screenHeight-20)* (((float)WandsMod.config.wand_tools_display_y_pos)/100.0f));
+                    
 
                     tag.forEach(element -> {
                         CompoundTag stackTag = (CompoundTag) element;

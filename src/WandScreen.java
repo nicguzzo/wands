@@ -3,19 +3,17 @@ package net.nicguzzo.wands;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.nicguzzo.wands.mcver.MCVer;
-
+import net.nicguzzo.wands.gui.*;
+import net.nicguzzo.wands.WandItem.Value;
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
@@ -26,209 +24,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     private static final ResourceLocation BG_TEX = new ResourceLocation("wands", "textures/gui/wand.png");
     private static final ResourceLocation INV_TEX = new ResourceLocation("wands", "textures/gui/inventory.png");
 
-    class Wdgt{
-        int x;
-        int y;
-        int w;
-        int h;
-        boolean visible=true;
-        public void render(PoseStack poseStack, Font font,int mx,int my){
-
-        }
-        public void click(int mx,int my){
-
-        }
-        public BufferBuilder init_quads() {
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-            MCVer.inst.set_render_quads_pos_col(bufferBuilder);
-            return bufferBuilder;
-        }
-        public void end_quads() {
-            Tesselator.getInstance().end();
-            RenderSystem.disableBlend();
-        }
-        void quad(BufferBuilder bufferBuilder,float x,float y,float w, float h,float r,float g,float b, float a){
-            bufferBuilder.vertex(x,   y  , 0.0F).color(r, g, b, a).endVertex();
-            bufferBuilder.vertex(x,   y+h, 0.0F).color(r, g, b, a).endVertex();
-            bufferBuilder.vertex(x+w, y+h, 0.0F).color(r, g, b, a).endVertex();
-            bufferBuilder.vertex(x+w, y  , 0.0F).color(r, g, b, a).endVertex();
-        }
-        public boolean inside(int mx,int my){
-            return mx>=x && mx<=(x+w) && my>=y && my<=(y+h);
-        }
-    }
-    class Btn extends Wdgt{
-        int ox=2;
-        int oy=3;
-        Component text;
-        ClientRender.Colorf c1=new ClientRender.Colorf(0.1f,0.1f,0.1f,0.8f);
-        ClientRender.Colorf c2=new ClientRender.Colorf(0.4f,0.4f,0.40f,0.9f);
-        boolean selected=false;
-        Btn(int x,int y,int w,int h,Component text){
-            this.text=text;
-            this.x=x;
-            this.y=y;
-            this.w=w;
-            this.h=h;
-        }
-        Btn(Component text){
-            this(0,0,0,0,text);
-        }
-        void onClick(int mx,int my){
-
-        }
-        public void click(int mx,int my){
-            if (inside(mx, my)) {
-                onClick(mx,my);
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F, 1.0F));
-            }
-        }
-
-        public void render(PoseStack poseStack, Font font,int mx,int my){
-            float r,g,b,a;
-            if(selected||inside(mx,my)){
-                r=c2.r;g=c2.g;b=c2.b;a=c2.a;
-            }else{
-                r=c1.r;g=c1.g;b=c1.b;a=c1.a;
-            }
-            BufferBuilder bufferBuilder=init_quads();
-            quad(bufferBuilder,x,y,w,h,r,g,b,a);
-            if(selected) {
-                quad(bufferBuilder,x-2,y-2,w+4,2,0.0f, 0.8f, 0.8f, 1.0f);
-                quad(bufferBuilder,x-2,y+h,w+4,2,0.0f, 0.8f, 0.8f, 1.0f);
-                quad(bufferBuilder,x-2,y-2,2,h+4,0.0f, 0.8f, 0.8f, 1.0f);
-                quad(bufferBuilder,x+w,y-2,2,h+4,0.0f, 0.8f, 0.8f, 1.0f);
-            }
-            end_quads();
-            int text_color=0xffffffff;
-            if(selected)
-                text_color=0xff000000;
-            font.draw(poseStack,text ,x+ox,y+oy, text_color);
-        }
-    }
-    class Spinner  extends Wdgt{
-        int value;
-        int inc_val=1;
-        int min;
-        int max;
-        Btn inc;
-        Btn dec;
-        boolean label_side=false;
-        int shift_inc_val=10;
-        Component label=null;
-        Spinner(int _value,int min,int max,int x,int y,int w,int h,Component label){
-            this.value=_value;
-            this.min=min;
-            this.max=max;
-            this.x=x;
-            this.y=y;
-            this.w=w;
-            this.h=h;
-            this.label=label;
-            inc=new Btn(x+w-10,y,10,h/2,MCVer.inst.literal("+"))
-            {
-                void onClick(int mx,int my){
-                    int iv=inc_val;
-                    if(Screen.hasShiftDown()) {
-                        iv=shift_inc_val;
-                    }
-                    if(value+iv<= max) {
-                        value += iv;
-                        onInc(mx,my,value);
-                    }
-                }
-            };
-            inc.ox=0;
-            inc.oy=0;
-            dec=new Btn(x+w-10,y+h/2,10,h/2,MCVer.inst.literal("-"))
-            {
-                void onClick(int mx,int my){
-                    int iv=inc_val;
-                    if(Screen.hasShiftDown()) {
-                        iv=shift_inc_val;
-                    }
-                    if(value-iv>=min) {
-                        value-=iv;
-                        onDec(mx,my,value);
-                    }
-                }
-            };
-            dec.ox=0;
-            dec.oy=0;
-        }
-        void onInc(int mx,int my,int v){
-        }
-        void onDec(int mx,int my,int v){
-        }
-        public void render(PoseStack poseStack, Font font,int mx,int my) {
-            int fh=0;
-            if(label!=null) {
-                int lw=font.width(label);
-                font.draw(poseStack, label, x-lw-1, y+3, 0xff000000);
-                if(!label_side) {
-                    fh = font.lineHeight;
-                }
-            }
-            int sw=font.width(String.valueOf(value));
-
-            BufferBuilder bufferBuilder=init_quads();
-            quad(bufferBuilder,x,y+fh,w,h,0.4f,0.4f,0.40f,0.9f);
-            end_quads();
-            inc.y=y+fh;
-            inc.render(poseStack,font,mx,my);
-
-            font.draw(poseStack, String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000);
-
-            dec.y=y+h/2+fh;
-            dec.render(poseStack,font,mx,my);
-        }
-        public void click(int mx,int my){
-            dec.click(mx,my);
-            inc.click(mx,my);
-        }
-    }
-    class Select extends Wdgt{
-        Component label=null;
-        public Vector<Btn> selections=new Vector<>();
-        public int selected=-1;
-        Select(int x,int y,int w,int h,Component label) {
-            this.x=x;
-            this.y=y;
-            this.w=w;
-            this.h=h;
-            this.label=label;
-        }
-
-        public void add(Btn b){
-            selections.add(b);
-        }
-        public void render(PoseStack poseStack, Font font,int mx,int my) {
-            int k=0;
-            if(label!=null) {
-                font.draw(poseStack, label, x, y, 0xff000000);
-                k++;
-            }
-            for (int j=0;j<selections.size();j++) {
-                Btn btn=selections.get(j);
-                btn.x=x;
-                btn.y=y+h*k;
-                btn.w=w;
-                btn.h=h;
-                btn.selected=(this.selected==j);
-                btn.render(poseStack,font,mx,my);
-                k++;
-            }
-        }
-        public void click(int mx,int my) {
-            for (int j = 0; j < selections.size(); j++) {
-                selections.get(j).click(mx,my);
-            }
-        }
-    };
     Vector<Wdgt> wdgets =new Vector<>();
-
     Select modes_grp;
     Select action_grp;
     Select orientation_grp;
@@ -236,21 +32,25 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     Select axis_grp;
     Select inv_grp_btn;
     Select fill_grp_btn;
+    Select even_grp_btn;
     Select rot_grp;
     Select state_grp;
     Select slab_grp_btn;
     Select diag_grp_btn;
     Select inc_sel_grp_btn;
     Btn conf_btn;
-    Btn show_inv_btn;
     Spinner mult_spn;
-    Spinner grid_n_spn;
     Spinner grid_m_spn;
+    Spinner grid_n_spn;
+    Spinner grid_mskp_spn;
+    Spinner grid_nskp_spn;
+    Spinner grid_moff_spn;
+    Spinner grid_noff_spn;
     Spinner blast_radius_spn;
     Spinner row_col_spn;
     Spinner arealim_spn;
     Select match_state_sel;
-
+    Btn show_inv_btn;
     boolean show_inv=false;
     int left;
     int right;
@@ -258,6 +58,19 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     int top;
     public WandScreen(WandScreenHandler handler, Inventory inventory,Component title) {
         super(handler, inventory, title);
+    }
+    private Spinner valSpinner(WandItem.Value val,int x,int y,int w,int h,Component label) {
+        int v=WandItem.getVal(wand_stack, val);
+        return new Spinner(v, val.min, val.max,x,y,w,h,label) {
+            public void onInc(int mx, int my, int value) {
+                WandItem.setVal(wand_stack, val, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+            public void onDec(int mx, int my, int value) {
+                WandItem.setVal(wand_stack, val, value);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
     }
 
     @Override
@@ -279,98 +92,78 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         bottom=(height/2)-(h/2)-12;
         top=(height/2)+(h/2);
 
-        int multiplier=WandItem.getMultiplier(wand_stack);
-        mult_spn=new Spinner(multiplier,1,16,left+200,bottom+25,25,14,MCVer.inst.translatable("screen.wands.multiplier"))
-        {
-            void onInc(int mx,int my,int value){
-                WandItem.setMultiplier(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-            void onDec(int mx,int my,int value){
-                WandItem.setMultiplier(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
+
+        mult_spn=valSpinner(Value.MULTIPLIER,left+200,bottom+25,25,14,MCVer.inst.translatable("screen.wands.multiplier"));
         mult_spn.label_side=true;
+        wdgets.add(mult_spn);
 
-        int row_col=WandItem.getRowColLimit(wand_stack);
-        row_col_spn=new Spinner(row_col,0,wand.limit,left+200,bottom+60,25,14,MCVer.inst.translatable("screen.wands.limit"))
-        {
-            void onInc(int mx,int my,int value){
-                WandItem.setRowColLimit(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-            void onDec(int mx,int my,int value){
-                WandItem.setRowColLimit(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
+        row_col_spn=valSpinner(Value.ROWCOLLIM,left+200,bottom+60,25,14,MCVer.inst.translatable("screen.wands.limit"));
         row_col_spn.label_side=true;
+        wdgets.add(row_col_spn);
 
-        int blast_radius=WandItem.getBlastRadius(wand_stack);
-        blast_radius_spn=new Spinner(blast_radius,4,16,left+210,bottom+25,25,14,MCVer.inst.translatable("screen.wands.blast_radius"))
-        {
-            void onInc(int mx,int my,int value){
-                WandItem.setBlastRadius(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-            void onDec(int mx,int my,int value){
-                WandItem.setBlastRadius(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
+        blast_radius_spn=valSpinner(Value.BLASTRAD,left+210,bottom+25,25,14,MCVer.inst.translatable("screen.wands.blast_radius"));
         blast_radius_spn.label_side=true;
         blast_radius_spn.inc_val=2;
         blast_radius_spn.shift_inc_val=4;
-        int grid_m=WandItem.getGridM(wand_stack);
-        grid_m_spn=new Spinner(grid_m,1,wand.limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
+        wdgets.add(blast_radius_spn);
+
+        grid_m_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDM),1,wand.limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
         {
-            void onInc(int mx,int my,int value){
-                WandItem.setGridM(wand_stack, value);
+            public void onInc(int mx,int my,int value){
+                WandItem.incGrid(wand_stack,Value.GRIDM,1);
                 WandsModClient.send_wand(wand_stack);
             }
-            void onDec(int mx,int my,int value){
-                WandItem.setGridM(wand_stack, value);
+            public void onDec(int mx,int my,int value){
+                WandItem.decVal(wand_stack,Value.GRIDM,1);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         grid_m_spn.label_side=true;
-        int grid_n=WandItem.getGridN(wand_stack);
-        grid_n_spn=new Spinner(grid_n,1,wand.limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
+        wdgets.add(grid_m_spn);
+
+        grid_n_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDN),1,wand.limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
         {
-            void onInc(int mx,int my,int value){
-                WandItem.setGridN(wand_stack, value);
+            public void onInc(int mx,int my,int value){
+                WandItem.incGrid(wand_stack,Value.GRIDN,1);
                 WandsModClient.send_wand(wand_stack);
             }
-            void onDec(int mx,int my,int value){
-                WandItem.setGridN(wand_stack, value);
+            public void onDec(int mx,int my,int value){
+                WandItem.decVal(wand_stack,Value.GRIDN,1);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         grid_n_spn.label_side=true;
+        wdgets.add(grid_n_spn);
 
-        int arealim=WandItem.getAreaLimit(wand_stack);
-        arealim_spn=new Spinner(arealim,0, wand.limit, left+200,bottom+50,25,14,MCVer.inst.translatable("screen.wands.limit"))
-        {
-            void onInc(int mx,int my,int value){
-                WandItem.setAreaLimit(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-            void onDec(int mx,int my,int value){
-                WandItem.setAreaLimit(wand_stack, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
+        grid_mskp_spn=valSpinner(Value.GRIDMS,left+170,bottom+40,25,14,MCVer.inst.translatable("screen.wands.grid_mxn_skip"));
+        grid_mskp_spn.label_side=true;
+        wdgets.add(grid_mskp_spn);
+
+        grid_nskp_spn=valSpinner(Value.GRIDNS,left+205,bottom+40,25,14,MCVer.inst.literal(","));
+        grid_nskp_spn.label_side=true;
+        wdgets.add(grid_nskp_spn);
+
+        grid_moff_spn=valSpinner(Value.GRIDMOFF,left+170,bottom+55,25,14,MCVer.inst.translatable("screen.wands.grid_offset"));
+        grid_moff_spn.label_side=true;
+        wdgets.add(grid_moff_spn);
+
+        grid_noff_spn=valSpinner(Value.GRIDNOFF,left+205,bottom+55,25,14,MCVer.inst.literal(","));
+        grid_noff_spn.label_side=true;
+        wdgets.add(grid_noff_spn);
+
+        arealim_spn=valSpinner(Value.AREALIM, left+200,bottom+50,25,14,MCVer.inst.translatable("screen.wands.limit"));
         arealim_spn.label_side=true;
+        wdgets.add(arealim_spn);
 
         match_state_sel=new Select(left+170,bottom+100,80,12,null);
         Btn match_state_btn=new Btn(MCVer.inst.translatable("screen.wands.match_state")){
-            void onClick(int mx,int my) {                
-                WandItem.setMatchState(wand_stack,!WandItem.getMatchState(wand_stack));
+            public void onClick(int mx,int my) {                
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.MATCHSTATE);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         match_state_sel.add(match_state_btn);
+        wdgets.add(match_state_sel);
 
         modes_grp=new Select(left+80,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.mode"));
         int l=WandItem.modes.length-1;
@@ -380,72 +173,90 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         for (int i=0;i<l;i++) {
             int finalI=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.modes[i].toString())){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setMode(wand_stack, WandItem.modes[finalI]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             modes_grp.add(b);
         }
+        wdgets.add(modes_grp);
+
         action_grp =new Select(left+10,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.action"));
         for (int i=0;i<WandItem.actions.length;i++) {
             int finalp=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.actions[i].toString())){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setAction(wand_stack, WandItem.actions[finalp]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             action_grp.add(b);
         }
+        wdgets.add(action_grp);
+
         orientation_grp=new Select(left+170,bottom+30,btn_w,btn_h,MCVer.inst.translatable("screen.wands.orientation"));
         for (int i=0;i<WandItem.orientations.length;i++) {
             int finalo=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.orientations[i].toString())){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setOrientation(wand_stack, WandItem.orientations[finalo]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             orientation_grp.add(b);
         }
+        wdgets.add(orientation_grp);
+
         plane_grp=new Select(left+170,bottom+5,btn_w,btn_h,MCVer.inst.translatable("screen.wands.plane"));
         for (int i=0;i<WandItem.planes.length;i++) {
             int finalp=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.planes[i].toString())){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setPlane(wand_stack, WandItem.planes[finalp]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             plane_grp.add(b);
         }
+        wdgets.add(plane_grp);
+
         axis_grp=new Select(left+10,bottom+135,btn_w,btn_h,MCVer.inst.translatable("screen.wands.axis"));
         for (int i=0;i<WandItem.axes.length;i++) {
             int finala=i;
             Btn b=new Btn(MCVer.inst.literal(WandItem.axes[i].toString())){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setAxis(wand_stack, WandItem.axes[finala]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             axis_grp.add(b);
         }
+        wdgets.add(axis_grp);
+
         state_grp=new Select(left+80,bottom+160,btn_w+20,btn_h,null);
         Btn b1=new Btn(MCVer.inst.translatable("screen.wands.use_same_state")){
-            void onClick(int mx,int my){
+            public void onClick(int mx,int my){
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.CLONE);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         state_grp.add(b1);
         Btn b2=new Btn(MCVer.inst.translatable("screen.wands.apply_rot")){
-            void onClick(int mx,int my){
+            public void onClick(int mx,int my){
                 WandItem.setStateMode(wand_stack, WandItem.StateMode.APPLY);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         state_grp.add(b2);
+        Btn b3=new Btn(MCVer.inst.translatable("screen.wands.target")){
+            public void onClick(int mx,int my){
+                WandItem.setStateMode(wand_stack, WandItem.StateMode.TARGET);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        state_grp.add(b3);
+        wdgets.add(state_grp);
 
         rot_grp=new Select(left+10,bottom+70,btn_w,btn_h,MCVer.inst.translatable("screen.wands.rotation"));
         for (int i=0;i<WandItem.rotations.length;i++) {
@@ -466,73 +277,88 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
                     break;
             }
             Btn b=new Btn(MCVer.inst.literal(rot)){
-                void onClick(int mx,int my){
+                public void onClick(int mx,int my){
                     WandItem.setRotation(wand_stack, WandItem.rotations[finalr]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
             rot_grp.add(b);
         }
-        //Select show_grp_btn=new Select(null);
+        wdgets.add(rot_grp);
+
+
         show_inv_btn=new Btn(right-100,bottom+5,60,12,MCVer.inst.literal("Pick Tools")){
-            void onClick(int mx,int my) {
+            public void onClick(int mx,int my) {
                 show_inv=!show_inv;
             }
         };
-        //show_grp_btn.add(show_inv_btn);
+        wdgets.add(show_inv_btn);
 
         inv_grp_btn=new Select(left+170,bottom+145,40,12,null);
         Btn inv_btn=new Btn(MCVer.inst.translatable("screen.wands.invert")){
-            void onClick(int mx,int my) {
-                boolean inv =!WandItem.isInverted(wand_stack);
-                WandItem.setInvert(wand_stack,inv);
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.INVERTED);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         inv_grp_btn.add(inv_btn);
+        wdgets.add(inv_grp_btn);
 
         inc_sel_grp_btn=new Select(left+170,bottom+115,80,12,null);
         Btn inc_sel_btn=new Btn(MCVer.inst.translatable("screen.wands.inc_sel")){
-            void onClick(int mx,int my) {
-                WandItem.setIncSelBlock(wand_stack,!WandItem.getIncSelBlock(wand_stack));
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.INCSELBLOCK);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         inc_sel_grp_btn.add(inc_sel_btn);
+        wdgets.add(inc_sel_grp_btn);
 
         slab_grp_btn=new Select(left+170,bottom+130,70,12,null);
         Btn slab_btn=new Btn(MCVer.inst.translatable("screen.wands.slab")){
-            void onClick(int mx,int my) {
-                WandItem.setStairSlab(wand_stack,!WandItem.getStairSlab(wand_stack));
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.STAIRSLAB);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         slab_grp_btn.add(slab_btn);
+        wdgets.add(slab_grp_btn);
 
         diag_grp_btn=new Select(left+150,bottom+20,100,12,null);
         Btn diag_btn=new Btn(MCVer.inst.translatable("screen.wands.diagonal_spread")){
-            void onClick(int mx,int my) {
-                WandItem.setAreaDiagonalSpread(wand_stack,!WandItem.getAreaDiagonalSpread(wand_stack));
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.DIAGSPREAD);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         diag_grp_btn.add(diag_btn);
+        wdgets.add(diag_grp_btn);
 
-        fill_grp_btn=new Select(left+170,bottom+80,60,12,null);
+        fill_grp_btn=new Select(left+170,bottom+60,60,12,null);
         Btn fill_btn=new Btn(MCVer.inst.translatable("screen.wands.filled_circle")){
-            void onClick(int mx,int my) {
-                boolean fill =!WandItem.isCircleFill(wand_stack);
-                WandItem.setFill(wand_stack,fill);
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.FILLED);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         fill_grp_btn.add(fill_btn);
+        wdgets.add(fill_grp_btn);
+
+        even_grp_btn=new Select(left+170,bottom+74,60,12,null);
+        Btn even_btn=new Btn(MCVer.inst.translatable("screen.wands.even_circle")){
+            public void onClick(int mx,int my) {
+                WandItem.toggleFlag(wand_stack, WandItem.Flag.EVEN);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        even_grp_btn.add(even_btn);
+        wdgets.add(even_grp_btn);
 
 #if USE_CLOTHCONFIG
         if(WandsMod.platform!=2){
             Screen parent=this;
             conf_btn=new Btn(left+210,bottom+175,27,12,MCVer.inst.literal("Conf")){
-                void onClick(int mx,int my) {
+                public void onClick(int mx,int my) {
                     Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
                 }
             };
@@ -540,26 +366,6 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }
 #endif
 
-        wdgets.add(modes_grp);
-        wdgets.add(action_grp);
-        wdgets.add(orientation_grp);
-        wdgets.add(plane_grp);
-        wdgets.add(state_grp);
-        wdgets.add(axis_grp);
-        wdgets.add(rot_grp);
-        wdgets.add(inv_grp_btn);
-        wdgets.add(fill_grp_btn);
-        wdgets.add(mult_spn);
-        wdgets.add(grid_n_spn);
-        wdgets.add(grid_m_spn);
-        wdgets.add(blast_radius_spn);
-        wdgets.add(slab_grp_btn);
-        wdgets.add(row_col_spn);
-        wdgets.add(diag_grp_btn);
-        wdgets.add(inc_sel_grp_btn);
-        wdgets.add(arealim_spn);
-        wdgets.add(show_inv_btn);
-        wdgets.add(match_state_sel);
     }
     void update_selections(){
         if(wand!=null && wand_stack!=null) {
@@ -575,17 +381,23 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             axis_grp.selected =WandItem.getAxis(wand_stack).ordinal();
             state_grp.selected=WandItem.getStateMode(wand_stack).ordinal();
             rot_grp.selected=WandItem.getRotation(wand_stack).ordinal();
-            inv_grp_btn.selected=(WandItem.isInverted(wand_stack)?0:-1);
-            inc_sel_grp_btn.selected=(WandItem.getIncSelBlock(wand_stack)?0:-1);
-            fill_grp_btn.selected=(WandItem.isCircleFill(wand_stack)?0:-1);
+            inv_grp_btn.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.INVERTED)?0:-1);
+            inc_sel_grp_btn.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.INCSELBLOCK)?0:-1);
+            fill_grp_btn.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.FILLED)?0:-1);
             fill_grp_btn.visible=modes_grp.selected==WandItem.Mode.CIRCLE.ordinal()||modes_grp.selected==WandItem.Mode.RECT.ordinal();
+            even_grp_btn.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.EVEN)?0:-1);
+            even_grp_btn.visible=modes_grp.selected==WandItem.Mode.CIRCLE.ordinal();
             grid_n_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
             grid_m_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            grid_moff_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            grid_noff_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            grid_mskp_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
+            grid_nskp_spn.visible=modes_grp.selected==WandItem.Mode.GRID.ordinal();
             blast_radius_spn.visible=modes_grp.selected==WandItem.Mode.BLAST.ordinal();
-            slab_grp_btn.selected=(WandItem.getStairSlab(wand_stack)?0:-1);
+            slab_grp_btn.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.STAIRSLAB)?0:-1);
             diag_grp_btn.visible=modes_grp.selected==WandItem.Mode.AREA.ordinal();
-            diag_grp_btn.selected=(!WandItem.getAreaDiagonalSpread(wand_stack)?0:-1);
-            match_state_sel.selected=(WandItem.getMatchState(wand_stack)?0:-1);
+            diag_grp_btn.selected=(!WandItem.getFlag(wand_stack, WandItem.Flag.DIAGSPREAD)?0:-1);
+            match_state_sel.selected=(WandItem.getFlag(wand_stack, WandItem.Flag.MATCHSTATE)?0:-1);
         }
     }
     @Override 
@@ -609,23 +421,29 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
             blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
             super.render(poseStack,mouseX,mouseY,delta);            
             show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
+
         }else{
-            blit(poseStack, x, y, 0, 0, img_w, img_h);
-            for (int i=0;i<9;i++) {
-                Slot s=this.menu.slots.get(36+i);
-                x = (width - img_w)/2 +48;
-                y = (height - img_h) / 2;
-                this.itemRenderer.renderAndDecorateItem(s.getItem(),x+i*18, y+22);
-                this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),x+i*18, y+48 , null);
-            }
+            blit(poseStack, x, y, 0, 0, img_w, img_h);            
             update_selections();
             for (int i = 0; i< wdgets.size(); i++) {
                 if(wdgets.get(i).visible) {
                     wdgets.get(i).render(poseStack, this.font, mouseX, mouseY);
                 }
             }
+            x = (width - img_w)/2 +48;
+            y = ((height - img_h) / 2)+22;
+            for (int i=0;i<9;i++) {
+                Slot s=this.menu.slots.get(36+i);
+                int xx=x+i*18;
+                this.itemRenderer.renderAndDecorateItem(s.getItem(),xx, y);
+                this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),xx, y , null);
+                if(mouseX>xx && mouseX<xx+16 && mouseY>y && mouseY<y+16) {
+                    this.hoveredSlot=s;
+                }
+            }
         }
         this.renderTooltip(poseStack, mouseX,mouseY);
+
         RenderSystem.depthMask(true);
     }
     @Override

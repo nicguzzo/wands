@@ -205,7 +205,7 @@ public class WandConfigScreen {
                 .setSaveConsumer(newValue -> conf.render_last = newValue)
                 .build());
         preview.addEntry(entryBuilder.startFloatField(MCVer.inst.translatable("option.wands.wand_mode_display_x_pos"), conf.wand_mode_display_x_pos)
-                .setDefaultValue(80.0f)
+                .setDefaultValue(75.0f)
                 .setTooltip(MCVer.inst.translatable("option.wands.wand_mode_display_x_pos_tt"))
                 .setSaveConsumer(newValue -> conf.wand_mode_display_x_pos = newValue)
                 .build());
@@ -215,7 +215,16 @@ public class WandConfigScreen {
                 .setSaveConsumer(newValue -> conf.wand_mode_display_y_pos = newValue)
                 .build());
 
-
+        preview.addEntry(entryBuilder.startFloatField(MCVer.inst.translatable("option.wands.wand_tools_display_x_pos"), conf.wand_mode_display_x_pos)
+                .setDefaultValue(0.0f)
+                .setTooltip(MCVer.inst.translatable("option.wands.wand_tools_display_x_pos_tt"))
+                .setSaveConsumer(newValue -> conf.wand_tools_display_x_pos = newValue)
+                .build());
+        preview.addEntry(entryBuilder.startFloatField(MCVer.inst.translatable("option.wands.wand_tools_display_y_pos"), conf.wand_mode_display_y_pos)
+                .setDefaultValue(100.0f)
+                .setTooltip(MCVer.inst.translatable("option.wands.wand_tools_display_y_pos_tt"))
+                .setSaveConsumer(newValue -> conf.wand_tools_display_y_pos = newValue)
+                .build());
 
 
         preview.addEntry(entryBuilder.startColorField(MCVer.inst.translatable("option.wands.block_outline_color"), WandsConfig.c_block_outline)
