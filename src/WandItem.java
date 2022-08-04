@@ -84,7 +84,7 @@ public class WandItem extends TieredItem implements Vanishable {
         GRIDNOFF   { public String toString() {return  "grid_noff" ;}};
         public int def=0;
         public int min=0;
-        public int max=Integer.MAX_VALUE;
+        public int max=Wand.MAX_LIMIT;
         public Value coval=null;
         static{
             MULTIPLIER.def=1; MULTIPLIER.min=1; MULTIPLIER.max=16;
@@ -166,7 +166,15 @@ public class WandItem extends TieredItem implements Vanishable {
     }
     static public int getVal(ItemStack stack,Value v) {
         if(is_wand(stack)) {
-            return stack.getOrCreateTag().getInt(v.toString());
+            int i= stack.getOrCreateTag().getInt(v.toString());
+            if(i<v.min){
+                return v.min;
+            }else{
+                if(i>v.max){
+                    return v.max;
+                }
+            }
+            return i;
         }
         return -1;
     }

@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[39,)"
+loaderVersion = "[41,)"
 #issueTrackerURL = ""
 license = "Insert License Here"
 
@@ -16,26 +16,27 @@ Building Wands!
 [[dependencies.wands]]
 modId = "forge"
 mandatory = true
-versionRange = "[39,)"
+versionRange = "[41,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.wands]]
 modId = "minecraft"
 mandatory = true
-versionRange = "[1.18.1,)"
+versionRange = "[1.19,)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.wands]]
 modId = "architectury"
 mandatory = true
-versionRange = "[3.9.66,)"
+versionRange = "[5.7.28 ,)"
 ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.wands]]
-modId = "cloth-config"
+modId = "cloth_config"
 mandatory = true
+ordering = "AFTER"
 versionRange = "[7.0.72,)"
 

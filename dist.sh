@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.6_beta
+VERSION=2.6.1_beta
 
 modloader=(fabric forge)
 mcvers=(1.16.5 1.17.1 1.18.1 1.18.2 1.19)

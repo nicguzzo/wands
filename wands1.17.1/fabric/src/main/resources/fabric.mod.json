@@ -33,7 +33,7 @@
     "fabric": "*",
     "minecraft": ">=1.17.1",
     "architectury": ">=2.10.12",
-    "cloth-config": ">=5.3.63"
+    "cloth-config2": ">=5.3.63"
   },
   "suggests": {
     "modmenu": "*"

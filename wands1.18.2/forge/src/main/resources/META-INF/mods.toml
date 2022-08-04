@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "[39,)"
+loaderVersion = "[40,)"
 #issueTrackerURL = ""
 license = "Insert License Here"
 
@@ -16,7 +16,7 @@ Building Wands!
 [[dependencies.wands]]
 modId = "forge"
 mandatory = true
-versionRange = "[39,)"
+versionRange = "[40,)"
 ordering = "NONE"
 side = "BOTH"
 
@@ -35,6 +35,7 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.wands]]
-modId = "cloth-config"
+modId = "cloth_config"
 mandatory = true
+ordering = "AFTER"
 versionRange = "[6.2.62,)"

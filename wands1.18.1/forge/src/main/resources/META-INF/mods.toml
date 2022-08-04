@@ -35,6 +35,7 @@ ordering = "AFTER"
 side = "BOTH"
 
 [[dependencies.wands]]
-modId = "cloth-config"
+modId = "cloth_config"
 mandatory = true
+ordering = "AFTER"
 versionRange = "[6.2.62,)"
