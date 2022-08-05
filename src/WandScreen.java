@@ -97,7 +97,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         mult_spn.label_side=true;
         wdgets.add(mult_spn);
 
-        row_col_spn=valSpinner(Value.ROWCOLLIM,left+200,bottom+60,25,14,MCVer.inst.translatable("screen.wands.limit"));
+        row_col_spn=valSpinner(Value.ROWCOLLIM,left+200,bottom+70,25,14,MCVer.inst.translatable("screen.wands.limit"));
         row_col_spn.label_side=true;
         wdgets.add(row_col_spn);
 
@@ -107,7 +107,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         blast_radius_spn.shift_inc_val=4;
         wdgets.add(blast_radius_spn);
 
-        grid_m_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDM),1,wand.limit,left+170,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
+        grid_m_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDM),1,wand.limit,left+180,bottom+25,25,14,MCVer.inst.translatable("screen.wands.grid_mxn"))
         {
             public void onInc(int mx,int my,int value){
                 WandItem.incGrid(wand_stack,Value.GRIDM,1);
@@ -121,7 +121,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         grid_m_spn.label_side=true;
         wdgets.add(grid_m_spn);
 
-        grid_n_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDN),1,wand.limit,left+205,bottom+25,25,14,MCVer.inst.literal("x"))
+        grid_n_spn=new Spinner(WandItem.getVal(wand_stack,Value.GRIDN),1,wand.limit,left+215,bottom+25,25,14,MCVer.inst.literal("x"))
         {
             public void onInc(int mx,int my,int value){
                 WandItem.incGrid(wand_stack,Value.GRIDN,1);
@@ -135,19 +135,19 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         grid_n_spn.label_side=true;
         wdgets.add(grid_n_spn);
 
-        grid_mskp_spn=valSpinner(Value.GRIDMS,left+170,bottom+40,25,14,MCVer.inst.translatable("screen.wands.grid_mxn_skip"));
+        grid_mskp_spn=valSpinner(Value.GRIDMS,left+180,bottom+40,25,14,MCVer.inst.translatable("screen.wands.grid_mxn_skip"));
         grid_mskp_spn.label_side=true;
         wdgets.add(grid_mskp_spn);
 
-        grid_nskp_spn=valSpinner(Value.GRIDNS,left+205,bottom+40,25,14,MCVer.inst.literal(","));
+        grid_nskp_spn=valSpinner(Value.GRIDNS,left+215,bottom+40,25,14,MCVer.inst.literal(","));
         grid_nskp_spn.label_side=true;
         wdgets.add(grid_nskp_spn);
 
-        grid_moff_spn=valSpinner(Value.GRIDMOFF,left+170,bottom+55,25,14,MCVer.inst.translatable("screen.wands.grid_offset"));
+        grid_moff_spn=valSpinner(Value.GRIDMOFF,left+180,bottom+55,25,14,MCVer.inst.translatable("screen.wands.grid_offset"));
         grid_moff_spn.label_side=true;
         wdgets.add(grid_moff_spn);
 
-        grid_noff_spn=valSpinner(Value.GRIDNOFF,left+205,bottom+55,25,14,MCVer.inst.literal(","));
+        grid_noff_spn=valSpinner(Value.GRIDNOFF,left+215,bottom+55,25,14,MCVer.inst.literal(","));
         grid_noff_spn.label_side=true;
         wdgets.add(grid_noff_spn);
 
@@ -324,7 +324,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         slab_grp_btn.add(slab_btn);
         wdgets.add(slab_grp_btn);
 
-        diag_grp_btn=new Select(left+150,bottom+20,100,12,null);
+        diag_grp_btn=new Select(left+150,bottom+30,100,12,null);
         Btn diag_btn=new Btn(MCVer.inst.translatable("screen.wands.diagonal_spread")){
             public void onClick(int mx,int my) {
                 WandItem.toggleFlag(wand_stack, WandItem.Flag.DIAGSPREAD);

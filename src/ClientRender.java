@@ -160,6 +160,7 @@ public class ClientRender {
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
                 prnt = true;
+                //WandsMod.LOGGER.info("render");
             }//else{
             if (t1 - t00 > 100) {
                 t00 = System.currentTimeMillis();
@@ -202,7 +203,7 @@ public class ClientRender {
                     preview_shape = block_state.getShape(client.level, last_pos);
                 }
                 preview_mode(wand.mode, matrixStack, block_state);
-                //WandsMod.log("p1 "+wand.p1,prnt);
+
             } else {
                 has_target = false;
                 /*if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||

@@ -14,7 +14,11 @@ loom {
     forge {
         convertAccessWideners = true
         extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
+
+        mixinConfig "wands-common.mixins.json"
+
     }
+
 }
 
 configurations {
