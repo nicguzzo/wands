@@ -1,0 +1,146 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "me.shedaniel.unified-publishing" version "0.1.+"
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+loom {
+    accessWidenerPath = project(":common").loom.accessWidenerPath
+}
+
+configurations {
+    common
+    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+repositories {
+    maven{
+        url "https://maven.terraformersmc.com/releases"
+    }    
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "${architectury}:architectury-fabric:${rootProject.architectury_version}"
+
+    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+    common(project(path: ":common", configuration: "namedElements")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+shadowJar {
+    exclude "architectury.common.json"
+
+    configurations = [project.configurations.shadowCommon]
+    classifier "dev-shadow"
+}
+
+remapJar {
+    injectAccessWidener = true
+    input.set shadowJar.archiveFile
+    dependsOn shadowJar
+    classifier "fabric"
+}
+
+jar {
+    classifier "dev"
+}
+
+sourcesJar {
+    def commonSources = project(":common").sourcesJar
+    dependsOn commonSources
+    from commonSources.archiveFile.map { zipTree(it) }
+}
+
+components.java {
+    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
+        skip()
+    }
+}
+
+publishing {
+    publications {
+        mavenFabric(MavenPublication) {
+            artifactId = rootProject.archives_base_name + "-" + project.name
+            from components.java
+        }
+    }
+
+    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    repositories {
+        // Add repositories to publish to here.
+    }
+}
+
+unifiedPublishing {
+    project {
+        gameVersions = ["${rootProject.minecraft_version}"]
+        gameLoaders = ["fabric"]
+        displayName= "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - fabric - ${rootProject.minecraft_version}"
+        version = "${rootProject.mod_version}_${rootProject.release_type}_fabric_${rootProject.minecraft_version}"
+        releaseType = "${rootProject.release_type}"
+        var chlog= System.getenv("WANDS_CHANGELOG")
+        if (chlog != null) {
+           changelog= chlog
+        }
+        mainPublication tasks.remapJar
+        relations {        
+            depends {
+                curseforge = "fabric-api" // Optional, project slug
+                modrinth = "P7dR8mSH" // Optional, project slug or id
+            }
+            depends {
+                curseforge = "architectury-api" // Optional, project slug
+                modrinth = "lhGA9TYQ" // Optional, project slug or id
+            }
+            depends {
+                curseforge = "cloth-config" // Optional, project slug
+                modrinth = "9s6osm5g" // Optional, project slug or id
+            }
+            includes {} // Mark as an included dependency
+            optional {
+                curseforge="modmenu"
+                modrinth="mOgUt4GM"
+            } // Mark as an optional dependency
+            conflicts {} // Mark as a conflicted dependency
+        }
+
+        var cfToken = System.getenv("CF_TOKEN")
+        if (cfToken != null) {
+            curseforge {
+                token = cfToken
+                id = "363392" // Required, must be a string, ID of CurseForge project
+            }
+        }
+
+        var mrToken = System.getenv("MODRINTH_TOKEN")
+        if (mrToken != null) {
+            modrinth {
+                displayName= "Building Wands"
+                token = mrToken
+                id = "XkisZUfp" // Required, must be a string, ID of Modrinth project
+            }
+        }
+    }
+}
