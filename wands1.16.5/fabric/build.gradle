@@ -97,7 +97,7 @@ unifiedPublishing {
     project {
         gameVersions = ["${rootProject.minecraft_version}"]
         gameLoaders = ["fabric"]
-        displayName= "Building Wands"
+        displayName= "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - fabric - ${rootProject.minecraft_version}"
         version = "${rootProject.mod_version}_${rootProject.release_type}_fabric_${rootProject.minecraft_version}"
         releaseType = "${rootProject.release_type}"
         mainPublication tasks.remapJar
@@ -133,6 +133,7 @@ unifiedPublishing {
         var mrToken = System.getenv("MODRINTH_TOKEN")
         if (mrToken != null) {
             modrinth {
+                displayName= "Building Wands"
                 token = mrToken
                 id = "XkisZUfp" // Required, must be a string, ID of Modrinth project
             }

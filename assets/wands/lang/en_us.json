@@ -136,5 +136,6 @@
     "screen.wands.limit": "Limit",
     "screen.wands.diagonal_spread": "Diagonal Spread",
     "screen.wands.inc_sel": "Include in sel",
-    "screen.wands.match_state": "Match State"
+    "screen.wands.match_state": "Match State",
+    "screen.wands.mirror": "Mirror"
 }
