@@ -127,6 +127,7 @@ public class ClientRender {
     static BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
     static boolean water = false;
     static BlockState AIR = Blocks.AIR.defaultBlockState();
+    static int mirroraxis=0;
 
     public static void render(PoseStack matrixStack) {
         client = Minecraft.getInstance();
@@ -168,6 +169,7 @@ public class ClientRender {
             }
             HitResult hitResult = client.hitResult;
             Mode mode = WandItem.getMode(stack);
+            mirroraxis=WandItem.getVal(player.getMainHandItem(), WandItem.Value.MIRRORAXIS);
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
 
@@ -557,6 +559,20 @@ public class ClientRender {
                     break;
                 case PASTE:
                     if (wand.copy_paste_buffer.size() > 0) {
+                        int mx=1;
+                        int my=1;
+                        int mz=1;
+                        switch(mirroraxis){
+                            case 1://X
+                                mx=-1;
+                                break;
+                            case 2://Y
+                                my=-1;
+                                break;
+                            case 3://Z
+                                mz=-1;
+                                break;
+                        }
                         BlockPos b_pos = last_pos;
                         if (!(wand.replace || wand.destroy)) {
                             b_pos = last_pos.relative(last_side, 1);
@@ -573,13 +589,19 @@ public class ClientRender {
                             random.setSeed(0);
                             wand.random.setSeed(wand.palette_seed);
                             //use block_buffer, previously copy copy_paste_buffer to block_buffer
+                            BlockPos po=wand.copy_paste_buffer.get(0).pos;
+
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
                                 BlockState st = wand.paste_rot(b.state);
                                 if (wand.has_palette) {
                                     st = wand.get_state();
                                 }
-                                render_shape(matrixStack, tesselator, bufferBuilder, st, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                int px=b_pos.getX() + p.getX()*mx;
+                                int py=b_pos.getY() + p.getY()*my;
+                                int pz=b_pos.getZ() + p.getZ()*mz;
+                                //render_shape(matrixStack, tesselator, bufferBuilder, st, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+                                render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
@@ -603,9 +625,9 @@ public class ClientRender {
                             }
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
-                                float x = b_pos.getX() + p.getX();
-                                float y = b_pos.getY() + p.getY();
-                                float z = b_pos.getZ() + p.getZ();
+                                float x = b_pos.getX() + p.getX()*mx;
+                                float y = b_pos.getY() + p.getY()*my;
+                                float z = b_pos.getZ() + p.getZ()*mz;
                                 if (fat_lines) {
                                     preview_block_fat(bufferBuilder,
                                             x, y, z,
@@ -617,24 +639,17 @@ public class ClientRender {
                                             x + 1, y + 1, z + 1, c
                                     );
                                 }
+                                if (x < x1) x1 = x;
+                                if (y < y1) y1 = y;
+                                if (z < z1) z1 = z;
+                                if (x + 1 > x2) x2 = x + 1;
+                                if (y + 1 > y2) y2 = y + 1;
+                                if (z + 1 > z2) z2 = z + 1;
 
-                                if (p.getX() < x1) x1 = p.getX();
-                                if (p.getY() < y1) y1 = p.getY();
-                                if (p.getZ() < z1) z1 = p.getZ();
-                                if (p.getX() + 1 > x2) x2 = p.getX() + 1;
-                                if (p.getY() + 1 > y2) y2 = p.getY() + 1;
-                                if (p.getZ() + 1 > z2) z2 = p.getZ() + 1;
                             }
                             tesselator.end();
                             RenderSystem.disableTexture();
-                            x1 = b_pos.getX() + x1 - off2;
-                            y1 = b_pos.getY() + y1 - off2;
-                            z1 = b_pos.getZ() + z1 - off2;
-                            x2 = b_pos.getX() + x2 + off2;
-                            y2 = b_pos.getY() + y2 + off2;
-                            z2 = b_pos.getZ() + z2 + off2;
                             if (fat_lines) {
-                                //RenderSystem.disableCull();
                                 RenderSystem.enableTexture();
                                 MCVer.inst.set_render_quads_pos_tex(bufferBuilder);
                             } else {

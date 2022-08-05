@@ -51,6 +51,9 @@ public class WandItem extends TieredItem implements Vanishable {
     public enum Plane {
         XZ,XY,YZ
     }
+    public enum MirrorAxis {
+        NONE,X,Y,Z
+    }
     public enum StateMode {
         CLONE  { public String toString() { return "Clone";             }},
         APPLY  { public String toString() { return "Apply rotaion/axis";}},
@@ -81,7 +84,8 @@ public class WandItem extends TieredItem implements Vanishable {
         GRIDMS     { public String toString() {return  "grid_msp" ;}},
         GRIDNS     { public String toString() {return  "grid_nsp" ;}},
         GRIDMOFF   { public String toString() {return  "grid_moff" ;}},
-        GRIDNOFF   { public String toString() {return  "grid_noff" ;}};
+        GRIDNOFF   { public String toString() {return  "grid_noff" ;}},
+        MIRRORAXIS { public String toString() {return  "mirror_axis" ;}};
         public int def=0;
         public int min=0;
         public int max=Wand.MAX_LIMIT;
@@ -94,6 +98,8 @@ public class WandItem extends TieredItem implements Vanishable {
             GRIDN.coval=GRIDM;
             GRIDM.min=1;
             GRIDN.min=1;
+            MIRRORAXIS.min=0;//0 disabled - 1=X - 2=Y - 3=Z
+            MIRRORAXIS.max=3;
         }        
     }
 
@@ -110,6 +116,7 @@ public class WandItem extends TieredItem implements Vanishable {
     static public final Direction.Axis[] axes=Direction.Axis.values();
     static public final Rotation[] rotations=Rotation.values();
     static public final StateMode[] state_modes=StateMode.values();
+    static public final MirrorAxis[] mirrorAxes=MirrorAxis.values();
 
     public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
         super(tier,properties);

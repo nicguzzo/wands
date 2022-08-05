@@ -1577,6 +1577,20 @@ public class Wand {
 
     void mode_paste() {
         if (!preview) {
+            int mx=1;
+            int my=1;
+            int mz=1;
+            switch(WandItem.getVal(wand_stack, WandItem.Value.MIRRORAXIS)){
+                case 1://X
+                    mx=-1;
+                    break;
+                case 2://Y
+                    my=-1;
+                    break;
+                case 3://Z
+                    mz=-1;
+                    break;
+            }
             //log("mode6 paste "+copy_paste_buffer.size());
             BlockPos b_pos = pos;
             if(!(replace||destroy)){
@@ -1588,17 +1602,13 @@ public class Wand {
             for (CopyPasteBuffer b : copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(rotation);
                 BlockState st=paste_rot(b.state);
+                int px=b_pos.getX() + p.getX()*mx;
+                int py=b_pos.getY() + p.getY()*my;
+                int pz=b_pos.getZ() + p.getZ()*mz;
                 if(has_palette) {
-                    block_buffer.add(
-                            b_pos.getX() + p.getX(),
-                            b_pos.getY() + p.getY(),
-                            b_pos.getZ() + p.getZ(),this);
+                    block_buffer.add(px,py,pz,this);
                 }else {
-                    block_buffer.add(
-                            b_pos.getX() + p.getX(),
-                            b_pos.getY() + p.getY(),
-                            b_pos.getZ() + p.getZ(),
-                            st, st.getBlock().asItem());
+                    block_buffer.add(px,py,pz,st, st.getBlock().asItem());
                 }
             }
         }

@@ -38,6 +38,7 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     Select slab_grp_btn;
     Select diag_grp_btn;
     Select inc_sel_grp_btn;
+    Select mirror_axis;
     Btn conf_btn;
     Spinner mult_spn;
     Spinner grid_m_spn;
@@ -234,6 +235,20 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
         }
         wdgets.add(axis_grp);
 
+
+        mirror_axis=new Select(left+170,bottom+30,btn_w,btn_h,MCVer.inst.translatable("screen.wands.mirror"));
+        for (int i=0;i<WandItem.mirrorAxes.length;i++) {
+            int mo=i;
+            Btn b=new Btn(MCVer.inst.literal(WandItem.mirrorAxes[i].toString())){
+                public void onClick(int mx,int my){
+                    WandItem.setVal(wand_stack,Value.MIRRORAXIS, mo);
+                    WandsModClient.send_wand(wand_stack);
+                }
+            };
+            mirror_axis.add(b);
+        }
+        wdgets.add(mirror_axis);
+
         state_grp=new Select(left+80,bottom+160,btn_w+20,btn_h,null);
         Btn b1=new Btn(MCVer.inst.translatable("screen.wands.use_same_state")){
             public void onClick(int mx,int my){
@@ -369,6 +384,8 @@ public class WandScreen extends AbstractContainerScreen<WandScreenHandler> {
     }
     void update_selections(){
         if(wand!=null && wand_stack!=null) {
+            mirror_axis.selected=WandItem.getVal(wand_stack,Value.MIRRORAXIS);
+            mirror_axis.visible=modes_grp.selected==WandItem.Mode.PASTE.ordinal();
             modes_grp.selected=WandItem.getMode(wand_stack).ordinal();
             mult_spn.visible=modes_grp.selected==WandItem.Mode.DIRECTION.ordinal();
             action_grp.selected=WandItem.getAction(wand_stack).ordinal();
