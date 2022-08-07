@@ -1,8 +1,8 @@
 #!/bin/bash
 
-mcvers=(1.16.5 1.17.1 1.18.1 1.18.2 1.19)
+mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 for v in ${mcvers[@]}; do  
-  pushd wands$v
-      ./gradlew clean 
+  pushd mc$v
+      ./gradlew --no-daemon clean 
   popd
 done

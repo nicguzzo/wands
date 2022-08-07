@@ -1,9 +1,12 @@
 #!/bin/bash
-
-mcvers=(1.16.5 1.17.1 1.18.1 1.18.2 1.19)
+mod="wands"
+if [ "$1" == "" ]; then
+  mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
+else
+  mcvers=( $1 )
+fi
 for v in ${mcvers[@]}; do  
-  pushd wands$v
-      ./gradlew clean >>../../build_log || exit
-      ./gradlew build >>../../build_log|| exit
+  pushd mc$v      
+      ./gradlew --no-daemon --parallel build &>../../build_log_${mod}_mc${v} || exit
   popd
 done

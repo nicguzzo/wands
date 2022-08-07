@@ -1,8 +1,7 @@
 #!/bin/bash
-
-mcvers=(1.16.5 1.17.1 1.18.1 1.18.2 1.19 1.19.1)
+mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 for v in ${mcvers[@]}; do
-	pushd wands$v
-		./gradlew publishUnified
+	pushd mc$v
+		./gradlew --no-daemon publishUnified
 	popd
 done

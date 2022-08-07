@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "net.nicguzzo.wands.mixin.fabric",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "client": [
+  ],
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

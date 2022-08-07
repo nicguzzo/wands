@@ -1,42 +1,26 @@
 #!/bin/bash
 
-mcvers=(1.16.5 1.17.1 1.18.1 1.18.2 1.19 1.19.1)
+mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 for v in ${mcvers[@]}; do  
-  pushd wands$v
-    mkdir -p "common/src/main/java/net/nicguzzo"
+  pushd "mc$v/"
+    ln -s ../src/build.gradle
+    ln -s ../src/gradle
+    ln -s ../src/gradlew
+    ln -s ../src/settings.gradle
+    ln -s ../versions/${v}_build.properties build.properties
+    ln -s ../versions/${v}_gradle.properties gradle.properties
     pushd "common"
-      rm build.gradle
-      ln -s ../../common/build.gradle
+      ln -s ../../src/common/src
+      ln -s ../../src/common/build.gradle  
     popd
-    pushd "common/src/main"
-      pushd "java/net/nicguzzo"
-        rm wands
-        ln -s ../../../../../../../common/src wands
-      popd
-      pushd "resources"
-        rm assets
-        rm data
-        ln -s  ../../../../../assets
-        ln -s  ../../../../../data
-      popd
+    pushd "fabric"
+      ln -s ../../src/fabric/src
+      ln -s ../../src/fabric/build.gradle  
     popd
-    mkdir -p "fabric/src/main/java/net/nicguzzo/wands"    
-    pushd "fabric/"
-      rm build.gradle
-      ln -s  ../../fabric/build.gradle
-    popd
-    pushd "fabric/src/main/java/net/nicguzzo/wands"
-      rm fabric
-      ln -s  ../../../../../../../../fabric/src fabric
-    popd
-    mkdir -p "forge/src/main/java/net/nicguzzo/wands"
-    pushd "forge/"      
-      rm build.gradle
-      ln -s  ../../forge/build.gradle
-    popd
-    pushd "forge/src/main/java/net/nicguzzo/wands"      
-      rm forge
-      ln -s  ../../../../../../../../forge/src forge      
+    pushd "forge"
+      ln -s ../../src/forge/src
+      ln -s ../../src/forge/build.gradle  
+      ln -s ../../src/forge/gradle.properties
     popd
   popd
 done
