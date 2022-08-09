@@ -35,6 +35,7 @@ public class WandsConfig {
 	static public int def_iron_wand_limit = 32;
 	static public int def_diamond_wand_limit = 64;
 	static public int def_netherite_wand_limit = 256;
+	static public int def_creative_wand_limit = 512;
 	static public int def_stone_wand_durability = 256;
 	static public int def_iron_wand_durability = 512;
 	static public int def_diamond_wand_durability = 2048;
@@ -44,6 +45,7 @@ public class WandsConfig {
 	public int iron_wand_limit = def_iron_wand_limit;
 	public int diamond_wand_limit = def_diamond_wand_limit;
 	public int netherite_wand_limit = def_netherite_wand_limit;
+	public int creative_wand_limit = def_creative_wand_limit;
 	public int stone_wand_durability = def_stone_wand_durability;
 	public int iron_wand_durability = def_iron_wand_durability;
 	public int diamond_wand_durability = def_diamond_wand_durability;
@@ -53,6 +55,8 @@ public class WandsConfig {
 	public boolean allow_wand_to_break=false;
 	public boolean allow_offhand_to_break=false;
 	public boolean mend_tools=true;
+	public boolean enable_vein_mode=true;
+	public boolean enable_blast_mode=true;
 
 	//Client options
 	public float wand_mode_display_x_pos = 75.0f;

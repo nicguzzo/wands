@@ -192,7 +192,7 @@ public class WandItem extends TieredItem implements Vanishable {
     static public Mode getMode(ItemStack stack) {
         if(is_wand(stack)) {
             int m=stack.getOrCreateTag().getInt("mode");
-            if(m<modes.length)
+            if(m>=0 && m<modes.length)
                 return modes[m];
         }
         return Mode.DIRECTION;
@@ -208,9 +208,16 @@ public class WandItem extends TieredItem implements Vanishable {
             CompoundTag tag=stack.getOrCreateTag();
             int mode=(tag.getInt("mode")+1) % (modes.length);
             WandItem wand=(WandItem)stack.getItem();
-            if(wand.can_blast && mode==Mode.BLAST.ordinal()){
+            if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
+                mode = Mode.BLAST.ordinal();
+            }
+            if( (!wand.can_blast && mode==Mode.BLAST.ordinal())
+                || (!WandsMod.config.enable_blast_mode && mode==Mode.BLAST.ordinal())
+            )
+            {
                 mode=Mode.DIRECTION.ordinal();
             }
+
             tag.putInt("mode", mode);
         }
     }
@@ -222,8 +229,15 @@ public class WandItem extends TieredItem implements Vanishable {
                 mode=modes.length-1;
             }
             WandItem wand=(WandItem)stack.getItem();
-            if(wand.can_blast && mode==Mode.BLAST.ordinal()){
+
+            if( (!wand.can_blast && mode==Mode.BLAST.ordinal())
+                    || (!WandsMod.config.enable_blast_mode && mode==Mode.BLAST.ordinal())
+            )
+            {
                 mode=Mode.BLAST.ordinal()-1;
+            }
+            if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
+                mode = Mode.VEIN.ordinal()-1;
             }
             tag.putInt("mode", mode);
         }

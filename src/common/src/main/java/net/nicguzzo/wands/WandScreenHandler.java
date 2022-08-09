@@ -7,6 +7,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -23,6 +24,16 @@ public class WandScreenHandler extends AbstractContainerMenu {
     public ItemStack wand;
     public final Inventory playerInventory;
     private final SimpleContainer simplecontainer;
+
+    class WandSlot extends Slot{
+        public WandSlot(Container container, int i, int j, int k) {
+            super(container, i, j, k);
+        }
+        @Override
+        public boolean mayPlace(ItemStack itemStack) {
+            return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
+        }
+    }
 
     public WandScreenHandler(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
         this(syncId, playerInventory, packetByteBuf.readItem());
@@ -53,7 +64,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
             }
         }        
         for(o = 0; o < 9; ++o) {
-            this.addSlot(new Slot(simplecontainer, o, 8+o*18,32));
+            this.addSlot(new WandSlot(simplecontainer, o, 8+o*18,32));
         }
 
     }
@@ -62,13 +73,13 @@ public class WandScreenHandler extends AbstractContainerMenu {
     public boolean stillValid(Player player) {
         return wand.getItem() instanceof WandItem;
     }
-    boolean can_pickup(ItemStack itemStack){
+    boolean mayPlace(ItemStack itemStack){
         return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
         for(int o = s; o < e; ++o) {
             Slot slot = this.slots.get(o);
-            if(!slot.hasItem() && can_pickup(itemStack)){
+            if(!slot.hasItem() && mayPlace(itemStack)){
                 slot.set(itemStack);
                 slot.setChanged();
                 return true;
@@ -76,6 +87,7 @@ public class WandScreenHandler extends AbstractContainerMenu {
         }
         return false;
     }
+    /*
     void pick(Player player,Slot slot){
         ItemStack itemStack = MCVer.inst.get_carried(player, this);
         if(itemStack.isEmpty() && can_pickup(slot.getItem())) {
@@ -150,8 +162,24 @@ public class WandScreenHandler extends AbstractContainerMenu {
         return;
 #endif
     }
+
+    */
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
+        //WandsMod.LOGGER.info("quick move "+index);
+        Slot slot = (Slot)this.slots.get(index);
+        if(index>=0 && index<36) { //player inv
+                if (insert(slot.getItem(), 36, 45)) {
+                    slot.set(ItemStack.EMPTY);
+                }
+
+        }else{
+            if(index>=36 && index<45){
+                if (insert(slot.getItem(), 0, 36)) {
+                    slot.set(ItemStack.EMPTY);
+                }
+            }
+        }
         return ItemStack.EMPTY;
     }
     public static ListTag toTag(SimpleContainer inventory) {
@@ -175,6 +203,4 @@ public class WandScreenHandler extends AbstractContainerMenu {
             inventory.setItem(slot, stack);
         });
     }
-
-
 }

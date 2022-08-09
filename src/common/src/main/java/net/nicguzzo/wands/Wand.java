@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.mojang.datafixers.util.Pair;
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
@@ -41,12 +43,14 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 //import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -138,7 +142,7 @@ public class Wand {
     private boolean damaged_tool;
     public boolean match_state=false;
     public boolean even_circle=false;
-    private BlockPos[] vein_dirs=new BlockPos[14];
+    private BlockPos[] vein_dirs=new BlockPos[26];
     public static class PaletteSlot {
         public ItemStack stack;
         public BlockState state;
@@ -190,6 +194,39 @@ public class Wand {
             this.state = state;
         }
     }
+#if MC<="1165"
+    private static final Set<Block>    PICKAXE_DIGGABLES= ImmutableSet.of(Blocks.ACTIVATOR_RAIL, Blocks.COAL_ORE, Blocks.COBBLESTONE, Blocks.DETECTOR_RAIL, Blocks.DIAMOND_BLOCK, Blocks.DIAMOND_ORE, new Block[]{Blocks.POWERED_RAIL, Blocks.GOLD_BLOCK, Blocks.GOLD_ORE, Blocks.NETHER_GOLD_ORE, Blocks.ICE, Blocks.IRON_BLOCK, Blocks.IRON_ORE, Blocks.LAPIS_BLOCK, Blocks.LAPIS_ORE, Blocks.MOSSY_COBBLESTONE, Blocks.NETHERRACK, Blocks.PACKED_ICE, Blocks.BLUE_ICE, Blocks.RAIL, Blocks.REDSTONE_ORE, Blocks.SANDSTONE, Blocks.CHISELED_SANDSTONE, Blocks.CUT_SANDSTONE, Blocks.CHISELED_RED_SANDSTONE, Blocks.CUT_RED_SANDSTONE, Blocks.RED_SANDSTONE, Blocks.STONE, Blocks.GRANITE, Blocks.POLISHED_GRANITE, Blocks.DIORITE, Blocks.POLISHED_DIORITE, Blocks.ANDESITE, Blocks.POLISHED_ANDESITE, Blocks.STONE_SLAB, Blocks.SMOOTH_STONE_SLAB, Blocks.SANDSTONE_SLAB, Blocks.PETRIFIED_OAK_SLAB, Blocks.COBBLESTONE_SLAB, Blocks.BRICK_SLAB, Blocks.STONE_BRICK_SLAB, Blocks.NETHER_BRICK_SLAB, Blocks.QUARTZ_SLAB, Blocks.RED_SANDSTONE_SLAB, Blocks.PURPUR_SLAB, Blocks.SMOOTH_QUARTZ, Blocks.SMOOTH_RED_SANDSTONE, Blocks.SMOOTH_SANDSTONE, Blocks.SMOOTH_STONE, Blocks.STONE_BUTTON, Blocks.STONE_PRESSURE_PLATE, Blocks.POLISHED_GRANITE_SLAB, Blocks.SMOOTH_RED_SANDSTONE_SLAB, Blocks.MOSSY_STONE_BRICK_SLAB, Blocks.POLISHED_DIORITE_SLAB, Blocks.MOSSY_COBBLESTONE_SLAB, Blocks.END_STONE_BRICK_SLAB, Blocks.SMOOTH_SANDSTONE_SLAB, Blocks.SMOOTH_QUARTZ_SLAB, Blocks.GRANITE_SLAB, Blocks.ANDESITE_SLAB, Blocks.RED_NETHER_BRICK_SLAB, Blocks.POLISHED_ANDESITE_SLAB, Blocks.DIORITE_SLAB, Blocks.SHULKER_BOX, Blocks.BLACK_SHULKER_BOX, Blocks.BLUE_SHULKER_BOX, Blocks.BROWN_SHULKER_BOX, Blocks.CYAN_SHULKER_BOX, Blocks.GRAY_SHULKER_BOX, Blocks.GREEN_SHULKER_BOX, Blocks.LIGHT_BLUE_SHULKER_BOX, Blocks.LIGHT_GRAY_SHULKER_BOX, Blocks.LIME_SHULKER_BOX, Blocks.MAGENTA_SHULKER_BOX, Blocks.ORANGE_SHULKER_BOX, Blocks.PINK_SHULKER_BOX, Blocks.PURPLE_SHULKER_BOX, Blocks.RED_SHULKER_BOX, Blocks.WHITE_SHULKER_BOX, Blocks.YELLOW_SHULKER_BOX, Blocks.PISTON, Blocks.STICKY_PISTON, Blocks.PISTON_HEAD});
+    private static final Set<Material> AXE_DIGGABLE_MATERIALS = Sets.newHashSet(new Material[]{Material.WOOD, Material.NETHER_WOOD, Material.PLANT, Material.REPLACEABLE_PLANT, Material.BAMBOO, Material.VEGETABLE});
+    private static final Set<Block>    AXE_DIGGABLE_BLOCKS = Sets.newHashSet(new Block[]{Blocks.LADDER, Blocks.SCAFFOLDING, Blocks.OAK_BUTTON, Blocks.SPRUCE_BUTTON, Blocks.BIRCH_BUTTON, Blocks.JUNGLE_BUTTON, Blocks.DARK_OAK_BUTTON, Blocks.ACACIA_BUTTON, Blocks.CRIMSON_BUTTON, Blocks.WARPED_BUTTON});
+    private static final Set<Block>    SHOVEL_DIGGABLES = Sets.newHashSet(new Block[]{Blocks.CLAY, Blocks.DIRT, Blocks.COARSE_DIRT, Blocks.PODZOL, Blocks.FARMLAND, Blocks.GRASS_BLOCK, Blocks.GRAVEL, Blocks.MYCELIUM, Blocks.SAND, Blocks.RED_SAND, Blocks.SNOW_BLOCK, Blocks.SNOW, Blocks.SOUL_SAND, Blocks.GRASS_PATH, Blocks.WHITE_CONCRETE_POWDER, Blocks.ORANGE_CONCRETE_POWDER, Blocks.MAGENTA_CONCRETE_POWDER, Blocks.LIGHT_BLUE_CONCRETE_POWDER, Blocks.YELLOW_CONCRETE_POWDER, Blocks.LIME_CONCRETE_POWDER, Blocks.PINK_CONCRETE_POWDER, Blocks.GRAY_CONCRETE_POWDER, Blocks.LIGHT_GRAY_CONCRETE_POWDER, Blocks.CYAN_CONCRETE_POWDER, Blocks.PURPLE_CONCRETE_POWDER, Blocks.BLUE_CONCRETE_POWDER, Blocks.BROWN_CONCRETE_POWDER, Blocks.GREEN_CONCRETE_POWDER, Blocks.RED_CONCRETE_POWDER, Blocks.BLACK_CONCRETE_POWDER, Blocks.SOUL_SOIL});
+    private static final Set<Block>    HOE_DIGGABLES = ImmutableSet.of(Blocks.NETHER_WART_BLOCK, Blocks.WARPED_WART_BLOCK, Blocks.HAY_BLOCK, Blocks.DRIED_KELP_BLOCK, Blocks.TARGET, Blocks.SHROOMLIGHT, new Block[]{Blocks.SPONGE, Blocks.WET_SPONGE, Blocks.JUNGLE_LEAVES, Blocks.OAK_LEAVES, Blocks.SPRUCE_LEAVES, Blocks.DARK_OAK_LEAVES, Blocks.ACACIA_LEAVES, Blocks.BIRCH_LEAVES});
+#endif
+
+#if MC == "1165"
+    static boolean pickaxe_minable(BlockState state){
+            return PICKAXE_DIGGABLES.contains(state.getBlock());
+    }
+    static boolean axe_minable(BlockState state){
+        return AXE_DIGGABLE_BLOCKS.contains(state.getBlock())||AXE_DIGGABLE_MATERIALS.contains(state.getMaterial());
+    }
+    static boolean hoe_minable(BlockState state){
+        return HOE_DIGGABLES.contains(state.getBlock());
+    }
+    static boolean shovel_minable(BlockState state) {
+        return SHOVEL_DIGGABLES.contains(state.getBlock());
+    }
+#else
+#if MC == "1171"
+    static boolean pickaxe_minable(BlockState state){
+            return BlockTags.MINEABLE_WITH_PICKAXE.contains(state.getBlock());
+    }
+#else
+    static boolean pickaxe_minable(BlockState state) {
+        return state.is(BlockTags.MINEABLE_WITH_PICKAXE);
+    }
+#endif
+#endif
+
 
     static class HoeAccess extends  HoeItem{
         public HoeAccess(Tier tier, int i, float f, Properties properties) {
@@ -536,7 +573,7 @@ public class Wand {
 
         if (!preview) {
             //log(" using palette seed: " + palette_seed);
-            if(limit_reached){
+            if(limit_reached && (mode!=Mode.VEIN)){
                 player.displayClientMessage(MCVer.inst.literal("wand limit reached"),false);
             }
             //log("has_palette: "+has_palette);
@@ -889,7 +926,7 @@ public class Wand {
         int skip_probability=WandItem.getVal(wand_stack, WandItem.Value.SKIPBLOCK);
         if(skip_probability>0) {
             for (int a = 0; a < block_buffer.get_length(); a++) {
-                int r = random.nextInt(0, 100);
+                int r = random.nextInt(100);
                 boolean skip = (r >= skip_probability);
                 if (!skip) {
                     block_buffer.state[a]=null;
@@ -1494,78 +1531,74 @@ public class Wand {
         int found = 1;
         limit2-=1;
         int i=0;
-        BlockPos bpos=pos;
-        int distance=100;
-        int dist=0;
-
         add_to_buffer(pos.getX(),pos.getY(),pos.getZ());
         int from=0;
         int to=1;
+        int k;
+        int cost=0;
         while (i < limit2 && i < MAX_LIMIT && found <= limit2) {
+            k=0;
             for(int j=from;j<to;j++) {
-                next_vein_layer(vein_dirs, block_buffer.get(j), 1);
+                next_vein_layer(vein_dirs, block_buffer.get(j));
                 for (BlockPos p : vein_dirs) {
-                    BlockState st = level.getBlockState(p);
-                    if (!st.isAir() &&
-                            (
-                                    (match_state && st.equals(block_state)) ||
-                                            (!match_state && st.getBlock().equals(block_state.getBlock())) ||
-                                            state_in_slot(st)
-                            )
-                    ) {
-                        if (!block_buffer.in_buffer(p)) {
-                            add_to_buffer(p.getX(), p.getY(), p.getZ());
-                            found++;
+                    if(p!=null) {
+                        BlockState st = level.getBlockState(p);
+                        if (!st.isAir() && (
+                                (match_state && st.equals(block_state)) ||
+                                (!match_state && st.getBlock().equals(block_state.getBlock())) ||
+                                state_in_slot(st)
+                        )) {
+                            if (!block_buffer.in_buffer(p)) {
+                                add_to_buffer(p.getX(), p.getY(), p.getZ());
+                                found++;
+                                k++;
+                            }
                         }
                     }
+                    cost++;
                 }
+            }
+            if(k==0){
+                break;
             }
             from=to;
             to=block_buffer.get_length();
             i++;
         }
+        //if(!preview){
+            //WandsMod.LOGGER.info("cost: "+cost);
+        //}
         validate_buffer();
     }
-    void next_vein_layer(BlockPos[] vein_dirs,BlockPos bpos,int dist){
-        vein_dirs[0] =bpos.north(dist);
-        vein_dirs[1] =bpos.east(dist);
-        vein_dirs[2] =bpos.west(dist);
-        vein_dirs[3] =bpos.south(dist);
-        vein_dirs[4] =bpos.above(dist);
-        vein_dirs[5] =bpos.below(dist);
-        vein_dirs[6] =bpos.north(dist).east(dist);
-        vein_dirs[7] =bpos.north(dist).west(dist);
-        vein_dirs[8] =bpos.north(dist).above(dist);
-        vein_dirs[9] =bpos.north(dist).below(dist);
-        vein_dirs[10] =bpos.south(dist).east(dist);
-        vein_dirs[11] =bpos.south(dist).west(dist);
-        vein_dirs[12] =bpos.south(dist).above(dist);
-        vein_dirs[13] =bpos.south(dist).below(dist);
+    void next_vein_layer(BlockPos[] vein_dirs,BlockPos bpos){
+        vein_dirs[0] =bpos.north();
+        vein_dirs[1] =bpos.east();
+        vein_dirs[2] =bpos.west();
+        vein_dirs[3] =bpos.south();
+        vein_dirs[4] =bpos.above();
+        vein_dirs[5] =bpos.below();
+        vein_dirs[6] =bpos.north().east();
+        vein_dirs[7] =bpos.north().west();
+        vein_dirs[8] =bpos.north().above();
+        vein_dirs[9] =bpos.north().below();
+        vein_dirs[10] =bpos.south().east();
+        vein_dirs[11] =bpos.south().west();
+        vein_dirs[12] =bpos.south().above();
+        vein_dirs[13] =bpos.south().below();
+        vein_dirs[14] =bpos.east().below();
+        vein_dirs[15] =bpos.west().below();
+        vein_dirs[16] =bpos.east().above();
+        vein_dirs[17] =bpos.west().above();
+        vein_dirs[18] =vein_dirs[6].above();
+        vein_dirs[19] =vein_dirs[6].below();
+        vein_dirs[20] =vein_dirs[7].above();
+        vein_dirs[21] =vein_dirs[7].below();
+        vein_dirs[22] =vein_dirs[10].above();
+        vein_dirs[23] =vein_dirs[10].below();
+        vein_dirs[24] =vein_dirs[11].above();
+        vein_dirs[25] =vein_dirs[11].below();
     }
-   /* int find_vein(BlockPos bpos, BlockState state,int found,int limit) {
-        if (found >= limit) {
-            return 0;
-        }
-        for (BlockPos p : vein_dirs) {
-            BlockState st = level.getBlockState(p);
-            if (!st.isAir() &&
-                    (
-                            (match_state && st.equals(state)) ||
-                                    (!match_state && st.getBlock().equals(state.getBlock())) ||
-                                    state_in_slot(st)
-                    )
-            ) {
-                if (!block_buffer.in_buffer(p)) {
-                    add_to_buffer(p.getX(), p.getY(), p.getZ());
-                    found++;
-                    //if (found < limit) {
-                    //    found += find_vein(p, state, found, limit);
-                    //}
-                }
-            }
-        }
-        return found;
-    }*/
+
     void mode_copy() {
         //if (!preview) {
             //WandsMod.log("mode6 copy_pos1: "+copy_pos1+" copy_pos2: "+copy_pos2 + " copy_paste_buffer: "+copy_paste_buffer.size(),prnt);
@@ -2104,19 +2137,8 @@ public class Wand {
                 }
             }
             boolean will_break=(wand_durability == 1 ) || (tool_durability == 1 );
-            /*if(will_break){
-                if(WandsMod.config.allow_wand_to_break) {
-                    if(WandsMod.config.allow_offhand_to_break){
-                    }
-                }else{
-                    if(WandsMod.config.allow_offhand_to_break){
-                        will_break = false;
-                    }
-                }
-            }*/
             if(will_break) {
                 damaged_tool=true;
-                //stop = true;
                 return false;
             }
         }else{
@@ -2129,30 +2151,21 @@ public class Wand {
             }
         }
 
-
         p1_state=state;
         if (!destroy ) {
-            //if (state.getBlock() instanceof SnowLayerBlock) {
-
             if (offhand!=null) {
                 blk = Block.byItem(offhand.getItem());
             }
             #if MC>="1190"
-            //WandsMod.LOGGER.info("block: "+blk);
-            //WandsMod.LOGGER.info("has_water_potion: "+has_water_potion);
             if((use)&& has_water_potion &&  state.is(BlockTags.CONVERTABLE_TO_MUD)){
                 level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
                 send_sound=Sounds.SPLASH.ordinal();
-                /*BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,block_pos,true);
-                UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
-                if( player.getOffhandItem().useOn(ctx) != InteractionResult.PASS) {*/
-                    if (!creative) {
-                        if(!wand_item.unbreakable) {
-                            wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
-                        }
-                        consume_xp();
+                if (!creative) {
+                    if(!wand_item.unbreakable) {
+                        wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                     }
-                //}
+                    consume_xp();
+                }
                 return true;
             }
         #endif
@@ -2167,8 +2180,6 @@ public class Wand {
                     if(layers<8){
                         block_pos=block_pos.below();
                         state=state.setValue(SnowLayerBlock.LAYERS,layers+1);
-                        //level.setBlock(block_pos,Blocks.AIR.defaultBlockState(),2);
-                        //level.destroyBlock(block_pos, false);
                     }
                 }
             }else{
@@ -2182,14 +2193,14 @@ public class Wand {
         }
 
         if(use && digger_item!=null && (has_hoe||has_shovel||has_axe) ) {
-            //HoeItem hoe=(HoeItem) offhand.getItem();
             BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,block_pos,true);
             UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
             if( digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative) {
                     if(!wand_item.unbreakable) {
-                        wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
+                       wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                     }
+                    digger_item.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
                     consume_xp();
                 }
             }
@@ -2230,28 +2241,11 @@ public class Wand {
                 }
                 if ((BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
                     if (destroy || replace) {
-
                         if (_can_destroy) {
-                            //log("can destroy: "+st);
-                            placed = destroyBlock(block_pos, false);
-                            //log("destroyed: "+placed);
-                            if (placed && WandsMod.config.destroy_in_survival_drop && digger_item !=null) {
-                                int silk_touch = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,
-                                        digger_item);
-                                int fortune = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,
-                                        digger_item);
-                                if ( WandsMod.config.survival_unenchanted_drops || fortune > 0 || silk_touch > 0
-                                        || digger_item.getItem() instanceof ShearsItem) {
-                                    st.getBlock().playerDestroy(level, player, block_pos, st, null, digger_item);
-                                }
-                            }
-                        }else{
-                            //log("can't destroy: "+st);
+                            placed = destroyBlock(block_pos, true);
                         }
                     }
                     if(!destroy || (replace && placed)){
-                        /*boolean is_tool = offhand != null && !offhand.isEmpty()
-                                && offhand.getItem() instanceof DiggerItem;*/
                         if (!use) {
                             if (state!=null && state.canSurvive(level,block_pos) && level.setBlockAndUpdate(block_pos, state)) {
                                 blk.setPlacedBy(level,block_pos,state,player,blk.asItem().getDefaultInstance());
@@ -2279,14 +2273,7 @@ public class Wand {
                             stop = true;
                         }
                     }
-                    /*if((wand_durability == 1 && WandsMod.config.allow_wand_to_break)
-                        && digger_item !=null && digger_item.getItem()==Items.AIR)
-                    {
-
-                        stop=true;
-                    }*/
                 }
-
                 if (placed) {
                     if ((destroy||replace) && digger_item !=null) {
                         digger_item.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
@@ -2311,10 +2298,14 @@ public class Wand {
                 //level.levelEvent(2001, blockPos, Block.getId(blockState));
             }
 
-            /*if (bl) {
+            if (bl) {
+#if MC<="1165"
+                BlockEntity blockEntity = blockState.getBlock().isEntityBlock() ? level.getBlockEntity(blockPos) : null;
+#else
                 BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
-                Block.dropResources(blockState, level, blockPos, blockEntity, null, ItemStack.EMPTY);
-            }*/
+#endif
+                Block.dropResources(blockState, level, blockPos, blockEntity, null, digger_item);
+            }
 
             boolean bl2 = level.setBlock(blockPos, fluidState.createLegacyBlock(), 3, 512);
             if (bl2) {
@@ -2664,6 +2655,7 @@ public class Wand {
         Item item_digger=digger.getItem();
         if(digger!=null && !digger.isEmpty() &&(item_digger instanceof DiggerItem ||item_digger instanceof ShearsItem) ){
             boolean is_allowed=false;
+            boolean minable=false;
             if (item_digger instanceof ShearsItem) {
                 can_shear=(
                         state.is(BlockTags.LEAVES) ||
@@ -2681,15 +2673,27 @@ public class Wand {
                 is_allowed = is_allowed || WandsConfig.shears_allowed.contains(blk);
             }else{
                 if(item_digger instanceof PickaxeItem){
+                    #if MC == "1165"
+                    minable=pickaxe_minable(state);
+                    #endif
                     is_allowed= is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
                 }else {
                     if (item_digger instanceof AxeItem) {
+                        #if MC == "1165"
+                            minable=axe_minable(state);
+                        #endif
                         is_allowed = is_allowed || WandsConfig.axe_allowed.contains(blk);
                     } else {
                         if (item_digger instanceof ShovelItem) {
+                            #if MC == "1165"
+                              minable=shovel_minable(state);
+                            #endif
                             is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
                         } else {
                             if (item_digger instanceof HoeItem) {
+                                #if MC == "1165"
+                                    minable=hoe_minable(state);
+                                #endif
                                is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
                             }
                         }
@@ -2697,11 +2701,12 @@ public class Wand {
                 }
             }
             if(check_speed){
-                /*if(use){
-                    item_digger.
-                }*/
                 float destroy_speed=item_digger.getDestroySpeed(digger, state);
-                boolean correct_tool=item_digger.isCorrectToolForDrops(state);
+                #if MC == "1165"
+                boolean correct_tool=item_digger.isCorrectToolForDrops(state)||minable ;
+                #else
+                    boolean correct_tool=item_digger.isCorrectToolForDrops(state);
+                #endif
                 return creative || (destroy_speed > 1.0f&& correct_tool)
                         || is_glass || is_snow_layer || is_allowed ||can_shear;
             }else{

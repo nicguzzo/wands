@@ -66,7 +66,7 @@ public class WandsMod {
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,Wand.MAX_LIMIT,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,config.creative_wand_limit,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{

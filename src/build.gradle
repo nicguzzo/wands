@@ -40,8 +40,8 @@ allprojects {
         
     }
     dependencies {
-        annotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.18'
-        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.18'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.19'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.19'
     }
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
