@@ -217,86 +217,99 @@ public class WandsModClient {
         Minecraft client = Minecraft.getInstance();
         if(client!=null && client.player!=null){
             ItemStack stack=client.player.getMainHandItem();
-            if(stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem){
+            ItemStack offhand_stack=client.player.getOffhandItem();
+            boolean main=stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem;
+            boolean off =offhand_stack!=null && !offhand_stack.isEmpty() && offhand_stack.getItem() instanceof WandItem;
+            if(main || off){
+                
+                
+                
                 int screenWidth =client.getWindow().getGuiScaledWidth();
                 int screenHeight = client.getWindow().getGuiScaledHeight();
-                Font font = client.font;
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-                MCVer.inst.set_pos_tex_shader();
+                if(main){
+                    RenderSystem.enableBlend();
+                    RenderSystem.defaultBlendFunc();
+                    Font font = client.font;
 
-                Wand wand=ClientRender.wand;
-                WandItem.Mode mode=WandItem.getMode(stack);
-                WandItem.Action action=WandItem.getAction(stack);
-                Rotation r = WandItem.getRotation(stack);
-                String rot = "";
-                switch (r) {
-                    case NONE:
-                        rot = "0°";
-                        break;
-                    case CLOCKWISE_90:
-                        rot = "90°";
-                        break;
-                    case CLOCKWISE_180:
-                        rot = "180°";
-                        break;
-                    case COUNTERCLOCKWISE_90:
-                        rot = "270°";
-                        break;
-                }
-                String ln1="";
-                String ln2="Action: "+action.toString();
-                String ln3="Mode: "+mode.toString()+" Rot:"+rot;
-                if(wand.valid) {
-                    switch(mode){
-                        case DIRECTION:
-                            int mult=WandItem.getVal(stack, WandItem.Value.MULTIPLIER);
-                            ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
-                            break;
-                        case GRID:
-                            int gm=WandItem.getVal(stack, WandItem.Value.GRIDM);
-                            int gn=WandItem.getVal(stack, WandItem.Value.GRIDN);
-                            int gms=WandItem.getVal(stack, WandItem.Value.GRIDMS);
-                            int gns=WandItem.getVal(stack, WandItem.Value.GRIDNS);
-                            String skp="";
-                            if(gms>0||gns>0){
-                                skp=" - ("+gms+"x"+gns+")";
-                            }
-                            ln1="Grid "+gm+"x"+gn+ skp;
-                            break;
+                    MCVer.inst.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+                    MCVer.inst.set_pos_tex_shader();
 
-                        case ROW_COL:
-                        case FILL:
-                        case LINE:
-                        case AREA:
-                        case VEIN:
-                            int arealim=WandItem.getVal(stack, WandItem.Value.AREALIM);
-                            ln1="Blocks: "+wand.block_buffer.get_length();
-                            if(arealim>0){
-                                ln1+=" Limit: "+arealim;
-                            }
+                    Wand wand=ClientRender.wand;
+                    WandItem.Mode mode=WandItem.getMode(stack);
+                    WandItem.Action action=WandItem.getAction(stack);
+                    Rotation r = WandItem.getRotation(stack);
+                    String rot = "";
+                    switch (r) {
+                        case NONE:
+                            rot = "0°";
                             break;
-                        case CIRCLE:
-                            ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
+                        case CLOCKWISE_90:
+                            rot = "90°";
                             break;
-                        case RECT:
-                            ln1="Blocks: "+wand.block_buffer.get_length();
+                        case CLOCKWISE_180:
+                            rot = "180°";
                             break;
-                        case COPY:
-                        case PASTE:
-                            ln1="Copied Blocks: "+wand.copy_paste_buffer.size();
+                        case COUNTERCLOCKWISE_90:
+                            rot = "270°";
                             break;
                     }
+                    String ln1="";
+                    String ln2="Action: "+action.toString();
+                    String ln3="Mode: "+mode.toString()+" Rot:"+rot;
+                    if(wand.valid) {
+                        switch(mode){
+                            case DIRECTION:
+                                int mult=WandItem.getVal(stack, WandItem.Value.MULTIPLIER);
+                                ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
+                                break;
+                            case GRID:
+                                int gm=WandItem.getVal(stack, WandItem.Value.GRIDM);
+                                int gn=WandItem.getVal(stack, WandItem.Value.GRIDN);
+                                int gms=WandItem.getVal(stack, WandItem.Value.GRIDMS);
+                                int gns=WandItem.getVal(stack, WandItem.Value.GRIDNS);
+                                String skp="";
+                                if(gms>0||gns>0){
+                                    skp=" - ("+gms+"x"+gns+")";
+                                }
+                                ln1="Grid "+gm+"x"+gn+ skp;
+                                break;
+
+                            case ROW_COL:
+                            case FILL:
+                            case LINE:
+                            case AREA:
+                            case VEIN:
+                                int arealim=WandItem.getVal(stack, WandItem.Value.AREALIM);
+                                ln1="Blocks: "+wand.block_buffer.get_length();
+                                if(arealim>0){
+                                    ln1+=" Limit: "+arealim;
+                                }
+                                break;
+                            case CIRCLE:
+                                ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
+                                break;
+                            case RECT:
+                                ln1="Blocks: "+wand.block_buffer.get_length();
+                                break;
+                            case COPY:
+                            case PASTE:
+                                ln1="Copied Blocks: "+wand.copy_paste_buffer.size();
+                                break;
+                        }
+                    }
+                    int h=3*font.lineHeight;
+                    float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
+                    float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
+                    font.draw(poseStack,ln1,x,y,0xffffff);
+                    font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
+                    font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
                 }
-                int h=3*font.lineHeight;
-                float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
-                float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
-                font.draw(poseStack,ln1,x,y,0xffffff);
-                font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
-                font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
                 if(WandsMod.config.show_tools_info) {
+                    Font font = client.font;
                     ItemRenderer itemRenderer = client.getItemRenderer();
+                    if(!main){
+                        stack=offhand_stack;
+                    }
                     CompoundTag ctag = stack.getOrCreateTag();
                     ListTag tag = ctag.getList("Tools", MCVer.NbtType.COMPOUND);
                     //int ix = 4;

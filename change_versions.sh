@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.6.2
+VERSION=2.6.3
 TYPE=release
 mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 sed -i "s/VERSION=.*/VERSION=${VERSION}_${TYPE}/" dist.sh

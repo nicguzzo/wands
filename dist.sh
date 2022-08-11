@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.6.2_release
+VERSION=2.6.3_release
 mod="BuildingWands"
 modloader=(fabric forge)
 mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`

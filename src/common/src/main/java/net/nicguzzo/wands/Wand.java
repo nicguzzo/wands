@@ -426,13 +426,15 @@ public class Wand {
         update_tools();
         if(use) {
             for (int i = 0; i < tools.length; i++) {
-                int dmg=tools[i].getMaxDamage()- tools[i].getDamageValue();
-                if(tools[i]!=null && dmg>1) {
-                    Item item=tools[i].getItem();
-                    has_hoe = (has_hoe || item instanceof HoeItem);
-                    has_shovel = has_shovel || item instanceof ShovelItem;
-                    has_axe = has_axe || item instanceof AxeItem;
-                    has_shear = has_shear || item instanceof ShearsItem;
+                if(tools[i]!=null && tools[i].getItem()!= Items.AIR){
+                    int dmg=tools[i].getMaxDamage()- tools[i].getDamageValue();
+                    if(dmg>1) {
+                        Item item=tools[i].getItem();
+                        has_hoe = (has_hoe || item instanceof HoeItem);
+                        has_shovel = has_shovel || item instanceof ShovelItem;
+                        has_axe = has_axe || item instanceof AxeItem;
+                        has_shear = has_shear || item instanceof ShearsItem;
+                    }
                 }
             }
         }
