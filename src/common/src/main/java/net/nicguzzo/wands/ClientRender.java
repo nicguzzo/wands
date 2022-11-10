@@ -27,6 +27,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.Half;
+import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -593,15 +595,55 @@ public class ClientRender {
                             BlockPos po=wand.copy_paste_buffer.get(0).pos;
 
                             for (CopyPasteBuffer b : wand.copy_paste_buffer) {
-                                BlockPos p = b.pos.rotate(last_rot);
-                                BlockState st = wand.paste_rot(b.state);
+                                BlockState st =b.state;
                                 if (wand.has_palette) {
                                     st = wand.get_state();
-                                }
+                                }else{
+                                    st=wand.mirror_stair(st,mirroraxis);
+                                    //Mirror
+                                    /*Block blk=st.getBlock();
+                                    if(blk instanceof  StairBlock && mirroraxis >0) {
+                                        st = wand.paste_rot(st);
+
+                                        Direction facing=st.getValue(StairBlock.FACING);
+                                        StairsShape shape=st.getValue(StairBlock.SHAPE);
+                                        if(my==-1){
+                                            st=st.setValue(StairBlock.HALF,st.getValue(StairBlock.HALF));
+                                        }else {
+                                            if (
+                                                (mx == -1 && (facing == Direction.EAST  || facing == Direction.WEST  )) ||
+                                                (mz == -1 && (facing == Direction.NORTH || facing == Direction.SOUTH ))
+                                            ) {
+                                                st = st.setValue(StairBlock.FACING, facing.getOpposite());
+                                            }
+                                            if ( shape!= StairsShape.STRAIGHT){
+                                                if(shape==StairsShape.INNER_LEFT) {
+                                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
+                                                }else{
+                                                    if(shape==StairsShape.OUTER_LEFT) {
+                                                        st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
+                                                    }else{
+                                                        if(shape==StairsShape.OUTER_RIGHT) {
+                                                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                                                        }else {
+                                                            if (shape == StairsShape.INNER_RIGHT) {
+                                                                st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }else{
+                                        st = wand.paste_rot(st);
+                                    }*/
+                            }
+                                BlockPos p = b.pos.rotate(last_rot);
                                 int px=b_pos.getX() + p.getX()*mx;
                                 int py=b_pos.getY() + p.getY()*my;
                                 int pz=b_pos.getZ() + p.getZ()*mz;
-                                //render_shape(matrixStack, tesselator, bufferBuilder, st, b_pos.getX() + p.getX(), b_pos.getY() + p.getY(), b_pos.getZ() + p.getZ());
+
                                 render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
                             }
                             tesselator.end();

@@ -10,6 +10,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.google.gson.JsonSyntaxException;
 import me.shedaniel.math.Color;
 
 import net.minecraft.core.Registry;
@@ -172,9 +173,16 @@ public class WandsConfig {
 		Gson gson=new Gson();
 		File configFile = new File(WandsExpectPlatform.getConfigDirectory().toString(), "wands.json");
 		try (FileReader reader = new FileReader(configFile)) {
-			INSTANCE = gson.fromJson(reader, WandsConfig.class);
-			System.out.println("Config: "+INSTANCE);
-			INSTANCE.parse_colors();
+			try{
+				WandsConfig ins= gson.fromJson(reader, WandsConfig.class);
+				if(ins!=null) {
+					INSTANCE = ins;
+					System.out.println("Config: " + INSTANCE);
+					INSTANCE.parse_colors();
+				}
+			}catch(JsonSyntaxException e3){
+				System.out.println("Failed to parse config file!");				
+			}
 			try (FileWriter writer = new FileWriter(configFile)) {
 				writer.write(new GsonBuilder().setPrettyPrinting().create().toJson(INSTANCE));
 				System.out.println("Config updated!");

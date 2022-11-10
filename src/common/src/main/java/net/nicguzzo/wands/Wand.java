@@ -48,6 +48,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 //import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.Material;
@@ -62,6 +63,7 @@ import net.nicguzzo.wands.mcver.MCVer;
 
 #if MC>="1190"
     import net.minecraft.util.RandomSource;
+import org.jetbrains.annotations.Nullable;
 #endif
 
 public class Wand {
@@ -88,7 +90,8 @@ public class Wand {
 
     public boolean valid = false;
     public static final int MAX_UNDO = 2048;
-    public static final int MAX_LIMIT = 32768;
+    public static final int MAX_LIMIT = 4096;
+//    public static final int MAX_LIMIT = 50000000;
     Player player;
     Level level;
     BlockState block_state;
@@ -400,10 +403,15 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-        //Done paste should respect modes place replace destroy
+        //TODO bug, copy undoes last destroy
+        //TODO place bamboo
+        //TODO walls/fences state
+        //TODO bug, mud with potion on survival
+        //TODO bug shear pumpkins
         //TODO support tags in allow/deny list
         //TODO palette pattern mode
         //TODO banner placement not working on sides
+
 
         wand_item = (WandItem) wand_stack.getItem();
         limit = wand_item.limit;
@@ -1716,7 +1724,8 @@ public class Wand {
             int mx=1;
             int my=1;
             int mz=1;
-            switch(WandItem.getVal(wand_stack, WandItem.Value.MIRRORAXIS)){
+            int mirroraxis=WandItem.getVal(wand_stack, WandItem.Value.MIRRORAXIS);
+            switch(mirroraxis){
                 case 1://X
                     mx=-1;
                     break;
@@ -1735,12 +1744,14 @@ public class Wand {
             //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             block_buffer.reset();
             random.setSeed(palette_seed);
+
             for (CopyPasteBuffer b : copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(rotation);
-                BlockState st=paste_rot(b.state);
+                BlockState st=b.state;
                 int px=b_pos.getX() + p.getX()*mx;
                 int py=b_pos.getY() + p.getY()*my;
                 int pz=b_pos.getZ() + p.getZ()*mz;
+                st=mirror_stair(st,mirroraxis);
                 if(has_palette) {
                     block_buffer.add(px,py,pz,this);
                 }else {
@@ -1748,6 +1759,42 @@ public class Wand {
                 }
             }
         }
+    }
+    public BlockState mirror_stair(BlockState st,int mirroraxis){
+        if(st.getBlock() instanceof  StairBlock && mirroraxis >0) {
+            //TrapDoorBlock ??
+            st = paste_rot(st);
+            Direction facing = st.getValue(StairBlock.FACING);
+            StairsShape shape = st.getValue(StairBlock.SHAPE);
+            if (mirroraxis == 2) {
+                st = st.setValue(StairBlock.HALF, st.getValue(StairBlock.HALF));
+            } else {
+                if (
+                    (mirroraxis == 1 && (facing == Direction.EAST || facing == Direction.WEST)) ||
+                    (mirroraxis == 3 && (facing == Direction.NORTH || facing == Direction.SOUTH))
+                ) {
+                    st = st.setValue(StairBlock.FACING, facing.getOpposite());
+                }
+                if (shape != StairsShape.STRAIGHT) {
+                    if (shape == StairsShape.INNER_LEFT) {
+                        st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
+                    } else {
+                        if (shape == StairsShape.OUTER_LEFT) {
+                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
+                        } else {
+                            if (shape == StairsShape.OUTER_RIGHT) {
+                                st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                            } else {
+                                if (shape == StairsShape.INNER_RIGHT) {
+                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return st;
     }
     public BlockState paste_rot(BlockState st){
         Block blk=st.getBlock();
@@ -1959,7 +2006,10 @@ public class Wand {
         }
         return null;
     }
+
     BlockState state_for_placement(BlockState st,BlockPos bp){
+        if(mode==Mode.PASTE)
+            return st;
         Block blk=st.getBlock();
         if(state_mode== WandItem.StateMode.TARGET) {
            BlockHitResult hit_res = new BlockHitResult(hit, side, (bp!=null?bp:pos), true);
@@ -2306,7 +2356,9 @@ public class Wand {
 #else
                 BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
 #endif
-                Block.dropResources(blockState, level, blockPos, blockEntity, null, digger_item);
+                //Block.dropResources(blockState, level, blockPos, blockEntity, null, digger_item);
+                //Level level, Player player, BlockPos blockPos, BlockState blockState, @Nullable BlockEntity blockEntity, ItemStack itemStack
+                blockState.getBlock().playerDestroy(level,player,pos,blockState,blockEntity,digger_item);
             }
 
             boolean bl2 = level.setBlock(blockPos, fluidState.createLegacyBlock(), 3, 512);

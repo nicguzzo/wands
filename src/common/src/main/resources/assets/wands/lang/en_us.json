@@ -26,6 +26,7 @@
     "key.wands.area_diagonal_spread": "Area Diagonal Spread",
     "key.wands.inc_sel_block": "Include block in selection",
     "itemGroup.wands.wands_tab": "Building Wands",
+    "key.categories.wands": "Building Wands",
     "title.wands.config": "Building Wands Configuration",
     "category.wands.general": "General",
     "category.wands.preview": "Preview",

@@ -9,6 +9,7 @@ import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
 #else
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
@@ -37,50 +38,76 @@ import net.minecraft.world.level.block.SoundType;
 import net.nicguzzo.wands.mcver.MCVer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class WandsModClient {
     static boolean shift =false;
     static boolean alt =false;
     public static boolean has_optifine=false;
     public static KeyMapping wand_menu_km;
-    public static KeyMapping palette_menu_km;
+    //public static KeyMapping palette_menu_km;
     public static final Logger LOGGER = LogManager.getLogger();
+    static final public Map keys=new HashMap<KeyMapping,WandsMod.WandKeys>();
+    static final public int wand_menu_key        = GLFW.GLFW_KEY_Y;// InputConstants.KEY_Y;
+    static final public int wand_mode_key        = GLFW.GLFW_KEY_V;//InputConstants.KEY_V;
+    static final public int wand_action_key      = GLFW.GLFW_KEY_H;//InputConstants.KEY_H;
+    static final public int wand_orientation_key = GLFW.GLFW_KEY_X;//InputConstants.KEY_X;
+    static final public int wand_undo_key        = GLFW.GLFW_KEY_U;//InputConstants.KEY_U;
+    static final public int wand_invert_key      = GLFW.GLFW_KEY_I;//InputConstants.KEY_I;
+    static final public int wand_fill_circle_key = GLFW.GLFW_KEY_K;//InputConstants.KEY_K;
+    static final public int wand_rotate           = GLFW.GLFW_KEY_R;//InputConstants.KEY_R;
+    static final public int palette_mode_key     = GLFW.GLFW_KEY_P;//InputConstants.KEY_P;
+    static final public int palette_menu_key     = GLFW.GLFW_KEY_J;//InputConstants.KEY_J;
+    static final public int wand_conf_key  = -1;
+    static final public int wand_m_inc_key = GLFW.GLFW_KEY_RIGHT;//InputConstants.KEY_RIGHT;
+    static final public int wand_m_dec_key = GLFW.GLFW_KEY_LEFT;//InputConstants.KEY_LEFT;
+    static final public int wand_n_inc_key = GLFW.GLFW_KEY_UP;//InputConstants.KEY_UP;
+    static final public int wand_n_dec_key = GLFW.GLFW_KEY_DOWN;//InputConstants.KEY_DOWN;
+    static final public int toggle_stair_slab_key = GLFW.GLFW_KEY_PERIOD;//InputConstants.KEY_PERIOD;
+    static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
+    static final public int inc_sel_block=GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
     public static void initialize() {
-        wand_menu_km=new KeyMapping("key.wands.wand_menu",WandsMod.wand_menu_key,"itemGroup.wands.wands_tab");
-        palette_menu_km=new KeyMapping("key.wands.palette_menu",WandsMod.palette_menu_key,"itemGroup.wands.wands_tab");
-        KeyMapping[] km={
-            new KeyMapping("key.wands.wand_mode",WandsMod.wand_mode_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_action",WandsMod.wand_action_key,"itemGroup.wands.wands_tab"),
-            wand_menu_km,
-            new KeyMapping("key.wands.wand_orientation",WandsMod.wand_orientation_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_invert",WandsMod.wand_invert_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_fill_circle",WandsMod.wand_fill_circle_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_undo",WandsMod.wand_undo_key,"itemGroup.wands.wands_tab"),
-            palette_menu_km,
-            new KeyMapping("key.wands.wand_palette_mode",WandsMod.palette_mode_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_rotate",WandsMod.wand_rotate,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.wand_conf",WandsMod.wand_conf_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.m_inc",WandsMod.wand_m_inc_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.m_dec",WandsMod.wand_m_dec_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.n_inc",WandsMod.wand_n_inc_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.n_dec",WandsMod.wand_n_dec_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.toggle_stair_slab",WandsMod.toggle_stair_slab_key,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.area_diagonal_spread",WandsMod.area_diagonal_spread,"itemGroup.wands.wands_tab"),
-            new KeyMapping("key.wands.inc_sel_block",WandsMod.inc_sel_block,"itemGroup.wands.wands_tab"),
+        String k="key.wands.";
+        //final String tab="itemGroup.wands.wands_tab";
+        final String tab="key.categories.wands";
+        wand_menu_km=new KeyMapping(k+"wand_menu",wand_menu_key,tab);
+        keys.put(wand_menu_km,WandsMod.WandKeys.MENU);
+        keys.put(new KeyMapping(k+"wand_mode",wand_mode_key,tab),WandsMod.WandKeys.MODE);
+        keys.put(new KeyMapping(k+"palette_menu",palette_menu_key,tab),WandsMod.WandKeys.PALETTE_MENU);
+        keys.put(new KeyMapping(k+"wand_action",wand_action_key,tab),WandsMod.WandKeys.ACTION);
+        keys.put(new KeyMapping(k+"wand_orientation",wand_orientation_key,tab),WandsMod.WandKeys.ORIENTATION);
+        keys.put(new KeyMapping(k+"wand_invert",wand_invert_key,tab),WandsMod.WandKeys.INVERT);
+        keys.put(new KeyMapping(k+"wand_fill_circle",wand_fill_circle_key,tab),WandsMod.WandKeys.FILL);
+        keys.put(new KeyMapping(k+"wand_undo",wand_undo_key,tab),WandsMod.WandKeys.UNDO);
+        keys.put(new KeyMapping(k+"wand_palette_mode",palette_mode_key,tab),WandsMod.WandKeys.PALETTE_MODE);
+        keys.put(new KeyMapping(k+"wand_rotate",wand_rotate,tab),WandsMod.WandKeys.ROTATE);
+        //keys.put(new KeyMapping(k+"wand_conf",wand_conf_key,tab),WandsMod.WandKeys.CONF);
+        keys.put(new KeyMapping(k+"m_inc",wand_m_inc_key,tab),WandsMod.WandKeys.M_INC);
+        keys.put(new KeyMapping(k+"m_dec",wand_m_dec_key,tab),WandsMod.WandKeys.M_DEC);
+        keys.put(new KeyMapping(k+"n_inc",wand_n_inc_key,tab),WandsMod.WandKeys.N_INC);
+        keys.put(new KeyMapping(k+"n_dec",wand_n_dec_key,tab),WandsMod.WandKeys.N_DEC);
+        keys.put(new KeyMapping(k+"toggle_stair_slab",toggle_stair_slab_key,tab),WandsMod.WandKeys.TOGGLE_STAIRSLAB);
+        keys.put(new KeyMapping(k+"area_diagonal_spread",area_diagonal_spread,tab),WandsMod.WandKeys.DIAGONAL_SPREAD);
+        keys.put(new KeyMapping(k+"inc_sel_block",inc_sel_block,tab),WandsMod.WandKeys.INC_SEL_BLK);
 
-        };
-        for(KeyMapping k: km){
-            MCVer.inst.register_key(k);
-        }
+        keys.forEach((km,v) -> MCVer.inst.register_key((KeyMapping)km));
+
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any=false;
-            for(KeyMapping k: km){
-                if (k.consumeClick()) {
+            Iterator<Map.Entry<KeyMapping,WandsMod.WandKeys>> itr = keys.entrySet().iterator();
+            while(itr.hasNext())
+            {
+                Map.Entry<KeyMapping,WandsMod.WandKeys> me=itr.next();
+                KeyMapping km=me.getKey();
+                if (km.consumeClick()) {
                     if(!any) any=true;
-                    if(k.getDefaultKey().getValue()== WandsMod.wand_conf_key){
-                        
-                    }
-                    send_key(k.getDefaultKey().getValue(),Screen.hasShiftDown(),Screen.hasAltDown());
+                    send_key(me.getValue().ordinal(),Screen.hasShiftDown(),Screen.hasAltDown());
                 }
             }
 
