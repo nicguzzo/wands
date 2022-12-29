@@ -1,15 +1,20 @@
 package net.nicguzzo.wands.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+#if MC>="1193"
+import org.joml.Matrix4f;
+#else
 import com.mojang.math.Matrix4f;
+#endif
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
-import net.nicguzzo.wands.ClientRender;
+import net.nicguzzo.wands.client.render.ClientRender;
 
 import net.nicguzzo.wands.WandsMod;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

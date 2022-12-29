@@ -5,39 +5,65 @@ import me.shedaniel.architectury.event.events.PlayerEvent;
 import me.shedaniel.architectury.registry.*;
 import me.shedaniel.architectury.networking.NetworkManager;
 import me.shedaniel.architectury.networking.NetworkManager.Side;
+import net.minecraft.core.Registry;
 #else
-import com.mojang.blaze3d.platform.InputConstants;
+
 import dev.architectury.event.events.common.PlayerEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
+
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
-import dev.architectury.registry.registries.Registries;
+#if MC>="1193"
+    import com.google.common.base.Suppliers;
+    import com.google.common.base.Supplier;
+    import dev.architectury.registry.registries.RegistrarManager;
+    import dev.architectury.registry.CreativeTabRegistry;
+    import net.minecraft.core.registries.Registries;
+#else
+    import dev.architectury.registry.registries.Registries;
+    import net.minecraft.core.Registry;
+#endif
 import dev.architectury.registry.registries.RegistrySupplier;
 #endif
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.nicguzzo.wands.menues.MagicBagMenu;
+import net.nicguzzo.wands.menues.PaletteMenu;
+import net.nicguzzo.wands.menues.WandMenu;
+import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.items.MagicBagItem;
+import net.nicguzzo.wands.items.PaletteItem;
+import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.wand.PlayerWand;
+import net.nicguzzo.wands.wand.Wand;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.GLFW;
-import net.minecraft.core.Registry;
+
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.LazyLoadedValue;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
-import net.nicguzzo.wands.mcver.MCVer;
+
+#if MC<"1193"
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.util.LazyLoadedValue;
+#endif
+
+import java.util.Objects;
 
 public class WandsMod {   
     public static int platform=-1; // 0=forge; 1=fabric; 2=quilt
@@ -46,36 +72,85 @@ public class WandsMod {
     
     public static final Logger LOGGER = LogManager.getLogger();
     // We can use this if we don't want to use DeferredRegister
-    public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
 
-    public static final CreativeModeTab WANDS_TAB = MCVer.inst.create_tab(new ResourceLocation(MOD_ID, "wands_tab"));
+    #if MC>="1193"
+        public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
+        public static final CreativeTabRegistry.TabSupplier WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"),
+                () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get()));
+    #else
+        public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
+        public static final CreativeModeTab WANDS_TAB = Compat.create_tab(new ResourceLocation(MOD_ID, "wands_tab"));
+    #endif
 
+
+
+    #if MC>="1193"
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registries.ITEM);
+    public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registries.MENU);
+    #else
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registry.ITEM_REGISTRY);
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registry.MENU_REGISTRY);
-
+    #endif
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
-            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,false,new Item.Properties().durability(config.stone_wand_durability).tab(WandsMod.WANDS_TAB));
+            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,false,new Item.Properties().durability(config.stone_wand_durability)
+                    #if MC>="1193"
+                    .arch$tab(WandsMod.WANDS_TAB));
+                    #else
+                    .tab(WandsMod.WANDS_TAB));
+                    #endif
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register("iron_wand", () ->{
-        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.iron_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.iron_wand_durability)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register("diamond_wand", () ->{
-        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,false,new Item.Properties().durability(config.diamond_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,false,new Item.Properties().durability(config.diamond_wand_durability)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register("netherite_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,config.creative_wand_limit,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new WandItem(Tiers.NETHERITE,config.creative_wand_limit,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
-        return new PaletteItem(new Item.Properties().stacksTo(1).tab(WandsMod.WANDS_TAB));
+        return new PaletteItem(new Item.Properties().stacksTo(1)#if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
+    });
+    public static final RegistrySupplier<Item> MAGIC_BAG = ITEMS.register("magic_bag", () ->{
+        return new MagicBagItem(new Item.Properties().stacksTo(1)#if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
     });
     
-    public static final RegistrySupplier<MenuType<PaletteScreenHandler>> PALETTE_SCREEN_HANDLER=MENUES.register("palette_menu",()-> MenuRegistry.ofExtended(PaletteScreenHandler::new));
-    public static final RegistrySupplier<MenuType<WandScreenHandler>> WAND_SCREEN_HANDLER=MENUES.register("wand_menu",()-> MenuRegistry.ofExtended(WandScreenHandler::new));
+    public static final RegistrySupplier<MenuType<PaletteMenu>> PALETTE_CONTAINER =MENUES.register("palette_menu",()-> MenuRegistry.ofExtended(PaletteMenu::new));
+    public static final RegistrySupplier<MenuType<WandMenu>> WAND_CONTAINER =MENUES.register("wand_menu",()-> MenuRegistry.ofExtended(WandMenu::new));
+    public static final RegistrySupplier<MenuType<MagicBagMenu>> MAGIC_WAND_CONTANIER=MENUES.register("magic_bag_menu",()-> MenuRegistry.ofExtended(MagicBagMenu::new));
 
     static public ResourceLocation KB_PACKET= new ResourceLocation(MOD_ID, "key_packet");
     static public ResourceLocation SND_PACKET= new ResourceLocation(MOD_ID, "sound_packet");
@@ -107,7 +182,6 @@ public class WandsMod {
    public static boolean is_forge=false;
 	
     public static void init() {
-        
         ITEMS.register();
         MENUES.register();
 
@@ -115,16 +189,12 @@ public class WandsMod {
             int key=packet.readInt();
             boolean shift=packet.readBoolean();
             boolean alt=packet.readBoolean();
-            context.queue(()->{
-                process_keys(context.getPlayer(), key,shift,alt);
-            });
+            context.queue(()-> process_keys(context.getPlayer(), key,shift,alt));
         });
         NetworkManager.registerReceiver(Side.C2S, PALETTE_PACKET, (packet,context)->{
             boolean mode=packet.readBoolean();
             boolean rotate=packet.readBoolean();
-            context.queue(()->{
-                process_palette(context.getPlayer(), mode,rotate);
-            });
+            context.queue(()-> process_palette(context.getPlayer(), mode,rotate));
         });
         NetworkManager.registerReceiver(Side.C2S, WAND_PACKET, (packet,context)->{
             ItemStack item=packet.readItem();
@@ -179,14 +249,6 @@ public class WandsMod {
                 if(WandsMod.config!=null){
                     FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                     packet.writeFloat(WandsMod.config.blocks_per_xp);
-                    /*packet.writeInt(WandsMod.config.stone_wand_limit);
-                    packet.writeInt(WandsMod.config.iron_wand_limit);
-                    packet.writeInt(WandsMod.config.diamond_wand_limit);
-                    packet.writeInt(WandsMod.config.netherite_wand_limit);
-                    packet.writeInt(WandsMod.config.stone_wand_durability);
-                    packet.writeInt(WandsMod.config.iron_wand_durability);
-                    packet.writeInt(WandsMod.config.diamond_wand_durability);
-                    packet.writeInt(WandsMod.config.netherite_wand_durability);*/
                     packet.writeBoolean(WandsMod.config.destroy_in_survival_drop);
                     packet.writeBoolean(WandsMod.config.survival_unenchanted_drops);
                     packet.writeBoolean(WandsMod.config.allow_wand_to_break);
@@ -257,17 +319,17 @@ public class WandsMod {
         ItemStack offhand_stack = player.getOffhandItem();
         boolean is_wand=main_stack.getItem() instanceof WandItem;
         boolean is_palette=main_stack.getItem() instanceof PaletteItem ||offhand_stack.getItem() instanceof PaletteItem;
-        boolean creative=MCVer.inst.is_creative(player);
+        boolean creative= Compat.is_creative(player);
         if(is_palette){
             if (key >= 0 && key < WandKeys.values().length) {
                 switch (WandKeys.values()[key]) {
                     case PALETTE_MENU: {
                         if (offhand_stack.getItem() instanceof PaletteItem) {
-                            MCVer.inst.open_palette((ServerPlayer) player, offhand_stack);
+                            Compat.open_menu((ServerPlayer) player, offhand_stack,1);
                         } else {
                             ItemStack mainhand_stack = player.getMainHandItem();
                             if (mainhand_stack.getItem() instanceof PaletteItem) {
-                                MCVer.inst.open_palette((ServerPlayer) player, mainhand_stack);
+                                Compat.open_menu((ServerPlayer) player, mainhand_stack,1);
                             }
                         }
                     }
@@ -275,7 +337,7 @@ public class WandsMod {
                     case PALETTE_MODE: {
                         if (!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem) {
                             PaletteItem.nextMode(offhand_stack);
-                            player.displayClientMessage(MCVer.inst.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
+                            player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
                         }
                     }
                     break;
@@ -348,10 +410,10 @@ public class WandsMod {
                         } else {
                             WandItem.nextAction(main_stack);
                         }
-                        player.displayClientMessage(MCVer.inst.literal("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
+                        player.displayClientMessage(Compat.literal("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
                         break;
                     case MENU:
-                        MCVer.inst.open_wand_menu((ServerPlayer) player, main_stack);
+                        Compat.open_menu((ServerPlayer) player, main_stack,0);
                         break;
                     case MODE:
                         if (shift) {
@@ -365,7 +427,7 @@ public class WandsMod {
                             case CIRCLE:
                             case RECT:
                                 WandItem.nextPlane(main_stack);
-                                player.displayClientMessage(MCVer.inst.literal("Wand Plane: " + WandItem.getPlane(main_stack)), false);
+                                player.displayClientMessage(Compat.literal("Wand Plane: " + WandItem.getPlane(main_stack)), false);
                                 send_state((ServerPlayer) player, wand);
                                 break;
                             case DIRECTION:
@@ -374,23 +436,23 @@ public class WandsMod {
                                 break;
                             default:
                                 WandItem.nextOrientation(main_stack);
-                                player.displayClientMessage(MCVer.inst.literal("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
+                                player.displayClientMessage(Compat.literal("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
                                 break;
                         }
                         break;
                     case INVERT:
                         WandItem.toggleFlag(main_stack, WandItem.Flag.INVERTED);
-                        player.displayClientMessage(MCVer.inst.literal("Wand inverted: " + WandItem.getFlag(main_stack, WandItem.Flag.INVERTED)), false);
+                        player.displayClientMessage(Compat.literal("Wand inverted: " + WandItem.getFlag(main_stack, WandItem.Flag.INVERTED)), false);
                         break;
                     case FILL:
                         WandItem.toggleFlag(main_stack, WandItem.Flag.FILLED);
-                        player.displayClientMessage(MCVer.inst.literal("Wand circle fill: " + WandItem.getFlag(main_stack, WandItem.Flag.FILLED)), false);
+                        player.displayClientMessage(Compat.literal("Wand circle fill: " + WandItem.getFlag(main_stack, WandItem.Flag.FILLED)), false);
                         break;
                     case ROTATE:
                     /*ItemStack offhand_stack2 = player.getOffhandItem();
                     if (!shift && !offhand_stack2.isEmpty() && offhand_stack2.getItem() instanceof PaletteItem) {
                         PaletteItem.nextMode(offhand_stack2);
-                        player.displayClientMessage(MCVer.inst.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
+                        player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
                     } else {*/
                         WandItem.nextRotation(main_stack);
                         WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
@@ -417,11 +479,9 @@ public class WandsMod {
         }
         if(!main_stack.isEmpty() && main_stack.getItem() instanceof PaletteItem){
             if (key >= 0 && key < WandKeys.values().length) {
-                switch (WandKeys.values()[key]) {
-                    case PALETTE_MODE:
-                        PaletteItem.nextMode(main_stack);
-                        player.displayClientMessage(MCVer.inst.literal("Palette mode: " + PaletteItem.getMode(main_stack)), false);
-                        break;
+                if (Objects.requireNonNull(WandKeys.values()[key]) == WandKeys.PALETTE_MODE) {
+                    PaletteItem.nextMode(main_stack);
+                    player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(main_stack)), false);
                 }
             }
         }

@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.fabric;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.nicguzzo.wands.WandsMod;
 import net.fabricmc.api.ModInitializer;
 

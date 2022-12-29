@@ -2,13 +2,10 @@ package net.nicguzzo.wands.fabric;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import me.shedaniel.clothconfig2.api.ConfigCategory;
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import net.nicguzzo.wands.WandConfigScreen;
+import net.nicguzzo.wands.client.screens.WandConfigScreen;
 
 @Environment(EnvType.CLIENT)
 public class ModMenu implements ModMenuApi {

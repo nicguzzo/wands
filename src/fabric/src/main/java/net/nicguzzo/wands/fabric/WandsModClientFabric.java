@@ -4,7 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsModClient;
+import net.nicguzzo.wands.client.WandsModClient;
 
 import java.util.Optional;
 

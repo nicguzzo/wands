@@ -6,20 +6,15 @@ import me.shedaniel.architectury.utils.Env;
 import me.shedaniel.architectury.utils.EnvExecutor;
 #else
 import dev.architectury.platform.forge.EventBuses;
-import dev.architectury.registry.client.keymappings.forge.KeyMappingRegistryImpl;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 #endif
 
-import net.minecraft.client.KeyMapping;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+//import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsModClient;
+import net.nicguzzo.wands.client.WandsModClient;
 
 @Mod(WandsMod.MOD_ID)
 
