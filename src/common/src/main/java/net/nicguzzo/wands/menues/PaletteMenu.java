@@ -5,6 +5,8 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 #if MC>="1193"
 import net.minecraft.core.registries.BuiltInRegistries;
+#else
+import net.minecraft.core.Registry;
 #endif
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;

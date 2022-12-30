@@ -35,10 +35,11 @@ import net.nicguzzo.wands.*;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.Colorf;
+import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
-import net.nicguzzo.wands.wand.Wand.CopyPasteBuffer;
 import net.nicguzzo.wands.items.WandItem;
-import net.nicguzzo.wands.items.WandItem.Mode;
+import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.wand.WandProps.Mode;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class ClientRender {
     static boolean last_alt = false;
     //static int last_y=0;
     static int last_buffer_size = -1;
-    static WandItem.Orientation last_orientation = null;
+    static WandProps.Orientation last_orientation = null;
     //private static boolean last_valid =false;
     public static Wand wand = new Wand();
     static VoxelShape preview_shape = null;
@@ -174,8 +175,8 @@ public class ClientRender {
                 force = true;
             }
             HitResult hitResult = client.hitResult;
-            Mode mode = WandItem.getMode(stack);
-            mirroraxis=WandItem.getVal(player.getMainHandItem(), WandItem.Value.MIRRORAXIS);
+            Mode mode = WandProps.getMode(stack);
+            mirroraxis=WandProps.getVal(player.getMainHandItem(), WandProps.Value.MIRRORAXIS);
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
 
@@ -183,16 +184,16 @@ public class ClientRender {
                 //wand.digger_item_slot=-1;
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 wand.lastHitResult=block_hit;
-                Rotation rot = WandItem.getRotation(stack);
-                WandItem.Orientation orientation = WandItem.getOrientation(stack);
+                Rotation rot = WandProps.getRotation(stack);
+                WandProps.Orientation orientation = WandProps.getOrientation(stack);
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
                 if (force) {
 
                     wand.force_render = false;
-                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY || mode == Mode.RECT) {
-                        if (WandItem.getFlag(stack, WandItem.Flag.INCSELBLOCK)) {
+                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY /*|| mode == Mode.RECT*/) {
+                        if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                             pos = pos.relative(side, 1);
                         }
                     }
@@ -215,7 +216,7 @@ public class ClientRender {
             } else {
                 has_target = false;
                 /*if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||
-                        (wand.mode == WandItem.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {*/
+                        (wand.mode == WandProps.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {*/
                 if (wand.is_alt_pressed && (wand.copy_paste_buffer.size() > 0 || wand.block_buffer.get_length()>0) ) {
                     if (!((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE))) {
                         wand.p1 = last_pos;
@@ -397,12 +398,12 @@ public class ClientRender {
                 case GRID:
                 case LINE:
                 case CIRCLE:
-                case RECT:
+                //case RECT:
                 case VEIN:
 
                     if (wand.valid || (mode == Mode.LINE || mode == Mode.CIRCLE) || (wand.valid && wand.has_empty_bucket)) {
                         //bbox
-                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.RECT)) {
+                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL /*|| mode == Mode.RECT*/)) {
                             if (fat_lines) {
                                 RenderSystem.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
@@ -481,7 +482,8 @@ public class ClientRender {
                                 //RenderSystem.disableCull();
                                 //even_circle=true;
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
-                                float off=(mode == Mode.CIRCLE && wand.even_circle)? -1.0f:0.0f;
+                                boolean even= WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
+                                float off=(mode == Mode.CIRCLE && even)? -1.0f:0.0f;
                                 preview_block_fat(bufferBuilder,
                                         wand.p1.getX()+off, wand.p1.getY()+off, wand.p1.getZ()+off,
                                         wand.p1.getX() + 1, wand.p1.getY() + 1, wand.p1.getZ() + 1,
@@ -500,7 +502,7 @@ public class ClientRender {
                                     RenderSystem.disableDepthTest();
                                     Compat.set_render_quads_pos_tex(bufferBuilder);
 
-                                    off=(mode == Mode.CIRCLE && wand.even_circle)? 0.0f:0.5f;
+                                    off=(mode == Mode.CIRCLE && even)? 0.0f:0.5f;
 
                                     player_facing_line(bufferBuilder,
                                             (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
@@ -594,13 +596,13 @@ public class ClientRender {
                             Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                             Compat.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
-                            wand.random.setSeed(wand.palette_seed);
+                            wand.random.setSeed(wand.palette.seed);
                             //use block_buffer, previously copy copy_paste_buffer to block_buffer
                             BlockPos po=wand.copy_paste_buffer.get(0).pos;
 
-                            for (CopyPasteBuffer b : wand.copy_paste_buffer) {
+                            for (CopyBuffer b : wand.copy_paste_buffer) {
                                 BlockState st =b.state;
-                                if (wand.has_palette) {
+                                if (wand.palette.has_palette) {
                                     st = wand.get_state();
                                 }else{
                                     st=wand.mirror_stair(st,mirroraxis);
@@ -670,7 +672,7 @@ public class ClientRender {
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
                             }
-                            for (CopyPasteBuffer b : wand.copy_paste_buffer) {
+                            for (CopyBuffer b : wand.copy_paste_buffer) {
                                 BlockPos p = b.pos.rotate(last_rot);
                                 float x = b_pos.getX() + p.getX()*mx;
                                 float y = b_pos.getY() + p.getY()*my;

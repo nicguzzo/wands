@@ -42,6 +42,7 @@ import net.nicguzzo.wands.client.screens.WandScreen;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.Wand;
+import net.nicguzzo.wands.wand.WandProps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -183,10 +184,10 @@ public class WandsModClient {
             float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    ClientRender.wand.palette_seed = seed;
-                    ClientRender.wand.mode= WandItem.Mode.values()[mode];
-                    if(ClientRender.wand.mode== WandItem.Mode.DIRECTION)
-                        ClientRender.wand.slot = slot;
+                    ClientRender.wand.palette.seed = seed;
+                    ClientRender.wand.mode= WandProps.Mode.values()[mode];
+                    if(ClientRender.wand.mode== WandProps.Mode.DIRECTION)
+                        ClientRender.wand.palette.slot = slot;
                     if(xp){
                         context.getPlayer().experienceLevel=levels;
                         context.getPlayer().experienceProgress=prog;
@@ -268,9 +269,9 @@ public class WandsModClient {
                     Compat.set_pos_tex_shader();
 
                     Wand wand=ClientRender.wand;
-                    WandItem.Mode mode=WandItem.getMode(stack);
-                    WandItem.Action action=WandItem.getAction(stack);
-                    Rotation r = WandItem.getRotation(stack);
+                    WandProps.Mode mode=WandProps.getMode(stack);
+                    WandProps.Action action=WandProps.getAction(stack);
+                    Rotation r = WandProps.getRotation(stack);
                     String rot = "";
                     switch (r) {
                         case NONE:
@@ -292,14 +293,14 @@ public class WandsModClient {
                     if(wand.valid) {
                         switch(mode){
                             case DIRECTION:
-                                int mult=WandItem.getVal(stack, WandItem.Value.MULTIPLIER);
+                                int mult=WandProps.getVal(stack, WandProps.Value.MULTIPLIER);
                                 ln1="pos: ["+wand.pos.getX()+","+wand.pos.getY()+","+wand.pos.getZ()+"] x"+mult;
                                 break;
                             case GRID:
-                                int gm=WandItem.getVal(stack, WandItem.Value.GRIDM);
-                                int gn=WandItem.getVal(stack, WandItem.Value.GRIDN);
-                                int gms=WandItem.getVal(stack, WandItem.Value.GRIDMS);
-                                int gns=WandItem.getVal(stack, WandItem.Value.GRIDNS);
+                                int gm=WandProps.getVal(stack, WandProps.Value.GRIDM);
+                                int gn=WandProps.getVal(stack, WandProps.Value.GRIDN);
+                                int gms=WandProps.getVal(stack, WandProps.Value.GRIDMS);
+                                int gns=WandProps.getVal(stack, WandProps.Value.GRIDNS);
                                 String skp="";
                                 if(gms>0||gns>0){
                                     skp=" - ("+gms+"x"+gns+")";
@@ -312,7 +313,7 @@ public class WandsModClient {
                             case LINE:
                             case AREA:
                             case VEIN:
-                                int arealim=WandItem.getVal(stack, WandItem.Value.AREALIM);
+                                int arealim=WandProps.getVal(stack, WandProps.Value.AREALIM);
                                 ln1="Blocks: "+wand.block_buffer.get_length();
                                 if(arealim>0){
                                     ln1+=" Limit: "+arealim;
@@ -321,9 +322,9 @@ public class WandsModClient {
                             case CIRCLE:
                                 ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                                 break;
-                            case RECT:
+                            /*case RECT:
                                 ln1="Blocks: "+wand.block_buffer.get_length();
-                                break;
+                                break;*/
                             case COPY:
                             case PASTE:
                                 ln1="Copied Blocks: "+wand.copy_paste_buffer.size();

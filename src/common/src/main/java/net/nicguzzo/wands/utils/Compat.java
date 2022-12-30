@@ -43,16 +43,20 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 #endif
-
+#if MC < "1193"
+import dev.architectury.registry.CreativeTabRegistry;
+#endif
 #endif
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandMenu;
+import com.google.common.base.Supplier;
 
 public class Compat {
     static public CreativeModeTab create_tab(ResourceLocation res){
+
         #if MC=="1165"
         return CreativeTabs.create(res, new Supplier<ItemStack>() {
 			@Override

@@ -46,8 +46,10 @@ import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
+import net.nicguzzo.wands.wand.WandProps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -215,7 +217,7 @@ public class WandsMod {
             Direction player_dir=Direction.values()[packet.readInt()];
             context.queue(()->{
                 ItemStack stack=context.getPlayer().getMainHandItem();
-                if(WandItem.is_wand(stack)){
+                if(WandUtils.is_wand(stack)){
                     BlockPos pos=hitResult.getBlockPos();
                     Direction side=hitResult.getDirection();
                     Player player=context.getPlayer();
@@ -225,11 +227,11 @@ public class WandsMod {
                             Level level=player.level;
                             BlockState block_state=level.getBlockState(pos);
                             wand.p1=p1;
-                            WandItem.Mode mode=wand.mode;
-                            if (    mode == WandItem.Mode.FILL   || mode == WandItem.Mode.LINE ||
-                                    mode == WandItem.Mode.CIRCLE || mode == WandItem.Mode.COPY ||
-                                    mode == WandItem.Mode.RECT) {
-                                if (WandItem.getFlag(stack, WandItem.Flag.INCSELBLOCK)) {
+                            WandProps.Mode mode=wand.mode;
+                            if (    mode == WandProps.Mode.FILL   || mode == WandProps.Mode.LINE ||
+                                    mode == WandProps.Mode.CIRCLE || mode == WandProps.Mode.COPY /*||
+                                    mode == WandProps.Mode.RECT*/) {
+                                if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                                     pos = pos.relative(side, 1);
                                 }
                             }
@@ -275,15 +277,15 @@ public class WandsMod {
         if(wand!=null && player!=null && !player.level.isClientSide()) {
             ItemStack wand_stack=player.getMainHandItem();
             if(wand_stack.getItem() instanceof WandItem) {
-                WandItem.Mode mode = WandItem.getMode(wand_stack);
+                WandProps.Mode mode = WandProps.getMode(wand_stack);
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                 int slot=0;
-                if (wand.palette_slots.size() != 0) {
-                    slot=(wand.slot + 1) % wand.palette_slots.size();
+                if (wand.palette.palette_slots.size() != 0) {
+                    slot=(wand.palette.slot + 1) % wand.palette.palette_slots.size();
                 }
                 float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
 
-                packet.writeLong(wand.palette_seed);
+                packet.writeLong(wand.palette.seed);
                 packet.writeInt(mode.ordinal());
                 packet.writeInt(slot);
                 packet.writeBoolean(BLOCKS_PER_XP != 0);
@@ -346,88 +348,89 @@ public class WandsMod {
         }
         if(is_wand) {
             Wand wand = PlayerWand.get(player);
-            WandItem.Mode mode = WandItem.getMode(main_stack);
+            if(wand==null) return;
+            WandProps.Mode mode = WandProps.getMode(main_stack);
             int inc = (shift ? 10 : 1);
             if (key >= 0 && key < WandKeys.values().length) {
                 switch (WandKeys.values()[key]) {
                     case INC_SEL_BLK:
-                        WandItem.toggleFlag(main_stack, WandItem.Flag.INCSELBLOCK);
+                        WandProps.toggleFlag(main_stack, WandProps.Flag.INCSELBLOCK);
                         break;
                     case DIAGONAL_SPREAD:
-                        WandItem.toggleFlag(main_stack, WandItem.Flag.DIAGSPREAD);
+                        WandProps.toggleFlag(main_stack, WandProps.Flag.DIAGSPREAD);
                         break;
                     case TOGGLE_STAIRSLAB:
-                        WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
-                        WandItem.toggleFlag(main_stack, WandItem.Flag.STAIRSLAB);
+                        WandProps.setStateMode(main_stack, WandProps.StateMode.APPLY);
+                        WandProps.toggleFlag(main_stack, WandProps.Flag.STAIRSLAB);
                         break;
                     case N_INC:
-                        if (mode == WandItem.Mode.GRID) {
-                            //WandItem.incVal(main_stack, WandItem.Value.GRIDN ,inc,wand.limit);
-                            WandItem.incGrid(main_stack, WandItem.Value.GRIDN, inc);
+                        if (mode == WandProps.Mode.GRID) {
+                            //WandProps.incVal(main_stack, WandProps.Value.GRIDN ,inc,wand.limit);
+                            WandProps.incGrid(main_stack, WandProps.Value.GRIDN, inc);
                         }
                         break;
                     case N_DEC:
-                        if (mode == WandItem.Mode.GRID) {
-                            WandItem.decVal(main_stack, WandItem.Value.GRIDN, inc);
+                        if (mode == WandProps.Mode.GRID) {
+                            WandProps.decVal(main_stack, WandProps.Value.GRIDN, inc);
                         }
                         break;
                     case M_INC:
                         switch (mode) {
                             case DIRECTION:
-                                WandItem.incVal(main_stack, WandItem.Value.MULTIPLIER, inc);
+                                WandProps.incVal(main_stack, WandProps.Value.MULTIPLIER, inc);
                                 break;
                             case ROW_COL:
-                                WandItem.incVal(main_stack, WandItem.Value.ROWCOLLIM, inc);
+                                WandProps.incVal(main_stack, WandProps.Value.ROWCOLLIM, inc);
                                 break;
                             case GRID:
-                                WandItem.incGrid(main_stack, WandItem.Value.GRIDM, inc);
-                                //WandItem.incVal(main_stack, WandItem.Value.GRIDM ,inc);
+                                WandProps.incGrid(main_stack, WandProps.Value.GRIDM, inc);
+                                //WandProps.incVal(main_stack, WandProps.Value.GRIDM ,inc);
                                 break;
                             case AREA:
-                                WandItem.incVal(main_stack, WandItem.Value.AREALIM, inc);
+                                WandProps.incVal(main_stack, WandProps.Value.AREALIM, inc);
                                 break;
                         }
                         break;
                     case M_DEC:
                         switch (mode) {
                             case DIRECTION:
-                                WandItem.decVal(main_stack, WandItem.Value.MULTIPLIER, inc);
+                                WandProps.decVal(main_stack, WandProps.Value.MULTIPLIER, inc);
                                 break;
                             case ROW_COL:
-                                WandItem.decVal(main_stack, WandItem.Value.ROWCOLLIM, inc);
+                                WandProps.decVal(main_stack, WandProps.Value.ROWCOLLIM, inc);
                                 break;
                             case GRID:
-                                WandItem.decVal(main_stack, WandItem.Value.GRIDM, inc);
+                                WandProps.decVal(main_stack, WandProps.Value.GRIDM, inc);
                                 break;
                             case AREA:
-                                WandItem.decVal(main_stack, WandItem.Value.AREALIM, inc);
+                                WandProps.decVal(main_stack, WandProps.Value.AREALIM, inc);
                                 break;
                         }
                         break;
                     case ACTION:
                         if (shift) {
-                            WandItem.prevAction(main_stack);
+                            WandProps.prevAction(main_stack);
                         } else {
-                            WandItem.nextAction(main_stack);
+                            WandProps.nextAction(main_stack);
                         }
-                        player.displayClientMessage(Compat.literal("Wand PlaceMode: " + WandItem.getAction(main_stack)), false);
+                        player.displayClientMessage(Compat.literal("Wand PlaceMode: " + WandProps.getAction(main_stack)), false);
                         break;
                     case MENU:
                         Compat.open_menu((ServerPlayer) player, main_stack,0);
                         break;
                     case MODE:
                         if (shift) {
-                            WandItem.prevMode(main_stack);
+                            WandProps.prevMode(main_stack);
                         } else {
-                            WandItem.nextMode(main_stack);
+                            WandProps.nextMode(main_stack);
                         }
                         break;
                     case ORIENTATION:
                         switch (mode) {
                             case CIRCLE:
-                            case RECT:
-                                WandItem.nextPlane(main_stack);
-                                player.displayClientMessage(Compat.literal("Wand Plane: " + WandItem.getPlane(main_stack)), false);
+                            case FILL:
+                                WandProps.nextPlane(main_stack);
+                                player.displayClientMessage(Compat.literal("Wand Plane: " + WandProps.getPlane(main_stack)), false);
                                 send_state((ServerPlayer) player, wand);
                                 break;
                             case DIRECTION:
@@ -435,18 +438,26 @@ public class WandsMod {
 
                                 break;
                             default:
-                                WandItem.nextOrientation(main_stack);
-                                player.displayClientMessage(Compat.literal("Wand Orientation: " + WandItem.getOrientation(main_stack).toString().toLowerCase()), false);
+                                WandProps.nextOrientation(main_stack);
+                                player.displayClientMessage(Compat.literal("Wand Orientation: " + WandProps.getOrientation(main_stack).toString().toLowerCase()), false);
                                 break;
                         }
                         break;
                     case INVERT:
-                        WandItem.toggleFlag(main_stack, WandItem.Flag.INVERTED);
-                        player.displayClientMessage(Compat.literal("Wand inverted: " + WandItem.getFlag(main_stack, WandItem.Flag.INVERTED)), false);
+                        WandProps.toggleFlag(main_stack, WandProps.Flag.INVERTED);
+                        player.displayClientMessage(Compat.literal("Wand inverted: " + WandProps.getFlag(main_stack, WandProps.Flag.INVERTED)), false);
                         break;
                     case FILL:
-                        WandItem.toggleFlag(main_stack, WandItem.Flag.FILLED);
-                        player.displayClientMessage(Compat.literal("Wand circle fill: " + WandItem.getFlag(main_stack, WandItem.Flag.FILLED)), false);
+                        switch (wand.mode){
+                            case FILL: {
+                                WandProps.toggleFlag(main_stack, WandProps.Flag.RFILLED);
+                                player.displayClientMessage(Compat.literal("Wand fill rect: " + WandProps.getFlag(main_stack, WandProps.Flag.RFILLED)), false);
+                            }break;
+                            case CIRCLE: {
+                                WandProps.toggleFlag(main_stack, WandProps.Flag.CFILLED);
+                                player.displayClientMessage(Compat.literal("Wand circle fill: " + WandProps.getFlag(main_stack, WandProps.Flag.CFILLED)), false);
+                            }break;
+                        }
                         break;
                     case ROTATE:
                     /*ItemStack offhand_stack2 = player.getOffhandItem();
@@ -454,8 +465,8 @@ public class WandsMod {
                         PaletteItem.nextMode(offhand_stack2);
                         player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
                     } else {*/
-                        WandItem.nextRotation(main_stack);
-                        WandItem.setStateMode(main_stack, WandItem.StateMode.APPLY);
+                        WandProps.nextRotation(main_stack);
+                        WandProps.setStateMode(main_stack, WandProps.StateMode.APPLY);
 //                    }
                         break;
                     case UNDO:

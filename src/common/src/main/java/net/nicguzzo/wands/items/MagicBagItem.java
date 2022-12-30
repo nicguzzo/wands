@@ -39,6 +39,9 @@ public class MagicBagItem extends Item {
     static public void setTotal(ItemStack bag,int total) {
         if(bag != null && bag.getItem() instanceof MagicBagItem) {
             bag.getOrCreateTag().putInt("total",total);
+            //if(total<=0){
+//                bag.getOrCreateTag().remove("item");
+//            }
         }
     }
     static public void inc(ItemStack bag,int n) {
@@ -52,30 +55,23 @@ public class MagicBagItem extends Item {
             int total=bag.getOrCreateTag().getInt("total");
             if(total-n>=0) {
                 bag.getOrCreateTag().putInt("total", total - n);
+            }else{
+                bag.getOrCreateTag().putInt("total", 0);
             }
         }
     }
     static public void setItem(ItemStack bag, ItemStack item) {
-        if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            ListTag list = new ListTag();
-            CompoundTag stackTag = new CompoundTag();
-            stackTag.putInt("Slot", 0);
+        if(bag != null && item!=null && bag.getItem() instanceof MagicBagItem) {
             ItemStack item2=item.copy();
             item2.setCount(1);
-            stackTag.put("Block",item2.save(new CompoundTag()));
-            list.add(stackTag);
-            bag.getOrCreateTag().put("bag", list);
+            bag.getOrCreateTag().put("item",item2.save(new CompoundTag()));
         }
     }
 
     static public ItemStack getItem(ItemStack bag) {
         if(bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = bag.getOrCreateTag();
-            ListTag list=tag.getList("bag", Compat.NbtType.COMPOUND);
-            if(!list.isEmpty()) {
-                CompoundTag stackTag = list.getCompound(0);
-                return ItemStack.of(stackTag.getCompound("Block"));
-            }
+            return ItemStack.of(tag.getCompound("item"));
         }
         return ItemStack.EMPTY;
     }

@@ -47,7 +47,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         if(!item.isEmpty()) {
             Component text = Compat.translatable(item.getDescriptionId());
             int w = font.width(text);
-            font.draw(poseStack, text, (width / 2.0f) - w / 2.0f, (height / 2.0f) - 24, text_color);
+            font.draw(poseStack, text, (width / 2.0f) - w / 2.0f, (height / 2.0f) - 20, text_color);
         }
         Component text2=Compat.literal(""+MagicBagItem.getTotal(bag_stack));
         int w2=font.width(text2);
