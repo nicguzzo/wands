@@ -16,6 +16,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("wands", "textures/gui/magicbag.png");
     ItemStack bag_stack=null;
     Item bag_item=null;
+    int tier=0;
     public MagicBagScreen(MagicBagMenu abstractContainerMenu, Inventory inventory, Component component) {
         super(abstractContainerMenu, inventory, component);
     }
@@ -25,6 +26,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         bag_stack = this.menu.bag;
         if (bag_stack != null && bag_stack.getItem() instanceof MagicBagItem) {
             bag_item = bag_stack.getItem();
+            this.tier=((MagicBagItem)bag_item).tier;
         }
     }
     @Override
@@ -32,10 +34,11 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
         Compat.set_texture(TEXTURE);
         Compat.set_pos_tex_shader();
-
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
+
+        blit(poseStack, x+imageWidth-64, y+10, 200, 64*tier, 41, 64);
     }
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {

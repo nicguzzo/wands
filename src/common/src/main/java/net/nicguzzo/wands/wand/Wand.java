@@ -630,7 +630,7 @@ public class Wand {
                     MagicBagItem.dec(stack_item,pa.placed);
                     pa.placed = 0;
                 }else{
-                    MagicBagItem.setTotal(stack_item,0);
+                    MagicBagItem.dec(stack_item,total);
                     pa.placed-=total;
                 }
             }else {
@@ -1255,9 +1255,10 @@ public class Wand {
             mb_item=item_to_place;
         }
         if(mb_item.getItem()==item_to_place.getItem()){
-            blocks_sent_to_inv+=item_to_place.getCount();
-            MagicBagItem.inc(bag,item_to_place.getCount());
-            return true;
+            if(MagicBagItem.inc(bag,item_to_place.getCount())){
+                blocks_sent_to_inv+=item_to_place.getCount();
+                return true;
+            }
         }
         return false;
     }

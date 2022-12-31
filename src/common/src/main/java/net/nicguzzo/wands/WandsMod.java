@@ -136,14 +136,33 @@ public class WandsMod {
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () ->{
-        return new PaletteItem(new Item.Properties().stacksTo(1)#if MC>="1193"
+        return new PaletteItem(new Item.Properties().stacksTo(1)
+                #if MC>="1193"
                 .arch$tab(WandsMod.WANDS_TAB));
                 #else
                 .tab(WandsMod.WANDS_TAB));
                 #endif
     });
-    public static final RegistrySupplier<Item> MAGIC_BAG = ITEMS.register("magic_bag", () ->{
-        return new MagicBagItem(new Item.Properties().stacksTo(1)#if MC>="1193"
+    public static final RegistrySupplier<Item> MAGIC_BAG_1 = ITEMS.register("magic_bag_1", () ->{
+        return new MagicBagItem(0,config.magic_bag_1_limit,new Item.Properties().stacksTo(1)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
+    });
+    public static final RegistrySupplier<Item> MAGIC_BAG_2 = ITEMS.register("magic_bag_2", () ->{
+        return new MagicBagItem(1,config.magic_bag_2_limit,new Item.Properties().stacksTo(1)
+                #if MC>="1193"
+                .arch$tab(WandsMod.WANDS_TAB));
+                #else
+                .tab(WandsMod.WANDS_TAB));
+                #endif
+    });
+
+    public static final RegistrySupplier<Item> MAGIC_BAG_3 = ITEMS.register("magic_bag_3", () ->{
+        return new MagicBagItem(2,Integer.MAX_VALUE,new Item.Properties().stacksTo(1)
+                #if MC>="1193"
                 .arch$tab(WandsMod.WANDS_TAB));
                 #else
                 .tab(WandsMod.WANDS_TAB));

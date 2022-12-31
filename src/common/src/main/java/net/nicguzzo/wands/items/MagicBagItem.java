@@ -19,8 +19,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class MagicBagItem extends Item {
-    public MagicBagItem(Properties properties) {
+    public int tier;
+    public int limit=Integer.MAX_VALUE;
+    public MagicBagItem(int tier,int limit,Properties properties) {
         super(properties);
+        this.tier=tier;
+        if(limit>0) {
+            this.limit = limit;
+        }
     }
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
@@ -36,19 +42,33 @@ public class MagicBagItem extends Item {
         }
         return 0;
     }
-    static public void setTotal(ItemStack bag,int total) {
+    /*static public int setTotal(ItemStack bag,int total) {
         if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            bag.getOrCreateTag().putInt("total",total);
+            int lim=((MagicBagItem)bag.getItem()).limit;
+            if(total<lim) {
+                bag.getOrCreateTag().putInt("total", total);
+                return 0;
+            }else{
+                bag.getOrCreateTag().putInt("total", total);
+                return 0;
+            }
             //if(total<=0){
 //                bag.getOrCreateTag().remove("item");
 //            }
         }
-    }
-    static public void inc(ItemStack bag,int n) {
+        return 0;
+    }*/
+    //returns false if it reached the limit;
+    static public boolean inc(ItemStack bag,int n) {
         if(bag != null && bag.getItem() instanceof MagicBagItem) {
+            int lim=((MagicBagItem)bag.getItem()).limit;
             int total=bag.getOrCreateTag().getInt("total");
-            bag.getOrCreateTag().putInt("total",total+n);
+            if(total+n<lim) {
+                bag.getOrCreateTag().putInt("total", total + n);
+                return true;
+            }
         }
+        return false;
     }
     static public void dec(ItemStack bag,int n) {
         if(bag != null && bag.getItem() instanceof MagicBagItem) {

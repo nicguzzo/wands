@@ -98,7 +98,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                             }
                                         }
                                         itemStack2.setCount(c);
-                                        MagicBagItem.setTotal(bag, total - c);
+                                        MagicBagItem.dec(bag, c);
                                         if (total - c == 0) {
                                             MagicBagItem.setItem(bag, ItemStack.EMPTY);
                                             slot.set(ItemStack.EMPTY);
@@ -117,8 +117,9 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                         bag_item.setCount(1);
                                     }
                                     if(itemStack3.getItem()==bag_item.getItem()){
-                                        MagicBagItem.inc(bag, itemStack3.getCount());
-                                        Compat.set_carried(player, this, ItemStack.EMPTY);
+                                        if(MagicBagItem.inc(bag,itemStack3.getCount())) {
+                                            Compat.set_carried(player, this, ItemStack.EMPTY);
+                                        }
                                     }
                                 }
                             }
@@ -152,13 +153,15 @@ public class MagicBagMenu extends AbstractContainerMenu {
                         if(slot_dst.hasItem()){
                             ItemStack item_dst=slot_dst.getItem();
                             if(item_src.getItem()==item_dst.getItem()) {
-                                MagicBagItem.inc(bag, item_src.getCount());
-                                slot_src.set(ItemStack.EMPTY);
+                                if(MagicBagItem.inc(bag,item_src.getCount())) {
+                                    slot_src.set(ItemStack.EMPTY);
+                                }
                             }
                         }else{
                             MagicBagItem.setItem(bag,item_src);
-                            MagicBagItem.setTotal(bag,item_src.getCount());
-                            slot_src.set(ItemStack.EMPTY);
+                            if(MagicBagItem.inc(bag,item_src.getCount())) {
+                                slot_src.set(ItemStack.EMPTY);
+                            }
                         }
                     }
                 }else {

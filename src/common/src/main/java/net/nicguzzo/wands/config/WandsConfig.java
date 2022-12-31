@@ -61,7 +61,10 @@ public class WandsConfig {
 	public boolean mend_tools=true;
 	public boolean enable_vein_mode=true;
 	public boolean enable_blast_mode=true;
-
+	static public int def_magic_bag_1_limit = 17280; //10 full inventories
+	static public int def_magic_bag_2_limit = 172800; //100 full inventories
+	public int magic_bag_1_limit = def_magic_bag_1_limit;
+	public int magic_bag_2_limit = def_magic_bag_2_limit;
 	//Client options
 	public float wand_mode_display_x_pos = 75.0f;
 	public float wand_mode_display_y_pos = 100.0f;
