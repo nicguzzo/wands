@@ -50,8 +50,10 @@ public class Spinner  extends Wdgt{
                 }
                 if(value-iv>=min) {
                     value-=iv;
-                    onDec(mx,my,value);
+                }else{
+                    value=min;
                 }
+                onDec(mx,my,value);
             }
         };
         dec.ox=0;

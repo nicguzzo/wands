@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "client": [
     "RenderWorldMixin",
-    "LevelRendererMixin"
+    "LevelRendererMixin",
+    "ItemRendererMixin"
   ],
   "mixins":[
     "ExperienceOrbMixin"

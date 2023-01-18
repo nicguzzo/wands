@@ -107,4 +107,14 @@ public class MagicBagItem extends Item {
         list.add(Compat.literal("total: " + MagicBagItem.getTotal(stack) ));
 
     }
+    @Override
+    public Component getName(ItemStack itemStack) {
+        if(!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem){
+            ItemStack item= MagicBagItem.getItem(itemStack);
+            if(!item.isEmpty()) {
+                return Compat.literal("Bag of ").append(Compat.translatable(item.getDescriptionId())).append(" - Tier "+(tier+1));
+            }
+        }
+        return super.getName(itemStack);
+    }
 }

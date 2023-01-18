@@ -400,10 +400,10 @@ public class ClientRender {
                 case CIRCLE:
                 //case RECT:
                 case VEIN:
-
+                case TUNNEL:
                     if (wand.valid || (mode == Mode.LINE || mode == Mode.CIRCLE) || (wand.valid && wand.has_empty_bucket)) {
                         //bbox
-                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL /*|| mode == Mode.RECT*/)) {
+                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL | mode == Mode.TUNNEL)) {
                             if (fat_lines) {
                                 RenderSystem.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);

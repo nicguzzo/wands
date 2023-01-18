@@ -11,22 +11,23 @@ import net.nicguzzo.wands.wand.modes.*;
 
 public class WandProps {
     public enum Mode{
-        DIRECTION { public String toString() {return "Direction"; } public WandMode get_mode(){return new DirectionMode();}},
-        ROW_COL   { public String toString() {return "Row/Column";} public WandMode get_mode(){return new RowColMode();}},
-        FILL      { public String toString() {return "Fill";      } public WandMode get_mode(){return new FillMode();}},
-        AREA      { public String toString() {return "Area";      } public WandMode get_mode(){return new AreaMode();}},
-        GRID      { public String toString() {return "Grid";      } public WandMode get_mode(){return new GridMode();}},
-        LINE      { public String toString() {return "Line";      } public WandMode get_mode(){return new LineMode();}},
-        CIRCLE    { public String toString() {return "Circle";    } public WandMode get_mode(){return new CircleMode();}},
-        //RECT      { public String toString() {return "Rectangle"; }},
-        COPY      { public String toString() {return "Copy";      } public WandMode get_mode(){return new CopyMode();}},
-        PASTE     { public String toString() {return "Paste";     } public WandMode get_mode(){return new PasteMode();}},
-        VEIN      { public String toString() {return "Vein";      } public WandMode get_mode(){return new VeinMode();}},
-        BLAST     { public String toString() {return "Blast";     } public WandMode get_mode(){return new BlastMode();}};
+        DIRECTION { public String toString() {return "wands.modes.direction";} public WandMode get_mode(){return new DirectionMode();}},
+        ROW_COL   { public String toString() {return "wands.modes.row_col";}   public WandMode get_mode(){return new RowColMode();}},
+        FILL      { public String toString() {return "wands.modes.fill";}      public WandMode get_mode(){return new FillMode();}},
+        AREA      { public String toString() {return "wands.modes.area";}      public WandMode get_mode(){return new AreaMode();}},
+        GRID      { public String toString() {return "wands.modes.grid";}      public WandMode get_mode(){return new GridMode();}},
+        LINE      { public String toString() {return "wands.modes.line";}      public WandMode get_mode(){return new LineMode();}},
+        CIRCLE    { public String toString() {return "wands.modes.circle";} public WandMode get_mode(){return new CircleMode();}},
+        COPY      { public String toString() {return "wands.modes.copy";}   public WandMode get_mode(){return new CopyMode();}},
+        PASTE     { public String toString() {return "wands.modes.paste";}  public WandMode get_mode(){return new PasteMode();}},
+        VEIN      { public String toString() {return "wands.modes.vein";}   public WandMode get_mode(){return new VeinMode();}},
+        BLAST     { public String toString() {return "wands.modes.blast";}  public WandMode get_mode(){return new BlastMode();}},
+        TUNNEL    { public String toString() {return "wands.modes.tunnel";} public WandMode get_mode(){return new TunnelMode();}};
         public abstract WandMode get_mode();
     }
     public enum Orientation {
-        ROW, COL
+        ROW { public String toString() {return "wands.orientation.row";}},
+        COL { public String toString() {return "wands.orientation.col";}};
     }
     public enum Plane {
         XZ,XY,YZ
@@ -35,15 +36,15 @@ public class WandProps {
         NONE,X,Y,Z
     }
     public enum StateMode {
-        CLONE  { public String toString() { return "Clone";             }},
-        APPLY  { public String toString() { return "Apply rotaion/axis";}},
-        TARGET { public String toString() { return "Use Target";}}
+        CLONE  { public String toString() { return "wands.state_mode.clone";}},
+        APPLY  { public String toString() { return "wands.state_mode.apply";}},
+        TARGET { public String toString() { return "wands.state_mode.target";}}
     }
     public enum Action{
-        PLACE  { public String toString() { return "Place";   }},
-        REPLACE{ public String toString() { return "Replace"; }},
-        DESTROY{ public String toString() { return "Destroy"; }},
-        USE    { public String toString() { return "Use";     }}
+        PLACE  { public String toString() { return "wands.action.place";   }},
+        REPLACE{ public String toString() { return "wands.action.replace"; }},
+        DESTROY{ public String toString() { return "wands.action.destroy"; }},
+        USE    { public String toString() { return "wands.action.use";     }}
     }
     public enum Flag{
         INVERTED    { public String toString() {return "inverted";}      public boolean get_default(){return false;}; },
@@ -68,7 +69,12 @@ public class WandProps {
         GRIDMOFF   { public String toString() {return  "grid_moff" ;}},
         GRIDNOFF   { public String toString() {return  "grid_noff" ;}},
         MIRRORAXIS { public String toString() {return  "mirror_axis" ;}},
-        SKIPBLOCK { public String toString() {return  "skip_block" ;}};
+        SKIPBLOCK  { public String toString() {return  "skip_block" ;}},
+        TUNNEL_W      { public String toString() {return  "tunnel_w" ;}},
+        TUNNEL_H      { public String toString() {return  "tunnel_h" ;}},
+        TUNNEL_OX     { public String toString() {return  "tunnel_ox" ;}},
+        TUNNEL_OY     { public String toString() {return  "tunnel_oy" ;}},
+        TUNNEL_DEPTH  { public String toString() {return  "tunnel_d" ;}};
         public int def=0;
         public int min=0;
         public int max= Wand.MAX_LIMIT;
@@ -84,6 +90,11 @@ public class WandProps {
             MIRRORAXIS.min=0;//0 disabled - 1=X - 2=Y - 3=Z
             MIRRORAXIS.max=3;
             SKIPBLOCK.max=100;
+            TUNNEL_W.min=1;
+            TUNNEL_H.min=1;
+            TUNNEL_H.def=2;
+            TUNNEL_DEPTH.def=3;
+            TUNNEL_DEPTH.min=1;
         }
     }
     static public Mode[] modes=Mode.values();

@@ -57,8 +57,6 @@ public class WandItem extends TieredItem implements Vanishable {
         this.can_blast=can_blast;
     }
 
-
-
     @Override
     public InteractionResult useOn(UseOnContext context) {    
         //WandsMod.LOGGER.info("UseOn");

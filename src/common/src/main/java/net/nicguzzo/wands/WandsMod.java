@@ -180,6 +180,7 @@ public class WandsMod {
     static public ResourceLocation WAND_PACKET= new ResourceLocation(MOD_ID, "wand_packet");
     static public ResourceLocation POS_PACKET= new ResourceLocation(MOD_ID, "pos_packet");
     static public ResourceLocation CONF_PACKET= new ResourceLocation(MOD_ID, "conf_packet");
+    static public ResourceLocation GLOBAL_SETTINGS_PACKET= new ResourceLocation(MOD_ID, "global_settings_packet");
     public enum WandKeys{
         MENU,
         MODE,
@@ -259,6 +260,18 @@ public class WandsMod {
                             wand.do_or_preview(player,level, block_state,pos, side, hitResult.getLocation(), stack,true);
                             wand.clear();
                         }
+                    }
+                }
+            });
+        });
+        NetworkManager.registerReceiver(Side.C2S, GLOBAL_SETTINGS_PACKET, (packet,context)->{
+            boolean drop_pos=packet.readBoolean();
+            context.queue(()-> {
+                Player player=context.getPlayer();
+                if(player!=null) {
+                    Wand wand = PlayerWand.get(player);
+                    if (wand != null) {
+                        wand.drop_on_player=drop_pos;
                     }
                 }
             });

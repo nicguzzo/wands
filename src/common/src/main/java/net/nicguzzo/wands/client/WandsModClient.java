@@ -200,14 +200,6 @@ public class WandsModClient {
             ServerData srv = Minecraft.getInstance().getCurrentServer();
             if(srv!=null && WandsMod.config!=null){
                 WandsMod.config.blocks_per_xp=packet.readFloat();
-                /*WandsMod.config.stone_wand_limit=packet.readInt();
-                WandsMod.config.iron_wand_limit=packet.readInt();
-                WandsMod.config.diamond_wand_limit=packet.readInt();
-                WandsMod.config.netherite_wand_limit=packet.readInt();
-                WandsMod.config.stone_wand_durability=packet.readInt();
-                WandsMod.config.iron_wand_durability=packet.readInt();
-                WandsMod.config.diamond_wand_durability=packet.readInt();
-                WandsMod.config.netherite_wand_durability=packet.readInt();*/
                 WandsMod.config.destroy_in_survival_drop=packet.readBoolean();
                 WandsMod.config.survival_unenchanted_drops=packet.readBoolean();
                 WandsMod.config.allow_wand_to_break=packet.readBoolean();
@@ -288,8 +280,8 @@ public class WandsModClient {
                             break;
                     }
                     String ln1="";
-                    String ln2="Action: "+action.toString();
-                    String ln3="Mode: "+mode.toString()+" Rot:"+rot;
+                    String ln2="Action: "+Compat.translatable(action.toString()).getString();
+                    String ln3="Mode: "+Compat.translatable(mode.toString()).getString()+" Rot:"+rot;
                     if(wand.valid) {
                         switch(mode){
                             case DIRECTION:

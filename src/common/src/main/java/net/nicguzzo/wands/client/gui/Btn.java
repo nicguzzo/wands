@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.client.gui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -11,7 +12,7 @@ import net.nicguzzo.wands.utils.Colorf;
 
 public class Btn extends Wdgt{
     int ox=2;
-    int oy=3;
+    int oy=2;
     Component text;
     Colorf c1=new Colorf(0.1f,0.1f,0.1f,0.8f);
     Colorf c2=new Colorf(0.4f,0.4f,0.40f,0.9f);
@@ -34,6 +35,9 @@ public class Btn extends Wdgt{
     }
     public Btn(Component text){
         this(0,0,0,0,text);
+    }
+    public Btn(Component text,BtnClick click){
+        this(0,0,0,0,text,click);
     }
 
     public void onClick(int mx,int my){
@@ -60,15 +64,20 @@ public class Btn extends Wdgt{
         }else{
             r=c1.r;g=c1.g;b=c1.b;a=c1.a;
         }
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
         BufferBuilder bufferBuilder=init_quads();
         quad(bufferBuilder,x,y,w,h,r,g,b,a);
         if(selected) {
-            quad(bufferBuilder,x-2,y-2,w+4,2,0.0f, 0.8f, 0.8f, 1.0f);
-            quad(bufferBuilder,x-2,y+h,w+4,2,0.0f, 0.8f, 0.8f, 1.0f);
-            quad(bufferBuilder,x-2,y-2,2,h+4,0.0f, 0.8f, 0.8f, 1.0f);
-            quad(bufferBuilder,x+w,y-2,2,h+4,0.0f, 0.8f, 0.8f, 1.0f);
+            int border=1;
+            quad(bufferBuilder,x,y,w,h,0.0f, 0.8f, 0.8f, 0.5f);
+            /*quad(bufferBuilder,x-border,y-border,w+border*2,border,0.0f, 0.8f, 0.8f, 0.5f);
+            quad(bufferBuilder,x-border,y+h,w+border*2,border,0.0f, 0.8f, 0.8f, 0.5f);
+            quad(bufferBuilder,x-border,y-border,border,h+border*2,0.0f, 0.8f, 0.8f, 0.5f);
+            quad(bufferBuilder,x+w,y-border,border,h+border*2,0.0f, 0.8f, 0.8f, 0.5f);*/
         }
         end_quads();
+        RenderSystem.disableBlend();
         int text_color=0xffffffff;
         if(selected)
             text_color=0xff000000;

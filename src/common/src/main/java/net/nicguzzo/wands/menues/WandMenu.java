@@ -88,6 +88,7 @@ public class WandMenu extends AbstractContainerMenu {
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         //WandsMod.LOGGER.info("quick move "+index);
+        //TODO: only quickmove while wand inv is visible
         Slot slot = (Slot)this.slots.get(index);
         if(index>=0 && index<36) { //player inv
                 if (insert(slot.getItem(), 36, 45)) {
