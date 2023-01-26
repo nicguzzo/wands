@@ -2,7 +2,7 @@ package net.nicguzzo.wands.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import dev.architectury.networking.NetworkManager;
+
 import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -77,6 +77,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     int right;
     int bottom;
     int top;
+    int xoff;
+    int yoff;
     public WandScreen(WandMenu handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
     }
@@ -108,10 +110,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         int btn_margin=2;
         int h2=btn_h+btn_margin;
         int h=WandProps.modes.length*h2;
-        left=(width/2)-(img_w/2);
-        right=(width/2)+(img_w/2);
-        bottom=(height/2)-(h/2)-12;
-        top=(height/2)+(h/2);
+        xoff=WandsMod.config.wand_screen_x_offset;
+        yoff=WandsMod.config.wand_screen_x_offset;
+        left=(width/2)-(img_w/2)-xoff;
+        right=(width/2)+(img_w/2)-xoff;
+        bottom=(height/2)-(h/2)-12-yoff;
+        top=(height/2)+(h/2)-yoff;
 
 
         mult_spn=valSpinner(Value.MULTIPLIER,left+200,bottom+25,25,14, Compat.translatable("screen.wands.multiplier"));
@@ -271,13 +275,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeBoolean(true);
             ClientRender.wand.drop_on_player=true;
-            NetworkManager.sendToServer(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
+            Compat.send_to_server(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
         }));
         drop_pos_sel.add(new Btn(Compat.translatable("screen.wands.drop_pos.block"),(int mx,int my)->{
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeBoolean(false);
             ClientRender.wand.drop_on_player=false;
-            NetworkManager.sendToServer(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
+            Compat.send_to_server(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
         }));
         wdgets.add(drop_pos_sel);
 
@@ -355,7 +359,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         wdgets.add(show_inv_btn);
 
 
-        match_state_sel=new Select(left+170,bottom+120,80,12,null);
+        match_state_sel=new Select(left+170,bottom+120,70,12,null);
         Btn match_state_btn=new Btn(Compat.translatable("screen.wands.match_state")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.MATCHSTATE);
@@ -365,7 +369,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         match_state_sel.add(match_state_btn);
         wdgets.add(match_state_sel);
 
-        inc_sel_grp_btn=new Select(left+170,bottom+135,80,12,null);
+        inc_sel_grp_btn=new Select(left+170,bottom+135,70,12,null);
         Btn inc_sel_btn=new Btn(Compat.translatable("screen.wands.inc_sel")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.INCSELBLOCK);
@@ -384,7 +388,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         slab_grp_btn.add(slab_btn);
         wdgets.add(slab_grp_btn);
 
-        inv_grp_btn=new Select(left+170,bottom+165,40,12,null);
+        inv_grp_btn=new Select(left+170,bottom+165,70,12,null);
         Btn inv_btn=new Btn(Compat.translatable("screen.wands.invert")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.INVERTED);
@@ -394,7 +398,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         inv_grp_btn.add(inv_btn);
         wdgets.add(inv_grp_btn);
 
-        skip_spn=valSpinner(Value.SKIPBLOCK, left+220,bottom+180,25,14,Compat.translatable("screen.wands.skip_block"));
+        skip_spn=valSpinner(Value.SKIPBLOCK, left+215,bottom+180,25,14,Compat.translatable("screen.wands.skip_block"));
         skip_spn.label_side=true;
         wdgets.add(skip_spn);
 
@@ -441,7 +445,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 #if USE_CLOTHCONFIG
         if(WandsMod.platform!=2){
             Screen parent=this;
-            conf_btn=new Btn(left+210,bottom+195,27,12,Compat.translatable("screen.wands.conf")){
+            conf_btn=new Btn(left+10,bottom+180,27,12,Compat.translatable("screen.wands.conf")){
                 public void onClick(int mx,int my) {
                     Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
                 }
@@ -502,15 +506,15 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         Compat.set_pos_tex_shader();
         RenderSystem.depthMask(false);
         RenderSystem.disableDepthTest();
-        int x = (width - img_w) / 2;
-        int y = (height - img_h) / 2;
+        int x = ((width - img_w) / 2)-xoff;
+        int y = ((height - img_h) / 2)-yoff;
 
         if(show_inv) {
             RenderSystem.depthMask(true);
             RenderSystem.enableDepthTest();
             Compat.set_texture(INV_TEX);
-            x = (width - imageWidth) / 2;
-            y = (height - imageHeight) / 2;
+            x =( (width - imageWidth) / 2);
+            y =( (height - imageHeight) / 2);
             blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
             super.render(poseStack,mouseX,mouseY,delta);            
             show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
@@ -523,8 +527,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     wdgets.get(i).render(poseStack, this.font, mouseX, mouseY);
                 }
             }
-            x = (width - img_w)/2 +48;
-            y = ((height - img_h) / 2)+22;
+            x = ((width - img_w)/2 +48)-xoff;
+            y = (((height - img_h) / 2)+22)-yoff;
             for (int i=0;i<9;i++) {
                 Slot s=this.menu.slots.get(36+i);
                 int xx=x+i*18;

@@ -445,7 +445,7 @@ public class WandsMod {
                         } else {
                             WandProps.nextAction(main_stack);
                         }
-                        player.displayClientMessage(Compat.literal("Wand PlaceMode: " + WandProps.getAction(main_stack)), false);
+                        player.displayClientMessage(Compat.literal("Wand Action: ").append(Compat.translatable(WandProps.getAction(main_stack).toString())), false);
                         break;
                     case MENU:
                         Compat.open_menu((ServerPlayer) player, main_stack,0);
@@ -471,7 +471,7 @@ public class WandsMod {
                                 break;
                             default:
                                 WandProps.nextOrientation(main_stack);
-                                player.displayClientMessage(Compat.literal("Wand Orientation: " + WandProps.getOrientation(main_stack).toString().toLowerCase()), false);
+                                player.displayClientMessage(Compat.literal("Wand Orientation: ").append(Compat.translatable(WandProps.getOrientation(main_stack).toString())), false);
                                 break;
                         }
                         break;

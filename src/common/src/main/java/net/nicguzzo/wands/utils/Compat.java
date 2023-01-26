@@ -194,6 +194,9 @@ public class Compat {
         NetworkManager.sendToPlayer(player, id, buf);
         #endif
     }
+    static public void send_to_server(ResourceLocation id, FriendlyByteBuf packet) {
+        NetworkManager.sendToServer(id, packet);
+    }
     static public void open_menu(ServerPlayer player, ItemStack item, int m){
 
         MenuRegistry.openExtendedMenu(player, new ExtendedMenuProvider(){

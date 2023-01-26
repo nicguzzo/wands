@@ -151,7 +151,8 @@ unifiedPublishing {
         var mrToken = System.getenv("MODRINTH_TOKEN")
         if (mrToken != null) {
             modrinth {
-                displayName= "Building Wands"
+                //displayName= "Building Wands"
+                displayName= "v${rootProject.mod_version} - ${rootProject.release_type} - fabric - ${rootProject.minecraft_version}"
                 token = mrToken
                 id = "XkisZUfp" // Required, must be a string, ID of Modrinth project
             }

@@ -196,10 +196,11 @@ public class WandItem extends TieredItem implements Vanishable {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag=stack.getOrCreateTag();
-
-        list.add(Compat.literal("mode: " + WandProps.getMode(stack).toString() ));
+        //TODO Complete translations
+        //TODO add tools info
+        list.add(Compat.literal("mode: ").append(Compat.translatable( WandProps.getMode(stack).toString() )));
         list.add(Compat.literal("limit: " + this.limit ));
-        list.add(Compat.literal("orientation: "+WandProps.orientations[tag.getInt("orientation")].toString()));
+        list.add(Compat.literal("orientation: ").append(Compat.translatable(WandProps.orientations[tag.getInt("orientation")].toString())));
         int a=tag.getInt("axis");
         if(a<WandProps.axes.length)
             list.add(Compat.literal("axis: "+WandProps.axes[a].toString()));
@@ -208,6 +209,19 @@ public class WandItem extends TieredItem implements Vanishable {
         list.add(Compat.literal("plane: "+ WandProps.Plane.values()[tag.getInt("plane")].toString()));
         list.add(Compat.literal("fill circle: "+ tag.getBoolean("cfill")));
         list.add(Compat.literal("rotation: "+ tag.getInt("rotation")));
+        ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
+        /*ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
+        int n_tools=0;
+        for (int i = 0; i < tag.size() && i<9; i++) {
+            CompoundTag stackTag = (CompoundTag) tools.get(i);
+            var tool = ItemStack.of(stackTag.getCompound("Tool"));
+            if(!tool.isEmpty()){
+                n_tools++;
+            }
+        }*/
+        if(ClientRender.wand!=null) {
+            list.add(Compat.literal("tools: " +tools.size()));
+        }
     }
     public int getEnchantmentValue() {
 

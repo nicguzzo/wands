@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=2.6.5_beta
+VERSION=2.6.6_beta
 mod="BuildingWands"
 modloader=(fabric forge)
 

@@ -72,6 +72,8 @@ public class WandsConfig {
 	public float wand_tools_display_x_pos = 0.0f;
 	public float wand_tools_display_y_pos = 100.0f;
 	public float preview_opacity = 0.8f;
+	public int wand_screen_x_offset=0;
+	public int wand_screen_y_offset=0;
 	public boolean fancy_preview = true;
 	public boolean block_outlines=true;
 	public boolean fill_outlines=true;

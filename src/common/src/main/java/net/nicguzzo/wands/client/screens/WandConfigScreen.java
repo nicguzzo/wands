@@ -229,7 +229,16 @@ public class WandConfigScreen {
                 .setTooltip(Compat.translatable("option.wands.wand_tools_display_y_pos_tt"))
                 .setSaveConsumer(newValue -> conf.wand_tools_display_y_pos = newValue)
                 .build());
-
+        preview.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.wand_screen_x_offset"), conf.wand_screen_x_offset)
+                .setDefaultValue(0)
+                .setTooltip(Compat.translatable("option.wands.wand_screen_x_offset_tt"))
+                .setSaveConsumer(newValue -> conf.wand_screen_x_offset = newValue)
+                .build());
+        preview.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.wand_screen_y_offset"), conf.wand_screen_y_offset)
+                .setDefaultValue(0)
+                .setTooltip(Compat.translatable("option.wands.wand_screen_y_offset_tt"))
+                .setSaveConsumer(newValue -> conf.wand_screen_y_offset = newValue)
+                .build());
 
         preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.block_outline_color"), WandsConfig.c_block_outline)
                 .setDefaultValue(Color.ofRGBA(220,220,220,255).getColor())

@@ -105,15 +105,17 @@ public class WandMenu extends AbstractContainerMenu {
         return ItemStack.EMPTY;
     }
     public static ListTag toTag(SimpleContainer inventory) {
-        ListTag tag = new ListTag();
+        ListTag list = new ListTag();
         for(int i = 0; i < inventory.getContainerSize(); i++) {
             CompoundTag stackTag = new CompoundTag();
             stackTag.putInt("Slot", i);
-            stackTag.put("Tool", inventory.getItem(i).save(new CompoundTag()));
-            tag.add(stackTag);
+            ItemStack tool=inventory.getItem(i);
+            if(!tool.isEmpty()) {
+                stackTag.put("Tool", tool.save(new CompoundTag()));
+                list.add(stackTag);
+            }
         }
-
-        return tag;
+        return list;
     }
 
     public static void fromTag(ListTag tag, SimpleContainer inventory) {

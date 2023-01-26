@@ -35,8 +35,10 @@ public class Spinner  extends Wdgt{
                 }
                 if(value+iv<= max) {
                     value += iv;
-                    onInc(mx,my,value);
+                }else{
+                    value=max;
                 }
+                onInc(mx,my,value);
             }
         };
         inc.ox=0;

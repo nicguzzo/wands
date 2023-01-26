@@ -114,6 +114,10 @@
     "option.wands.advancement_allow_diamond_wand_tt":"",
     "option.wands.advancement_allow_netherite_wand":"Allow netherite wand",
     "option.wands.advancement_allow_netherite_wand_tt":"",
+    "option.wands.wand_screen_x_offset": "wand menu x offset",
+    "option.wands.wand_screen_x_offset_tt": "moves the wand's menu x to the left",
+    "option.wands.wand_screen_y_offset": "wand menu y offset",
+    "option.wands.wand_screen_y_offset_tt": "moves the wand's menu y to the top",
     "screen.wands.multiplier": "Multiplier",
     "screen.wands.grid_mxn": "Grid",
     "screen.wands.grid_mxn_skip": "Skip",
@@ -172,6 +176,6 @@
     "wands.action.destroy":"Destroy",
     "wands.action.use":"Use",
     "wands.orientation.row": "Row",
-    "wands.orientation.col": "Col"
+    "wands.orientation.col": "Column"
 
 }

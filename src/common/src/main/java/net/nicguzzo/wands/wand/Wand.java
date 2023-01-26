@@ -27,6 +27,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -152,7 +153,6 @@ public class Wand {
 
     ItemStack[] tools=new ItemStack[9];
 
-
     public enum Sounds{
             SPLASH {
                 @Override
@@ -262,6 +262,10 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
+        //TODO fix plants place, force samestate
+        //TODO drop items on wand merge craft
+        //TODO fix tunnel mode only on netherite, should be iron+
+        //TODO stone wand no blast
         //DONE fix leaves default state
         //DONE bug, copy undoes last destroy
         //DONE place bamboo
@@ -1237,7 +1241,14 @@ public class Wand {
     boolean drop(BlockPos blockPos,BlockState blockState,BlockEntity blockEntity,ItemStack drop_item){
         BlockPos drop_pos;
         if (drop_on_player) {
-            drop_pos = player.getOnPos().above();
+#if MC == "1165"
+                int i = Mth.floor(player.position().x);
+                int j = Mth.floor(player.position().y - 0.20000000298023224);
+                int k = Mth.floor(player.position().z);
+                drop_pos = new BlockPos(i, j, k).above();
+#else
+                drop_pos = player.getOnPos().above();
+#endif
         } else {
             drop_pos = blockPos;
         }
@@ -1442,6 +1453,7 @@ public class Wand {
     public void update_tools(){
         ListTag tag = wand_stack.getOrCreateTag().getList("Tools", Compat.NbtType.COMPOUND);
         digger_item_slot =-1;
+
         for (int i = 0; i < tag.size() && i<9; i++) {
             CompoundTag stackTag = (CompoundTag) tag.get(i);
             tools[i] = ItemStack.of(stackTag.getCompound("Tool"));
@@ -1457,7 +1469,7 @@ public class Wand {
                          ))
                 )) {
                     if(digger_item_slot==-1)
-                        digger_item_slot = i;
+                        digger_item_slot = stackTag.getInt("Slot");
                 }
             }
         }
@@ -1478,7 +1490,8 @@ public class Wand {
                 ){
                     if(digger_item==null) {
                         digger_item = tools[i];
-                        digger_item_slot = i;
+                        //digger_item_slot = i;
+
                     }
                     return true;
                 }

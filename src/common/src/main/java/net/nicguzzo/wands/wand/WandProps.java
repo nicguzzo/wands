@@ -20,9 +20,10 @@ public class WandProps {
         CIRCLE    { public String toString() {return "wands.modes.circle";} public WandMode get_mode(){return new CircleMode();}},
         COPY      { public String toString() {return "wands.modes.copy";}   public WandMode get_mode(){return new CopyMode();}},
         PASTE     { public String toString() {return "wands.modes.paste";}  public WandMode get_mode(){return new PasteMode();}},
+        TUNNEL    { public String toString() {return "wands.modes.tunnel";} public WandMode get_mode(){return new TunnelMode();}},
         VEIN      { public String toString() {return "wands.modes.vein";}   public WandMode get_mode(){return new VeinMode();}},
-        BLAST     { public String toString() {return "wands.modes.blast";}  public WandMode get_mode(){return new BlastMode();}},
-        TUNNEL    { public String toString() {return "wands.modes.tunnel";} public WandMode get_mode(){return new TunnelMode();}};
+        BLAST     { public String toString() {return "wands.modes.blast";}  public WandMode get_mode(){return new BlastMode();}};
+
         public abstract WandMode get_mode();
     }
     public enum Orientation {
