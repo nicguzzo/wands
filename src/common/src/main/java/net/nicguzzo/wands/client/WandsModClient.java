@@ -31,6 +31,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
@@ -354,6 +356,14 @@ public class WandsModClient {
                         }
                         itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
                         itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                        int fortune= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,item);
+                        int silk= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item);
+
+                        if(fortune!=0) {
+                            font.draw(poseStack, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                        } else if (silk != 0) {
+                            font.draw(poseStack, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                        }
                     });
                 }
             }

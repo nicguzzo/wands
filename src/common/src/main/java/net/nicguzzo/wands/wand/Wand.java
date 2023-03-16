@@ -91,9 +91,7 @@ public class Wand {
     public BlockHitResult lastHitResult=null;
 
     public boolean valid = false;
-    public static final int MAX_UNDO = 2048;
-    public static int MAX_LIMIT = 4096;
-//    public static final int MAX_LIMIT = 50000000;
+
     public Player player;
     public Level level;
     public BlockState block_state;
@@ -149,7 +147,7 @@ public class Wand {
     //public boolean even_circle=false;
     public boolean mine_to_inventory=true;
     public boolean  stop_on_full_inventory=true;
-
+    public boolean target_air=false;
 
     ItemStack[] tools=new ItemStack[9];
 
@@ -169,13 +167,13 @@ public class Wand {
     public Palette palette=new Palette();
     //public ItemStack palette_item = null;
     public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
-    public BlockBuffer block_buffer = new BlockBuffer(MAX_LIMIT);
-    public CircularBuffer undo_buffer = new CircularBuffer(MAX_UNDO);
+    public BlockBuffer block_buffer = new BlockBuffer(WandsConfig.max_limit);
+    public CircularBuffer undo_buffer = new CircularBuffer(WandsConfig.max_limit);
     public Vector<CopyBuffer> copy_paste_buffer = new Vector<>();
 
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
     private int blocks_sent_to_inv=0;
-    public int MAX_COPY_VOL = MAX_LIMIT;
+    public int MAX_COPY_VOL = WandsConfig.max_limit;
     public int radius=0;
 
 
@@ -189,9 +187,9 @@ public class Wand {
     public int copy_z2 = 0;
     public boolean preview;
     public boolean creative=true;
-    public WandProps.Mode mode;
+    public WandProps.Mode mode=null;
     public boolean prnt = false;
-    public int limit=MAX_LIMIT;
+    public int limit=WandsConfig.max_limit;
     Inventory player_inv;
     public boolean slab_stair_bottom=true;
     static boolean once=true;
@@ -218,6 +216,17 @@ public class Wand {
     public void do_or_preview(Player player,Level level,BlockState block_state,BlockPos pos,Direction side,
             Vec3 hit,ItemStack wand_stack,boolean prnt)
     {
+
+        this.replace=WandProps.getAction(wand_stack)== WandProps.Action.REPLACE;
+        this.destroy=WandProps.getAction(wand_stack)== WandProps.Action.DESTROY;
+        this.use=WandProps.getAction(wand_stack)== WandProps.Action.USE;
+
+        if((destroy||replace) && WandsMod.config.disable_destroy_replace){
+            destroy=false;
+            replace=false;
+            WandProps.setAction(wand_stack, WandProps.Action.PLACE);
+
+        }
         this.player = player;
         this.level = level;
         this.block_state = block_state;
@@ -226,6 +235,7 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
+        this.target_air=false;
         if(this.player==null || this.level==null||this.pos==null
                 || this.side==null||this.hit==null||this.wand_stack==null){
             return;
@@ -262,7 +272,8 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-        //TODO fix plants place, force samestate
+
+        //TODO fix plants place, force samestate, needs air bug
         //TODO drop items on wand merge craft
         //TODO fix tunnel mode only on netherite, should be iron+
         //TODO stone wand no blast
@@ -277,17 +288,29 @@ public class Wand {
         //TODO banner placement not working on sides
 
         wand_item = (WandItem) wand_stack.getItem();
+        switch(Tiers.values()[wand_item.getTier().getLevel()]){
+            case STONE:
+                wand_item.limit=WandsMod.config.stone_wand_limit;
+                break;
+            case IRON:
+                wand_item.limit=WandsMod.config.iron_wand_limit;
+                break;
+            case DIAMOND:
+                wand_item.limit=WandsMod.config.diamond_wand_limit;
+                break;
+            case NETHERITE:
+                wand_item.limit=WandsMod.config.netherite_wand_limit;
+                break;
+        }
         limit = wand_item.limit;
-        if(limit>MAX_LIMIT){
-            limit=MAX_LIMIT;
+        if(limit>WandsConfig.max_limit){
+            limit=WandsConfig.max_limit;
         }
 
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
         valid = false;
-        this.replace=WandProps.getAction(wand_stack)== WandProps.Action.REPLACE;
-        this.destroy=WandProps.getAction(wand_stack)== WandProps.Action.DESTROY;
-        this.use=WandProps.getAction(wand_stack)== WandProps.Action.USE;
+
 
         offhand = player.getOffhandItem();
         has_offhand = false;
@@ -416,6 +439,7 @@ public class Wand {
             }
             return;
         }
+
         update_inv_aux();
         blocks_sent_to_inv=0;
         //process the current mode
@@ -432,7 +456,7 @@ public class Wand {
             }
             if(mode!=Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
                         if (!replace && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
@@ -507,7 +531,7 @@ public class Wand {
                         }
 
                         BlockAccounting pa = new BlockAccounting();
-                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
                             if (has_empty_bucket || has_water_bucket || has_lava_bucket) {
                                 block_buffer.state[a] = block_state;
                                 if (has_lava_bucket) {
@@ -528,7 +552,7 @@ public class Wand {
                         }
                     } else {
                         //copy paste
-                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
                             if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
@@ -555,7 +579,7 @@ public class Wand {
             {
                 AABB bb = player.getBoundingBox();
                 if(mode!=Mode.COPY) {
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < MAX_LIMIT; a++) {
+                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
                         tmp_pos.set(block_buffer.buffer_x[a], block_buffer.buffer_y[a], block_buffer.buffer_z[a]);
                         if (!destroy && !has_bucket && !use) {
                             if (bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
@@ -939,7 +963,6 @@ public class Wand {
         }
     }
     public void fill(BlockPos from, BlockPos to,boolean hollow,int xskip,int yskip,int zskip) {
-        //log("fill from: "+from+" to: "+to);
         int xs, ys, zs, xe, ye, ze;
         xs = from.getX();
         xe = to.getX();
@@ -987,7 +1010,7 @@ public class Wand {
                     if(xskip!=0 && (x0 % (xskip+1))!=0){
                         continue;
                     }
-                    if (ll < limit && ll < MAX_LIMIT) {
+                    if (ll < limit && ll < WandsMod.config.max_limit) {
                         add_to_buffer(x, y, z);
                         ll++;
                     }
@@ -1154,7 +1177,7 @@ public class Wand {
                     dec = (1.0f / BLOCKS_PER_XP);
                 }
                 if ((BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
-                    if (destroy || replace) {
+                    if (WandsMod.config.destroy_in_survival_drop&& (destroy || replace)) {
                         if (_can_destroy) {
                             placed = destroyBlock(block_pos, true);
                         }
@@ -1478,22 +1501,24 @@ public class Wand {
     public boolean can_destroy(BlockState state,boolean check_speed){
         digger_item =null;
         for (int i = 0; i<tools.length; i++) {
-            int dmg=tools[i].getMaxDamage()- tools[i].getDamageValue();
-            if(tools[i]!=null && !tools[i].isEmpty() && dmg>1) {
-                if( ((destroy || replace)&& can_dig(state, check_speed, tools[i]))||
-                    ((use) && (
-                            (tools[i].getItem() instanceof HoeItem    && HoeAccess.is_tillable(state))||
-                            (tools[i].getItem() instanceof AxeItem    && AxeAccess.is_stripable(state))||
-                            (tools[i].getItem() instanceof ShovelItem && ShovelAccess.is_flattenable(state))||
-                            (tools[i].getItem() instanceof ShearsItem && can_shear(state))
-                    ))
-                ){
-                    if(digger_item==null) {
-                        digger_item = tools[i];
-                        //digger_item_slot = i;
+            if(tools[i]!=null) {
+                int dmg = tools[i].getMaxDamage() - tools[i].getDamageValue();
+                if (!tools[i].isEmpty() && dmg > 1) {
+                    if (((destroy || replace) && can_dig(state, check_speed, tools[i])) ||
+                            ((use) && (
+                                    (tools[i].getItem() instanceof HoeItem && HoeAccess.is_tillable(state)) ||
+                                            (tools[i].getItem() instanceof AxeItem && AxeAccess.is_stripable(state)) ||
+                                            (tools[i].getItem() instanceof ShovelItem && ShovelAccess.is_flattenable(state)) ||
+                                            (tools[i].getItem() instanceof ShearsItem && can_shear(state))
+                            ))
+                    ) {
+                        if (digger_item == null) {
+                            digger_item = tools[i];
+                            //digger_item_slot = i;
 
+                        }
+                        return true;
                     }
-                    return true;
                 }
             }
         }

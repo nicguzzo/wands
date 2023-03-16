@@ -42,60 +42,60 @@ public class WandConfigScreen {
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.stone_wand_limit"), conf.stone_wand_limit)
                     .setDefaultValue(WandsConfig.def_stone_wand_limit)
                     .setMin(0)
-                    .setMax(Wand.MAX_LIMIT)
-                    .setTooltip(Compat.translatable("option.wands.stone_wand_limit_tt"))
+                    .setMax(WandsConfig.max_limit)
+                    .setTooltip(Compat.translatable("option.wands.stone_wand_limit_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.stone_wand_limit = newValue)
                     .build());
     //iron_wand_limit
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.iron_wand_limit"), conf.iron_wand_limit)
                     .setDefaultValue(WandsConfig.def_iron_wand_limit)
                     .setMin(0)
-                    .setMax(Wand.MAX_LIMIT)
-                    .setTooltip(Compat.translatable("option.wands.iron_wand_limit_tt"))
+                    .setMax(WandsConfig.max_limit)
+                    .setTooltip(Compat.translatable("option.wands.iron_wand_limit_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.iron_wand_limit = newValue)
                     .build());
     //diamond_wand_limit
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.diamond_wand_limit"), conf.diamond_wand_limit)
                     .setDefaultValue(WandsConfig.def_diamond_wand_limit)
                     .setMin(0)
-                    .setMax(Wand.MAX_LIMIT)
-                    .setTooltip(Compat.translatable("option.wands.diamond_wand_limit_tt"))
+                    .setMax(WandsConfig.max_limit)
+                    .setTooltip(Compat.translatable("option.wands.diamond_wand_limit_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.diamond_wand_limit = newValue)
                     .build());
     //netherite_wand_limit
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.netherite_wand_limit"), conf.netherite_wand_limit)
                     .setDefaultValue(WandsConfig.def_netherite_wand_limit)
                     .setMin(0)
-                    .setMax(Wand.MAX_LIMIT)
-                    .setTooltip(Compat.translatable("option.wands.netherite_wand_limit_tt"))
+                    .setMax(WandsConfig.max_limit)
+                    .setTooltip(Compat.translatable("option.wands.netherite_wand_limit_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.netherite_wand_limit = newValue)
                     .build());
     //stone_wand_durability
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.stone_wand_durability"), conf.stone_wand_durability)
                     .setDefaultValue(WandsConfig.def_stone_wand_durability)
                     .setMin(0)
-                    .setTooltip(Compat.translatable("option.wands.stone_wand_durability_tt"))
+                    .setTooltip(Compat.translatable("option.wands.stone_wand_durability_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.stone_wand_durability = newValue)
                     .build());
     //iron_wand_durability
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.iron_wand_durability"), conf.iron_wand_durability)
                     .setDefaultValue(WandsConfig.def_iron_wand_durability)
                     .setMin(0)
-                    .setTooltip(Compat.translatable("option.wands.iron_wand_durability_tt"))
+                    .setTooltip(Compat.translatable("option.wands.iron_wand_durability_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.iron_wand_durability = newValue)
                     .build());
     //diamond_wand_durability
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.diamond_wand_durability"), conf.diamond_wand_durability)
                     .setDefaultValue(WandsConfig.def_diamond_wand_durability)
                     .setMin(0)
-                    .setTooltip(Compat.translatable("option.wands.diamond_wand_durability_tt"))
+                    .setTooltip(Compat.translatable("option.wands.diamond_wand_durability_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.diamond_wand_durability = newValue)
                     .build());
     //netherite_wand_durability
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.netherite_wand_durability"), conf.netherite_wand_durability)
                     .setDefaultValue(WandsConfig.def_netherite_wand_durability)
                     .setMin(0)
-                    .setTooltip(Compat.translatable("option.wands.netherite_wand_durability_tt"))
+                    .setTooltip(Compat.translatable("option.wands.netherite_wand_durability_tt").append("restart required"))
                     .setSaveConsumer(newValue -> conf.netherite_wand_durability = newValue)
                     .build());
     //destroy_in_survival_drop

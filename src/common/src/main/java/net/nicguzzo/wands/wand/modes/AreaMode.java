@@ -3,6 +3,7 @@ package net.nicguzzo.wands.wand.modes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
+import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -21,7 +22,7 @@ public class AreaMode implements WandMode {
         int i = 0;
         int found = 1;
         limit2-=1;
-        while (i < limit2 && i < wand.MAX_LIMIT && found <= limit2) {
+        while (i < limit2 && i < WandsConfig.max_limit && found <= limit2) {
             if (i < wand.block_buffer.get_length()) {
                 BlockPos p = wand.block_buffer.get(i).relative(wand.side, -1);
                 found += find_neighbours(p, wand.block_state,limit2,wand);

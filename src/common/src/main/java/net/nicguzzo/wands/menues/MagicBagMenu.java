@@ -144,7 +144,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
 
                 }
             }else{
-                if (actionType == ClickType.QUICK_MOVE) {
+                if (actionType == ClickType.QUICK_MOVE && slotIndex<this.slots.size()) {
 
                     Slot slot_src = this.slots.get(slotIndex);
                     Slot slot_dst = this.slots.get(36);

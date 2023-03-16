@@ -226,6 +226,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     WandsModClient.send_wand(wand_stack);
                 }
             };
+            if((WandProps.actions[i]== WandProps.Action.DESTROY ||WandProps.actions[i]== WandProps.Action.REPLACE) &&
+                WandsMod.config.disable_destroy_replace){
+                b.disabled=true;
+            }
             action_grp.add(b);
         }
         wdgets.add(action_grp);

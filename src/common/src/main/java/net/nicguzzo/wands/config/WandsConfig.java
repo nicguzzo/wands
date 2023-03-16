@@ -21,6 +21,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.nicguzzo.wands.WandsExpectPlatform;
+import net.nicguzzo.wands.WandsMod;
 
 public class WandsConfig {
 
@@ -44,6 +45,8 @@ public class WandsConfig {
 	static public int def_iron_wand_durability = 512;
 	static public int def_diamond_wand_durability = 2048;
 	static public int def_netherite_wand_durability = 4096;
+	static public int max_limit=8192;
+	public int max_limit___increment_this_if_your_machine_can_handle_it=max_limit;
 	public float blocks_per_xp =def_blocks_per_xp;
 	public int stone_wand_limit = def_stone_wand_limit;
 	public int iron_wand_limit = def_iron_wand_limit;
@@ -61,6 +64,7 @@ public class WandsConfig {
 	public boolean mend_tools=true;
 	public boolean enable_vein_mode=true;
 	public boolean enable_blast_mode=true;
+	public boolean disable_destroy_replace=false;
 	static public int def_magic_bag_1_limit = 17280; //10 full inventories
 	static public int def_magic_bag_2_limit = 172800; //100 full inventories
 	public int magic_bag_1_limit = def_magic_bag_1_limit;
@@ -190,7 +194,8 @@ public class WandsConfig {
 				WandsConfig ins= gson.fromJson(reader, WandsConfig.class);
 				if(ins!=null) {
 					INSTANCE = ins;
-					System.out.println("Config: " + INSTANCE);
+					WandsConfig.max_limit=INSTANCE.max_limit___increment_this_if_your_machine_can_handle_it;
+					//System.out.println("Config: " + INSTANCE);
 					INSTANCE.parse_colors();
 				}
 			}catch(JsonSyntaxException e3){

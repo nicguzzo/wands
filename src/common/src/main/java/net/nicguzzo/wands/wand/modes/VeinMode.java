@@ -2,6 +2,7 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
+import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -25,7 +26,7 @@ public class VeinMode implements WandMode {
         int to=1;
         int k;
         int cost=0;
-        while (i < limit2 && i < wand.MAX_LIMIT && found <= limit2) {
+        while (i < limit2 && i < WandsConfig.max_limit && found <= limit2) {
             k=0;
             for(int j=from;j<to;j++) {
                 next_vein_layer(vein_dirs, wand.block_buffer.get(j));

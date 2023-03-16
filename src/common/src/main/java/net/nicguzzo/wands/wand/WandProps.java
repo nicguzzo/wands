@@ -11,20 +11,69 @@ import net.nicguzzo.wands.wand.modes.*;
 
 public class WandProps {
     public enum Mode{
-        DIRECTION { public String toString() {return "wands.modes.direction";} public WandMode get_mode(){return new DirectionMode();}},
-        ROW_COL   { public String toString() {return "wands.modes.row_col";}   public WandMode get_mode(){return new RowColMode();}},
-        FILL      { public String toString() {return "wands.modes.fill";}      public WandMode get_mode(){return new FillMode();}},
-        AREA      { public String toString() {return "wands.modes.area";}      public WandMode get_mode(){return new AreaMode();}},
-        GRID      { public String toString() {return "wands.modes.grid";}      public WandMode get_mode(){return new GridMode();}},
-        LINE      { public String toString() {return "wands.modes.line";}      public WandMode get_mode(){return new LineMode();}},
-        CIRCLE    { public String toString() {return "wands.modes.circle";} public WandMode get_mode(){return new CircleMode();}},
-        COPY      { public String toString() {return "wands.modes.copy";}   public WandMode get_mode(){return new CopyMode();}},
-        PASTE     { public String toString() {return "wands.modes.paste";}  public WandMode get_mode(){return new PasteMode();}},
-        TUNNEL    { public String toString() {return "wands.modes.tunnel";} public WandMode get_mode(){return new TunnelMode();}},
-        VEIN      { public String toString() {return "wands.modes.vein";}   public WandMode get_mode(){return new VeinMode();}},
-        BLAST     { public String toString() {return "wands.modes.blast";}  public WandMode get_mode(){return new BlastMode();}};
+        DIRECTION {
+            public String toString() {return "wands.modes.direction";}
+            public WandMode get_mode(){return new DirectionMode();}
+            public boolean can_target_air(){return false;}
+        },
+        ROW_COL   {
+            public String toString() {return "wands.modes.row_col";}
+            public WandMode get_mode(){return new RowColMode();}
+            public boolean can_target_air(){return true;}
+        },
+        FILL      {
+            public String toString() {return "wands.modes.fill";}
+            public WandMode get_mode(){return new FillMode();}
+            public boolean can_target_air(){return true;}
+        },
+        AREA      {
+            public String toString() {return "wands.modes.area";}
+            public WandMode get_mode(){return new AreaMode();}
+            public boolean can_target_air(){return false;}
+        },
+        GRID      {
+            public String toString() {return "wands.modes.grid";}
+            public WandMode get_mode(){return new GridMode();}
+            public boolean can_target_air(){return true;}
+        },
+        LINE      {
+            public String toString() {return "wands.modes.line";}
+            public WandMode get_mode(){return new LineMode();}
+            public boolean can_target_air(){return true;}
+        },
+        CIRCLE    {
+            public String toString() {return "wands.modes.circle";}
+            public WandMode get_mode(){return new CircleMode();}
+            public boolean can_target_air(){return true;}
+        },
+        COPY      {
+            public String toString() {return "wands.modes.copy";}
+            public WandMode get_mode(){return new CopyMode();}
+            public boolean can_target_air(){return true;}
+        },
+        PASTE     {
+            public String toString() {return "wands.modes.paste";}
+            public WandMode get_mode(){return new PasteMode();}
+            public boolean can_target_air(){return true;}
+        },
+        TUNNEL    {
+            public String toString() {return "wands.modes.tunnel";}
+            public WandMode get_mode(){return new TunnelMode();}
+            public boolean can_target_air(){return true;}
+        },
+        VEIN      {
+            public String toString() {return "wands.modes.vein";}
+            public WandMode get_mode(){return new VeinMode();}
+            public boolean can_target_air(){return false;}
+        },
+        BLAST     {
+            public String toString() {return "wands.modes.blast";}
+            public WandMode get_mode(){return new BlastMode();}
+            public boolean can_target_air(){return true;}
+        };
 
         public abstract WandMode get_mode();
+        public abstract boolean can_target_air();
     }
     public enum Orientation {
         ROW { public String toString() {return "wands.orientation.row";}},
@@ -78,7 +127,7 @@ public class WandProps {
         TUNNEL_DEPTH  { public String toString() {return  "tunnel_d" ;}};
         public int def=0;
         public int min=0;
-        public int max= Wand.MAX_LIMIT;
+        public int max=2048;
         public Value coval=null;
         static{
             MULTIPLIER.def=1; MULTIPLIER.min=1; MULTIPLIER.max=16;
@@ -299,6 +348,9 @@ public class WandProps {
     static public void setAction(ItemStack stack,Action a) {
         if(WandUtils.is_wand(stack)){
             CompoundTag tag=stack.getOrCreateTag();
+            if(WandsMod.config.disable_destroy_replace && (a== Action.DESTROY ||a== Action.REPLACE)){
+                a=Action.PLACE;
+            }
             tag.putInt("action", a.ordinal());
         }
     }
@@ -306,6 +358,9 @@ public class WandProps {
         if(WandUtils.is_wand(stack)){
             CompoundTag tag=stack.getOrCreateTag();
             int a=(tag.getInt("action")+1) % (actions.length);
+            if(WandsMod.config.disable_destroy_replace && (a== Action.DESTROY.ordinal() ||a== Action.REPLACE.ordinal())){
+                a=Action.USE.ordinal();
+            }
             tag.putInt("action", a);
         }
     }
@@ -315,6 +370,9 @@ public class WandProps {
             int a=tag.getInt("action")-1;
             if(a<0){
                 a=actions.length-1;
+            }
+            if(WandsMod.config.disable_destroy_replace && (a== Action.DESTROY.ordinal() ||a== Action.REPLACE.ordinal())){
+                a=Action.PLACE.ordinal();
             }
             tag.putInt("action", a);
         }

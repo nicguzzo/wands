@@ -249,8 +249,7 @@ public class WandsMod {
                             wand.p1=p1;
                             WandProps.Mode mode=wand.mode;
                             if (    mode == WandProps.Mode.FILL   || mode == WandProps.Mode.LINE ||
-                                    mode == WandProps.Mode.CIRCLE || mode == WandProps.Mode.COPY /*||
-                                    mode == WandProps.Mode.RECT*/) {
+                                    mode == WandProps.Mode.CIRCLE || mode == WandProps.Mode.COPY ) {
                                 if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                                     pos = pos.relative(side, 1);
                                 }

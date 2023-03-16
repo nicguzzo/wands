@@ -22,7 +22,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.utils.Compat;
@@ -38,15 +37,11 @@ import net.nicguzzo.wands.wand.WandProps.Mode;
 
 public class WandItem extends TieredItem implements Vanishable {
 
-
-
     public int limit = 0;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
-
-
 
     public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
         super(tier,properties);
@@ -60,13 +55,17 @@ public class WandItem extends TieredItem implements Vanishable {
     @Override
     public InteractionResult useOn(UseOnContext context) {    
         //WandsMod.LOGGER.info("UseOn");
+        Player player=context.getPlayer();
+        if(player==null){
+            return InteractionResult.FAIL;
+        }
         Level world=context.getLevel();
         Wand wand=null;
         if(!world.isClientSide()){
-            wand= PlayerWand.get(context.getPlayer());
+            wand= PlayerWand.get(player);
             if(wand==null){
-                PlayerWand.add_player(context.getPlayer());
-                wand=PlayerWand.get(context.getPlayer());
+                PlayerWand.add_player(player);
+                wand=PlayerWand.get(player);
                 if(wand==null){
                     return InteractionResult.FAIL;
                 }
@@ -75,9 +74,9 @@ public class WandItem extends TieredItem implements Vanishable {
             wand= ClientRender.wand;
         }
         wand.force_render=true;
-        ItemStack stack = context.getPlayer().getMainHandItem();//check anyway...
-        if (!wand.is_alt_pressed && stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
 
+        ItemStack stack = player.getMainHandItem();
+        if (!wand.is_alt_pressed && !stack.isEmpty() && stack.getItem() instanceof WandItem) {
             Vec3 hit = context.getClickLocation();
             BlockPos pos = context.getClickedPos();
             Direction side = context.getClickedFace();
@@ -115,6 +114,7 @@ public class WandItem extends TieredItem implements Vanishable {
             }
             wand.lastPlayerDirection=context.getPlayer().getDirection();
             wand.do_or_preview(context.getPlayer(),world, block_state, pos, side, hit,stack,true);
+            //wand.lastHitResult=null;
             if(!world.isClientSide()) {
                 wand.palette.seed = world.random.nextInt(20000000);
                 WandsMod.send_state((ServerPlayer) context.getPlayer(),wand);
@@ -150,7 +150,6 @@ public class WandItem extends TieredItem implements Vanishable {
             if(wand.is_alt_pressed) {
                 send_placement(wand);
             }
-            //wand.clear();
         }
         if(!wand.is_alt_pressed) {
             wand.clear();
@@ -160,15 +159,16 @@ public class WandItem extends TieredItem implements Vanishable {
     public void send_placement(Wand wand){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
-            if(wand.lastHitResult!=null){
+            if(wand.lastHitResult!=null && ClientRender.last_pos!=null){
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                 packet.writeBlockHitResult(wand.lastHitResult);
-                if(wand.p1!=null)
+                if(wand.p1!=null) {
                     packet.writeBlockPos(wand.p1);
-                else
+                }else {
                     packet.writeBlockPos(wand.lastHitResult.getBlockPos());
+                }
                 if(wand.mode==Mode.FILL||wand.mode==Mode.LINE||wand.mode==Mode.CIRCLE
-                        ||wand.mode==Mode.COPY/*||wand.mode==Mode.RECT*/) {
+                        ||wand.mode==Mode.COPY) {
                     if (ClientRender.last_pos != null) {
                         wand.p2 = true;
                     }
@@ -177,19 +177,10 @@ public class WandItem extends TieredItem implements Vanishable {
                 packet.writeBoolean(wand.p2);
                 packet.writeInt(ClientRender.wand.lastPlayerDirection.ordinal());
                 NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
+                WandsMod.LOGGER.info("send_placement");
+                //wand.lastHitResult=null;
             }
         }
-    }
-    static public boolean has_tools(ItemStack stack){
-        ListTag tag = stack.getOrCreateTag().getList("Tools", Compat.NbtType.COMPOUND);
-        for (int i = 0; i < tag.size() && i<9; i++) {
-            CompoundTag stackTag = (CompoundTag) tag.get(i);
-            ItemStack itemStack = ItemStack.of(stackTag.getCompound("Tool"));
-            if(!itemStack.isEmpty()){
-                return true;
-            }
-        }
-        return false;
     }
 
     @Environment(EnvType.CLIENT)
@@ -210,17 +201,14 @@ public class WandItem extends TieredItem implements Vanishable {
         list.add(Compat.literal("fill circle: "+ tag.getBoolean("cfill")));
         list.add(Compat.literal("rotation: "+ tag.getInt("rotation")));
         ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
-        /*ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
-        int n_tools=0;
-        for (int i = 0; i < tag.size() && i<9; i++) {
-            CompoundTag stackTag = (CompoundTag) tools.get(i);
-            var tool = ItemStack.of(stackTag.getCompound("Tool"));
-            if(!tool.isEmpty()){
-                n_tools++;
-            }
-        }*/
         if(ClientRender.wand!=null) {
-            list.add(Compat.literal("tools: " +tools.size()));
+            tools.forEach(element -> {
+                        CompoundTag stackTag = (CompoundTag) element;
+                        int slot = stackTag.getInt("Slot");
+                        ItemStack item = ItemStack.of(stackTag.getCompound("Tool"));
+                        list.add(Compat.literal("tool: ").append(item.getDisplayName()));
+            });
+            //list.add(Compat.literal("tools: " +tools.size()));
         }
     }
     public int getEnchantmentValue() {

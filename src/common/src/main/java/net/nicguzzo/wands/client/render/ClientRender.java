@@ -137,6 +137,9 @@ public class ClientRender {
     static int mirroraxis=0;
 
     public static void render(PoseStack matrixStack) {
+        if((wand.destroy||wand.replace) && WandsMod.config.disable_destroy_replace){
+            return;
+        }
         client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null)
@@ -215,18 +218,21 @@ public class ClientRender {
 
             } else {
                 has_target = false;
-                /*if (((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE) && wand.p1 != null) ||
-                        (wand.mode == WandProps.Mode.PASTE && wand.copy_paste_buffer.size() != 0 && wand.is_alt_pressed)) {*/
                 if (wand.is_alt_pressed && (wand.copy_paste_buffer.size() > 0 || wand.block_buffer.get_length()>0) ) {
                     if (!((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE))) {
                         wand.p1 = last_pos;
                     }
-                    //WandsMod.log("alt pv "+wand.block_buffer.get_length(),prnt);
-                    //WandsMod.log("p1 "+wand.p1,prnt);
                     preview_mode(wand.mode, matrixStack, null);
                 }else{
-                    wand.block_buffer.reset();
-                    //wand.p1=null;
+                    if(wand.target_air && mode.can_target_air() ){
+                        BlockPos pos =player.getOnPos().above().relative(player.getDirection(),2);
+                        if(wand.p1==null){
+                            wand.p1=pos;
+                        }
+                        wand.do_or_preview(player, player.level, wand.block_state, pos, wand.side, pos.getCenter(), stack, prnt);
+                    }else{
+                        wand.block_buffer.reset();
+                    }
                 }
                 if (water) {
                     water = false;
@@ -434,7 +440,7 @@ public class ClientRender {
                                 Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                                 Compat.set_render_quads_block(bufferBuilder);
                                 BlockState st;
-                                for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
+                                for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                                     if (wand.block_buffer.state[idx] != null) {
                                         //preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
                                         st = wand.block_buffer.state[idx];
@@ -751,7 +757,7 @@ public class ClientRender {
                 RenderSystem.enableCull();
                 Compat.set_render_lines(bufferBuilder);
             }
-            for (int idx = 0; idx < wand.block_buffer.get_length() && idx < Wand.MAX_LIMIT; idx++) {
+            for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                 float x = wand.block_buffer.buffer_x[idx];
                 float y = wand.block_buffer.buffer_y[idx];
                 float z = wand.block_buffer.buffer_z[idx];
