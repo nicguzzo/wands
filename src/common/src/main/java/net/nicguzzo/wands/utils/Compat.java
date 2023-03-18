@@ -170,6 +170,10 @@ public class Compat {
         if(WandsMod.config.render_last)
         {
             poseStack2.mulPoseMatrix(poseStack.last().pose());
+        }else{
+            #if MC >= "1194"
+            poseStack2.mulPoseMatrix(poseStack.last().pose());
+            #endif
         }
         poseStack2.translate(-c.x,-c.y,-c.z);
         RenderSystem.applyModelViewMatrix();

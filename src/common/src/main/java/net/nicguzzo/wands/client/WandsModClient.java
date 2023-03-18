@@ -354,8 +354,13 @@ public class WandsModClient {
                         if(ClientRender.has_target && slot==ClientRender.wand.digger_item_slot){
                             yoff=-5;
                         }
+                        #if MC <= "1193"
                         itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
                         itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                        #else
+                        itemRenderer.renderAndDecorateItem(poseStack,item, ix + slot * 16, iy+yoff);
+                        itemRenderer.renderGuiItemDecorations(poseStack,font, item, ix + slot * 16, iy, null);
+                        #endif
                         int fortune= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,item);
                         int silk= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item);
 

@@ -536,8 +536,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             for (int i=0;i<9;i++) {
                 Slot s=this.menu.slots.get(36+i);
                 int xx=x+i*18;
+                #if MC <= "1193"
                 this.itemRenderer.renderAndDecorateItem(s.getItem(),xx, y);
                 this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),xx, y , null);
+                #else
+                this.itemRenderer.renderAndDecorateItem(poseStack,s.getItem(),xx, y);
+                this.itemRenderer.renderGuiItemDecorations(poseStack,this.font, s.getItem(),xx, y , null);
+                #endif
                 if(mouseX>xx && mouseX<xx+16 && mouseY>y && mouseY<y+16) {
                     this.hoveredSlot=s;
                 }

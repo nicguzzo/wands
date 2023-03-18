@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VERSION=2.6.6
-TYPE=beta
+TYPE=release
 sed -i "s/VERSION=.*/VERSION=${VERSION}_${TYPE}/" dist.sh
 pushd "versions"
   mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`

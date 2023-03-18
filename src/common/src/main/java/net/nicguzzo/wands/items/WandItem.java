@@ -84,7 +84,7 @@ public class WandItem extends TieredItem implements Vanishable {
             Mode mode = WandProps.getMode(stack);
             //WandsMod.log("mode "+mode,true);
 
-            if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY/*||mode==Mode.RECT*/){
+            if(mode==Mode.FILL||mode==Mode.LINE||mode==Mode.CIRCLE||mode==Mode.COPY){
                 //if (WandItem.getIncSelBlock(stack)) {
                 if (WandProps.getFlag(stack,WandProps.Flag.INCSELBLOCK)) {
                     pos=pos.relative(side,1);

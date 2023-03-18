@@ -20,11 +20,17 @@ public class WandToast implements Toast {
         Compat.set_pos_tex_shader();
         Compat.set_texture(TEXTURE);
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+        #if MC <= "1193"
         RenderSystem.enableTexture();
+        #endif
         toastComponent.blit(poseStack, 0, 0, 0, 96, this.width(), this.height());
         if(client.player!=null) {
             ItemStack s = client.player.getMainHandItem();
+            #if MC <= "1193"
             client.getItemRenderer().renderAndDecorateItem(s,10,6);
+            #else
+            client.getItemRenderer().renderAndDecorateItem(poseStack,s,10,6);
+            #endif
         }
         client.font.draw(poseStack,text ,30.0F, 12.0F, -11534256);
         return l >= 1000L ? Visibility.HIDE : Visibility.SHOW;

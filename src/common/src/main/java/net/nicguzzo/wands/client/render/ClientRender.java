@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.nicguzzo.wands.*;
 import net.nicguzzo.wands.config.WandsConfig;
@@ -182,9 +183,7 @@ public class ClientRender {
             mirroraxis=WandProps.getVal(player.getMainHandItem(), WandProps.Value.MIRRORAXIS);
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
-
                 wand.lastPlayerDirection=player.getDirection();
-                //wand.digger_item_slot=-1;
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 wand.lastHitResult=block_hit;
                 Rotation rot = WandProps.getRotation(stack);
@@ -193,9 +192,8 @@ public class ClientRender {
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
                 if (force) {
-
                     wand.force_render = false;
-                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY /*|| mode == Mode.RECT*/) {
+                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY) {
                         if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                             pos = pos.relative(side, 1);
                         }
@@ -225,11 +223,21 @@ public class ClientRender {
                     preview_mode(wand.mode, matrixStack, null);
                 }else{
                     if(wand.target_air && mode.can_target_air() ){
-                        BlockPos pos =player.getOnPos().above().relative(player.getDirection(),2);
+                        #if MC == "1165"
+                            BlockPos player_pos=player.blockPosition();
+                        #else
+                            BlockPos player_pos=player.getOnPos();
+                        #endif
+                        BlockPos pos =player_pos.above().relative(player.getDirection(),2);
                         if(wand.p1==null){
                             wand.p1=pos;
                         }
-                        wand.do_or_preview(player, player.level, wand.block_state, pos, wand.side, pos.getCenter(), stack, prnt);
+                        #if MC == "1165"
+                            Vec3 pos_center=player.position();
+                        #else
+                            Vec3 pos_center=pos.getCenter();
+                        #endif
+                        wand.do_or_preview(player, player.level, wand.block_state, pos, wand.side, pos_center, stack, prnt);
                     }else{
                         wand.block_buffer.reset();
                     }
@@ -273,7 +281,10 @@ public class ClientRender {
             float off2 = 0.05f;
             Compat.set_color(1.0F, 1.0F, 1.0F, 0.8f);
             RenderSystem.lineWidth(1.0f);
+
+            #if MC <= "1193"
             RenderSystem.disableTexture();
+            #endif
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             switch (mode) {
@@ -283,7 +294,9 @@ public class ClientRender {
                             List<AABB> list = preview_shape.toAabbs();
                             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                                 if (fancy) {
+                                    #if MC <= "1193"
                                     RenderSystem.enableTexture();
+                                    #endif
                                     RenderSystem.disableCull();
                                     RenderSystem.enableCull();
                                     RenderSystem.enableBlend();
@@ -375,7 +388,9 @@ public class ClientRender {
                                     }
                                     tesselator.end();
                                     RenderSystem.enableBlend();
+                                    #if MC <= "1193"
                                     RenderSystem.disableTexture();
+                                    #endif
                                 }
                                 if (!fancy || !fat_lines) {
                                     Compat.set_render_lines(bufferBuilder);
@@ -411,14 +426,18 @@ public class ClientRender {
                         //bbox
                         if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL | mode == Mode.TUNNEL)) {
                             if (fat_lines) {
+                                #if MC <= "1193"
                                 RenderSystem.enableTexture();
+                                #endif
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                                 preview_block_fat(bufferBuilder,
                                         wand.bb1_x - off2, wand.bb1_y - off2, wand.bb1_z - off2,
                                         wand.bb2_x + off2, wand.bb2_y + off2, wand.bb2_z + off2,
                                         bbox_col,false);
                                 tesselator.end();
+                                #if MC <= "1193"
                                 RenderSystem.disableTexture();
+                                #endif
                                 RenderSystem.enableCull();
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -433,7 +452,9 @@ public class ClientRender {
                         if (wand.has_empty_bucket || (wand.valid && (has_target || wand.is_alt_pressed) && wand.block_buffer != null)) {
                             random.setSeed(0);
                             if (fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
+                                #if MC <= "1193"
                                 RenderSystem.enableTexture();
+                                #endif
                                 RenderSystem.enableCull();
                                 //RenderSystem.enableBlend();
                                 //RenderSystem.defaultBlendFunc();
@@ -475,7 +496,9 @@ public class ClientRender {
                                 }
                                 tesselator.end();
                                 //RenderSystem.disableBlend();
+                                #if MC <= "1193"
                                 RenderSystem.disableTexture();
+                                #endif
                             }
 
 
@@ -484,7 +507,9 @@ public class ClientRender {
                         if (drawlines && wand.p1 != null && (mode == Mode.LINE || mode == Mode.CIRCLE)) {
 
                             if (fat_lines) {
+                                #if MC <= "1193"
                                 RenderSystem.enableTexture();
+                                #endif
                                 //RenderSystem.disableCull();
                                 //even_circle=true;
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
@@ -518,7 +543,9 @@ public class ClientRender {
                                     tesselator.end();
                                 }
 
+                                #if MC <= "1193"
                                 RenderSystem.disableTexture();
+                                #endif
                                 RenderSystem.enableDepthTest();
                                 RenderSystem.enableCull();
                             } else {
@@ -553,14 +580,18 @@ public class ClientRender {
                         z2 = (wand.copy_z2 > wand.copy_z1) ? (wand.copy_z2 + off2) : (wand.copy_z2 - off2);
                         if (fat_lines) {
                             //RenderSystem.disableCull();
+                            #if MC <= "1193"
                             RenderSystem.enableTexture();
+                            #endif
                             Compat.set_render_quads_pos_tex(bufferBuilder);
                             preview_block_fat(bufferBuilder,
                                     x1, y1, z1,
                                     x2, y2, z2,
                                     bbox_col,false);
                             tesselator.end();
+                            #if MC <= "1193"
                             RenderSystem.disableTexture();
+                            #endif
                             RenderSystem.enableCull();
                         } else {
                             Compat.set_render_lines(bufferBuilder);
@@ -598,7 +629,9 @@ public class ClientRender {
                             RenderSystem.enableCull();
                             //RenderSystem.enableBlend();
                             //RenderSystem.defaultBlendFunc();
+                            #if MC <= "1193"
                             RenderSystem.enableTexture();
+                            #endif
                             Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                             Compat.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
@@ -659,7 +692,9 @@ public class ClientRender {
                                 render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
                             }
                             tesselator.end();
+                            #if MC <= "1193"
                             RenderSystem.disableTexture();
+                            #endif
                             //RenderSystem.disableBlend();
                         }
                         if (drawlines && paste_outlines) {
@@ -673,7 +708,9 @@ public class ClientRender {
 
                             if (fat_lines) {
                                 //RenderSystem.disableCull();
+                                #if MC <= "1193"
                                 RenderSystem.enableTexture();
+                                #endif
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -703,9 +740,13 @@ public class ClientRender {
 
                             }
                             tesselator.end();
+                            #if MC <= "1193"
                             RenderSystem.disableTexture();
+                            #endif
                             if (fat_lines) {
+                                #if MC <= "1193"
                                 RenderSystem.enableTexture();
+                                #endif
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -722,13 +763,17 @@ public class ClientRender {
                                         c);
                             }
                             tesselator.end();
+                            #if MC <= "1193"
                             RenderSystem.disableTexture();
+                            #endif
                         }
                     }
                     break;
             }
             //RenderSystem.enableBlend();
+            #if MC <= "1193"
             //RenderSystem.enableTexture();
+            #endif
             //RenderSystem.enableDepthTest();
             RenderSystem.lineWidth(1.0f);
         }
@@ -751,7 +796,9 @@ public class ClientRender {
 
         {
             if (fat_lines) {
+                #if MC <= "1193"
                 RenderSystem.enableTexture();
+                #endif
                 Compat.set_render_quads_pos_tex(bufferBuilder);
             } else {
                 RenderSystem.enableCull();
@@ -781,7 +828,9 @@ public class ClientRender {
             }
             tesselator.end();
             if (fat_lines) {
+                #if MC <= "1193"
                 RenderSystem.disableTexture();
+                #endif
             }
         }
     }
