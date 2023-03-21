@@ -35,8 +35,7 @@ public class WandConfigScreen {
                 general.addEntry(entryBuilder.startFloatField(Compat.translatable("option.wands.blocks_per_xp"), conf.blocks_per_xp)
                         .setDefaultValue(WandsConfig.def_blocks_per_xp)
                         .setTooltip(Compat.translatable("option.wands.blocks_per_xp_tt"))
-                        .setSaveConsumer(newValue -> conf.blocks_per_xp = newValue)
-                        .build());
+                        .setSaveConsumer(newValue -> conf.blocks_per_xp = newValue).build());
 
     //stone_wand_limit
             general.addEntry(entryBuilder.startIntField(Compat.translatable("option.wands.stone_wand_limit"), conf.stone_wand_limit)
@@ -240,89 +239,115 @@ public class WandConfigScreen {
                 .setSaveConsumer(newValue -> conf.wand_screen_y_offset = newValue)
                 .build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.block_outline_color"), WandsConfig.c_block_outline)
-                .setDefaultValue(Color.ofRGBA(220,220,220,255).getColor())
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.block_outline_color"),
+                        WandsConfig.c_block_outline)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_block_outline.getColor())
                 .setTooltip(Compat.translatable("option.wands.block_outline_color_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_block_outline=Color.ofOpaque(newValue);
+                    WandsConfig.c_block_outline=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
+                }).build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.bounding_box_color"), WandsConfig.c_bounding_box)
-                .setDefaultValue(Color.ofRGBA(0,0,200,255).getColor())
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.bounding_box_color"),
+                        WandsConfig.c_bounding_box)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_bounding_box.getColor())
                 .setTooltip(Compat.translatable("option.wands.bounding_box_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_bounding_box=Color.ofOpaque(newValue);
+                    WandsConfig.c_bounding_box=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
+                }).build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.destroy_color"), WandsConfig.c_destroy)
-                .setDefaultValue(Color.ofRGBA(220,0,0,255).getColor())
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.destroy_color"),
+                        WandsConfig.c_destroy)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_destroy.getColor())
                 .setTooltip(Compat.translatable("option.wands.destroy_color_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_destroy=Color.ofOpaque(newValue);
+                    WandsConfig.c_destroy=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
+                }).build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.tool_use_color"), WandsConfig.c_tool_use)
-                .setDefaultValue(Color.ofRGBA(240,240,0,255).getColor())
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.tool_use_color"),
+                        WandsConfig.c_tool_use)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_tool_use.getColor())
                 .setTooltip(Compat.translatable("option.wands.tool_use_color_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_tool_use=Color.ofOpaque(newValue);
+                    WandsConfig.c_tool_use=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
+                }).build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.start_color"), WandsConfig.c_start)
-                .setDefaultValue(Color.ofRGBA(0,200,200,255).getColor())
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                    Compat.translatable("option.wands.start_color"),
+                    WandsConfig.c_start)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_start.getColor())
                 .setTooltip(Compat.translatable("option.wands.start_color_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_start=Color.ofOpaque(newValue);
+                    WandsConfig.c_start=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
+                }).build());
 
-        preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.end_color"), WandsConfig.c_end)
-                .setDefaultValue(Color.ofRGBA(0,200,0,255).getColor())
-                .setTooltip(Compat.translatable("option.wands.end_color_tt"))
+        preview.addEntry(entryBuilder
+            .startAlphaColorField(
+                    Compat.translatable("option.wands.end_color"),
+                    WandsConfig.c_end)
+            .setAlphaMode(true)
+            .setDefaultValue(WandsConfig.def_c_end.getColor())
+            .setTooltip(Compat.translatable("option.wands.end_color_tt"))
+            .setSaveConsumer(newValue -> {
+                WandsConfig.c_end=Color.ofTransparent(newValue);
+                ClientRender.update_colors();
+            }).build());
+
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.line_color"),
+                        WandsConfig.c_line)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_line.getColor())
+                .setTooltip(Compat.translatable("option.wands.line_color_tt"))
                 .setSaveConsumer(newValue -> {
-                    WandsConfig.c_end=Color.ofOpaque(newValue);
+                    WandsConfig.c_line=Color.ofTransparent(newValue);
                     ClientRender.update_colors();
-            })
-                .build());
-/*
-                "block_color": "255,255,255,255",*/
-                preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.line_color"), WandsConfig.c_line)
-                        .setDefaultValue(Color.ofRGBA(200,0,200,200).getColor())
-                        .setTooltip(Compat.translatable("option.wands.line_color_tt"))
-                        .setSaveConsumer(newValue -> {
-                            WandsConfig.c_line=Color.ofOpaque(newValue);
-                            ClientRender.update_colors();
-                    })
-                        .build());
+                }).build());
 
-                preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.paste_bb_color"), WandsConfig.c_paste_bb)
-                        .setDefaultValue(Color.ofRGBA(80,40,0,255).getColor())
-                        .setTooltip(Compat.translatable("option.wands.paste_bb_color_tt"))
-                        .setSaveConsumer(newValue -> {
-                            WandsConfig.c_paste_bb=Color.ofOpaque(newValue);
-                            ClientRender.update_colors();
-                    })
-                        .build());
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.paste_bb_color"),
+                        WandsConfig.c_paste_bb)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_paste_bb.getColor())
+                .setTooltip(Compat.translatable("option.wands.paste_bb_color_tt"))
+                .setSaveConsumer(newValue -> {
+                    WandsConfig.c_paste_bb=Color.ofTransparent(newValue);
+                    ClientRender.update_colors();
+                }).build());
 
-                preview.addEntry(entryBuilder.startColorField(Compat.translatable("option.wands.block_color"), WandsConfig.c_block)
-                        .setDefaultValue(Color.ofRGBA(255,255,255,255).getColor())
-                        .setTooltip(Compat.translatable("option.wands.block_color_tt"))
-                        .setSaveConsumer(newValue -> {
-                            WandsConfig.c_block=Color.ofOpaque(newValue);
-                            ClientRender.update_colors();
-                    })
-                        .build());
-                Screen screen = builder.build();
-                return screen;
-        }
+        preview.addEntry(entryBuilder
+                .startAlphaColorField(
+                        Compat.translatable("option.wands.block_color"),
+                        WandsConfig.c_block)
+                .setAlphaMode(true)
+                .setDefaultValue(WandsConfig.def_c_block.getColor())
+                .setTooltip(Compat.translatable("option.wands.block_color_tt"))
+                .setSaveConsumer(newValue -> {
+                    WandsConfig.c_block=Color.ofTransparent(newValue);
+                    ClientRender.update_colors();
+                }).build());
+        Screen screen = builder.build();
+        return screen;
+    }
 }
 #endif

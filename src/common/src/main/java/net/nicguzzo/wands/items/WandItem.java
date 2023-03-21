@@ -1,9 +1,5 @@
 package net.nicguzzo.wands.items;
-#if MC=="1165"
-import me.shedaniel.architectury.networking.NetworkManager;
-#else
-import dev.architectury.networking.NetworkManager;
-#endif
+
 import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -24,20 +20,24 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
-import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.wand.WandProps.Mode;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import net.nicguzzo.wands.wand.WandProps.Mode;
-
+#if MC=="1165"
+import me.shedaniel.architectury.networking.NetworkManager;
+#else
+import dev.architectury.networking.NetworkManager;
+#endif
 public class WandItem extends TieredItem implements Vanishable {
 
-    public int limit = 0;
+    public int limit;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;

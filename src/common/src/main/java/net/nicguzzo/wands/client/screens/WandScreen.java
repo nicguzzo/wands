@@ -135,11 +135,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         grid_m_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDM),1,wand.limit,left+180,bottom+25,25,14,Compat.translatable("screen.wands.grid_mxn"))
         {
             public void onInc(int mx,int my,int value){
-                WandProps.incGrid(wand_stack,Value.GRIDM,1);
+                WandProps.incGrid(wand_stack,Value.GRIDM,1,wand.limit);
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDM,1);
+                WandProps.decVal(wand_stack,Value.GRIDM,1,wand.limit);
                 WandsModClient.send_wand(wand_stack);
             }
         };
@@ -149,11 +149,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         grid_n_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDN),1,wand.limit,left+215,bottom+25,25,14,Compat.literal("x"))
         {
             public void onInc(int mx,int my,int value){
-                WandProps.incGrid(wand_stack,Value.GRIDN,1);
+                WandProps.incGrid(wand_stack,Value.GRIDN,1,wand.limit);
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDN,1);
+                WandProps.decVal(wand_stack,Value.GRIDN,1,wand.limit);
                 WandsModClient.send_wand(wand_stack);
             }
         };

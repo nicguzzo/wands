@@ -176,6 +176,8 @@
     "wands.action.destroy":"Destroy",
     "wands.action.use":"Use",
     "wands.orientation.row": "Row",
-    "wands.orientation.col": "Column"
-
+    "wands.orientation.col": "Column",
+    "wands.target.block":"Block",
+    "wands.target.air":"Air",
+    "wands.target.block_and_air":"Block and Air"
 }

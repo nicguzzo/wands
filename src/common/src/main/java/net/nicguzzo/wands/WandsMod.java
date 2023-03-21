@@ -379,6 +379,7 @@ public class WandsMod {
         }
         if(is_wand) {
             Wand wand = PlayerWand.get(player);
+            WandItem  wand_item=(WandItem)main_stack.getItem();
             if(wand==null) return;
             WandProps.Mode mode = WandProps.getMode(main_stack);
             int inc = (shift ? 10 : 1);
@@ -397,7 +398,7 @@ public class WandsMod {
                     case N_INC:
                         if (mode == WandProps.Mode.GRID) {
                             //WandProps.incVal(main_stack, WandProps.Value.GRIDN ,inc,wand.limit);
-                            WandProps.incGrid(main_stack, WandProps.Value.GRIDN, inc);
+                            WandProps.incGrid(main_stack, WandProps.Value.GRIDN, inc,wand_item.limit);
                         }
                         break;
                     case N_DEC:
@@ -414,7 +415,7 @@ public class WandsMod {
                                 WandProps.incVal(main_stack, WandProps.Value.ROWCOLLIM, inc);
                                 break;
                             case GRID:
-                                WandProps.incGrid(main_stack, WandProps.Value.GRIDM, inc);
+                                WandProps.incGrid(main_stack, WandProps.Value.GRIDM, inc,wand_item.limit);
                                 //WandProps.incVal(main_stack, WandProps.Value.GRIDM ,inc);
                                 break;
                             case AREA:
@@ -451,9 +452,9 @@ public class WandsMod {
                         break;
                     case MODE:
                         if (shift) {
-                            WandProps.prevMode(main_stack);
+                            WandProps.prevMode(main_stack,wand_item.can_blast);
                         } else {
-                            WandProps.nextMode(main_stack);
+                            WandProps.nextMode(main_stack,wand_item.can_blast);
                         }
                         break;
                     case ORIENTATION:

@@ -5,7 +5,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Rotation;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.modes.*;
 
@@ -147,6 +146,13 @@ public class WandProps {
             TUNNEL_DEPTH.min=1;
         }
     }
+
+    public enum Target {
+        BLOCK  { public String toString() { return "wands.target.block";}},
+        AIR  { public String toString() { return "wands.target.air";}},
+        BLOCK_AND_AIR  { public String toString() { return "wands.target.block_and_air";}}
+    }
+
     static public Mode[] modes=Mode.values();
     static public Action[] actions=Action.values();
     static public Orientation[] orientations=Orientation.values();
@@ -155,6 +161,8 @@ public class WandProps {
     static public Rotation[] rotations=Rotation.values();
     static public StateMode[] state_modes=StateMode.values();
     static public MirrorAxis[] mirrorAxes=MirrorAxis.values();
+
+    static public Target[] targets=Target.values();
 
 
     static public boolean getFlag(ItemStack stack, Flag flag) {
@@ -208,134 +216,135 @@ public class WandProps {
         decVal(stack,v,dec,v.min);
     }
     static public int getVal(ItemStack stack,Value v) {
-        if(WandUtils.is_wand(stack)) {
-            int i= stack.getOrCreateTag().getInt(v.toString());
-            if(i<v.min){
-                return v.min;
-            }else{
-                if(i>v.max){
-                    return v.max;
-                }
-            }
-            return i;
+        if(!WandUtils.is_wand(stack)) {
+            return -1;
         }
-        return -1;
+        int i= stack.getOrCreateTag().getInt(v.toString());
+        if(i<v.min){
+            return v.min;
+        }else if(i>v.max){
+            return v.max;
+        }
+        return i;
     }
 
     static public Mode getMode(ItemStack stack) {
-        if(WandUtils.is_wand(stack)) {
-            int m=stack.getOrCreateTag().getInt("mode");
-            if(m>=0 && m<modes.length)
-                return modes[m];
+        if(!WandUtils.is_wand(stack)) {
+            return Mode.DIRECTION;
+        }
+        int m=stack.getOrCreateTag().getInt("mode");
+        if(m>=0 && m<modes.length) {
+            return modes[m];
         }
         return Mode.DIRECTION;
     }
     static public void setMode(ItemStack stack,Mode mode) {
-        if(WandUtils.is_wand(stack)) {
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putInt("mode", mode.ordinal());
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        stack.getOrCreateTag().putInt("mode", mode.ordinal());
     }
-    static public void nextMode(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            int mode=(tag.getInt("mode")+1) % (modes.length);
-            WandItem wand=(WandItem)stack.getItem();
-            if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
-                mode = Mode.BLAST.ordinal();
-            }
-            if( (!wand.can_blast && mode==Mode.BLAST.ordinal())
+    static public void nextMode(ItemStack stack,boolean can_blast) {
+        if(!WandUtils.is_wand(stack)){
+            return;
+        }
+        CompoundTag tag=stack.getOrCreateTag();
+        int mode=(tag.getInt("mode")+1) % (modes.length);
+
+        if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
+            mode = Mode.BLAST.ordinal();
+        }
+        if( (!can_blast && mode==Mode.BLAST.ordinal())
+            || (!WandsMod.config.enable_blast_mode && mode==Mode.BLAST.ordinal())
+        ){
+            mode=Mode.DIRECTION.ordinal();
+        }
+        tag.putInt("mode", mode);
+    }
+    static public void prevMode(ItemStack stack,boolean can_blast) {
+        if(!WandUtils.is_wand(stack)) {
+            return;
+        }
+        CompoundTag tag=stack.getOrCreateTag();
+        int mode=tag.getInt("mode")-1;
+        if(mode<0){
+            mode=modes.length-1;
+        }
+        if( (!can_blast && mode==Mode.BLAST.ordinal())
                 || (!WandsMod.config.enable_blast_mode && mode==Mode.BLAST.ordinal())
-            )
-            {
-                mode=Mode.DIRECTION.ordinal();
-            }
-
-            tag.putInt("mode", mode);
+        ){
+            mode=Mode.BLAST.ordinal()-1;
         }
-    }
-    static public void prevMode(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            int mode=tag.getInt("mode")-1;
-            if(mode<0){
-                mode=modes.length-1;
-            }
-            WandItem wand=(WandItem)stack.getItem();
-
-            if( (!wand.can_blast && mode==Mode.BLAST.ordinal())
-                    || (!WandsMod.config.enable_blast_mode && mode==Mode.BLAST.ordinal())
-            )
-            {
-                mode=Mode.BLAST.ordinal()-1;
-            }
-            if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
-                mode = Mode.VEIN.ordinal()-1;
-            }
-            tag.putInt("mode", mode);
+        if(mode==Mode.VEIN.ordinal()  && !WandsMod.config.enable_vein_mode){
+            mode = Mode.VEIN.ordinal()-1;
         }
+        tag.putInt("mode", mode);
     }
 
     static public Orientation getOrientation(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            int o=stack.getOrCreateTag().getInt("orientation");
-            return orientations[o];
+        if(!WandUtils.is_wand(stack)) {
+            return Orientation.ROW;
         }
-        return Orientation.ROW;
+        return orientations[stack.getOrCreateTag().getInt("orientation")];
     }
     static public void setOrientation(ItemStack stack,Orientation o) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putInt("orientation", o.ordinal());
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        stack.getOrCreateTag().putInt("orientation", o.ordinal());
     }
     static public void nextOrientation(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            int o=(tag.getInt("orientation")+1) %2;
-            tag.putInt("orientation", o);
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        CompoundTag tag=stack.getOrCreateTag();
+        int o=(tag.getInt("orientation")+1) %2;
+        tag.putInt("orientation", o);
     }
     static public Plane getPlane(ItemStack stack) {
         Plane plane=Plane.XZ;
-        if(WandUtils.is_wand(stack)){
-            int p=stack.getOrCreateTag().getInt("plane");
-            if(p>=0 && p<planes.length)
-                plane=planes[p];
+        if(!WandUtils.is_wand(stack)) {
+            return plane;
         }
+        int p=stack.getOrCreateTag().getInt("plane");
+        if(p>=0 && p<planes.length)
+            plane=planes[p];
         return plane;
     }
     static public void setPlane(ItemStack stack,Plane p) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putInt("plane", p.ordinal());
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        stack.getOrCreateTag().putInt("plane", p.ordinal());
     }
     static public void nextPlane(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            int plane=(tag.getInt("plane")+1) % 3;
-            tag.putInt("plane", plane);
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        CompoundTag tag=stack.getOrCreateTag();
+        int plane=(tag.getInt("plane")+1) % 3;
+        tag.putInt("plane", plane);
     }
 
     static public Rotation getRotation(ItemStack stack) {
-        if(WandUtils.is_wand(stack))
-            return rotations[stack.getOrCreateTag().getInt("rotation")];
-        return Rotation.NONE;
+        if(!WandUtils.is_wand(stack)) {
+            return Rotation.NONE;
+        }
+        return rotations[stack.getOrCreateTag().getInt("rotation")];
     }
     static public void nextRotation(ItemStack stack) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            int rot=(tag.getInt("rotation")+1) % rotations.length;
-            tag.putInt("rotation", rot);
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        CompoundTag tag=stack.getOrCreateTag();
+        int rot=(tag.getInt("rotation")+1) % rotations.length;
+        tag.putInt("rotation", rot);
     }
     static public void setRotation(ItemStack stack,Rotation rot) {
-        if(WandUtils.is_wand(stack)){
-            CompoundTag tag=stack.getOrCreateTag();
-            tag.putInt("rotation", rot.ordinal());
+        if(!WandUtils.is_wand(stack)) {
+            return;
         }
+        stack.getOrCreateTag().putInt("rotation", rot.ordinal());
     }
     static public Action getAction(ItemStack stack) {
         if(WandUtils.is_wand(stack)) {
@@ -420,13 +429,12 @@ public class WandProps {
             tag.putInt("state_mode", mode.ordinal());
         }
     }
-    static public void incGrid(ItemStack stack,Value v, int n) {
+    static public void incGrid(ItemStack stack,Value v, int n,int limit) {
         if(WandUtils.is_wand(stack)) {
             CompoundTag tag=stack.getOrCreateTag();
-            WandItem w=(WandItem)stack.getItem();
             if(v.coval!=null){
                 int c=stack.getOrCreateTag().getInt(v.coval.toString());
-                if( (c*n)<=w.limit) {
+                if( (c*n)<=limit) {
                     int nn=stack.getOrCreateTag().getInt(v.toString());
                     tag.putInt(v.toString(), nn+n);
                 }

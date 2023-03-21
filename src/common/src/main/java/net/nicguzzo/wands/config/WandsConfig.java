@@ -125,6 +125,16 @@ public class WandsConfig {
 	static public Color c_line;
 	static public Color c_paste_bb;
 	static public Color c_block;
+	//default colors
+	static public Color def_c_block_outline=Color.ofRGBA(220,220,220,255);
+	static public Color def_c_bounding_box=Color.ofRGBA(0,0,200,255);
+	static public Color def_c_destroy=Color.ofRGBA(220,0,0,255);
+	static public Color def_c_tool_use=Color.ofRGBA(240,240,0,255);
+	static public Color def_c_start=Color.ofRGBA(0,200,200,255);
+	static public Color def_c_end=Color.ofRGBA(0,200,0,255);
+	static public Color def_c_line=Color.ofRGBA(200,0,200,200);
+	static public Color def_c_paste_bb=Color.ofRGBA(80,40,0,255);
+	static public Color def_c_block=Color.ofRGBA(255,255,255,255);
 
 	Color parse_color(String col){
 		int r=255,g=255,b=255,a=255;
