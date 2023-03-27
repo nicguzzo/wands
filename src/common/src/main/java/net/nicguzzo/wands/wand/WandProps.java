@@ -103,7 +103,8 @@ public class WandProps {
         MATCHSTATE  { public String toString() {return "match_state";}   public boolean get_default(){return false;}; },
         INCSELBLOCK { public String toString() {return "inc_sel_block";} public boolean get_default(){return false;}; },
         STAIRSLAB   { public String toString() {return "stair_slab";}    public boolean get_default(){return false;}; },
-        RFILLED     { public String toString() {return "rfill";}         public boolean get_default(){return  true;}; };
+        RFILLED     { public String toString() {return "rfill";}         public boolean get_default(){return  true;}; },
+        TARGET_AIR  { public String toString() {return "target_air";}    public boolean get_default(){return false;}; };
         public abstract boolean get_default();
     }
     public enum Value{
@@ -147,12 +148,6 @@ public class WandProps {
         }
     }
 
-    public enum Target {
-        BLOCK  { public String toString() { return "wands.target.block";}},
-        AIR  { public String toString() { return "wands.target.air";}},
-        BLOCK_AND_AIR  { public String toString() { return "wands.target.block_and_air";}}
-    }
-
     static public Mode[] modes=Mode.values();
     static public Action[] actions=Action.values();
     static public Orientation[] orientations=Orientation.values();
@@ -161,9 +156,6 @@ public class WandProps {
     static public Rotation[] rotations=Rotation.values();
     static public StateMode[] state_modes=StateMode.values();
     static public MirrorAxis[] mirrorAxes=MirrorAxis.values();
-
-    static public Target[] targets=Target.values();
-
 
     static public boolean getFlag(ItemStack stack, Flag flag) {
         if(WandUtils.is_wand(stack)) {

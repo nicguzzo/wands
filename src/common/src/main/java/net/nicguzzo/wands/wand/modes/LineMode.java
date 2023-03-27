@@ -6,7 +6,7 @@ import net.nicguzzo.wands.wand.WandMode;
 public class LineMode implements WandMode {
     public void place_in_buffer(Wand wand) {
         wand.block_buffer.reset();
-        if (wand.p1 != null && (wand.p2 || wand.preview)) {
+        if (wand.p1 != null && (wand.p2!=null || wand.preview)) {
             int x1 = wand.p1.getX();
             int y1 = wand.p1.getY();
             int z1 = wand.p1.getZ();

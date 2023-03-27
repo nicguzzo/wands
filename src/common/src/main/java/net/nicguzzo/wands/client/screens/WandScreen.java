@@ -14,7 +14,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.nicguzzo.wands.client.render.ClientRender;
-import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
@@ -25,12 +25,13 @@ import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Value;
 import net.nicguzzo.wands.utils.Compat;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandMenu> {
     ItemStack wand_stack=null;
-    WandItem wand=null;
+    WandItem wand_item =null;
     static final int img_w=256;
     static final int img_h=256;
     private static final ResourceLocation BG_TEX = new ResourceLocation("wands", "textures/gui/wand.png");
@@ -51,6 +52,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Select slab_grp_btn;
     Select diag_grp_btn;
     Select inc_sel_grp_btn;
+    Select target_air_grp_btn;
     Select mirror_axis;
     Btn conf_btn;
     Spinner mult_spn;
@@ -100,9 +102,15 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     public void init(){
         super.init();
         wand_stack=this.menu.wand;
+        if(wand_stack==null){
+            return;
+        }
         if(wand_stack!=null && wand_stack.getItem() instanceof WandItem){
-            wand=(WandItem)wand_stack.getItem();
+            wand_item =(WandItem)wand_stack.getItem();
         }else{
+            return;
+        }
+        if(wand_item ==null){
             return;
         }
         int btn_h=10;
@@ -132,28 +140,28 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         blast_radius_spn.shift_inc_val=4;
         wdgets.add(blast_radius_spn);
 
-        grid_m_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDM),1,wand.limit,left+180,bottom+25,25,14,Compat.translatable("screen.wands.grid_mxn"))
+        grid_m_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDM),1, wand_item.limit,left+180,bottom+25,25,14,Compat.translatable("screen.wands.grid_mxn"))
         {
             public void onInc(int mx,int my,int value){
-                WandProps.incGrid(wand_stack,Value.GRIDM,1,wand.limit);
+                WandProps.incGrid(wand_stack,Value.GRIDM,1, wand_item.limit);
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDM,1,wand.limit);
+                WandProps.decVal(wand_stack,Value.GRIDM,1, wand_item.limit);
                 WandsModClient.send_wand(wand_stack);
             }
         };
         grid_m_spn.label_side=true;
         wdgets.add(grid_m_spn);
 
-        grid_n_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDN),1,wand.limit,left+215,bottom+25,25,14,Compat.literal("x"))
+        grid_n_spn=new Spinner(WandProps.getVal(wand_stack,Value.GRIDN),1, wand_item.limit,left+215,bottom+25,25,14,Compat.literal("x"))
         {
             public void onInc(int mx,int my,int value){
-                WandProps.incGrid(wand_stack,Value.GRIDN,1,wand.limit);
+                WandProps.incGrid(wand_stack,Value.GRIDN,1, wand_item.limit);
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDN,1,wand.limit);
+                WandProps.decVal(wand_stack,Value.GRIDN,1, wand_item.limit);
                 WandsModClient.send_wand(wand_stack);
             }
         };
@@ -202,7 +210,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
         modes_grp=new Select(left+80,bottom+5,btn_w,btn_h,Compat.translatable("screen.wands.mode"));
         int l=WandProps.modes.length-1;
-        if(wand.can_blast){
+        if(wand_item.can_blast){
             l+=1;
         }
         for (int i=0;i<l;i++) {
@@ -363,7 +371,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         wdgets.add(show_inv_btn);
 
 
-        match_state_sel=new Select(left+170,bottom+120,70,12,null);
+        match_state_sel=new Select(left+170,bottom+110,70,12,null);
         Btn match_state_btn=new Btn(Compat.translatable("screen.wands.match_state")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.MATCHSTATE);
@@ -373,7 +381,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         match_state_sel.add(match_state_btn);
         wdgets.add(match_state_sel);
 
-        inc_sel_grp_btn=new Select(left+170,bottom+135,70,12,null);
+        inc_sel_grp_btn=new Select(left+170,bottom+122,70,12,null);
         Btn inc_sel_btn=new Btn(Compat.translatable("screen.wands.inc_sel")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.INCSELBLOCK);
@@ -382,7 +390,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         };
         inc_sel_grp_btn.add(inc_sel_btn);
         wdgets.add(inc_sel_grp_btn);
-        slab_grp_btn=new Select(left+170,bottom+150,70,12,null);
+        slab_grp_btn=new Select(left+170,bottom+134,70,12,null);
         Btn slab_btn=new Btn(Compat.translatable("screen.wands.slab")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.STAIRSLAB);
@@ -392,7 +400,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         slab_grp_btn.add(slab_btn);
         wdgets.add(slab_grp_btn);
 
-        inv_grp_btn=new Select(left+170,bottom+165,70,12,null);
+        inv_grp_btn=new Select(left+170,bottom+146,70,12,null);
         Btn inv_btn=new Btn(Compat.translatable("screen.wands.invert")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.INVERTED);
@@ -401,6 +409,16 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         };
         inv_grp_btn.add(inv_btn);
         wdgets.add(inv_grp_btn);
+
+        target_air_grp_btn=new Select(left+170,bottom+158,70,12,null);
+        Btn target_air_btn=new Btn(Compat.translatable("screen.wands.target_air")){
+            public void onClick(int mx,int my) {
+                WandProps.toggleFlag(wand_stack, WandProps.Flag.TARGET_AIR);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        target_air_grp_btn.add(target_air_btn);
+        wdgets.add(target_air_grp_btn);
 
         skip_spn=valSpinner(Value.SKIPBLOCK, left+215,bottom+180,25,14,Compat.translatable("screen.wands.skip_block"));
         skip_spn.label_side=true;
@@ -460,7 +478,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     }
     void update_selections(){
-        if(wand!=null && wand_stack!=null) {
+        if(wand_item !=null && wand_stack!=null) {
             mirror_axis.selected=WandProps.getVal(wand_stack,Value.MIRRORAXIS);
             mirror_axis.visible=modes_grp.selected==WandProps.Mode.PASTE.ordinal();
             modes_grp.selected=WandProps.getMode(wand_stack).ordinal();
@@ -494,6 +512,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             diag_grp_btn.visible=modes_grp.selected==WandProps.Mode.AREA.ordinal();
             diag_grp_btn.selected=(!WandProps.getFlag(wand_stack, WandProps.Flag.DIAGSPREAD)?0:-1);
             match_state_sel.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE)?0:-1);
+            target_air_grp_btn.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR)?0:-1);
             drop_pos_sel.selected=(ClientRender.wand.drop_on_player ?0:-1);
             tunnel_w.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();
             tunnel_h.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();
@@ -526,9 +545,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         }else{
             blit(poseStack, x, y, 0, 0, img_w, img_h);            
             update_selections();
-            for (int i = 0; i< wdgets.size(); i++) {
-                if(wdgets.get(i).visible) {
-                    wdgets.get(i).render(poseStack, this.font, mouseX, mouseY);
+            for (Wdgt wdget : wdgets) {
+                if (wdget.visible) {
+                    wdget.render(poseStack, this.font, mouseX, mouseY);
                 }
             }
             x = ((width - img_w)/2 +48)-xoff;
@@ -553,14 +572,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         RenderSystem.depthMask(true);
     }
     @Override
-    protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
+    protected void renderBg(@NotNull PoseStack matrices, float delta, int mouseX, int mouseY) {
 
     }
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(!show_inv) {
-            for (int i = 0; i< wdgets.size(); i++) {
-                wdgets.get(i).click((int)mouseX,(int)mouseY);
+            for (Wdgt wdget : wdgets) {
+                wdget.click((int) mouseX, (int) mouseY);
             }            
         }else{
             super.mouseClicked(mouseX, mouseY, button);
@@ -576,11 +595,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         if ((WandsModClient.wand_menu_km.matches(i, j) || i==256) ) {
             if(show_inv) {
                 show_inv = false;
-                return true;
             }else{
                 onClose();
-                return true;
             }
+            return true;
         }else {
             return super.keyPressed(i, j, k);
         }

@@ -299,6 +299,30 @@ public class Compat {
         ClientGuiEvent.RENDER_HUD.register((pose, delta)->{ WandsModClient.render_wand_info(pose);});
         #endif
     }
+    static public void enableTexture() {
+        #if MC <= "1193"
+        RenderSystem.enableTexture();
+        #endif
+    }
+    static public void disableTexture() {
+        #if MC <= "1193"
+        RenderSystem.disableTexture();
+        #endif
+    }
+    static public BlockPos get_player_pos(Player player){
+        #if MC <= "1193"
+            return player.blockPosition();
+        #else
+            return player.getOnPos();
+        #endif
+    }
+    static public Vec3 get_player_pos_center(Player player) {
+        #if MC <= "1193"
+            return player.position();
+        #else
+            return player.getOnPos().getCenter();
+        #endif
+    }
 
     public final class NbtType {
         public static final int END = 0;

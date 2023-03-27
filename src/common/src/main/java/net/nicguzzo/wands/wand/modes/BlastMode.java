@@ -27,7 +27,7 @@ public class BlastMode implements WandMode {
     @Override
     public boolean action(Wand wand) {
 
-        if( wand.wand_item.can_blast) {
+        if( wand.can_blast) {
             boolean do_explode = false;
             BlockAccounting ba = null;
             if (wand.creative) {

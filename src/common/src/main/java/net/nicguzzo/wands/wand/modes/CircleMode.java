@@ -5,6 +5,7 @@ import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.items.*;
 
 public class CircleMode implements WandMode {
     public void place_in_buffer(Wand wand) {
@@ -13,7 +14,7 @@ public class CircleMode implements WandMode {
         boolean even= WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
         wand.block_buffer.reset();
         int diameter=0;
-        if (wand.p1 != null && (wand.p2 || wand.preview)) {
+        if (wand.p1 != null && (wand.p2!=null || wand.preview)) {
             int xc = wand.p1.getX();
             int yc = wand.p1.getY();
             int zc = wand.p1.getZ();
@@ -116,16 +117,7 @@ public class CircleMode implements WandMode {
                 }
             }
         }
-        if (wand.preview) {
-            wand.valid = (wand.block_buffer.get_length() > 0) && diameter< wand.wand_item.limit;
-            if(wand.prnt && diameter>= wand.wand_item.limit){
-                wand.player.displayClientMessage( Compat.literal("limit reached"), true);
-            }
-        }else{
-            if(diameter>= wand.wand_item.limit){
-                wand.player.displayClientMessage( Compat.literal("limit reached"), false);
-            }
-        }
+        wand.validate_buffer();
     }
     void drawCircleOctants(int xc, int yc, int zc, int x, int y, int z, int plane,boolean even,boolean fill,Wand wand) {
         switch (plane) {

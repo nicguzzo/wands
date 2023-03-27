@@ -15,7 +15,7 @@ public class VeinMode implements WandMode {
         }
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.AREALIM);
         if(limit2<=0){
-            limit2=wand.wand_item.limit;
+            limit2=wand.limit;
         }
         wand.block_buffer.reset();
         int found = 1;

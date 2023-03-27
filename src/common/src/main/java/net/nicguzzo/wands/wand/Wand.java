@@ -26,8 +26,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
-
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -38,32 +36,35 @@ import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
-
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
-//import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.items.MagicBagItem;
-import net.nicguzzo.wands.items.PaletteItem;
-import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.utils.*;
 import net.nicguzzo.wands.wand.WandProps.Mode;
+
+#if MC == "1165"
+import net.minecraft.util.Mth;
+#endif
+
 #if MC>="1190"
 import net.minecraft.util.RandomSource;
 #else
 import java.util.Random;
 #endif
+
 #if MC<"1193"
 import net.minecraft.world.level.Explosion;
 #endif
@@ -86,9 +87,10 @@ public class Wand {
     public int bb2_z=0;
 
     public BlockPos p1 = null;
-    public boolean p2 = false;
+    public BlockPos p2 = null;
+    //public boolean p2 = false;
     public BlockState p1_state = null;
-    public BlockHitResult lastHitResult=null;
+    public HitResult lastHitResult=null;
 
     public boolean valid = false;
 
@@ -99,9 +101,8 @@ public class Wand {
     Block offhand_block = null;
     public BlockPos pos;
     public Direction side = Direction.UP;
-    public Direction lastPlayerDirection;
+    public Direction lastPlayerDirection=Direction.UP;
     public Vec3 hit;
-    public WandItem wand_item;
     public ItemStack wand_stack;
     ItemStack offhand;
     ItemStack digger_item;
@@ -148,7 +149,10 @@ public class Wand {
     public boolean mine_to_inventory=true;
     public boolean  stop_on_full_inventory=true;
     public boolean target_air=false;
-
+    public boolean unbreakable=false;
+    public boolean removes_water=false;
+    public boolean removes_lava=false;
+    public boolean can_blast=false;
     ItemStack[] tools=new ItemStack[9];
 
     public enum Sounds{
@@ -212,15 +216,27 @@ public class Wand {
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
+        if(player!=null)
+            player.displayClientMessage(Compat.literal("wand cleared"),false);
     }
     public void do_or_preview(Player player,Level level,BlockState block_state,BlockPos pos,Direction side,
-            Vec3 hit,ItemStack wand_stack,boolean prnt)
+            Vec3 hit,ItemStack wand_stack,WandItem wand_item,
+            boolean prnt)
     {
-
+        if(wand_stack==null || wand_item==null)
+            return;
+        this.limit = wand_item.limit;
+        if(limit>WandsConfig.max_limit){
+            this.limit=WandsConfig.max_limit;
+        }
+        this.unbreakable=wand_item.unbreakable;
+        this.removes_water=wand_item.removes_water;
+        this.removes_lava=wand_item.removes_lava;
+        this.can_blast=wand_item.can_blast;
         this.replace=WandProps.getAction(wand_stack)== WandProps.Action.REPLACE;
         this.destroy=WandProps.getAction(wand_stack)== WandProps.Action.DESTROY;
         this.use=WandProps.getAction(wand_stack)== WandProps.Action.USE;
-
+        this.target_air=WandProps.getFlag(wand_stack,WandProps.Flag.TARGET_AIR);
         if((destroy||replace) && WandsMod.config.disable_destroy_replace){
             destroy=false;
             replace=false;
@@ -235,7 +251,6 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
-        this.target_air=false;
         if(this.player==null || this.level==null||this.pos==null
                 || this.side==null||this.hit==null||this.wand_stack==null){
             return;
@@ -287,7 +302,7 @@ public class Wand {
         //TODO palette pattern mode
         //TODO banner placement not working on sides
 
-        wand_item = (WandItem) wand_stack.getItem();
+
         switch(Tiers.values()[wand_item.getTier().getLevel()]){
             case STONE:
                 wand_item.limit=WandsMod.config.stone_wand_limit;
@@ -302,10 +317,7 @@ public class Wand {
                 wand_item.limit=WandsMod.config.netherite_wand_limit;
                 break;
         }
-        limit = wand_item.limit;
-        if(limit>WandsConfig.max_limit){
-            limit=WandsConfig.max_limit;
-        }
+
 
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
@@ -650,9 +662,9 @@ public class Wand {
                 damaged_tool = false;
             }
         }
-        if (p2) {
+        if (p2!=null) {
             p1 = null;
-            p2 = false;
+            p2 = null;
             valid = false;
         }
     }
@@ -749,7 +761,7 @@ public class Wand {
             bb2_z=z2;
         }
 
-        valid = true;
+        //valid = true;
     }
     public BlockState mirror_stair(BlockState st,int mirroraxis){
         if(st.getBlock() instanceof  StairBlock && mirroraxis >0) {
@@ -958,8 +970,9 @@ public class Wand {
         }
     }
     public void validate_buffer() {
-        if (preview) {
-            valid = (block_buffer.get_length() > 0) && block_buffer.get_length()<= wand_item.limit;
+        valid = (block_buffer.get_length() > 0) && block_buffer.get_length()<= this.limit;
+        if(!preview && block_buffer.get_length()>this.limit){
+            limit_reached=true;
         }
     }
     public void fill(BlockPos from, BlockPos to,boolean hollow,int xskip,int yskip,int zskip) {
@@ -976,7 +989,7 @@ public class Wand {
         int nx=(xs >= xe)? xs-xe: xe-xs;
         int ny=(ys >= ye)? ys-ye: ye-ys;
         int nz=(zs >= ze)? zs-ze: ze-zs;
-        int    limit = wand_item.limit;
+        int    limit = this.limit;
         int ll=0;
         block_buffer.reset();
         for (int z = zs,z0=0; z0 <= nz; z+=oz,z0++) {
@@ -1051,7 +1064,7 @@ public class Wand {
                 ItemStack pumpkin_seeds=Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
                 drop(block_pos,state,null,pumpkin_seeds);
-                if(!wand_item.unbreakable) {
+                if(!this.unbreakable) {
                     wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                 }
                 consume_xp();
@@ -1064,7 +1077,7 @@ public class Wand {
                 level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
                 send_sound=Sounds.SPLASH.ordinal();
                 if (!creative) {
-                    if(!wand_item.unbreakable) {
+                    if(!this.unbreakable) {
                         wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                     }
                     consume_xp();
@@ -1134,7 +1147,7 @@ public class Wand {
             UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
             if( digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative) {
-                    if(!wand_item.unbreakable) {
+                    if(!this.unbreakable) {
                        wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                     }
                     digger_item.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
@@ -1215,7 +1228,7 @@ public class Wand {
                     if ((destroy||replace) && digger_item !=null) {
                         digger_item.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
                     }
-                    if(!wand_item.unbreakable) {
+                    if(!this.unbreakable) {
                         wand_stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
                     }
                     consume_xp();
@@ -1584,9 +1597,9 @@ public class Wand {
         return false;
     }
     public boolean replace_fluid(BlockState state){
-        if(wand_item.removes_water && wand_item.removes_lava){
+        if(this.removes_water && this.removes_lava){
             return state.getFluidState().is(FluidTags.WATER)||state.getFluidState().is(FluidTags.LAVA);
-        }else if(wand_item.removes_water){
+        }else if(this.removes_water){
             return state.getFluidState().is(FluidTags.WATER);
         }
         return false;
@@ -1808,5 +1821,34 @@ public class Wand {
             //WandsMod.log("prog: "+prog.isDone(),prnt);
             //AdvancementList.advancements.get(ResourceLocation.tryParse(WandsMod.config.advancement_allow_diamond_wand));
         }
+    }
+    public BlockPos get_pos_from_air(Vec3 hit){
+        if(player==null)
+            return  new BlockPos((int)hit.x,(int)hit.y,(int)hit.z);
+        Direction dir=player.getDirection();
+        int offx=0;
+        int offy=0;
+        int offz=0;
+        switch (dir){
+            case NORTH:
+            case SOUTH:
+                if(hit.x<0) {
+                    offx = -1;
+                }
+                break;
+            case EAST:
+            case WEST:
+                if(hit.z<0) {
+                    offz = -1;
+                }else{
+
+                }
+                break;
+
+        }
+        if(hit.y<0) {
+            offy = -1;
+        }
+        return new BlockPos((int)hit.x+offx,(int)hit.y+offy,(int)hit.z+offz);
     }
 }

@@ -50,6 +50,7 @@ public class PasteMode implements WandMode {
                     wand.block_buffer.add(px,py,pz,st, st.getBlock().asItem());
                 }
             }
+            wand.validate_buffer();
         }
     }
 }

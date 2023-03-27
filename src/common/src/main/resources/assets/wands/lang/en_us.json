@@ -156,6 +156,7 @@
     "screen.wands.tunnel_depth": "Depth",
     "screen.wands.tunnel_ox": "Offset x",
     "screen.wands.tunnel_oy": "Offset y",
+    "screen.wands.target_air": "Target air",
     "wands.modes.direction": "Direction",
     "wands.modes.row_col": "Row/Column",
     "wands.modes.fill": "Fill",

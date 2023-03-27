@@ -38,7 +38,7 @@ import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
-import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 
@@ -179,13 +179,16 @@ public class ClientRender {
                 force = true;
             }
             HitResult hitResult = client.hitResult;
+            wand.lastHitResult=hitResult;
+            wand.lastPlayerDirection=player.getDirection();
             Mode mode = WandProps.getMode(stack);
             mirroraxis=WandProps.getVal(player.getMainHandItem(), WandProps.Value.MIRRORAXIS);
+            //WandsMod.LOGGER.info("hit result "+hitResult.getLocation());
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
-                wand.lastPlayerDirection=player.getDirection();
+
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
-                wand.lastHitResult=block_hit;
+                //wand.lastHitResult=block_hit;
                 Rotation rot = WandProps.getRotation(stack);
                 WandProps.Orientation orientation = WandProps.getOrientation(stack);
                 Direction side = block_hit.getDirection();
@@ -206,13 +209,13 @@ public class ClientRender {
                     last_alt = wand.is_alt_pressed;
                     last_buffer_size = wand.block_buffer.get_length();
 
-                    wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack, prnt);
+                    wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack,(WandItem) stack.getItem(), prnt);
                 }
                 preview_shape = null;
                 if (block_state != null && last_pos!=null) {
                     preview_shape = block_state.getShape(client.level, last_pos);
                 }
-                preview_mode(wand.mode, matrixStack, block_state);
+                preview_mode(wand.mode, matrixStack);
 
             } else {
                 has_target = false;
@@ -220,24 +223,33 @@ public class ClientRender {
                     if (!((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE))) {
                         wand.p1 = last_pos;
                     }
-                    preview_mode(wand.mode, matrixStack, null);
+                    preview_mode(wand.mode, matrixStack);
                 }else{
-                    if(wand.target_air && mode.can_target_air() ){
-                        #if MC <= "1193"
-                            BlockPos player_pos=player.blockPosition();
-                        #else
-                            BlockPos player_pos=player.getOnPos();
-                        #endif
-                        BlockPos pos =player_pos.above().relative(player.getDirection(),2);
-                        if(wand.p1==null){
-                            wand.p1=pos;
+                    if(wand.target_air && mode.can_target_air() ) {
+                        Vec3 hit=hitResult.getLocation();
+                        BlockPos pos=wand.get_pos_from_air(hit);
+                        ItemStack offhand = player.getOffhandItem();
+                        Block offhand_block;
+                        BlockState block_state = null;
+                        offhand_block = Block.byItem(offhand.getItem());
+                        if (offhand_block != Blocks.AIR) {
+                            block_state=offhand_block.defaultBlockState();
                         }
-                        #if MC <= "1193"
-                            Vec3 pos_center=player.position();
-                        #else
-                            Vec3 pos_center=pos.getCenter();
-                        #endif
-                        wand.do_or_preview(player, player.level, wand.block_state, pos, wand.side, pos_center, stack, prnt);
+                        if (block_state != null){
+                            if (wand.p1 != null) {
+                                last_pos = wand.p1;
+                                has_target=true;
+                            }else{
+                                last_pos=pos;
+                            }
+                            if(prnt && wand.p1!=null) {
+                                WandsMod.LOGGER.info("preview p1: "+wand.p1+" p2: "+wand.p2+" pos:"+pos);
+                            }
+                            wand.do_or_preview(player, player.level, block_state, pos, wand.side,
+                                    hit, stack, (WandItem) stack.getItem(), prnt);
+                            preview_mode(wand.mode, matrixStack);
+
+                        }
                     }else{
                         wand.block_buffer.reset();
                     }
@@ -249,10 +261,10 @@ public class ClientRender {
         }
     }
 
-    private static void preview_mode(Mode mode, PoseStack matrixStack, BlockState state) {
-        if (!wand.valid) {
+    private static void preview_mode(Mode mode, PoseStack matrixStack/*, BlockState state*/) {
+        /*if (!wand.valid) {
             return;
-        }
+        }*/
         //RenderSystem.clear(256, Minecraft.ON_OSX);
         Compat.pre_render(matrixStack);
         Camera camera = client.gameRenderer.getMainCamera();
@@ -282,23 +294,19 @@ public class ClientRender {
             float nx = 0.0f, ny = 0.0f, nz = 0.0f;
 
             float off2 = 0.05f;
+            float off3 = off2/2;
             Compat.set_color(1.0F, 1.0F, 1.0F, 0.8f);
             RenderSystem.lineWidth(1.0f);
-
-            #if MC <= "1193"
-            RenderSystem.disableTexture();
-            #endif
+            Compat.disableTexture();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             switch (mode) {
                 case DIRECTION:
-                    if ((preview_shape != null && !preview_shape.isEmpty())){
+                    if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
                         List<AABB> list = preview_shape.toAabbs();
                         if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                             if (fancy) {
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 RenderSystem.disableCull();
                                 RenderSystem.enableCull();
                                 RenderSystem.enableBlend();
@@ -390,9 +398,7 @@ public class ClientRender {
                                 }
                                 tesselator.end();
                                 RenderSystem.enableBlend();
-                                #if MC <= "1193"
-                                RenderSystem.disableTexture();
-                                #endif
+                                Compat.disableTexture();
                             }
                             if (!fancy || !fat_lines) {
                                 Compat.set_render_lines(bufferBuilder);
@@ -416,21 +422,38 @@ public class ClientRender {
                 case VEIN:
                 case TUNNEL:
                     //if ((mode == Mode.LINE || mode == Mode.CIRCLE) || wand.has_empty_bucket) {
+                    if (drawlines && wand.p1==null &&(mode==Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE)){
+                        if (fat_lines) {
+                            Compat.enableTexture();
+                            Compat.set_render_quads_pos_tex(bufferBuilder);
+                            preview_block_fat(bufferBuilder,
+                                    last_pos_x  - off3, last_pos_y  - off3, last_pos_z  - off3,
+                                    last_pos_x+1+ off3, last_pos_y+1+ off3, last_pos_z+1+ off3,
+                                    start_col,false);
+                            tesselator.end();
+                            Compat.disableTexture();
+                            RenderSystem.enableCull();
+                        } else {
+                            Compat.set_render_lines(bufferBuilder);
+                            preview_block(bufferBuilder,
+                                    last_pos_x  - off3, last_pos_y  - off3, last_pos_z  - off3,
+                                    last_pos_x+1+ off3, last_pos_y+1+ off3, last_pos_z+1+ off3,
+                                    start_col);
+                            tesselator.end();
+                        }
+                    }
+                    if (wand.valid || ( mode == Mode.FILL&& wand.p1!=null)){
                         //bbox
-                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL | mode == Mode.TUNNEL)) {
+                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL)) {
                             if (fat_lines) {
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                                 preview_block_fat(bufferBuilder,
                                         wand.bb1_x - off2, wand.bb1_y - off2, wand.bb1_z - off2,
                                         wand.bb2_x + off2, wand.bb2_y + off2, wand.bb2_z + off2,
                                         bbox_col,false);
                                 tesselator.end();
-                                #if MC <= "1193"
-                                RenderSystem.disableTexture();
-                                #endif
+                                Compat.disableTexture();
                                 RenderSystem.enableCull();
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -445,9 +468,7 @@ public class ClientRender {
                         if (wand.has_empty_bucket || (wand.valid && (has_target || wand.is_alt_pressed) && wand.block_buffer != null)) {
                             random.setSeed(0);
                             if (fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 RenderSystem.enableCull();
                                 //RenderSystem.enableBlend();
                                 //RenderSystem.defaultBlendFunc();
@@ -489,28 +510,21 @@ public class ClientRender {
                                 }
                                 tesselator.end();
                                 //RenderSystem.disableBlend();
-                                #if MC <= "1193"
-                                RenderSystem.disableTexture();
-                                #endif
+                                Compat.disableTexture();
                             }
-
-
                             render_mode_outline(tesselator,bufferBuilder);
                         }
-                        if (drawlines && wand.p1 != null && (mode == Mode.LINE || mode == Mode.CIRCLE)) {
-
+                        if (drawlines && wand.p1 != null && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE)) {
                             if (fat_lines) {
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 //RenderSystem.disableCull();
                                 //even_circle=true;
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                                 boolean even= WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
                                 float off=(mode == Mode.CIRCLE && even)? -1.0f:0.0f;
                                 preview_block_fat(bufferBuilder,
-                                        wand.p1.getX()+off, wand.p1.getY()+off, wand.p1.getZ()+off,
-                                        wand.p1.getX() + 1, wand.p1.getY() + 1, wand.p1.getZ() + 1,
+                                        wand.p1.getX()-off3, wand.p1.getY()-off3, wand.p1.getZ()-off3,
+                                        wand.p1.getX()+1+off3, wand.p1.getY()+1+off3, wand.p1.getZ()+1+off3,
                                         start_col,false
                                 );
                                 tesselator.end();
@@ -518,27 +532,25 @@ public class ClientRender {
                                     Compat.set_render_quads_pos_tex(bufferBuilder);
                                     //off=(mode == Mode.CIRCLE && even_circle)? 1.0f:0.0f;
                                     preview_block_fat(bufferBuilder,
-                                            last_pos_x, last_pos_y, last_pos_z,
-                                            last_pos_x + 1, last_pos_y + 1, last_pos_z + 1,
+                                            last_pos_x-off3, last_pos_y-off3, last_pos_z-off3,
+                                            last_pos_x + 1+ off3, last_pos_y + 1+ off3, last_pos_z + 1+ off3,
                                             end_col,false);
                                     tesselator.end();
 
                                     RenderSystem.disableDepthTest();
-                                    Compat.set_render_quads_pos_tex(bufferBuilder);
-
-                                    off=(mode == Mode.CIRCLE && even)? 0.0f:0.5f;
-
-                                    player_facing_line(bufferBuilder,
-                                            (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
-                                            last_pos_x + off, last_pos_y + off, last_pos_z + off,
-                                            wand_x1 + off, wand_y1 + off, wand_z1 + off,
-                                            line_col);
-                                    tesselator.end();
+                                    if(mode!=Mode.FILL) {
+                                        Compat.set_render_quads_pos_tex(bufferBuilder);
+                                        off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
+                                        player_facing_line(bufferBuilder,
+                                                (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
+                                                last_pos_x + off, last_pos_y + off, last_pos_z + off,
+                                                wand_x1 + off, wand_y1 + off, wand_z1 + off,
+                                                line_col);
+                                        tesselator.end();
+                                    }
                                 }
 
-                                #if MC <= "1193"
-                                RenderSystem.disableTexture();
-                                #endif
+                                Compat.disableTexture();
                                 RenderSystem.enableDepthTest();
                                 RenderSystem.enableCull();
                             } else {
@@ -560,7 +572,7 @@ public class ClientRender {
                                 tesselator.end();
                             }
                         }
-                    //}
+                    }
                     break;
                 case COPY:
                     if (drawlines && copy_outlines && wand.valid) {
@@ -573,18 +585,14 @@ public class ClientRender {
                         z2 = (wand.copy_z2 > wand.copy_z1) ? (wand.copy_z2 + off2) : (wand.copy_z2 - off2);
                         if (fat_lines) {
                             //RenderSystem.disableCull();
-                            #if MC <= "1193"
-                            RenderSystem.enableTexture();
-                            #endif
+                            Compat.enableTexture();
                             Compat.set_render_quads_pos_tex(bufferBuilder);
                             preview_block_fat(bufferBuilder,
                                     x1, y1, z1,
                                     x2, y2, z2,
                                     bbox_col,false);
                             tesselator.end();
-                            #if MC <= "1193"
-                            RenderSystem.disableTexture();
-                            #endif
+                            Compat.disableTexture();
                             RenderSystem.enableCull();
                         } else {
                             Compat.set_render_lines(bufferBuilder);
@@ -622,9 +630,7 @@ public class ClientRender {
                             RenderSystem.enableCull();
                             //RenderSystem.enableBlend();
                             //RenderSystem.defaultBlendFunc();
-                            #if MC <= "1193"
-                            RenderSystem.enableTexture();
-                            #endif
+                            Compat.enableTexture();
                             Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                             Compat.set_render_quads_block(bufferBuilder);
                             random.setSeed(0);
@@ -685,9 +691,7 @@ public class ClientRender {
                                 render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
                             }
                             tesselator.end();
-                            #if MC <= "1193"
-                            RenderSystem.disableTexture();
-                            #endif
+                            Compat.disableTexture();
                             //RenderSystem.disableBlend();
                         }
                         if (drawlines && paste_outlines) {
@@ -701,9 +705,7 @@ public class ClientRender {
 
                             if (fat_lines) {
                                 //RenderSystem.disableCull();
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -733,13 +735,9 @@ public class ClientRender {
 
                             }
                             tesselator.end();
-                            #if MC <= "1193"
-                            RenderSystem.disableTexture();
-                            #endif
+                            Compat.disableTexture();
                             if (fat_lines) {
-                                #if MC <= "1193"
-                                RenderSystem.enableTexture();
-                                #endif
+                                Compat.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                             } else {
                                 Compat.set_render_lines(bufferBuilder);
@@ -756,17 +754,12 @@ public class ClientRender {
                                         c);
                             }
                             tesselator.end();
-                            #if MC <= "1193"
-                            RenderSystem.disableTexture();
-                            #endif
+                            Compat.disableTexture();
                         }
                     }
                     break;
             }
             //RenderSystem.enableBlend();
-            #if MC <= "1193"
-            //RenderSystem.enableTexture();
-            #endif
             //RenderSystem.enableDepthTest();
             RenderSystem.lineWidth(1.0f);
         }
@@ -790,9 +783,7 @@ public class ClientRender {
 
         {
             if (fat_lines) {
-                #if MC <= "1193"
-                RenderSystem.enableTexture();
-                #endif
+                Compat.enableTexture();
                 Compat.set_render_quads_pos_tex(bufferBuilder);
             } else {
                 RenderSystem.enableCull();
@@ -822,9 +813,7 @@ public class ClientRender {
             }
             tesselator.end();
             if (fat_lines) {
-                #if MC <= "1193"
-                RenderSystem.disableTexture();
-                #endif
+                Compat.disableTexture();
             }
         }
     }

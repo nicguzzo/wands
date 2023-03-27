@@ -21,6 +21,7 @@ public class TunnelMode implements WandMode {
         int toy=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_OY);
 
         Direction pdir=wand.player.getDirection();
+        wand.valid = true;
         switch (pdir){
             case NORTH:{
                 tp1.set(wand.pos.getX()-tox,wand.pos.getY()-toy,wand.pos.getZ());

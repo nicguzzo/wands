@@ -38,13 +38,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.config.WandsConfig;
-import net.nicguzzo.wands.items.MagicBagItem;
-import net.nicguzzo.wands.items.PaletteItem;
-import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.PlayerWand;
@@ -59,6 +58,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
+import org.joml.Vector3f;
 
 #if MC<"1193"
 import net.minecraft.world.item.CreativeModeTab;
@@ -229,34 +229,61 @@ public class WandsMod {
             });
         });
         NetworkManager.registerReceiver(Side.C2S, POS_PACKET, (packet,context)->{
-
-            BlockHitResult hitResult=packet.readBlockHitResult();
-            BlockPos p1=packet.readBlockPos();
-            BlockPos pos2=packet.readBlockPos();
-            boolean p2=packet.readBoolean();
-            Direction player_dir=Direction.values()[packet.readInt()];
+            BlockHitResult hitResult;
+            //final BlockPos[] pos = new BlockPos[1];
+            final Direction[] side = new Direction[1];
+            final BlockPos[] p1 = new BlockPos[1];
+            final BlockPos[] p2 = new BlockPos[1];
+            Vec3 hit;
+            boolean block_or_air=packet.readBoolean();
+            if(block_or_air) {
+                hitResult = packet.readBlockHitResult();
+                p1[0]=packet.readBlockPos();
+                p2[0] =packet.readBlockPos();
+                side[0] =hitResult.getDirection();
+                hit=hitResult.getLocation();
+            }else{
+                Vector3f v=packet.readVector3f();
+                hit=new Vec3(v);
+                if(packet.readBoolean()) {
+                    p1[0] = packet.readBlockPos();
+                }
+                if(packet.readBoolean()) {
+                    p2[0] = packet.readBlockPos();
+                }
+            }
+            //boolean p2=packet.readBoolean();
+            int d=packet.readInt();
+            if(!block_or_air) {
+                if (d < Direction.values().length) {
+                    side[0] = Direction.values()[d];
+                } else {
+                    side[0] = Direction.UP;
+                }
+            }
             context.queue(()->{
                 ItemStack stack=context.getPlayer().getMainHandItem();
                 if(WandUtils.is_wand(stack)){
-                    BlockPos pos=hitResult.getBlockPos();
-                    Direction side=hitResult.getDirection();
                     Player player=context.getPlayer();
                     if(player!=null) {
                         Wand wand = PlayerWand.get(player);
                         if(wand!=null) {
                             Level level=player.level;
-                            BlockState block_state=level.getBlockState(pos);
-                            wand.p1=p1;
+                            BlockState block_state=level.getBlockState(p2[0]);
+                            wand.p1=p1[0];
                             WandProps.Mode mode=wand.mode;
                             if (    mode == WandProps.Mode.FILL   || mode == WandProps.Mode.LINE ||
                                     mode == WandProps.Mode.CIRCLE || mode == WandProps.Mode.COPY ) {
-                                if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
-                                    pos = pos.relative(side, 1);
+                                boolean inc_sel=WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
+                                //boolean target_air=WandProps.getFlag(stack, WandProps.Flag.TARGET_AIR);
+                                if (inc_sel && !block_state.isAir()) {
+                                    p2[0] = p2[0].relative(side[0], 1);
                                 }
                             }
-                            wand.p2=p2;
-                            wand.lastPlayerDirection=player_dir;
-                            wand.do_or_preview(player,level, block_state,pos, side, hitResult.getLocation(), stack,true);
+                            wand.p2= p2[0];
+                            //wand.lastPlayerDirection=player_dir;
+                            WandsMod.LOGGER.info("got_placement p1: "+wand.p1+" p2: "+wand.p2+" pos:"+ p2[0]);
+                            wand.do_or_preview(player,level, block_state, p2[0], side[0], hit, stack,(WandItem)stack.getItem(),true);
                             wand.clear();
                         }
                     }
