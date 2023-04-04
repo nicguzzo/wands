@@ -10,7 +10,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
@@ -22,16 +21,11 @@ import net.minecraft.world.item.Vanishable;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.utils.Compat;
-import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
@@ -62,8 +56,45 @@ public class WandItem extends TieredItem implements Vanishable {
 
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
+        Level world=context.getLevel();
+        if(!world.isClientSide()){
+            return InteractionResult.FAIL;
+        }
+        Player player=context.getPlayer();
+        if(player==null){
+            return InteractionResult.FAIL;
+        }
+        ItemStack stack = player.getMainHandItem();
+        if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
+            return InteractionResult.FAIL;
+        }
         //WandsMod.LOGGER.info("UseOn");
-
+        Mode mode = WandProps.getMode(stack);
+        BlockPos pos = context.getClickedPos();
+        BlockState block_state = world.getBlockState(pos);
+        Direction side = context.getClickedFace();
+        //WandsMod.LOGGER.info("UseOn p1 "+ClientRender.wand.getP1());
+        //WandsMod.LOGGER.info("UseOn pps "+pos);
+        boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
+        if(ClientRender.wand.getP1() ==null){
+            ClientRender.wand.setP1(pos);
+        }else{
+            if(ClientRender.wand.getP2() ==null && mode.n_clicks()==2){
+                ClientRender.wand.setP2(pos);
+                //boolean target_air=WandProps.getFlag(stack, WandProps.Flag.TARGET_AIR);
+                if (inc_sel && !block_state.isAir()) {
+                    ClientRender.wand.setP2(ClientRender.wand.getP2().relative(side, 1));
+                }
+            }
+        }
+        if( (ClientRender.wand.getP1() !=null && mode.n_clicks()==1)||
+           ((ClientRender.wand.getP1() !=null && ClientRender.wand.getP2() !=null && mode.n_clicks()==2))
+        ) {
+            send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation());
+            ClientRender.wand.copy();
+            ClientRender.wand.clear();
+        }
+/*
         Player player=context.getPlayer();
         if(player==null){
             return InteractionResult.FAIL;
@@ -139,17 +170,44 @@ public class WandItem extends TieredItem implements Vanishable {
             if(world.isClientSide()) {
                 send_placement(wand);
             }
-        }
+        }*/
         
         return InteractionResult.SUCCESS;
     }
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level world, @NotNull Player player, @NotNull InteractionHand interactionHand) {
+        if(!world.isClientSide()){
+            return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+        }
         //WandsMod.LOGGER.info("use");
         ItemStack stack = player.getMainHandItem();
         if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
             return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
         }
+        Wand wand=ClientRender.wand;
+        Mode mode = WandProps.getMode(stack);
+        if(wand.target_air && mode.can_target_air() ){
+            if(wand.getP1() ==null){
+                wand.setP1(ClientRender.last_pos);
+                wand.setP2(null);
+                ClientRender.has_target=true;
+            }else{
+                if(mode.n_clicks()==2) {
+                    wand.setP2(wand.get_pos_from_air(wand.hit));
+                }else{
+                    wand.setP2(null);
+                }
+
+                send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(),wand.hit);
+                ClientRender.wand.copy();
+                ClientRender.wand.clear();
+            }
+        }else{
+            ClientRender.wand.clear();
+            if(player!=null)
+                player.displayClientMessage(Compat.literal("wand cleared"),false);
+        }
+        /*
         Wand wand;
         if(!world.isClientSide()){
             wand=PlayerWand.get(player);
@@ -168,9 +226,9 @@ public class WandItem extends TieredItem implements Vanishable {
             }
         }
         Mode mode = WandProps.getMode(stack);
-        /*if(wand.p1!=null && wand.p2){
-            wand.clear();
-        }*/
+        //if(wand.p1!=null && wand.p2){
+        //    wand.clear();
+        //}
         if(wand.target_air && mode.can_target_air() ){
             if(world.isClientSide()){
                 if(wand.p1==null){
@@ -186,11 +244,49 @@ public class WandItem extends TieredItem implements Vanishable {
             if (!wand.is_alt_pressed) {
                 wand.clear();
             }
-        }
+        }*/
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
 
-    public void send_placement(Wand wand){
+    public void send_placement(Direction side,BlockPos p1,BlockPos p2,Vec3 hit){
+        Minecraft client=Minecraft.getInstance();
+        if(client.getConnection() == null) {
+            return;
+        }
+        FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+        packet.writeInt(side.ordinal());
+        if(p1!=null){
+            packet.writeBoolean(true);
+            packet.writeBlockPos(p1);
+        }else{
+            packet.writeBoolean(false);
+        }
+        if(p2!=null){
+            packet.writeBoolean(true);
+            packet.writeBlockPos(p2);
+        }else{
+            packet.writeBoolean(false);
+        }
+        packet.writeDouble(hit.x);
+        packet.writeDouble(hit.y);
+        packet.writeDouble(hit.z);
+
+        NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
+        //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
+
+    }
+    /*public void send_placement(Wand wand) {
+        Mode mode = WandProps.getMode(stack);
+        if (mode == WandProps.Mode.FILL || mode == WandProps.Mode.LINE ||
+                mode == WandProps.Mode.CIRCLE || mode == WandProps.Mode.COPY) {
+            boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
+            //boolean target_air=WandProps.getFlag(stack, WandProps.Flag.TARGET_AIR);
+            if (inc_sel && !block_state.isAir()) {
+                p2 = p2.relative(side[0], 1);
+            }
+        }
+    }*/
+    /*public void send_placement(Wand wand){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
             if(wand.lastHitResult!=null && ClientRender.last_pos!=null && (wand.lastHitResult.getType()!= HitResult.Type.ENTITY)){
@@ -215,9 +311,9 @@ public class WandItem extends TieredItem implements Vanishable {
                         //packet.writeBlockPos(ClientRender.last_pos);
                     }
                 }
-                /*if(wand.mode==Mode.FILL||wand.mode==Mode.LINE||wand.mode==Mode.CIRCLE||wand.mode==Mode.COPY) {
-                     wand.p2 = pos;
-                }*/
+                //if(wand.mode==Mode.FILL||wand.mode==Mode.LINE||wand.mode==Mode.CIRCLE||wand.mode==Mode.COPY) {
+                //     wand.p2 = pos;
+                //}
                 if(wand.p2!=null) {
                     packet.writeBoolean(true);
                     packet.writeBlockPos(wand.p2);
@@ -230,7 +326,7 @@ public class WandItem extends TieredItem implements Vanishable {
                 WandsMod.LOGGER.info("send_placement p1: "+wand.p1+" p2: "+wand.p2+" last_pos:"+ClientRender.last_pos);
             }
         }
-    }
+    }*/
 
     @Environment(EnvType.CLIENT)
     @Override

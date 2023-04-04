@@ -13,52 +13,59 @@ import net.nicguzzo.wands.wand.WandMode;
 public class CopyMode implements WandMode {
 
     public void place_in_buffer(Wand wand) {
-        if (wand.copy_pos1 != null && wand.preview) {
+        int copy_x1 = 0;
+        int copy_y1 = 0;
+        int copy_z1 = 0;
+        int copy_x2 = 0;
+        int copy_y2 = 0;
+        int copy_z2 = 0;
+        if (wand.getP1() != null && wand.preview) {
+            wand.calc_pv_bbox(wand.getP1(), wand.pos);
             wand.valid = true;
-            wand.copy_x1 = wand.copy_pos1.getX();
-            wand.copy_y1 = wand.copy_pos1.getY();
-            wand.copy_z1 = wand.copy_pos1.getZ();
-            if (wand.copy_pos2 == null) {
-                wand.copy_x2 = wand.pos.getX();
-                wand.copy_y2 = wand.pos.getY();
-                wand.copy_z2 = wand.pos.getZ();
+            copy_x1 = wand.getP1().getX();
+            copy_y1 = wand.getP1().getY();
+            copy_z1 = wand.getP1().getZ();
+            if (wand.getP2() == null) {
+                copy_x2 = wand.pos.getX();
+                copy_y2 = wand.pos.getY();
+                copy_z2 = wand.pos.getZ();
             } else {
-                wand.copy_x2 = wand.copy_pos2.getX();
-                wand.copy_y2 = wand.copy_pos2.getY();
-                wand.copy_z2 = wand.copy_pos2.getZ();
+                copy_x2 = wand.getP2().getX();
+                copy_y2 = wand.getP2().getY();
+                copy_z2 = wand.getP2().getZ();
             }
-            if (!wand.copy_pos1.equals(wand.copy_pos2)) {
-                if (wand.copy_x1 >= wand.copy_x2) {
-                    wand.copy_x1 += 1;
+            if (copy_x1!=copy_x2 || copy_y1!=copy_y2 || copy_z1!=copy_z2 ) {
+                if (copy_x1 >= copy_x2) {
+                    copy_x1 += 1;
                 } else {
-                    wand.copy_x2 += 1;
+                    copy_x2 += 1;
                 }
-                if (wand.copy_y1 >= wand.copy_y2) {
-                    wand.copy_y1 += 1;
+                if (copy_y1 >= copy_y2) {
+                    copy_y1 += 1;
                 } else {
-                    wand.copy_y2 += 1;
+                    copy_y2 += 1;
                 }
-                if (wand.copy_z1 >= wand.copy_z2) {
-                    wand.copy_z1 += 1;
+                if (copy_z1 >= copy_z2) {
+                    copy_z1 += 1;
                 } else {
-                    wand.copy_z2 += 1;
+                    copy_z2 += 1;
                 }
             } else {
-                wand.copy_x2 = wand.copy_x1 + 1;
-                wand.copy_y2 = wand.copy_y1 + 1;
-                wand.copy_z2 = wand.copy_z1 + 1;
+                copy_x2 = copy_x1 + 1;
+                copy_y2 = copy_y1 + 1;
+                copy_z2 = copy_z1 + 1;
             }
         }
-        if (wand.copy_pos1 != null && wand.copy_pos2 != null) {
+        if (wand.getP1() != null && wand.getP2() != null) {
             {
                 int xs, ys, zs, xe, ye, ze,lx,ly,lz;
 
-                xs=wand.copy_pos1.getX();
-                xe=wand.copy_pos2.getX();
-                ys=wand.copy_pos1.getY();
-                ye=wand.copy_pos2.getY();
-                zs=wand.copy_pos1.getZ();
-                ze=wand.copy_pos2.getZ();
+                xs=wand.getP1().getX();
+                xe=wand.getP2().getX();
+                ys=wand.getP1().getY();
+                ye=wand.getP2().getY();
+                zs=wand.getP1().getZ();
+                ze=wand.getP2().getZ();
                 int xsgn=(xs>=xe?-1:1);
                 int ysgn=(ys>=ye?-1:1);
                 int zsgn=(zs>=ze?-1:1);

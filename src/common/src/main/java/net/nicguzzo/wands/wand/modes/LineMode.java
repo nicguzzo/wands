@@ -6,10 +6,10 @@ import net.nicguzzo.wands.wand.WandMode;
 public class LineMode implements WandMode {
     public void place_in_buffer(Wand wand) {
         wand.block_buffer.reset();
-        if (wand.p1 != null && (wand.p2!=null || wand.preview)) {
-            int x1 = wand.p1.getX();
-            int y1 = wand.p1.getY();
-            int z1 = wand.p1.getZ();
+        if (wand.getP1() != null && (wand.getP2() !=null || wand.preview)) {
+            int x1 = wand.getP1().getX();
+            int y1 = wand.getP1().getY();
+            int z1 = wand.getP1().getZ();
             int x2 = wand.pos.getX();
             int y2 = wand.pos.getY();
             int z2 = wand.pos.getZ();

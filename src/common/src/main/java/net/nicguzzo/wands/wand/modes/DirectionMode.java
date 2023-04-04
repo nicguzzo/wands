@@ -259,13 +259,13 @@ public class DirectionMode  implements WandMode {
             BlockState bs = wand.level.getBlockState(bpos);
             if (bs != null) {
                 if(wand.destroy || wand.use || wand.replace){
-                    if (p0!=wand.pos && !(bs.equals(state) || wand.palette.state_in_slot(bs) /* ||(offhand_state!=null&&  bs.is(offhand_state.getBlock()))*/)&& p0!=null)
+                    if (/*p0!=wand.pos && */!(bs.is(state.getBlock()) || wand.palette.state_in_slot(bs) /* ||(offhand_state!=null&&  bs.is(offhand_state.getBlock()))*/)&& p0!=null)
                         return p0;
                 }else{
                     if (wand.can_place(bs,bpos)) {
                         return bpos;
                     } else {
-                        if (!(bs.equals(state) || wand.palette.state_in_slot(bs) ||(wand.offhand_state!=null&&  bs.is(wand.offhand_state.getBlock()))))
+                        if (!(bs.is(state.getBlock()) || wand.palette.state_in_slot(bs) ||(wand.offhand_state!=null&&  bs.is(wand.offhand_state.getBlock()))))
                             return null;
                     }
                 }

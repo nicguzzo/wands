@@ -1,11 +1,9 @@
 package net.nicguzzo.wands.wand.modes;
 
 
-import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
-import net.nicguzzo.wands.items.*;
 
 public class CircleMode implements WandMode {
     public void place_in_buffer(Wand wand) {
@@ -14,10 +12,10 @@ public class CircleMode implements WandMode {
         boolean even= WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
         wand.block_buffer.reset();
         int diameter=0;
-        if (wand.p1 != null && (wand.p2!=null || wand.preview)) {
-            int xc = wand.p1.getX();
-            int yc = wand.p1.getY();
-            int zc = wand.p1.getZ();
+        if (wand.getP1() != null && (wand.getP2() !=null || wand.preview)) {
+            int xc = wand.getP1().getX();
+            int yc = wand.getP1().getY();
+            int zc = wand.getP1().getZ();
             int px = wand.pos.getX() - xc;
             int py = wand.pos.getY() - yc;
             int pz = wand.pos.getZ() - zc;

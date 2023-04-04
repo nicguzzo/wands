@@ -10,7 +10,7 @@ import net.nicguzzo.wands.wand.WandProps;
 public class PasteMode implements WandMode {
 
     public void place_in_buffer(Wand wand) {
-        if(wand.copy_paste_buffer==null)
+        if(wand.copy_paste_buffer==null || wand.copy_paste_buffer.size()==0)
             return;
         if (!wand.preview) {
             int mx=1;
@@ -29,10 +29,13 @@ public class PasteMode implements WandMode {
                     break;
             }
             //log("mode6 paste "+copy_paste_buffer.size());
-            BlockPos b_pos = wand.pos;
-            if(!(wand.replace||wand.destroy)){
+            //BlockPos b_pos = wand.pos;
+            BlockPos b_pos = wand.getP1();
+            /*BlockState s=wand.level.getBlockState(wand.pos);
+            boolean targeting_air=s.isAir();
+            if(!targeting_air && !(wand.replace || wand.destroy)) {
                 b_pos = wand.pos.relative(wand.side, 1);
-            }
+            }*/
             //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             wand.block_buffer.reset();
             wand.random.setSeed(wand.palette.seed);

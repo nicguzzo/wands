@@ -85,9 +85,11 @@ public class Wand {
     public int bb2_x=0;
     public int bb2_y=0;
     public int bb2_z=0;
-
-    public BlockPos p1 = null;
-    public BlockPos p2 = null;
+    public int fill_nx = 0;
+    public int fill_ny = 0;
+    public int fill_nz = 0;
+    private BlockPos p1 = null;
+    private BlockPos p2 = null;
     //public boolean p2 = false;
     public BlockState p1_state = null;
     public HitResult lastHitResult=null;
@@ -100,8 +102,8 @@ public class Wand {
     public BlockState offhand_state = null;
     Block offhand_block = null;
     public BlockPos pos;
-    public Direction side = Direction.UP;
-    public Direction lastPlayerDirection=Direction.UP;
+    public Direction side = Direction.NORTH;
+    public Direction lastPlayerDirection=Direction.NORTH;
     public Vec3 hit;
     public ItemStack wand_stack;
     ItemStack offhand;
@@ -155,6 +157,24 @@ public class Wand {
     public boolean can_blast=false;
     ItemStack[] tools=new ItemStack[9];
 
+    public BlockPos getP1() {
+        return p1;
+    }
+
+    public void setP1(BlockPos p1) {
+        this.p1 = p1;
+        //WandsMod.LOGGER.info("set p1 "+p1);
+    }
+
+    public BlockPos getP2() {
+        return p2;
+    }
+
+    public void setP2(BlockPos p2) {
+        this.p2 = p2;
+        //WandsMod.LOGGER.info("set p2 "+p2);
+    }
+
     public enum Sounds{
             SPLASH {
                 @Override
@@ -181,14 +201,14 @@ public class Wand {
     public int radius=0;
 
 
-    public BlockPos copy_pos1 = null;
-    public BlockPos copy_pos2 = null;
-    public int copy_x1 = 0;
-    public int copy_y1 = 0;
-    public int copy_z1 = 0;
-    public int copy_x2 = 0;
-    public int copy_y2 = 0;
-    public int copy_z2 = 0;
+    //public BlockPos copy_pos1 = null;
+    //public BlockPos copy_pos2 = null;
+    //public int copy_x1 = 0;
+    //public int copy_y1 = 0;
+    //public int copy_z1 = 0;
+    //public int copy_x2 = 0;
+    //public int copy_y2 = 0;
+    //public int copy_z2 = 0;
     public boolean preview;
     public boolean creative=true;
     public WandProps.Mode mode=null;
@@ -211,13 +231,18 @@ public class Wand {
         }
     }
     public void clear() {
-        p1 = null;
+        setP1(null);
+        setP2(null);
         p1_state = null;
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
-        if(player!=null)
-            player.displayClientMessage(Compat.literal("wand cleared"),false);
+        fill_nx=0;
+        fill_ny=0;
+        fill_nz=0;
+        //WandsMod.LOGGER.info("clear");
+        /*if(player!=null)
+            player.displayClientMessage(Compat.literal("wand cleared"),false);*/
     }
     public void do_or_preview(Player player,Level level,BlockState block_state,BlockPos pos,Direction side,
             Vec3 hit,ItemStack wand_stack,WandItem wand_item,
@@ -444,13 +469,13 @@ public class Wand {
             }
             return;
         }
-        if(has_offhand && (destroy)&& offhand_block!=null && offhand_state!=block_state){
+        /*if(has_offhand && (destroy)&& offhand_block!=null && offhand_state!=block_state){
             if (!preview) {
                 Component name=Compat.translatable(offhand.getDescriptionId());
                 player.displayClientMessage(Compat.literal("restricted to offand block: ").append(name), false);
             }
             return;
-        }
+        }*/
 
         update_inv_aux();
         blocks_sent_to_inv=0;
@@ -613,7 +638,9 @@ public class Wand {
                         if (item != null) {
                             pa = block_accounting.get(item);
                         }
-                        if ((destroy || use || creative || has_bucket || (pa != null && pa.placed < pa.in_player))) {
+                        if ((destroy || use || creative || has_bucket ||
+                                (pa != null && pa.placed < pa.in_player))//survival has blocks in inventory
+                        ) {
                             if (place_block(tmp_pos, block_buffer.state[a])) {
                                 if (pa != null)
                                     pa.placed++;
@@ -662,9 +689,9 @@ public class Wand {
                 damaged_tool = false;
             }
         }
-        if (p2!=null) {
-            p1 = null;
-            p2 = null;
+        if (getP2() !=null) {
+            setP1(null);
+            setP2(null);
             valid = false;
         }
     }
@@ -992,6 +1019,9 @@ public class Wand {
         int    limit = this.limit;
         int ll=0;
         block_buffer.reset();
+        fill_nx=nx;
+        fill_ny=ny;
+        fill_nz=nz;
         for (int z = zs,z0=0; z0 <= nz; z+=oz,z0++) {
             if(zskip!=0 && (z0 % (zskip+1))!=0){
                 continue;
@@ -1054,6 +1084,9 @@ public class Wand {
             //WandsMod.log("actual block ("+actual_blk+") is in the denied list",true);
             return false;
         }
+        if(destroy && (mode!=Mode.VEIN) && has_offhand && offhand_block!=null && offhand_state!=st){
+            return false;
+        }
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
         int tool_durability = -1;
 
@@ -1087,6 +1120,7 @@ public class Wand {
         #endif
 
         boolean _can_destroy=creative;
+        no_tool = false;
         if(!creative ){
             if (destroy||replace ||use) {
                 _can_destroy = can_destroy(st, true);
@@ -1839,6 +1873,7 @@ public class Wand {
             case EAST:
             case WEST:
                 if(hit.z<0) {
+                    //offz = 1;
                     offz = -1;
                 }else{
 
@@ -1850,5 +1885,11 @@ public class Wand {
             offy = -1;
         }
         return new BlockPos((int)hit.x+offx,(int)hit.y+offy,(int)hit.z+offz);
+    }
+    public void copy(){
+        if(mode==Mode.COPY) {
+            int m=mode.ordinal();
+            modes[m].place_in_buffer(this);
+        }
     }
 }

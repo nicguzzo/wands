@@ -130,7 +130,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         mult_spn.label_side=true;
         wdgets.add(mult_spn);
 
-        row_col_spn=valSpinner(Value.ROWCOLLIM,left+200,bottom+70,25,14,Compat.translatable("screen.wands.limit"));
+        row_col_spn=valSpinner(Value.ROWCOLLIM,left+170,bottom+70,50,14,Compat.translatable("screen.wands.limit"));
         row_col_spn.label_side=true;
         wdgets.add(row_col_spn);
 
@@ -184,7 +184,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         grid_noff_spn.label_side=true;
         wdgets.add(grid_noff_spn);
 
-        arealim_spn=valSpinner(Value.AREALIM, left+200,bottom+50,25,14,Compat.translatable("screen.wands.limit"));
+        arealim_spn=valSpinner(Value.AREALIM, left+170,bottom+50,50,14,Compat.translatable("screen.wands.limit"));
         arealim_spn.label_side=true;
         wdgets.add(arealim_spn);
 

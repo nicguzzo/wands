@@ -64,6 +64,7 @@ public class ClientRender {
     static Mode last_mode;
     static Rotation last_rot = Rotation.NONE;
     static boolean last_alt = false;
+    static boolean targeting_air = false;
     //static int last_y=0;
     static int last_buffer_size = -1;
     static WandProps.Orientation last_orientation = null;
@@ -179,6 +180,7 @@ public class ClientRender {
                 force = true;
             }
             HitResult hitResult = client.hitResult;
+            wand.target_air=WandProps.getFlag(stack,WandProps.Flag.TARGET_AIR);
             wand.lastHitResult=hitResult;
             wand.lastPlayerDirection=player.getDirection();
             Mode mode = WandProps.getMode(stack);
@@ -186,6 +188,7 @@ public class ClientRender {
             //WandsMod.LOGGER.info("hit result "+hitResult.getLocation());
             if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.is_alt_pressed) {
                 has_target = true;
+                targeting_air=false;
 
                 BlockHitResult block_hit = (BlockHitResult) hitResult;
                 //wand.lastHitResult=block_hit;
@@ -221,11 +224,12 @@ public class ClientRender {
                 has_target = false;
                 if (wand.is_alt_pressed && (wand.copy_paste_buffer.size() > 0 || wand.block_buffer.get_length()>0) ) {
                     if (!((wand.mode == Mode.LINE || wand.mode == Mode.CIRCLE))) {
-                        wand.p1 = last_pos;
+                        wand.setP1(last_pos);
                     }
                     preview_mode(wand.mode, matrixStack);
                 }else{
                     if(wand.target_air && mode.can_target_air() ) {
+                        targeting_air=true;
                         Vec3 hit=hitResult.getLocation();
                         BlockPos pos=wand.get_pos_from_air(hit);
                         ItemStack offhand = player.getOffhandItem();
@@ -235,20 +239,24 @@ public class ClientRender {
                         if (offhand_block != Blocks.AIR) {
                             block_state=offhand_block.defaultBlockState();
                         }
-                        if (block_state != null){
-                            if (wand.p1 != null) {
-                                last_pos = wand.p1;
+                        if (block_state != null || mode==Mode.PASTE){
+                            if(mode==Mode.TUNNEL||mode==Mode.ROW_COL||mode==Mode.GRID||mode==Mode.PASTE){
+                                wand.setP1(pos);
+                            }
+                            if (wand.getP1() != null) {
+                                last_pos = wand.getP1();
                                 has_target=true;
                             }else{
                                 last_pos=pos;
                             }
-                            if(prnt && wand.p1!=null) {
-                                WandsMod.LOGGER.info("preview p1: "+wand.p1+" p2: "+wand.p2+" pos:"+pos);
-                            }
-                            wand.do_or_preview(player, player.level, block_state, pos, wand.side,
+                            /*if(prnt && wand.getP1() !=null) {
+                                WandsMod.LOGGER.info("preview p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+pos);
+                            }*/
+                            //Direction side=wand.side;
+                            Direction side=player.getDirection().getOpposite();
+                            wand.do_or_preview(player, player.level, block_state, pos, side,
                                     hit, stack, (WandItem) stack.getItem(), prnt);
                             preview_mode(wand.mode, matrixStack);
-
                         }
                     }else{
                         wand.block_buffer.reset();
@@ -421,8 +429,20 @@ public class ClientRender {
                 case CIRCLE:
                 case VEIN:
                 case TUNNEL:
+                case COPY:
+                case PASTE:
                     //if ((mode == Mode.LINE || mode == Mode.CIRCLE) || wand.has_empty_bucket) {
-                    if (drawlines && wand.p1==null &&(mode==Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE)){
+                    if (drawlines && wand.getP1() ==null &&(mode==Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE ||mode==Mode.COPY ||mode==Mode.PASTE||mode==Mode.ROW_COL)){
+                        if (fancy && wand.offhand_state!=null){
+                            random.setSeed(0);
+                            Compat.enableTexture();
+                            RenderSystem.enableCull();
+                            Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
+                            Compat.set_render_quads_block(bufferBuilder);
+                            render_shape(matrixStack, tesselator, bufferBuilder, wand.offhand_state,last_pos_x,last_pos_y,last_pos_z);
+                            tesselator.end();
+                            Compat.disableTexture();
+                        }
                         if (fat_lines) {
                             Compat.enableTexture();
                             Compat.set_render_quads_pos_tex(bufferBuilder);
@@ -442,9 +462,9 @@ public class ClientRender {
                             tesselator.end();
                         }
                     }
-                    if (wand.valid || ( mode == Mode.FILL&& wand.p1!=null)){
+                    if (wand.valid || ( (mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
                         //bbox
-                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL)) {
+                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.COPY|| mode == Mode.TUNNEL)) {
                             if (fat_lines) {
                                 Compat.enableTexture();
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
@@ -470,8 +490,6 @@ public class ClientRender {
                             if (fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
                                 Compat.enableTexture();
                                 RenderSystem.enableCull();
-                                //RenderSystem.enableBlend();
-                                //RenderSystem.defaultBlendFunc();
                                 Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                                 Compat.set_render_quads_block(bufferBuilder);
                                 BlockState st;
@@ -509,31 +527,31 @@ public class ClientRender {
                                     }
                                 }
                                 tesselator.end();
-                                //RenderSystem.disableBlend();
                                 Compat.disableTexture();
                             }
                             render_mode_outline(tesselator,bufferBuilder);
                         }
-                        if (drawlines && wand.p1 != null && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE)) {
+                        BlockPos p1=wand.getP1();
+                        if (drawlines && p1 != null  && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE)) {
                             if (fat_lines) {
                                 Compat.enableTexture();
-                                //RenderSystem.disableCull();
-                                //even_circle=true;
+
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                                 boolean even= WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
                                 float off=(mode == Mode.CIRCLE && even)? -1.0f:0.0f;
                                 preview_block_fat(bufferBuilder,
-                                        wand.p1.getX()-off3, wand.p1.getY()-off3, wand.p1.getZ()-off3,
-                                        wand.p1.getX()+1+off3, wand.p1.getY()+1+off3, wand.p1.getZ()+1+off3,
+                                        p1.getX()-off3, p1.getY()-off3, p1.getZ()-off3,
+                                        p1.getX()+1+off3, p1.getY()+1+off3, p1.getZ()+1+off3,
                                         start_col,false
                                 );
                                 tesselator.end();
                                 if (has_target) {
                                     Compat.set_render_quads_pos_tex(bufferBuilder);
+                                    off = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
                                     //off=(mode == Mode.CIRCLE && even_circle)? 1.0f:0.0f;
                                     preview_block_fat(bufferBuilder,
-                                            last_pos_x-off3, last_pos_y-off3, last_pos_z-off3,
-                                            last_pos_x + 1+ off3, last_pos_y + 1+ off3, last_pos_z + 1+ off3,
+                                            last_pos_x-off3+off, last_pos_y-off3, last_pos_z-off3+off,
+                                            last_pos_x + 1+ off3+off, last_pos_y + 1+ off3, last_pos_z + 1+ off3+off,
                                             end_col,false);
                                     tesselator.end();
 
@@ -543,8 +561,9 @@ public class ClientRender {
                                         off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
                                         player_facing_line(bufferBuilder,
                                                 (float) camera.getPosition().x, (float) camera.getPosition().y, (float) camera.getPosition().z,
+                                                p1.getX() + off, p1.getY() + off, p1.getZ() + off,
                                                 last_pos_x + off, last_pos_y + off, last_pos_z + off,
-                                                wand_x1 + off, wand_y1 + off, wand_z1 + off,
+
                                                 line_col);
                                         tesselator.end();
                                     }
@@ -561,8 +580,8 @@ public class ClientRender {
                                         .color(line_col.r, line_col.g, line_col.b, line_col.a).endVertex();
                                 RenderSystem.disableDepthTest();
                                 preview_block(bufferBuilder,
-                                        wand.p1.getX(), wand.p1.getY(), wand.p1.getZ(),
-                                        wand.p1.getX() + 1, wand.p1.getY() + 1, wand.p1.getZ() + 1,
+                                        wand.getP1().getX(), wand.getP1().getY(), wand.getP1().getZ(),
+                                        wand.getP1().getX() + 1, wand.getP1().getY() + 1, wand.getP1().getZ() + 1,
                                         start_col);
                                 preview_block(bufferBuilder,
                                         last_pos_x - off2, last_pos_y - off2, last_pos_z - off2,
@@ -574,7 +593,7 @@ public class ClientRender {
                         }
                     }
                     break;
-                case COPY:
+                /*case COPY:
                     if (drawlines && copy_outlines && wand.valid) {
 
                         x1 = (wand.copy_x1 > wand.copy_x2) ? (wand.copy_x1 + off2) : (wand.copy_x1 - off2);
@@ -603,164 +622,155 @@ public class ClientRender {
                             tesselator.end();
                         }
                     }
-                    break;
-                case PASTE:
-                    if (wand.copy_paste_buffer.size() > 0) {
-                        int mx=1;
-                        int my=1;
-                        int mz=1;
-                        switch(mirroraxis){
-                            case 1://X
-                                mx=-1;
-                                break;
-                            case 2://Y
-                                my=-1;
-                                break;
-                            case 3://Z
-                                mz=-1;
-                                break;
-                        }
-                        BlockPos b_pos = last_pos;
-                        if (!(wand.replace || wand.destroy)) {
-                            b_pos = last_pos.relative(last_side, 1);
-                        }
-                        if (wand.destroy) {
-                            //render_mode_outline( tesselator,bufferBuilder);
-                        } else if (fancy) {
-                            RenderSystem.enableCull();
-                            //RenderSystem.enableBlend();
-                            //RenderSystem.defaultBlendFunc();
-                            Compat.enableTexture();
-                            Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
-                            Compat.set_render_quads_block(bufferBuilder);
-                            random.setSeed(0);
-                            wand.random.setSeed(wand.palette.seed);
-                            //use block_buffer, previously copy copy_paste_buffer to block_buffer
-                            BlockPos po=wand.copy_paste_buffer.get(0).pos;
+                    break;*/
 
-                            for (CopyBuffer b : wand.copy_paste_buffer) {
-                                BlockState st =b.state;
-                                if (wand.palette.has_palette) {
-                                    st = wand.get_state();
-                                }else{
-                                    st=wand.mirror_stair(st,mirroraxis);
-                                    //Mirror
-                                    /*Block blk=st.getBlock();
-                                    if(blk instanceof  StairBlock && mirroraxis >0) {
-                                        st = wand.paste_rot(st);
+            }
 
-                                        Direction facing=st.getValue(StairBlock.FACING);
-                                        StairsShape shape=st.getValue(StairBlock.SHAPE);
-                                        if(my==-1){
-                                            st=st.setValue(StairBlock.HALF,st.getValue(StairBlock.HALF));
-                                        }else {
-                                            if (
-                                                (mx == -1 && (facing == Direction.EAST  || facing == Direction.WEST  )) ||
-                                                (mz == -1 && (facing == Direction.NORTH || facing == Direction.SOUTH ))
-                                            ) {
-                                                st = st.setValue(StairBlock.FACING, facing.getOpposite());
-                                            }
-                                            if ( shape!= StairsShape.STRAIGHT){
-                                                if(shape==StairsShape.INNER_LEFT) {
-                                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
-                                                }else{
-                                                    if(shape==StairsShape.OUTER_LEFT) {
-                                                        st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
-                                                    }else{
-                                                        if(shape==StairsShape.OUTER_RIGHT) {
-                                                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
-                                                        }else {
-                                                            if (shape == StairsShape.INNER_RIGHT) {
-                                                                st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
-                                                            }
-                                                        }
+            if (mode==Mode.PASTE && wand.copy_paste_buffer.size() > 0) {
+                int mx=1;
+                int my=1;
+                int mz=1;
+                switch(mirroraxis){
+                    case 1://X
+                        mx=-1;
+                        break;
+                    case 2://Y
+                        my=-1;
+                        break;
+                    case 3://Z
+                        mz=-1;
+                        break;
+                }
+                BlockPos b_pos = wand.pos;
+                /*if(!targeting_air && !(wand.replace || wand.destroy)) {
+                    b_pos = last_pos.relative(last_side, 1);
+                }*/
+                if (!wand.destroy &&fancy) {
+                    RenderSystem.enableCull();
+                    Compat.enableTexture();
+                    Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
+                    Compat.set_render_quads_block(bufferBuilder);
+                    random.setSeed(0);
+                    wand.random.setSeed(wand.palette.seed);
+                    BlockPos po=wand.copy_paste_buffer.get(0).pos;
+
+                    for (CopyBuffer b : wand.copy_paste_buffer) {
+                        BlockState st =b.state;
+                        if (wand.palette.has_palette) {
+                            st = wand.get_state();
+                        }else{
+                            st=wand.mirror_stair(st,mirroraxis);
+                            //Mirror
+                            /*Block blk=st.getBlock();
+                            if(blk instanceof  StairBlock && mirroraxis >0) {
+                                st = wand.paste_rot(st);
+
+                                Direction facing=st.getValue(StairBlock.FACING);
+                                StairsShape shape=st.getValue(StairBlock.SHAPE);
+                                if(my==-1){
+                                    st=st.setValue(StairBlock.HALF,st.getValue(StairBlock.HALF));
+                                }else {
+                                    if (
+                                        (mx == -1 && (facing == Direction.EAST  || facing == Direction.WEST  )) ||
+                                        (mz == -1 && (facing == Direction.NORTH || facing == Direction.SOUTH ))
+                                    ) {
+                                        st = st.setValue(StairBlock.FACING, facing.getOpposite());
+                                    }
+                                    if ( shape!= StairsShape.STRAIGHT){
+                                        if(shape==StairsShape.INNER_LEFT) {
+                                            st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
+                                        }else{
+                                            if(shape==StairsShape.OUTER_LEFT) {
+                                                st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
+                                            }else{
+                                                if(shape==StairsShape.OUTER_RIGHT) {
+                                                    st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                                                }else {
+                                                    if (shape == StairsShape.INNER_RIGHT) {
+                                                        st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
                                                     }
                                                 }
                                             }
                                         }
-
-                                    }else{
-                                        st = wand.paste_rot(st);
-                                    }*/
-                            }
-                                BlockPos p = b.pos.rotate(last_rot);
-                                int px=b_pos.getX() + p.getX()*mx;
-                                int py=b_pos.getY() + p.getY()*my;
-                                int pz=b_pos.getZ() + p.getZ()*mz;
-
-                                render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
-                            }
-                            tesselator.end();
-                            Compat.disableTexture();
-                            //RenderSystem.disableBlend();
-                        }
-                        if (drawlines && paste_outlines) {
-                            Colorf c=(wand.destroy? destroy_col: paste_bb_col);
-                            x1 = Integer.MAX_VALUE;
-                            y1 = Integer.MAX_VALUE;
-                            z1 = Integer.MAX_VALUE;
-                            x2 = Integer.MIN_VALUE;
-                            y2 = Integer.MIN_VALUE;
-                            z2 = Integer.MIN_VALUE;
-
-                            if (fat_lines) {
-                                //RenderSystem.disableCull();
-                                Compat.enableTexture();
-                                Compat.set_render_quads_pos_tex(bufferBuilder);
-                            } else {
-                                Compat.set_render_lines(bufferBuilder);
-                            }
-                            for (CopyBuffer b : wand.copy_paste_buffer) {
-                                BlockPos p = b.pos.rotate(last_rot);
-                                float x = b_pos.getX() + p.getX()*mx;
-                                float y = b_pos.getY() + p.getY()*my;
-                                float z = b_pos.getZ() + p.getZ()*mz;
-                                if (fat_lines) {
-                                    preview_block_fat(bufferBuilder,
-                                            x, y, z,
-                                            x + 1, y + 1, z + 1, c,
-                                    true);
-                                } else {
-                                    preview_block(bufferBuilder,
-                                            x, y, z,
-                                            x + 1, y + 1, z + 1, c
-                                    );
+                                    }
                                 }
-                                if (x < x1) x1 = x;
-                                if (y < y1) y1 = y;
-                                if (z < z1) z1 = z;
-                                if (x + 1 > x2) x2 = x + 1;
-                                if (y + 1 > y2) y2 = y + 1;
-                                if (z + 1 > z2) z2 = z + 1;
 
-                            }
-                            tesselator.end();
-                            Compat.disableTexture();
-                            if (fat_lines) {
-                                Compat.enableTexture();
-                                Compat.set_render_quads_pos_tex(bufferBuilder);
-                            } else {
-                                Compat.set_render_lines(bufferBuilder);
-                            }
-                            if (fat_lines) {
-                                preview_block_fat(bufferBuilder,
-                                        x1, y1, z1,
-                                        x2, y2, z2,
-                                        c,false);
-                            } else {
-                                preview_block(bufferBuilder,
-                                        x1, y1, z1,
-                                        x2, y2, z2,
-                                        c);
-                            }
-                            tesselator.end();
-                            Compat.disableTexture();
-                        }
+                            }else{
+                                st = wand.paste_rot(st);
+                            }*/
                     }
-                    break;
+                        BlockPos p = b.pos.rotate(last_rot);
+                        int px=b_pos.getX() + p.getX()*mx;
+                        int py=b_pos.getY() + p.getY()*my;
+                        int pz=b_pos.getZ() + p.getZ()*mz;
+
+                        render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
+                    }
+                    tesselator.end();
+                    Compat.disableTexture();
+                }
+                if (drawlines && paste_outlines) {
+                    Colorf c=(wand.destroy? destroy_col: paste_bb_col);
+                    x1 = Integer.MAX_VALUE;
+                    y1 = Integer.MAX_VALUE;
+                    z1 = Integer.MAX_VALUE;
+                    x2 = Integer.MIN_VALUE;
+                    y2 = Integer.MIN_VALUE;
+                    z2 = Integer.MIN_VALUE;
+
+                    if (fat_lines) {
+                        Compat.enableTexture();
+                        Compat.set_render_quads_pos_tex(bufferBuilder);
+                    } else {
+                        Compat.set_render_lines(bufferBuilder);
+                    }
+                    for (CopyBuffer b : wand.copy_paste_buffer) {
+                        BlockPos p = b.pos.rotate(last_rot);
+                        float x = b_pos.getX() + p.getX()*mx;
+                        float y = b_pos.getY() + p.getY()*my;
+                        float z = b_pos.getZ() + p.getZ()*mz;
+                        if (fat_lines) {
+                            preview_block_fat(bufferBuilder,
+                                    x, y, z,
+                                    x + 1, y + 1, z + 1, c,
+                            true);
+                        } else {
+                            preview_block(bufferBuilder,
+                                    x, y, z,
+                                    x + 1, y + 1, z + 1, c
+                            );
+                        }
+                        if (x < x1) x1 = x;
+                        if (y < y1) y1 = y;
+                        if (z < z1) z1 = z;
+                        if (x + 1 > x2) x2 = x + 1;
+                        if (y + 1 > y2) y2 = y + 1;
+                        if (z + 1 > z2) z2 = z + 1;
+
+                    }
+                    tesselator.end();
+                    Compat.disableTexture();
+                    if (fat_lines) {
+                        Compat.enableTexture();
+                        Compat.set_render_quads_pos_tex(bufferBuilder);
+                    } else {
+                        Compat.set_render_lines(bufferBuilder);
+                    }
+                    if (fat_lines) {
+                        preview_block_fat(bufferBuilder,
+                                x1, y1, z1,
+                                x2, y2, z2,
+                                c,false);
+                    } else {
+                        preview_block(bufferBuilder,
+                                x1, y1, z1,
+                                x2, y2, z2,
+                                c);
+                    }
+                    tesselator.end();
+                    Compat.disableTexture();
+                }
             }
-            //RenderSystem.enableBlend();
-            //RenderSystem.enableDepthTest();
             RenderSystem.lineWidth(1.0f);
         }
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0f);

@@ -30,13 +30,17 @@ public class Spinner  extends Wdgt{
         {
             public void onClick(int mx,int my){
                 int iv=inc_val;
-                if(Screen.hasShiftDown()) {
-                    iv=shift_inc_val;
-                }
-                if(value+iv<= max) {
-                    value += iv;
-                }else{
+                if(Screen.hasControlDown()){
                     value=max;
+                }else {
+                    if (Screen.hasShiftDown()) {
+                        iv = shift_inc_val;
+                    }
+                    if (value + iv <= max) {
+                        value += iv;
+                    } else {
+                        value = max;
+                    }
                 }
                 onInc(mx,my,value);
             }
@@ -47,13 +51,17 @@ public class Spinner  extends Wdgt{
         {
             public void onClick(int mx,int my){
                 int iv=inc_val;
-                if(Screen.hasShiftDown()) {
-                    iv=shift_inc_val;
-                }
-                if(value-iv>=min) {
-                    value-=iv;
-                }else{
+                if(Screen.hasControlDown()){
                     value=min;
+                }else {
+                    if (Screen.hasShiftDown()) {
+                        iv = shift_inc_val;
+                    }
+                    if (value - iv >= min) {
+                        value -= iv;
+                    } else {
+                        value = min;
+                    }
                 }
                 onDec(mx,my,value);
             }

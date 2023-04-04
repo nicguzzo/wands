@@ -14,65 +14,78 @@ public class WandProps {
             public String toString() {return "wands.modes.direction";}
             public WandMode get_mode(){return new DirectionMode();}
             public boolean can_target_air(){return false;}
+            public int n_clicks(){return 1;}
         },
         ROW_COL   {
             public String toString() {return "wands.modes.row_col";}
             public WandMode get_mode(){return new RowColMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 1;}
         },
         FILL      {
             public String toString() {return "wands.modes.fill";}
             public WandMode get_mode(){return new FillMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 2;}
         },
         AREA      {
             public String toString() {return "wands.modes.area";}
             public WandMode get_mode(){return new AreaMode();}
             public boolean can_target_air(){return false;}
+            public int n_clicks(){return 1;}
         },
         GRID      {
             public String toString() {return "wands.modes.grid";}
             public WandMode get_mode(){return new GridMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 1;}
         },
         LINE      {
             public String toString() {return "wands.modes.line";}
             public WandMode get_mode(){return new LineMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 2;}
         },
         CIRCLE    {
             public String toString() {return "wands.modes.circle";}
             public WandMode get_mode(){return new CircleMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 2;}
         },
         COPY      {
             public String toString() {return "wands.modes.copy";}
             public WandMode get_mode(){return new CopyMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 2;}
         },
         PASTE     {
             public String toString() {return "wands.modes.paste";}
             public WandMode get_mode(){return new PasteMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 1;}
         },
         TUNNEL    {
             public String toString() {return "wands.modes.tunnel";}
             public WandMode get_mode(){return new TunnelMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 1;}
         },
         VEIN      {
             public String toString() {return "wands.modes.vein";}
             public WandMode get_mode(){return new VeinMode();}
             public boolean can_target_air(){return false;}
+            public int n_clicks(){return 1;}
         },
         BLAST     {
             public String toString() {return "wands.modes.blast";}
             public WandMode get_mode(){return new BlastMode();}
             public boolean can_target_air(){return true;}
+            public int n_clicks(){return 1;}
         };
 
         public abstract WandMode get_mode();
         public abstract boolean can_target_air();
+        public abstract int n_clicks();
     }
     public enum Orientation {
         ROW { public String toString() {return "wands.orientation.row";}},

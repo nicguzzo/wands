@@ -37,7 +37,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
@@ -58,7 +57,6 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
-import org.joml.Vector3f;
 
 #if MC<"1193"
 import net.minecraft.world.item.CreativeModeTab;
@@ -199,7 +197,8 @@ public class WandsMod {
         DIAGONAL_SPREAD,
         INC_SEL_BLK,
         PALETTE_MODE,
-        PALETTE_MENU
+        PALETTE_MENU,
+        CLEAR
     }
    public static boolean is_forge=false;
 	
@@ -228,7 +227,65 @@ public class WandsMod {
                 }
             });
         });
+
         NetworkManager.registerReceiver(Side.C2S, POS_PACKET, (packet,context)->{
+            Player player = context.getPlayer();
+            if(player==null){
+                WandsMod.LOGGER.error("player is null");
+                return;
+            }
+            ItemStack stack=context.getPlayer().getMainHandItem();
+            if(!WandUtils.is_wand(stack)) {
+                WandsMod.LOGGER.error("player doesn't have a wand in main hand");
+                return;
+            }
+            Wand wand = PlayerWand.get(player);
+            if(wand==null){
+                WandsMod.LOGGER.error("wand is null");
+                return;
+            }
+            BlockPos p1;
+            BlockPos p2;
+
+            int d=packet.readInt();
+            Direction side=Direction.values()[d];
+            if(packet.readBoolean()) {
+                p1 = packet.readBlockPos();
+            } else {
+                p1 = null;
+                WandsMod.LOGGER.info("needs at least 1 position");
+                return;
+            }
+            if(packet.readBoolean()) {
+                p2 = packet.readBlockPos();
+            } else {
+                p2 = null;
+            }
+            double hit_x=packet.readDouble();
+            double hit_y=packet.readDouble();
+            double hit_z=packet.readDouble();
+            Vec3 hit=new Vec3(hit_x,hit_y,hit_z);
+            context.queue(()->{
+                Level level=player.level;
+                BlockState block_state;
+                BlockPos pos;
+                if(p2!=null) {
+                    block_state = level.getBlockState(p2);
+                    pos=p2;
+                }else{
+                    block_state = level.getBlockState(p1);
+                    pos=p1;
+                }
+                wand.setP1(p1);
+                wand.setP2(p2);
+
+                //wand.lastPlayerDirection=player_dir;
+                //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
+                wand.do_or_preview(player,level, block_state, pos, side, hit, stack,(WandItem)stack.getItem(),true);
+                wand.clear();
+            });
+        });
+        /*NetworkManager.registerReceiver(Side.C2S, POS_PACKET, (packet,context)->{
             BlockHitResult hitResult;
             //final BlockPos[] pos = new BlockPos[1];
             final Direction[] side = new Direction[1];
@@ -289,7 +346,7 @@ public class WandsMod {
                     }
                 }
             });
-        });
+        });*/
         NetworkManager.registerReceiver(Side.C2S, GLOBAL_SETTINGS_PACKET, (packet,context)->{
             boolean drop_pos=packet.readBoolean();
             context.queue(()-> {
@@ -305,6 +362,12 @@ public class WandsMod {
         PlayerEvent.PLAYER_JOIN.register((player)->{
             LOGGER.info("PLAYER_JOIN");
             //send config
+            Wand wand=null;
+            wand=PlayerWand.get(player);
+            if(wand==null){
+                PlayerWand.add_player(player);
+                wand=PlayerWand.get(player);
+            }
             if(!player.level.isClientSide()){
                 if(WandsMod.config!=null){
                     FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
@@ -317,12 +380,7 @@ public class WandsMod {
                     NetworkManager.sendToPlayer(player, WandsMod.CONF_PACKET, packet);
                     LOGGER.info("config sent");
                 }
-                Wand wand=null;            
-                wand=PlayerWand.get(player);
-                if(wand==null){
-                    PlayerWand.add_player(player);
-                    wand=PlayerWand.get(player);
-                }
+
             }
         });
         PlayerEvent.PLAYER_QUIT.register((player)->{
@@ -542,6 +600,13 @@ public class WandsMod {
                                 }
                             }
                         }
+                        break;
+                    case CLEAR:
+                        if (wand != null) {
+                            wand.clear();
+                        }
+                        if(player!=null)
+                            player.displayClientMessage(Compat.literal("wand cleared"),false);
                         break;
                 }
 

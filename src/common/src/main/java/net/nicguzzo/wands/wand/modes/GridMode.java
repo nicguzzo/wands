@@ -9,7 +9,8 @@ import net.nicguzzo.wands.wand.WandProps;
 
 public class GridMode implements WandMode {
     public void place_in_buffer(Wand wand) {
-        Direction playerdir=wand.lastPlayerDirection;
+        Direction playerdir=wand.player.getDirection();;
+
         int ms=  WandProps.getVal(wand.wand_stack, WandProps.Value.GRIDMS);
         int ns=  WandProps.getVal(wand.wand_stack, WandProps.Value.GRIDNS);
         int moff=WandProps.getVal(wand.wand_stack, WandProps.Value.GRIDMOFF);

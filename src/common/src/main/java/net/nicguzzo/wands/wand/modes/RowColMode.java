@@ -13,9 +13,14 @@ public class RowColMode implements WandMode {
         WandProps.Orientation orientation = WandProps.getOrientation(wand.wand_stack);
         boolean preview = wand.player.level.isClientSide();
         Direction dir = Direction.EAST;
-        BlockPos pos_m = wand.pos.relative(wand.side, 1);
-        BlockState state = wand.player.level.getBlockState(pos_m);
+        BlockPos pos_m= wand.pos.relative(wand.side, 1);;
         WandItem wand_item = (WandItem) wand.wand_stack.getItem();
+        BlockState state = wand.player.level.getBlockState(pos_m);
+
+        int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
+        if(limit2<=0 || limit2 >wand.limit){
+            limit2=wand.limit;
+        }
 
         if (state.isAir() || wand.replace_fluid(state) || wand.destroy || wand.use) {
             BlockPos pos0 = wand.pos;
@@ -69,7 +74,7 @@ public class RowColMode implements WandMode {
             }
 
             Direction op = dir.getOpposite();
-            int i = wand_item.limit - 1;
+            int i = limit2 - 1;
             int k = 0;
             boolean stop1 = false;
             boolean stop2 = false;
@@ -78,8 +83,35 @@ public class RowColMode implements WandMode {
             boolean dont_check_state = false;
             boolean eq;
             int n=WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
-            if(n==0) {
-                while (k < wand_item.limit && i > 0) {
+            if( wand.target_air && wand.mode.can_target_air() && wand.player.level.getBlockState(wand.pos).isAir()) {
+                pos1=wand.pos;
+                pos3=wand.pos;
+                while (k < limit2 && i > 0) {
+                    if (!stop1 && i > 0) {
+                        BlockState bs0 = wand.player.level.getBlockState(pos1.relative(dir));
+                        if ((bs0.isAir() || wand.replace_fluid(bs0))) {
+                            pos1 = pos1.relative(dir);
+                            i--;
+                        } else {
+                            stop1 = true;
+                        }
+                    }
+                    if (!stop2 && i > 0) {
+                        BlockState bs2 = wand.player.level.getBlockState(pos3.relative(op));
+                        if (bs2.isAir() || wand.replace_fluid(bs2)) {
+                            pos3 = pos3.relative(op);
+                            i--;
+                        } else {
+                            stop2 = true;
+                        }
+                    }
+                    k++;
+                    if (stop1 && stop2) {
+                        k = 1000000;
+                    }
+                }
+            }else if(n==0) {
+                while (k < limit2 && i > 0) {
                     if (!stop1 && i > 0) {
                         BlockState bs0 = wand.player.level.getBlockState(pos0.relative(dir));
                         BlockState bs1 = wand.player.level.getBlockState(pos1.relative(dir));

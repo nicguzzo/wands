@@ -9,6 +9,7 @@ import me.shedaniel.architectury.networking.NetworkManager.Side;
 import me.shedaniel.architectury.registry.KeyBindings;
 import me.shedaniel.architectury.registry.MenuRegistry;
 #else
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
@@ -43,6 +44,7 @@ import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandScreen;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import org.apache.logging.log4j.LogManager;
@@ -79,10 +81,11 @@ public class WandsModClient {
     static final public int toggle_stair_slab_key = GLFW.GLFW_KEY_PERIOD;//InputConstants.KEY_PERIOD;
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block=GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
+    static final String tab="key.categories.wands";
+    static final String k="key.wands.";
+
     public static void initialize() {
-        String k="key.wands.";
-        //final String tab="itemGroup.wands.wands_tab";
-        final String tab="key.categories.wands";
+
         wand_menu_km=new KeyMapping(k+"wand_menu",wand_menu_key,tab);
         keys.put(wand_menu_km,WandsMod.WandKeys.MENU);
         keys.put(new KeyMapping(k+"wand_mode",wand_mode_key,tab),WandsMod.WandKeys.MODE);
@@ -94,7 +97,6 @@ public class WandsModClient {
         keys.put(new KeyMapping(k+"wand_undo",wand_undo_key,tab),WandsMod.WandKeys.UNDO);
         keys.put(new KeyMapping(k+"wand_palette_mode",palette_mode_key,tab),WandsMod.WandKeys.PALETTE_MODE);
         keys.put(new KeyMapping(k+"wand_rotate",wand_rotate,tab),WandsMod.WandKeys.ROTATE);
-        //keys.put(new KeyMapping(k+"wand_conf",wand_conf_key,tab),WandsMod.WandKeys.CONF);
         keys.put(new KeyMapping(k+"m_inc",wand_m_inc_key,tab),WandsMod.WandKeys.M_INC);
         keys.put(new KeyMapping(k+"m_dec",wand_m_dec_key,tab),WandsMod.WandKeys.M_DEC);
         keys.put(new KeyMapping(k+"n_inc",wand_n_inc_key,tab),WandsMod.WandKeys.N_INC);
@@ -102,6 +104,11 @@ public class WandsModClient {
         keys.put(new KeyMapping(k+"toggle_stair_slab",toggle_stair_slab_key,tab),WandsMod.WandKeys.TOGGLE_STAIRSLAB);
         keys.put(new KeyMapping(k+"area_diagonal_spread",area_diagonal_spread,tab),WandsMod.WandKeys.DIAGONAL_SPREAD);
         keys.put(new KeyMapping(k+"inc_sel_block",inc_sel_block,tab),WandsMod.WandKeys.INC_SEL_BLK);
+        keys.put(new KeyMapping(k+"clear_wand",GLFW.GLFW_KEY_C,tab),WandsMod.WandKeys.CLEAR);
+        /*keys.put(new KeyMapping(k+"clear_wand",
+            InputConstants.Type.MOUSE,
+            InputConstants.MOUSE_BUTTON_LEFT,
+            tab),WandsMod.WandKeys.CLEAR);*/
 
         keys.forEach((km,v) -> Compat.register_key((KeyMapping)km));
 
@@ -112,9 +119,14 @@ public class WandsModClient {
             {
                 Map.Entry<KeyMapping,WandsMod.WandKeys> me=itr.next();
                 KeyMapping km=me.getKey();
+                WandsMod.WandKeys key=me.getValue();
                 if (km.consumeClick()) {
                     if(!any) any=true;
-                    send_key(me.getValue().ordinal(),Screen.hasShiftDown(),Screen.hasAltDown());
+                    if(key== WandsMod.WandKeys.CLEAR){
+                        cancel_wand();
+                    }else {
+                        send_key(key.ordinal(), Screen.hasShiftDown(), Screen.hasAltDown());
+                    }
                 }
             }
 
@@ -281,6 +293,21 @@ public class WandsModClient {
                             rot = "270°";
                             break;
                     }
+                    String p1="";
+                    String p2="";
+                    BlockPos bp1= wand.getP1();
+                    BlockPos bp2= wand.getP2();
+                    if(wand.getP1() !=null) {
+                        p1 = "p1:[" + bp1.getX() + "," + bp1.getY() + "," + bp1.getZ() + "]";
+                    }
+                    if(wand.getP2() !=null) {
+                        p2 = "p2:[" + bp2.getX() + "," + bp2.getY() + "," + bp2.getZ() + "]";
+                    }else{
+                        if(wand.getP1() !=null) {
+                            p2 = "p2:[" + ClientRender.last_pos.getX() + "," + ClientRender.last_pos.getY() + "," + ClientRender.last_pos.getZ() + "]";
+                        }
+                    }
+
                     String ln1="";
                     String ln2="Action: "+Compat.translatable(action.toString()).getString();
                     String ln3="Mode: "+Compat.translatable(mode.toString()).getString()+" Rot:"+rot;
@@ -303,12 +330,18 @@ public class WandsModClient {
                                 break;
 
                             case ROW_COL:
-                            case FILL:
                             case LINE:
                             case AREA:
                             case VEIN:
+                            case FILL:
+                                if(mode== WandProps.Mode.FILL){
+                                    int nx=wand.fill_nx+1;
+                                    int ny=wand.fill_ny+1;
+                                    int nz=wand.fill_nz+1;
+                                    ln1+="volume ["+nx+","+ny+","+nz+"] ";
+                                }
                                 int arealim=WandProps.getVal(stack, WandProps.Value.AREALIM);
-                                ln1="Blocks: "+wand.block_buffer.get_length();
+                                ln1+="Blocks: "+wand.block_buffer.get_length();
                                 if(arealim>0){
                                     ln1+=" Limit: "+arealim;
                                 }
@@ -316,9 +349,6 @@ public class WandsModClient {
                             case CIRCLE:
                                 ln1="Radius: "+wand.radius + " N: "+wand.block_buffer.get_length();
                                 break;
-                            /*case RECT:
-                                ln1="Blocks: "+wand.block_buffer.get_length();
-                                break;*/
                             case COPY:
                             case PASTE:
                                 ln1="Copied Blocks: "+wand.copy_paste_buffer.size();
@@ -331,6 +361,9 @@ public class WandsModClient {
                     font.draw(poseStack,ln1,x,y,0xffffff);
                     font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
                     font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
+
+                    font.draw(poseStack,p1,x,y-font.lineHeight*2,0xffffff);
+                    font.draw(poseStack,p2,x,y-font.lineHeight,0xffffff);
                 }
                 if(WandsMod.config.show_tools_info) {
                     Font font = client.font;
@@ -363,7 +396,6 @@ public class WandsModClient {
                         #endif
                         int fortune= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,item);
                         int silk= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item);
-
                         if(fortune!=0) {
                             font.draw(poseStack, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
                         } else if (silk != 0) {
@@ -371,6 +403,14 @@ public class WandsModClient {
                         }
                     });
                 }
+            }
+        }
+    }
+    public static void cancel_wand(){
+        if(ClientRender.wand!=null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)){
+            ClientRender.wand.clear();
+            if(ClientRender.wand.player!=null) {
+                ClientRender.wand.player.displayClientMessage(Compat.literal("wand cleared"), false);
             }
         }
     }
