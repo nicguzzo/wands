@@ -1,6 +1,6 @@
 #!/bin/bash
 pushd "versions"
-	//mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
+#	mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 
 	if [ "$1" == "" ]; then
     	mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
