@@ -21,31 +21,32 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraft.network.chat.MutableComponent;
 #if MC=="1165"
-import com.mojang.blaze3d.platform.GlStateManager;
-import me.shedaniel.architectury.event.events.GuiEvent;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.registry.*;
-import me.shedaniel.architectury.registry.KeyBindings;
-import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+    import com.mojang.blaze3d.platform.GlStateManager;
+    import me.shedaniel.architectury.event.events.GuiEvent;
+    import me.shedaniel.architectury.networking.NetworkManager;
+    import me.shedaniel.architectury.registry.*;
+    import me.shedaniel.architectury.registry.KeyBindings;
+    import me.shedaniel.architectury.registry.menu.ExtendedMenuProvider;
+    import net.minecraft.network.chat.TextComponent;
+    import net.minecraft.network.chat.TranslatableComponent;
 #else
-import com.mojang.blaze3d.vertex.VertexFormat;
-import dev.architectury.event.events.client.ClientGuiEvent;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
-import dev.architectury.registry.menu.ExtendedMenuProvider;
-import dev.architectury.registry.menu.MenuRegistry;
-import net.minecraft.client.renderer.GameRenderer;
-#if MC <"1190"
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-#endif
-#if MC < "1193"
-import dev.architectury.registry.CreativeTabRegistry;
-#endif
+    import com.mojang.blaze3d.vertex.VertexFormat;
+    import dev.architectury.event.events.client.ClientGuiEvent;
+    import dev.architectury.networking.NetworkManager;
+    import dev.architectury.registry.client.keymappings.KeyMappingRegistry;
+    import dev.architectury.registry.menu.ExtendedMenuProvider;
+    import dev.architectury.registry.menu.MenuRegistry;
+    import net.minecraft.client.renderer.GameRenderer;
+    #if MC <"1190"
+        import net.minecraft.network.chat.TextComponent;
+        import net.minecraft.network.chat.TranslatableComponent;
+    #endif
+    #if MC < "1193"
+        import dev.architectury.registry.CreativeTabRegistry;
+    #endif
 #endif
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
@@ -66,136 +67,147 @@ public class Compat {
 		});
         #else
             #if MC < "1193"
-            return CreativeTabRegistry.create(res, new Supplier<ItemStack>() {
-                @Override
-                public ItemStack get() {
-                    return new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get() );
-                }
-            });
+                return CreativeTabRegistry.create(res, new Supplier<ItemStack>() {
+                    @Override
+                    public ItemStack get() {
+                        return new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get() );
+                    }
+                });
             #else
-            return null;
+                return null;
             #endif
         #endif
     }
+
     static public boolean is_creative(Player player){
         #if MC=="1165"
-        return player.abilities.instabuild;
+            return player.abilities.instabuild;
         #else
-        return player.getAbilities().instabuild;
+            return player.getAbilities().instabuild;
         #endif
     }
     static public Inventory get_inventory(Player player){
         #if MC=="1165"
-        return player.inventory;
+            return player.inventory;
         #else
-        return player.getInventory();
+            return player.getInventory();
         #endif
     }
     static public void set_color(float r, float g, float b, float a){
         #if MC=="1165"
-        RenderSystem.color4f(r,g,b,a);
+            RenderSystem.color4f(r,g,b,a);
         #else
-        RenderSystem.setShaderColor(r,g,b,a);
+            RenderSystem.setShaderColor(r,g,b,a);
         #endif
     }
     static public void set_pos_tex_shader(){
         #if MC>"1165"
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
         #endif
     }
     static public void set_texture(ResourceLocation tex){
         #if MC=="1165"
-        Minecraft.getInstance().getTextureManager().bind(tex);
+            Minecraft.getInstance().getTextureManager().bind(tex);
         #else
-        RenderSystem.setShaderTexture(0, tex);
+            RenderSystem.setShaderTexture(0, tex);
         #endif
     }
     static public void set_render_quads_block(BufferBuilder bufferBuilder){
-        #if MC=="1165"
-        bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
+        #if MC<"1200"
+            #if MC=="1165"
+                bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
+            #else
+                RenderSystem.setShader(GameRenderer::getBlockShader);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            #endif
         #else
-        RenderSystem.setShader(GameRenderer::getBlockShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
         #endif
     }
     static public void set_render_quads_pos_tex(BufferBuilder bufferBuilder){
-        #if MC=="1165"
-        bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
+        #if MC<"1200"
+            #if MC=="1165"
+                bufferBuilder.begin(7, DefaultVertexFormat.BLOCK);
+            #else
+                RenderSystem.setShader(GameRenderer::getBlockShader);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            #endif
         #else
-        RenderSystem.setShader(GameRenderer::getBlockShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
         #endif
     }
     static public void set_render_lines(BufferBuilder bufferBuilder){
         #if MC=="1165"
-        RenderSystem.disableTexture();
-		RenderSystem.disableBlend();
-		RenderSystem.shadeModel(7425);
-		RenderSystem.enableAlphaTest();
-		RenderSystem.defaultAlphaFunc();
-		bufferBuilder.begin(1, DefaultVertexFormat.POSITION_COLOR);
+            RenderSystem.disableTexture();
+    		RenderSystem.disableBlend();
+    		RenderSystem.shadeModel(7425);
+    		RenderSystem.enableAlphaTest();
+    		RenderSystem.defaultAlphaFunc();
+    		bufferBuilder.begin(1, DefaultVertexFormat.POSITION_COLOR);
         #else
-        RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-        RenderSystem.lineWidth(5.0f);
-        bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+            RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+            RenderSystem.lineWidth(5.0f);
+            bufferBuilder.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
         #endif
     }
     static public void set_render_quads_pos_col(BufferBuilder bufferBuilder){
         #if MC=="1165"
-        bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
+            bufferBuilder.begin(7, DefaultVertexFormat.POSITION_COLOR);
         #else
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         #endif
     }
     static public void pre_render(PoseStack poseStack){
         #if MC=="1165"
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-		Vec3 c = camera.getPosition();
-		if(WandsMod.config.render_last) {
-			poseStack.pushPose();
-			poseStack.translate(-c.x, -c.y, -c.z); // translate
-			GlStateManager._pushMatrix();
-			RenderSystem.multMatrix(poseStack.last().pose());
-		}else{
-			RenderSystem.translated(-c.x, -c.y, -c.z);
-		}
+            Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+    		Vec3 c = camera.getPosition();
+    		if(WandsMod.config.render_last) {
+    			poseStack.pushPose();
+    			poseStack.translate(-c.x, -c.y, -c.z); // translate
+    			GlStateManager._pushMatrix();
+    			RenderSystem.multMatrix(poseStack.last().pose());
+    		}else{
+    			RenderSystem.translated(-c.x, -c.y, -c.z);
+    		}
         #else
-        Minecraft client=Minecraft.getInstance();
-        Camera camera = client.gameRenderer.getMainCamera();
-        Vec3 c = camera.getPosition();
+            Minecraft client=Minecraft.getInstance();
+            Camera camera = client.gameRenderer.getMainCamera();
+            Vec3 c = camera.getPosition();
 
-        PoseStack poseStack2 = RenderSystem.getModelViewStack();
-        poseStack2.pushPose();
-        if(WandsMod.config.render_last)
-        {
-            poseStack2.mulPoseMatrix(poseStack.last().pose());
-        }else{
-            #if MC >= "1194"
-            poseStack2.mulPoseMatrix(poseStack.last().pose());
-            #endif
-        }
-        poseStack2.translate(-c.x,-c.y,-c.z);
-        RenderSystem.applyModelViewMatrix();
+            PoseStack poseStack2 = RenderSystem.getModelViewStack();
+            poseStack2.pushPose();
+            if(WandsMod.config.render_last)
+            {
+                poseStack2.mulPoseMatrix(poseStack.last().pose());
+            }else{
+                #if MC >= "1194"
+                poseStack2.mulPoseMatrix(poseStack.last().pose());
+                #endif
+            }
+            poseStack2.translate(-c.x,-c.y,-c.z);
+            RenderSystem.applyModelViewMatrix();
         #endif
     }
     static public void post_render(PoseStack poseStack){
         #if MC=="1165"
-        if(WandsMod.config.render_last) {
-			GlStateManager._popMatrix();
-			poseStack.popPose();
-		}
+            if(WandsMod.config.render_last) {
+    			GlStateManager._popMatrix();
+    			poseStack.popPose();
+    		}
         #else
-        PoseStack poseStack2 = RenderSystem.getModelViewStack();
-        poseStack2.popPose();
-        RenderSystem.applyModelViewMatrix();
+            PoseStack poseStack2 = RenderSystem.getModelViewStack();
+            poseStack2.popPose();
+            RenderSystem.applyModelViewMatrix();
         #endif
     }
     static public void send_to_player(ServerPlayer player, ResourceLocation id, FriendlyByteBuf buf){
         #if MC=="1165"
-        NetworkManager.sendToPlayer(player, id, buf);
+            NetworkManager.sendToPlayer(player, id, buf);
         #else
-        NetworkManager.sendToPlayer(player, id, buf);
+            NetworkManager.sendToPlayer(player, id, buf);
         #endif
     }
     static public void send_to_server(ResourceLocation id, FriendlyByteBuf packet) {
@@ -211,9 +223,9 @@ public class Compat {
 			@Override
 			public Component getDisplayName(){
                 #if MC=="1165"
-				return new TranslatableComponent(item.getItem().getDescriptionId());
+				    return new TranslatableComponent(item.getItem().getDescriptionId());
                 #else
-                return translatable(item.getItem().getDescriptionId());
+                    return translatable(item.getItem().getDescriptionId());
                 #endif
 			}
 			@Override
@@ -237,66 +249,70 @@ public class Compat {
 
     static public void set_carried(Player player, AbstractContainerMenu menu, ItemStack itemStack){
         #if MC=="1165"
-        player.inventory.setCarried(itemStack);
+            player.inventory.setCarried(itemStack);
         #else
-        menu.setCarried(itemStack);
+            menu.setCarried(itemStack);
         #endif
     }
     static public ItemStack get_carried(Player player,AbstractContainerMenu menu){
         #if MC=="1165"
-        return player.inventory.getCarried();
+            return player.inventory.getCarried();
         #else
-        return menu.getCarried();
+            return menu.getCarried();
         #endif
     }
     static public void set_identity(PoseStack m){
         #if MC=="1165"
-        m.last().pose().setIdentity();
+            m.last().pose().setIdentity();
         #else
-        m.setIdentity();
+            m.setIdentity();
         #endif
     }
     static public MutableComponent translatable(String key){
         #if MC=="1165"
-        return new TranslatableComponent(key);
+            return new TranslatableComponent(key);
         #else
             #if MC>="1190"
-            return Component.translatable(key);
+                return Component.translatable(key);
             #else
-            return new TranslatableComponent(key);
+                return new TranslatableComponent(key);
             #endif
         #endif
     }
     static public MutableComponent literal(String msg){
         #if MC=="1165"
-        return new TextComponent(msg);
+            return new TextComponent(msg);
         #else
             #if MC>="1190"
-            return Component.literal(msg);
+                return Component.literal(msg);
             #else
-            return new TextComponent(msg);
+                return new TextComponent(msg);
             #endif
         #endif
     }
     static public boolean shouldRenderFace(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, Direction direction, BlockPos blockPos2){
         #if MC=="1165"
-        return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction);
+            return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction);
         #else
-        return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction, blockPos2);
+            return Block.shouldRenderFace(blockState,blockGetter, blockPos, direction, blockPos2);
         #endif
     }
     static public void register_key(KeyMapping k){
         #if MC=="1165"
-        KeyBindings.registerKeyBinding(k);
+            KeyBindings.registerKeyBinding(k);
         #else
-        KeyMappingRegistry.register(k);
+            KeyMappingRegistry.register(k);
         #endif
     }
     static public void render_info(){
-        #if MC=="1165"
-        GuiEvent.RENDER_HUD.register((pose, delta)->{WandsModClient.render_wand_info(pose);});
+        #if MC<"1200"
+            #if MC=="1165"
+                GuiEvent.RENDER_HUD.register((pose, delta)->{WandsModClient.render_wand_info(pose);});
+            #else
+                ClientGuiEvent.RENDER_HUD.register((pose, delta)->{ WandsModClient.render_wand_info(pose);});
+            #endif
         #else
-        ClientGuiEvent.RENDER_HUD.register((pose, delta)->{ WandsModClient.render_wand_info(pose);});
+            ClientGuiEvent.RENDER_HUD.register((e,d)->{ WandsModClient.render_wand_info(e.pose());});
         #endif
     }
     static public void enableTexture() {
@@ -321,6 +337,21 @@ public class Compat {
             return player.position();
         #else
             return player.getOnPos().getCenter();
+        #endif
+    }
+
+    static public boolean is_same(ItemStack i1,ItemStack i2){
+        #if MC < "1200"
+            return i1.sameItem(i2);
+        #else
+            return ItemStack.isSameItem(i2,i2);
+        #endif
+    }
+    static public Level player_level(Player player){
+        #if MC < "1200"
+            return player.level;
+        #else
+            return player.level();
         #endif
     }
 

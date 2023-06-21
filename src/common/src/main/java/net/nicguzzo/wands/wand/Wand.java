@@ -494,7 +494,7 @@ public class Wand {
             if(mode!=Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
-                        if (!replace && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                        if (!replace && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
                             continue;
@@ -576,7 +576,7 @@ public class Wand {
                                     pa.needed++;
                                 }
                             } else {
-                                if (!replace && !destroy && !use && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                                if (!replace && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
                                     block_buffer.item[a] = null;
                                 } else {
@@ -590,7 +590,7 @@ public class Wand {
                     } else {
                         //copy paste
                         for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
-                            if (!replace && !destroy && !can_place(player.level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                            if (!replace && !destroy && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                             } else {
@@ -623,7 +623,7 @@ public class Wand {
                                 continue;
                             }
                             boolean pp = false;
-                            for (Player pl : player.level.players()) {
+                            for (Player pl : Compat.player_level(player).players()) {
                                 if (pl.getBoundingBox().intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
                                     pp = true;
                                     break;
@@ -1065,7 +1065,7 @@ public class Wand {
     boolean place_block(BlockPos block_pos,BlockState state) {
         boolean placed = false;
         //WandsMod.log("place_block "+block_pos+" state: "+state + " destroy: " + destroy,true);
-        Level level = player.level;
+        Level level = Compat.player_level(player);
         if (level.isClientSide) {
             return false;
         }
@@ -1419,7 +1419,7 @@ public class Wand {
                 }
                 ItemStack slot_item = ItemStack.of(itemTag);
                 if (slot_item != null) {
-                    if (item_to_place.sameItem(slot_item)) {
+                    if (Compat.is_same(item_to_place,slot_item)) {
                         int total = item_count + slot_item.getCount();
                         if (total <= slot_item.getMaxStackSize()) {
                             item_to_place.setCount(total);

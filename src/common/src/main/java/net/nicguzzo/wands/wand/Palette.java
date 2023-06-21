@@ -50,7 +50,7 @@ public class Palette {
                     Block blk = Block.byItem(stack.getItem());
                     if (blk != Blocks.AIR) {
                         Palette.PaletteSlot psl = new Palette.PaletteSlot(i, blk.defaultBlockState(), stack);
-                        if (palette_slots.stream().noneMatch(pp -> (pp.stack.sameItem(stack)))) {
+                        if (palette_slots.stream().noneMatch(pp -> (Compat.is_same(pp.stack,stack)))) {
                             block_accounting.put(stack.getItem(), new BlockAccounting());
                         }
                         palette_slots.add(psl);

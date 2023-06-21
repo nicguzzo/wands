@@ -57,7 +57,7 @@ public abstract class ItemRendererMixin {
                     poseStack.translate(0, -0.3, 0.2);
                     RenderSystem.disableDepthTest();
                     #if MC <= "1193"
-                    this.render(item_in_bag, ItemTransforms.TransformType.GUI, false, poseStack, multiBufferSource, 0xF000F0, OverlayTexture.NO_OVERLAY, bakedModel2);
+                        this.render(item_in_bag, ItemTransforms.TransformType.GUI, false, poseStack, multiBufferSource, 0xF000F0, OverlayTexture.NO_OVERLAY, bakedModel2);
                     #else
                         this.render(item_in_bag, ItemDisplayContext.GUI, false, poseStack, multiBufferSource, 0xF000F0, OverlayTexture.NO_OVERLAY, bakedModel2);
                     #endif
@@ -67,44 +67,46 @@ public abstract class ItemRendererMixin {
             }
         }
     }
-    #if MC <= "1193"
-    @Inject(method = "renderGuiItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At(value = "TAIL"))
-    public void renderGuiItemDecorations(Font font, ItemStack itemStack, int i, int j, String string, CallbackInfo cb) {
-    #else
-    @Inject(method = "renderGuiItemDecorations(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At(value = "TAIL"))
-    public void renderGuiItemDecorations(PoseStack poseStack, Font font, ItemStack itemStack, int i, int j, String string,CallbackInfo cb) {
-    #endif
-        if (WandUtils.is_wand(itemStack)) {
-            if (ClientRender.wand != null) {
-                ListTag tools = itemStack.getOrCreateTag().getList("Tools", Compat.NbtType.COMPOUND);
-                int n = tools.size();
-                if (n > 0) {
-                    #if MC <= "1193"
-                    PoseStack poseStack = new PoseStack();
-                    poseStack.translate(0.0f, 0.0f, this.blitOffset + 200.0f);
-                    String str=String.valueOf(n);
-                    MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-                    font.drawInBatch(str, (float)(i +  6 - font.width(str)), (float)(j + 2), 0xFFFFFF, true, poseStack.last().pose(), (MultiBufferSource)bufferSource, false, 0, 0xF000F0);
-                    bufferSource.endBatch();
-                    #else
-                    poseStack.translate(0.0f, 0.0f, 200.0f);
-                    String str=String.valueOf(n);
-                    MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-                    font.drawInBatch(str,
-                            (float)(i +  6 - font.width(str)),
-                            (float)(j + 2),
-                            0xFFFFFF,
-                            true,
-                            poseStack.last().pose(),
-                            (MultiBufferSource)bufferSource,
-                            Font.DisplayMode.NORMAL,
-                            0,
-                            0xF000F0);
+    #if MC < "1200"
+        #if MC <= "1193"
+        @Inject(method = "renderGuiItemDecorations(Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At(value = "TAIL"))
+        public void renderGuiItemDecorations(Font font, ItemStack itemStack, int i, int j, String string, CallbackInfo cb) {
+        #else
+        @Inject(method = "renderGuiItemDecorations(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/world/item/ItemStack;IILjava/lang/String;)V", at = @At(value = "TAIL"))
+        public void renderGuiItemDecorations(PoseStack poseStack, Font font, ItemStack itemStack, int i, int j, String string,CallbackInfo cb) {
+        #endif
+            if (WandUtils.is_wand(itemStack)) {
+                if (ClientRender.wand != null) {
+                    ListTag tools = itemStack.getOrCreateTag().getList("Tools", Compat.NbtType.COMPOUND);
+                    int n = tools.size();
+                    if (n > 0) {
+                        #if MC <= "1193"
+                        PoseStack poseStack = new PoseStack();
+                        poseStack.translate(0.0f, 0.0f, this.blitOffset + 200.0f);
+                        String str=String.valueOf(n);
+                        MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                        font.drawInBatch(str, (float)(i +  6 - font.width(str)), (float)(j + 2), 0xFFFFFF, true, poseStack.last().pose(), (MultiBufferSource)bufferSource, false, 0, 0xF000F0);
+                        bufferSource.endBatch();
+                        #else
+                        poseStack.translate(0.0f, 0.0f, 200.0f);
+                        String str=String.valueOf(n);
+                        MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+                        font.drawInBatch(str,
+                                (float)(i +  6 - font.width(str)),
+                                (float)(j + 2),
+                                0xFFFFFF,
+                                true,
+                                poseStack.last().pose(),
+                                (MultiBufferSource)bufferSource,
+                                Font.DisplayMode.NORMAL,
+                                0,
+                                0xF000F0);
 
-                    bufferSource.endBatch();
-                    #endif
+                        bufferSource.endBatch();
+                        #endif
+                    }
                 }
             }
         }
-    }
+    #endif
 }

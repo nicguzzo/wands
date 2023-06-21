@@ -1,39 +1,36 @@
 package net.nicguzzo.wands;
 
 #if MC=="1165"
-import me.shedaniel.architectury.event.events.PlayerEvent;
-import me.shedaniel.architectury.registry.*;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.NetworkManager.Side;
-import net.minecraft.core.Registry;
-#else
-
-import dev.architectury.event.events.common.PlayerEvent;
-import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.NetworkManager.Side;
-
-import dev.architectury.registry.menu.MenuRegistry;
-import dev.architectury.registry.registries.DeferredRegister;
-#if MC>="1193"
-    import com.google.common.base.Suppliers;
-    import com.google.common.base.Supplier;
-    import dev.architectury.registry.registries.RegistrarManager;
-    import dev.architectury.registry.CreativeTabRegistry;
-    import net.minecraft.core.registries.Registries;
-#else
-    import dev.architectury.registry.registries.Registries;
+    import me.shedaniel.architectury.event.events.PlayerEvent;
+    import me.shedaniel.architectury.registry.*;
+    import me.shedaniel.architectury.networking.NetworkManager;
+    import me.shedaniel.architectury.networking.NetworkManager.Side;
     import net.minecraft.core.Registry;
-#endif
-import dev.architectury.registry.registries.RegistrySupplier;
+#else
+    import dev.architectury.event.events.common.PlayerEvent;
+    import dev.architectury.networking.NetworkManager;
+    import dev.architectury.networking.NetworkManager.Side;
+    import dev.architectury.registry.menu.MenuRegistry;
+    import dev.architectury.registry.registries.DeferredRegister;
+    #if MC>="1193"
+        import com.google.common.base.Suppliers;
+        import com.google.common.base.Supplier;
+        import dev.architectury.registry.registries.RegistrarManager;
+        import dev.architectury.registry.CreativeTabRegistry;
+        import net.minecraft.core.registries.Registries;
+    #else
+        import dev.architectury.registry.registries.Registries;
+        import net.minecraft.core.Registry;
+    #endif
+    import dev.architectury.registry.registries.RegistrySupplier;
 #endif
 
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -50,7 +47,6 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -58,9 +54,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
 
+#if MC>="1200"
+    import net.minecraft.world.item.CreativeModeTab;
+#endif
 #if MC<"1193"
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.util.LazyLoadedValue;
+    import net.minecraft.world.item.CreativeModeTab;
+    import net.minecraft.util.LazyLoadedValue;
 #endif
 
 import java.util.Objects;
@@ -75,8 +74,14 @@ public class WandsMod {
 
     #if MC>="1193"
         public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
-        public static final CreativeTabRegistry.TabSupplier WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"),
+        #if MC>="1200"
+            //ResourceLocation tab_res=new ResourceLocation(MOD_ID, "wands_tab");
+            public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(Component.translatable("itemGroup.wands.wands_tab"),
                 () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get()));
+        #else
+            public static final CreativeTabRegistry.TabSupplier WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"),
+                () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get()));
+        #endif
     #else
         public static final LazyLoadedValue<Registries> REGISTRIES = new LazyLoadedValue<>(() -> Registries.get(MOD_ID));
         public static final CreativeModeTab WANDS_TAB = Compat.create_tab(new ResourceLocation(MOD_ID, "wands_tab"));
@@ -234,6 +239,7 @@ public class WandsMod {
                 WandsMod.LOGGER.error("player is null");
                 return;
             }
+            Level level=Compat.player_level(player);
             ItemStack stack=context.getPlayer().getMainHandItem();
             if(!WandUtils.is_wand(stack)) {
                 WandsMod.LOGGER.error("player doesn't have a wand in main hand");
@@ -266,7 +272,6 @@ public class WandsMod {
             double hit_z=packet.readDouble();
             Vec3 hit=new Vec3(hit_x,hit_y,hit_z);
             context.queue(()->{
-                Level level=player.level;
                 BlockState block_state;
                 BlockPos pos;
                 if(p2!=null) {
@@ -368,7 +373,7 @@ public class WandsMod {
                 PlayerWand.add_player(player);
                 wand=PlayerWand.get(player);
             }
-            if(!player.level.isClientSide()){
+            if(!Compat.player_level(player).isClientSide()){
                 if(WandsMod.config!=null){
                     FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                     packet.writeFloat(WandsMod.config.blocks_per_xp);
@@ -389,8 +394,8 @@ public class WandsMod {
         });
 
     }
-    public static void send_state(ServerPlayer player,Wand wand){
-        if(wand!=null && player!=null && !player.level.isClientSide()) {
+    public static void send_state(ServerPlayer player,Wand wand){        
+        if(wand!=null && player!=null && !Compat.player_level(player).isClientSide()) {
             ItemStack wand_stack=player.getMainHandItem();
             if(wand_stack.getItem() instanceof WandItem) {
                 WandProps.Mode mode = WandProps.getMode(wand_stack);
@@ -587,7 +592,7 @@ public class WandsMod {
 //                    }
                         break;
                     case UNDO:
-                        if (creative && !player.level.isClientSide()) {
+                        if (creative && !Compat.player_level(player).isClientSide()) {
                             if (wand != null) {
                                 int n = 1;
                                 if (alt) {
@@ -623,7 +628,7 @@ public class WandsMod {
         if(is_wand){
             if(key<0){
                 Wand wand=null;
-                if(!player.level.isClientSide()){
+                if(!Compat.player_level(player).isClientSide()){
                     wand=PlayerWand.get(player);
                     if(wand==null){
                         PlayerWand.add_player(player);

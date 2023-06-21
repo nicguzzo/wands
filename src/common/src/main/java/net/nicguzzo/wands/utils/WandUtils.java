@@ -8,7 +8,9 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+#if MC<="1165"
 import net.minecraft.world.level.material.Material;
+#endif
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.WandItem;
 

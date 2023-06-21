@@ -3,7 +3,7 @@
 #on windows: git bash only, enable sylinks on gitconfig, export MSYS=winsymlinks:nativestrict and run git bash console as admin.
 
 
-mcvers=( "1.16.5" "1.17.1" "1.18.1" "1.18.2" "1.19" "1.19.1" "1.19.2" "1.19.3" "1.19.4")
+mcvers=( "1.16.5" "1.17.1" "1.18.1" "1.18.2" "1.19" "1.19.1" "1.19.2" "1.19.3" "1.19.4" "1.20")
 pushd "versions"
   for v in ${mcvers[@]}; do  
     rm -rf "mc$v/"
