@@ -211,6 +211,9 @@ public class WandsMod {
     public static void init() {
         ITEMS.register();
         MENUES.register();
+        #if MC>="1200"
+            TABS.register();
+        #endif
 
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();

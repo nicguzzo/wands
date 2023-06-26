@@ -1,20 +1,14 @@
 package net.nicguzzo.wands.mixin;
 #if MC >= "1200"
-import com.mojang.blaze3d.systems.RenderSystem;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.ItemModelShaper;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.client.render.ClientRender;
-import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -55,4 +49,11 @@ public abstract class GuiGraphicsMixin {
        }
    }
 }
+#else
+    import org.spongepowered.asm.mixin.Mixin;
+    import net.minecraft.client.renderer.entity.ItemRenderer;
+    @Mixin(ItemRenderer.class)
+    public abstract class GuiGraphicsMixin {
+
+    }
 #endif
