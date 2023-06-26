@@ -9,7 +9,9 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.nicguzzo.wands.utils.Colorf;
-
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 public class Btn extends Wdgt{
     int ox=2;
     int oy=2;
@@ -60,8 +62,11 @@ public class Btn extends Wdgt{
             }
         }
     }
-
-    public void render(PoseStack poseStack, Font font, int mx, int my){
+    #if MC < "1200"
+        public void render(PoseStack poseStack, Font font, int mx, int my){
+    #else
+        public void render(GuiGraphics gui, Font font, int mx, int my){
+    #endif
         float r,g,b,a;
         if(disabled) {
             r=c_disabled.r;g=c_disabled.g;b=c_disabled.b;a=c_disabled.a;
@@ -87,6 +92,12 @@ public class Btn extends Wdgt{
         int text_color=0xffffffff;
         if(selected)
             text_color=0xff000000;
-        font.draw(poseStack,text ,x+ox,y+oy, text_color);
+        #if MC < "1200"
+            font.draw(poseStack,text ,x+ox,y+oy, text_color);
+        #else
+            net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getInstance();
+            gui.drawString(client.font,text ,x+ox,y+oy, text_color,false);
+        #endif
+
     }
 }

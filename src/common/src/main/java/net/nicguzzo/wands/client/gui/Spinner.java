@@ -6,7 +6,9 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.nicguzzo.wands.utils.Compat;
-
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 public class Spinner  extends Wdgt{
     int value;
     public int inc_val=1;
@@ -73,11 +75,20 @@ public class Spinner  extends Wdgt{
     }
     public void onDec(int mx,int my,int v){
     }
-    public void render(PoseStack poseStack, Font font, int mx, int my) {
+    #if MC < "1200"
+        public void render(PoseStack poseStack, Font font, int mx, int my){
+    #else
+        public void render(GuiGraphics gui, Font font, int mx, int my){
+    #endif
         int fh=0;
         if(label!=null) {
             int lw=font.width(label);
-            font.draw(poseStack, label, x-lw-1, y+3, 0xff000000);
+
+            #if MC < "1200"
+                font.draw(poseStack, label, x-lw-1, y+3, 0xff000000);
+            #else
+                gui.drawString(font, label, x-lw-1, y+3, 0xff000000,false);
+            #endif
             if(!label_side) {
                 fh = font.lineHeight;
             }
@@ -88,12 +99,17 @@ public class Spinner  extends Wdgt{
         quad(bufferBuilder,x,y+fh,w,h,0.4f,0.4f,0.40f,0.9f);
         end_quads();
         inc.y=y+fh;
-        inc.render(poseStack,font,mx,my);
-
-        font.draw(poseStack, String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000);
 
         dec.y=y+h/2+fh;
-        dec.render(poseStack,font,mx,my);
+        #if MC < "1200"
+            inc.render(poseStack,font,mx,my);
+            font.draw(poseStack, String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000);
+            dec.render(poseStack,font,mx,my);
+        #else
+            inc.render(gui,font,mx,my);
+            gui.drawString(font,String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000,false);
+            dec.render(gui,font,mx,my);
+        #endif
     }
     public void click(int mx,int my){
         dec.click(mx,my);

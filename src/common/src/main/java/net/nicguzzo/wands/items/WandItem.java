@@ -90,7 +90,8 @@ public class WandItem extends TieredItem implements Vanishable {
         if( (ClientRender.wand.getP1() !=null && mode.n_clicks()==1)||
            ((ClientRender.wand.getP1() !=null && ClientRender.wand.getP2() !=null && mode.n_clicks()==2))
         ) {
-            send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation());
+            send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(),ClientRender.wand.palette.seed);
+            ClientRender.wand.palette.seed= System.currentTimeMillis();
             ClientRender.wand.copy();
             ClientRender.wand.clear();
         }
@@ -198,7 +199,8 @@ public class WandItem extends TieredItem implements Vanishable {
                     wand.setP2(null);
                 }
 
-                send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(),wand.hit);
+                send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(),wand.hit,wand.palette.seed);
+                wand.palette.seed= System.currentTimeMillis();
                 ClientRender.wand.copy();
                 ClientRender.wand.clear();
             }
@@ -248,7 +250,7 @@ public class WandItem extends TieredItem implements Vanishable {
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
 
-    public void send_placement(Direction side,BlockPos p1,BlockPos p2,Vec3 hit){
+    public void send_placement(Direction side,BlockPos p1,BlockPos p2,Vec3 hit,long seed){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() == null) {
             return;
@@ -270,7 +272,8 @@ public class WandItem extends TieredItem implements Vanishable {
         packet.writeDouble(hit.x);
         packet.writeDouble(hit.y);
         packet.writeDouble(hit.z);
-
+        packet.writeLong(seed);
+        WandsMod.log(" send_placement palette seed: " + seed,true);
         NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
         //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
 

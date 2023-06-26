@@ -15,6 +15,9 @@ import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.utils.Compat;
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 
 public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     
@@ -56,9 +59,18 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
 */
     }
 
-    @Override 
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta){
-        super.render(poseStack, mouseX, mouseY, delta);
+    @Override
+    #if MC < "1200"
+        public void render(PoseStack poseStack, int mouseX, int mouseY, float delta){
+    #else
+        public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
+    #endif
+        #if MC < "1200"
+            super.render(poseStack, mouseX, mouseY, delta);
+        #else
+            super.render(gui, mouseX, mouseY, delta);
+            net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getInstance();
+        #endif
         
         //this.btn_mode.render(poseStack, mouseX, mouseY, delta);
         //this.btn_rotate.render(poseStack, mouseX, mouseY, delta);
@@ -77,22 +89,36 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 break;
             };
             boolean rot=this.menu.palette.getOrCreateTag().getBoolean("rotate");
-            this.font.draw(poseStack,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77, 4210752);
-            
-            this.font.draw(poseStack,mode_val , (width/2)+30, (height/2)-77, 4210752);
-            btn_mode.render(poseStack,this.font, mouseX, mouseY);
-            btn_rotate.render(poseStack,this.font, mouseX, mouseY);
+            #if MC < "1200"
+                this.font.draw(poseStack,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77, 4210752);
+                this.font.draw(poseStack,mode_val , (width/2)+30, (height/2)-77, 4210752);
+                btn_mode.render(poseStack,this.font, mouseX, mouseY);
+                btn_rotate.render(poseStack,this.font, mouseX, mouseY);
+            #else
+                gui.drawString(client.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77,4210752,false);
+                gui.drawString(client.font,mode_val , (width/2)+30, (height/2)-77, 4210752,false);
+                btn_mode.render(gui,this.font, mouseX, mouseY);
+                btn_rotate.render(gui,this.font, mouseX, mouseY);
+            #endif
         }
     }
     @Override
+    #if MC < "1200"
     protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
+    #else
+        protected void renderBg(GuiGraphics gui, float f, int i, int j) {
+    #endif
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
         Compat.set_texture(TEXTURE);
         Compat.set_pos_tex_shader();
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
+        #if MC < "1200"
+            blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
+        #else
+            gui.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
+        #endif
     }
     boolean is_hovering(int i, int j, int k, int l, double d, double e) {
         int m = this.leftPos;

@@ -6,7 +6,8 @@
   "client": [
     "RenderWorldMixin",
     "LevelRendererMixin",
-    "ItemRendererMixin"
+    "ItemRendererMixin",
+    "GuiGraphicsMixin"
   ],
   "mixins":[
     "ExperienceOrbMixin"

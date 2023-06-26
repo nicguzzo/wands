@@ -31,6 +31,10 @@ public class PasteMode implements WandMode {
             //log("mode6 paste "+copy_paste_buffer.size());
             //BlockPos b_pos = wand.pos;
             BlockPos b_pos = wand.getP1();
+            boolean sel= WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
+            if(sel){
+                b_pos = wand.pos.relative(wand.side, 1);
+            }
             /*BlockState s=wand.level.getBlockState(wand.pos);
             boolean targeting_air=s.isAir();
             if(!targeting_air && !(wand.replace || wand.destroy)) {
@@ -38,7 +42,7 @@ public class PasteMode implements WandMode {
             }*/
             //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
             wand.block_buffer.reset();
-            wand.random.setSeed(wand.palette.seed);
+            //wand.random.setSeed(wand.palette.seed);
 
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(wand.rotation);

@@ -75,9 +75,10 @@ public class WandsMod {
     #if MC>="1193"
         public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
         #if MC>="1200"
-            //ResourceLocation tab_res=new ResourceLocation(MOD_ID, "wands_tab");
-            public static final CreativeModeTab WANDS_TAB = CreativeTabRegistry.create(Component.translatable("itemGroup.wands.wands_tab"),
-                () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get()));
+            public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(MOD_ID, Registries.CREATIVE_MODE_TAB);
+            public static final RegistrySupplier<CreativeModeTab> WANDS_TAB = TABS.register("wands_tab", () ->
+            CreativeTabRegistry.create(Component.translatable("itemGroup.wands.wands_tab"),
+                    () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get())));
         #else
             public static final CreativeTabRegistry.TabSupplier WANDS_TAB = CreativeTabRegistry.create(new ResourceLocation(MOD_ID, "wands_tab"),
                 () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get()));
@@ -270,6 +271,7 @@ public class WandsMod {
             double hit_x=packet.readDouble();
             double hit_y=packet.readDouble();
             double hit_z=packet.readDouble();
+            long seed= packet.readLong();
             Vec3 hit=new Vec3(hit_x,hit_y,hit_z);
             context.queue(()->{
                 BlockState block_state;
@@ -283,7 +285,8 @@ public class WandsMod {
                 }
                 wand.setP1(p1);
                 wand.setP2(p2);
-
+                WandsMod.log(" received_placement palette seed: " + seed,true);
+                wand.palette.seed=seed;
                 //wand.lastPlayerDirection=player_dir;
                 //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
                 wand.do_or_preview(player,level, block_state, pos, side, hit, stack,(WandItem)stack.getItem(),true);
@@ -406,7 +409,7 @@ public class WandsMod {
                 }
                 float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
 
-                packet.writeLong(wand.palette.seed);
+//                packet.writeLong(wand.palette.seed);
                 packet.writeInt(mode.ordinal());
                 packet.writeInt(slot);
                 packet.writeBoolean(BLOCKS_PER_XP != 0);

@@ -6,15 +6,20 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.client.gui.Font;
 import net.nicguzzo.wands.utils.Compat;
-
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 public class Wdgt{
     int x;
     int y;
     int w;
     int h;
     public boolean visible=true;
-    public void render(PoseStack poseStack, Font font, int mx, int my){
-
+     #if MC < "1200"
+        public void render(PoseStack poseStack, Font font, int mx, int my){
+    #else
+        public void render(GuiGraphics gui, Font font, int mx, int my){
+    #endif
     }
     public void click(int mx,int my){
 

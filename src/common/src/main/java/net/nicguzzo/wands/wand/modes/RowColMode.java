@@ -2,8 +2,10 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -11,11 +13,12 @@ import net.nicguzzo.wands.wand.WandProps;
 public class RowColMode implements WandMode {
     public void place_in_buffer(Wand wand) {
         WandProps.Orientation orientation = WandProps.getOrientation(wand.wand_stack);
-        boolean preview = wand.player.level.isClientSide();
+        Level level= Compat.player_level(wand.player);
+        boolean preview = level.isClientSide();
         Direction dir = Direction.EAST;
         BlockPos pos_m= wand.pos.relative(wand.side, 1);;
         WandItem wand_item = (WandItem) wand.wand_stack.getItem();
-        BlockState state = wand.player.level.getBlockState(pos_m);
+        BlockState state = level.getBlockState(pos_m);
 
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
         if(limit2<=0 || limit2 >wand.limit){
@@ -83,12 +86,12 @@ public class RowColMode implements WandMode {
             boolean dont_check_state = false;
             boolean eq;
             int n=WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
-            if( wand.target_air && wand.mode.can_target_air() && wand.player.level.getBlockState(wand.pos).isAir()) {
+            if( wand.target_air && wand.mode.can_target_air() && level.getBlockState(wand.pos).isAir()) {
                 pos1=wand.pos;
                 pos3=wand.pos;
                 while (k < limit2 && i > 0) {
                     if (!stop1 && i > 0) {
-                        BlockState bs0 = wand.player.level.getBlockState(pos1.relative(dir));
+                        BlockState bs0 = level.getBlockState(pos1.relative(dir));
                         if ((bs0.isAir() || wand.replace_fluid(bs0))) {
                             pos1 = pos1.relative(dir);
                             i--;
@@ -97,7 +100,7 @@ public class RowColMode implements WandMode {
                         }
                     }
                     if (!stop2 && i > 0) {
-                        BlockState bs2 = wand.player.level.getBlockState(pos3.relative(op));
+                        BlockState bs2 = level.getBlockState(pos3.relative(op));
                         if (bs2.isAir() || wand.replace_fluid(bs2)) {
                             pos3 = pos3.relative(op);
                             i--;
@@ -113,8 +116,8 @@ public class RowColMode implements WandMode {
             }else if(n==0) {
                 while (k < limit2 && i > 0) {
                     if (!stop1 && i > 0) {
-                        BlockState bs0 = wand.player.level.getBlockState(pos0.relative(dir));
-                        BlockState bs1 = wand.player.level.getBlockState(pos1.relative(dir));
+                        BlockState bs0 = level.getBlockState(pos0.relative(dir));
+                        BlockState bs1 = level.getBlockState(pos1.relative(dir));
                         if (dont_check_state) {
                             eq = bs0.getBlock().equals(wand.block_state.getBlock());
                         } else {
@@ -130,8 +133,8 @@ public class RowColMode implements WandMode {
                         }
                     }
                     if (!stop2 && i > 0) {
-                        BlockState bs2 = wand.player.level.getBlockState(pos2.relative(op));
-                        BlockState bs3 = wand.player.level.getBlockState(pos3.relative(op));
+                        BlockState bs2 = level.getBlockState(pos2.relative(op));
+                        BlockState bs3 = level.getBlockState(pos3.relative(op));
                         if (dont_check_state) {
                             eq = bs2.getBlock().equals(wand.block_state.getBlock());
                         } else {
@@ -159,7 +162,7 @@ public class RowColMode implements WandMode {
                     pos2=pos0;
                     for(int m=0;m<n-1;m++) {
                         pos2 = pos2.relative(dir);
-                        BlockState bs = wand.player.level.getBlockState(pos2.relative(wand.side));
+                        BlockState bs = level.getBlockState(pos2.relative(wand.side));
                         if(wand.can_place(bs,pos2.relative(wand.side))){
                             pos3=pos2;
                         }else{

@@ -303,6 +303,7 @@ public class Wand {
         limit_reached=false;
         send_sound=-1;
         random.setSeed(palette.seed);
+        palette.random.setSeed(palette.seed);
 
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
@@ -486,6 +487,7 @@ public class Wand {
         }
 
         //server stuff
+        //WandsMod.log(" using palette seed: " + palette.seed,prnt);
         if (!preview) {
             //log(" using palette seed: " + palette_seed);
             if(limit_reached && (mode!=Mode.VEIN)){

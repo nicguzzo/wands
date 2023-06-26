@@ -51,6 +51,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -172,13 +175,13 @@ public class WandsModClient {
                 if(i_sound> -1 && i_sound< Wand.Sounds.values().length){
                     Wand.Sounds snd=Wand.Sounds.values()[i_sound];
                     SoundEvent sound = snd.get_sound();
-                    context.getPlayer().level.playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
+                    Compat.player_level(context.getPlayer()).playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
                 }else {
                     if (!item_stack.isEmpty()) {
                         Block block = Block.byItem(item_stack.getItem());
                         SoundType sound_type = block.getSoundType(block.defaultBlockState());
                         SoundEvent sound = (destroy ? sound_type.getBreakSound() : sound_type.getPlaceSound());
-                        context.getPlayer().level.playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
+                        Compat.player_level(context.getPlayer()).playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
                     }
                 }
                 if(no_tool){
@@ -198,7 +201,7 @@ public class WandsModClient {
             float prog=packet.readFloat();
             context.queue(()->{
                 if(ClientRender.wand!=null) {
-                    ClientRender.wand.palette.seed = seed;
+                    //ClientRender.wand.palette.seed = seed;
                     ClientRender.wand.mode= WandProps.Mode.values()[mode];
                     if(ClientRender.wand.mode== WandProps.Mode.DIRECTION)
                         ClientRender.wand.palette.slot = slot;
@@ -252,8 +255,11 @@ public class WandsModClient {
         NetworkManager.sendToServer(WandsMod.WAND_PACKET, packet);
     }
 
+#if MC < "1200"
     public static void render_wand_info(PoseStack poseStack){
-        
+#else
+    public static void render_wand_info(GuiGraphics gui) {
+#endif
         Minecraft client = Minecraft.getInstance();
         if(client!=null && client.player!=null){
             ItemStack stack=client.player.getMainHandItem();
@@ -358,12 +364,19 @@ public class WandsModClient {
                     int h=3*font.lineHeight;
                     float x=(int)(screenWidth* (((float)WandsMod.config.wand_mode_display_x_pos)/100.0f));
                     float y=(int)((screenHeight-h)* (((float)WandsMod.config.wand_mode_display_y_pos)/100.0f));
-                    font.draw(poseStack,ln1,x,y,0xffffff);
-                    font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
-                    font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
-
-                    font.draw(poseStack,p1,x,y-font.lineHeight*2,0xffffff);
-                    font.draw(poseStack,p2,x,y-font.lineHeight,0xffffff);
+                    #if MC < "1200"
+                        font.draw(poseStack,ln1,x,y,0xffffff);
+                        font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
+                        font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
+                        font.draw(poseStack,p1,x,y-font.lineHeight*2,0xffffff);
+                        font.draw(poseStack,p2,x,y-font.lineHeight,0xffffff);
+                    #else
+                        gui.drawString(font,ln1,(int)x,(int)y,0xffffff);
+                        gui.drawString(font,ln2,(int)x,(int)y+font.lineHeight,0xffffff);
+                        gui.drawString(font,ln3,(int)x,(int)y+font.lineHeight*2,0xffffff);
+                        gui.drawString(font,p1 ,(int)x,(int)y-font.lineHeight*2,0xffffff);
+                        gui.drawString(font,p2 ,(int)x,(int)y-font.lineHeight,0xffffff);
+                    #endif
                 }
                 if(WandsMod.config.show_tools_info) {
                     Font font = client.font;
@@ -387,19 +400,32 @@ public class WandsModClient {
                         if(ClientRender.has_target && slot==ClientRender.wand.digger_item_slot){
                             yoff=-5;
                         }
-                        #if MC <= "1193"
-                        itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
-                        itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                        #if MC < "1200"
+                            #if MC <= "1193"
+                            itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
+                            itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
+                            #else
+                            itemRenderer.renderAndDecorateItem(poseStack,item, ix + slot * 16, iy+yoff);
+                            itemRenderer.renderGuiItemDecorations(poseStack,font, item, ix + slot * 16, iy, null);
+                            #endif
                         #else
-                        itemRenderer.renderAndDecorateItem(poseStack,item, ix + slot * 16, iy+yoff);
-                        itemRenderer.renderGuiItemDecorations(poseStack,font, item, ix + slot * 16, iy, null);
+                            gui.renderFakeItem(item, ix + slot * 16, iy+yoff);
+                            gui.renderItemDecorations(font, item, ix + slot * 16, iy);
                         #endif
                         int fortune= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,item);
                         int silk= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item);
                         if(fortune!=0) {
-                            font.draw(poseStack, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #if MC < "1200"
+                                font.draw(poseStack, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #else
+                                gui.drawString(font, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #endif
                         } else if (silk != 0) {
-                            font.draw(poseStack, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #if MC < "1200"
+                                font.draw(poseStack, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #else
+                                gui.drawString(font, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
+                            #endif
                         }
                     });
                 }

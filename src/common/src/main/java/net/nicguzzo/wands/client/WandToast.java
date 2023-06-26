@@ -13,7 +13,7 @@ import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
 #endif
 
-public abstract class WandToast implements Toast {
+public class WandToast implements Toast {
     Component text;
     WandToast(String s){
         text= Compat.literal(s);

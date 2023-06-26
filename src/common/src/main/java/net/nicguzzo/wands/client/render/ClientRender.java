@@ -199,7 +199,7 @@ public class ClientRender {
                 BlockState block_state = client.level.getBlockState(pos);
                 if (force) {
                     wand.force_render = false;
-                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY) {
+                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.COPY|| mode == Mode.PASTE) {
                         if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                             pos = pos.relative(side, 1);
                         }
@@ -212,7 +212,7 @@ public class ClientRender {
                     last_alt = wand.is_alt_pressed;
                     last_buffer_size = wand.block_buffer.get_length();
 
-                    wand.do_or_preview(player, player.level, block_state, pos, side, block_hit.getLocation(), stack,(WandItem) stack.getItem(), prnt);
+                    wand.do_or_preview(player,Compat.player_level(player), block_state, pos, side, block_hit.getLocation(), stack,(WandItem) stack.getItem(), prnt);
                 }
                 preview_shape = null;
                 if (block_state != null && last_pos!=null) {
@@ -254,7 +254,7 @@ public class ClientRender {
                             }*/
                             //Direction side=wand.side;
                             Direction side=player.getDirection().getOpposite();
-                            wand.do_or_preview(player, player.level, block_state, pos, side,
+                            wand.do_or_preview(player, Compat.player_level(player), block_state, pos, side,
                                     hit, stack, (WandItem) stack.getItem(), prnt);
                             preview_mode(wand.mode, matrixStack);
                         }
@@ -651,7 +651,7 @@ public class ClientRender {
                     Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
                     Compat.set_render_quads_block(bufferBuilder);
                     random.setSeed(0);
-                    wand.random.setSeed(wand.palette.seed);
+                    //wand.random.setSeed(wand.palette.seed);
                     BlockPos po=wand.copy_paste_buffer.get(0).pos;
 
                     for (CopyBuffer b : wand.copy_paste_buffer) {
@@ -1259,7 +1259,6 @@ public class ClientRender {
             r = (float)(i >> 16 & 255) / 255.0F;
             g = (float)(i >> 8 & 255) / 255.0F;
             b = (float)(i & 255) / 255.0F;
-
             Compat.set_texture(TextureAtlas.LOCATION_BLOCKS);
             int bf = LevelRenderer.getLightColor(wand.level, bp);
             //bf=-1;
@@ -1357,6 +1356,7 @@ public class ClientRender {
                                 }
                                 float f = wand.level.getShade(quad.getDirection(), quad.isShade());
                                 bufferBuilder.putBulkData(matrixStack2.last(), quad, new float[]{f, f, f, f}, r, g, b, new int[]{-1, -1, -1, -1}, n, true);
+
                             }
                         }
                     }

@@ -48,6 +48,10 @@ import net.minecraft.network.chat.MutableComponent;
         import dev.architectury.registry.CreativeTabRegistry;
     #endif
 #endif
+#if MC >= "1200"
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.Font;
+#endif
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.menues.MagicBagMenu;
@@ -121,7 +125,7 @@ public class Compat {
                 bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
             #endif
         #else
-            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
             bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
         #endif
     }
@@ -134,7 +138,7 @@ public class Compat {
                 bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
             #endif
         #else
-            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            RenderSystem.setShader(GameRenderer::getPositionColorTexLightmapShader);
             bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
         #endif
     }
@@ -312,7 +316,7 @@ public class Compat {
                 ClientGuiEvent.RENDER_HUD.register((pose, delta)->{ WandsModClient.render_wand_info(pose);});
             #endif
         #else
-            ClientGuiEvent.RENDER_HUD.register((e,d)->{ WandsModClient.render_wand_info(e.pose());});
+            ClientGuiEvent.RENDER_HUD.register((e,d)->{ WandsModClient.render_wand_info(e);});
         #endif
     }
     static public void enableTexture() {
@@ -354,6 +358,8 @@ public class Compat {
             return player.level();
         #endif
     }
+
+
 
     public final class NbtType {
         public static final int END = 0;
