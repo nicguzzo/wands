@@ -95,7 +95,7 @@ public class WandProps {
         XZ,XY,YZ
     }
     public enum MirrorAxis {
-        NONE,X,Y,Z
+        NONE,LEFT_RIGHT,FRONT_BACK
     }
     public enum StateMode {
         CLONE  { public String toString() { return "wands.state_mode.clone";}},
@@ -150,8 +150,8 @@ public class WandProps {
             GRIDN.coval=GRIDM;
             GRIDM.min=1;
             GRIDN.min=1;
-            MIRRORAXIS.min=0;//0 disabled - 1=X - 2=Y - 3=Z
-            MIRRORAXIS.max=3;
+            MIRRORAXIS.min=0;
+            MIRRORAXIS.max=2;
             SKIPBLOCK.max=100;
             TUNNEL_W.min=1;
             TUNNEL_H.min=1;
@@ -197,12 +197,16 @@ public class WandProps {
 
     static public void setVal(ItemStack stack,Value v, int n) {
         if(WandUtils.is_wand(stack)) {
+            if(n>v.max) n=v.max;
+            if(n<v.min) n=v.min;
             stack.getOrCreateTag().putInt(v.toString(), n);
         }
     }
     static public void incVal(ItemStack stack,Value v, int inc,int max) {
         if(WandUtils.is_wand(stack)) {
             int n=stack.getOrCreateTag().getInt(v.toString());
+            if(n>v.max) n=v.max;
+            if(n<v.min) n=v.min;
             if(n+inc<=max)
                 stack.getOrCreateTag().putInt(v.toString(), n+inc);
         }
@@ -213,6 +217,8 @@ public class WandProps {
     static public void decVal(ItemStack stack,Value v, int inc,int min) {
         if(WandUtils.is_wand(stack)) {
             int n=stack.getOrCreateTag().getInt(v.toString());
+            if(n>v.max) n=v.max;
+            if(n<v.min) n=v.min;
             if(n-inc>=min)
                 stack.getOrCreateTag().putInt(v.toString(), n-inc);
         }
@@ -225,6 +231,14 @@ public class WandProps {
             return -1;
         }
         int i= stack.getOrCreateTag().getInt(v.toString());
+        if(i>v.max){
+            i=v.max;
+            stack.getOrCreateTag().putInt(v.toString(),i);
+        }
+        if(i<v.min) {
+            i = v.min;
+            stack.getOrCreateTag().putInt(v.toString(), i);
+        }
         if(i<v.min){
             return v.min;
         }else if(i>v.max){

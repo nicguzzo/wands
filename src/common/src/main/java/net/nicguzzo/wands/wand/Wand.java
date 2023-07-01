@@ -12,7 +12,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
 import net.minecraft.resources.ResourceLocation;
@@ -42,7 +41,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -455,6 +453,9 @@ public class Wand {
         }
         block_accounting.clear();
         if (palette.has_palette /*&& !destroy && !is_copy_paste*/) {
+            //if(!preview){
+                //WandsMod.log("update_palette bp",true);
+            //}
             palette.update_palette(block_accounting);
         }
 
@@ -792,102 +793,25 @@ public class Wand {
 
         //valid = true;
     }
-    public BlockState mirror_stair(BlockState st,int mirroraxis){
-        if(st.getBlock() instanceof  StairBlock && mirroraxis >0) {
-            //TrapDoorBlock ??
-            st = paste_rot(st);
-            Direction facing = st.getValue(StairBlock.FACING);
-            StairsShape shape = st.getValue(StairBlock.SHAPE);
-            if (mirroraxis == 2) {
-                st = st.setValue(StairBlock.HALF, st.getValue(StairBlock.HALF));
-            } else {
-                if (
-                    (mirroraxis == 1 && (facing == Direction.EAST || facing == Direction.WEST)) ||
-                    (mirroraxis == 3 && (facing == Direction.NORTH || facing == Direction.SOUTH))
-                ) {
-                    st = st.setValue(StairBlock.FACING, facing.getOpposite());
+    public BlockState rotate_mirror(BlockState st, int mirroraxis){
+        switch (mirroraxis){
+            case 1:
+                if(rotation==Rotation.NONE || rotation==Rotation.CLOCKWISE_180) {
+                    return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation);
+                }else {
+                    return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation.getRotated(Rotation.CLOCKWISE_180));
                 }
-                if (shape != StairsShape.STRAIGHT) {
-                    if (shape == StairsShape.INNER_LEFT) {
-                        st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
-                    } else {
-                        if (shape == StairsShape.OUTER_LEFT) {
-                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
-                        } else {
-                            if (shape == StairsShape.OUTER_RIGHT) {
-                                st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
-                            } else {
-                                if (shape == StairsShape.INNER_RIGHT) {
-                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
-                                }
-                            }
-                        }
-                    }
+            case 2:
+                if(rotation==Rotation.NONE || rotation==Rotation.CLOCKWISE_180) {
+                    return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation.getRotated(Rotation.CLOCKWISE_180));
+                }else{
+                    return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation);
                 }
-            }
+            default:
+                return st.rotate(this.rotation);
         }
-        return st;
     }
-    public BlockState paste_rot(BlockState st){
-        Block blk=st.getBlock();
-        if(this.replace && this.offhand_block!=null && this.offhand_block.asItem()!=Items.AIR){
-            blk=this.offhand_block;
-            st=blk.defaultBlockState();
-            return st;
-        }
-        if(blk instanceof  StairBlock) {
-            Direction d;
-            switch (this.rotation) {
-                case NONE:
-                break;
-                case CLOCKWISE_90:
-                    #if MC=="1165"
-                    d= st.getValue(StairBlock.FACING).getClockWise();
-                    #else
-                    d= st.getValue(StairBlock.FACING).getClockWise(Direction.Axis.Y);
-                    #endif
 
-                    st = st.setValue(StairBlock.FACING, d);
-                break;
-                case CLOCKWISE_180:
-                    d = st.getValue(StairBlock.FACING).getOpposite();
-                    st = st.setValue(StairBlock.FACING, d);
-                    break;
-                case COUNTERCLOCKWISE_90:
-                    #if MC=="1165"
-                    d= st.getValue(StairBlock.FACING).getCounterClockWise();
-                    #else
-                    d= st.getValue(StairBlock.FACING).getCounterClockWise(Direction.Axis.Y);
-                    #endif
-                    st = st.setValue(StairBlock.FACING, d);
-                    break;
-            }
-        }else{
-            if(blk instanceof RotatedPillarBlock){
-                Direction.Axis a= st.getValue(RotatedPillarBlock.AXIS);
-                if(a!=Direction.Axis.Y) {
-                    switch (this.rotation) {
-                        case CLOCKWISE_90:
-                        case COUNTERCLOCKWISE_90:
-                            if(a==Direction.Axis.X)
-                                st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
-                            if(a==Direction.Axis.Z)
-                                st = st.setValue(RotatedPillarBlock.AXIS, Direction.Axis.X);
-                            break;
-                            case NONE:
-                            break;
-                            case CLOCKWISE_180:
-                            break;
-                    }
-                }
-                //st = blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS,this.axis);
-
-            }else{
-                st=st.rotate(this.rotation);
-            }
-        }
-        return st;
-    }
     public BlockState get_state() {
         BlockState st=block_state;
         if (palette.has_palette) {

@@ -273,7 +273,7 @@ public class WandItem extends TieredItem implements Vanishable {
         packet.writeDouble(hit.y);
         packet.writeDouble(hit.z);
         packet.writeLong(seed);
-        WandsMod.log(" send_placement palette seed: " + seed,true);
+        //WandsMod.log(" send_placement palette seed: " + seed,true);
         NetworkManager.sendToServer(WandsMod.POS_PACKET, packet);
         //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
 

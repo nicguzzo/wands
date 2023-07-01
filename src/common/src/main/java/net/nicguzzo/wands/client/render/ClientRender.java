@@ -628,18 +628,18 @@ public class ClientRender {
 
             if (mode==Mode.PASTE && wand.copy_paste_buffer.size() > 0) {
                 int mx=1;
-                int my=1;
+                //int my=1;
                 int mz=1;
                 switch(mirroraxis){
                     case 1://X
                         mx=-1;
                         break;
                     case 2://Y
-                        my=-1;
-                        break;
-                    case 3://Z
                         mz=-1;
                         break;
+                    /*case 3://Z
+                        mz=-1;
+                        break;*/
                 }
                 BlockPos b_pos = wand.pos;
                 /*if(!targeting_air && !(wand.replace || wand.destroy)) {
@@ -659,7 +659,7 @@ public class ClientRender {
                         if (wand.palette.has_palette) {
                             st = wand.get_state();
                         }else{
-                            st=wand.mirror_stair(st,mirroraxis);
+                            st=wand.rotate_mirror(st,mirroraxis);
                             //Mirror
                             /*Block blk=st.getBlock();
                             if(blk instanceof  StairBlock && mirroraxis >0) {
@@ -701,7 +701,7 @@ public class ClientRender {
                     }
                         BlockPos p = b.pos.rotate(last_rot);
                         int px=b_pos.getX() + p.getX()*mx;
-                        int py=b_pos.getY() + p.getY()*my;
+                        int py=b_pos.getY() + p.getY();
                         int pz=b_pos.getZ() + p.getZ()*mz;
 
                         render_shape(matrixStack, tesselator, bufferBuilder, st, px,py,pz);
@@ -727,7 +727,7 @@ public class ClientRender {
                     for (CopyBuffer b : wand.copy_paste_buffer) {
                         BlockPos p = b.pos.rotate(last_rot);
                         float x = b_pos.getX() + p.getX()*mx;
-                        float y = b_pos.getY() + p.getY()*my;
+                        float y = b_pos.getY() + p.getY();
                         float z = b_pos.getZ() + p.getZ()*mz;
                         if (fat_lines) {
                             preview_block_fat(bufferBuilder,

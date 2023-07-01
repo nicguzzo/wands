@@ -288,7 +288,7 @@ public class WandsMod {
                 }
                 wand.setP1(p1);
                 wand.setP2(p2);
-                WandsMod.log(" received_placement palette seed: " + seed,true);
+                //WandsMod.log(" received_placement palette seed: " + seed,true);
                 wand.palette.seed=seed;
                 //wand.lastPlayerDirection=player_dir;
                 //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);

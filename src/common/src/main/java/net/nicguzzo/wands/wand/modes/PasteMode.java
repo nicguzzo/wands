@@ -22,11 +22,11 @@ public class PasteMode implements WandMode {
                     mx=-1;
                     break;
                 case 2://Y
-                    my=-1;
-                    break;
-                case 3://Z
                     mz=-1;
                     break;
+                /*case 3://Z
+                    mz=-1;
+                    break;*/
             }
             //log("mode6 paste "+copy_paste_buffer.size());
             //BlockPos b_pos = wand.pos;
@@ -48,9 +48,9 @@ public class PasteMode implements WandMode {
                 BlockPos p = b.pos.rotate(wand.rotation);
                 BlockState st=b.state;
                 int px=b_pos.getX() + p.getX()*mx;
-                int py=b_pos.getY() + p.getY()*my;
+                int py=b_pos.getY() + p.getY();
                 int pz=b_pos.getZ() + p.getZ()*mz;
-                st=wand.mirror_stair(st,mirroraxis);
+                st=wand.rotate_mirror(st,mirroraxis);
                 if(wand.palette.has_palette) {
                     wand.block_buffer.add(px,py,pz,wand);
                 }else {

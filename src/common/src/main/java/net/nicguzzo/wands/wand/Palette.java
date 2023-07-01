@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.Compat;
@@ -59,9 +60,12 @@ public class Palette {
                     Block blk = Block.byItem(stack.getItem());
                     if (blk != Blocks.AIR) {
                         Palette.PaletteSlot psl = new Palette.PaletteSlot(i, blk.defaultBlockState(), stack);
-                        if (palette_slots.stream().noneMatch(pp -> (Compat.is_same(pp.stack,stack)))) {
+
+                        //if (palette_slots.stream().noneMatch(pp -> (Compat.is_same(pp.stack,stack)))) {
+                        if(block_accounting.get(stack.getItem())==null) {
                             block_accounting.put(stack.getItem(), new BlockAccounting());
                         }
+                        //}
                         palette_slots.add(psl);
                     }
                 }
@@ -70,6 +74,9 @@ public class Palette {
     }
     public BlockState get_state(Wand wand){
         BlockState st=wand.block_state;
+        if(!wand.preview){
+            //WandsMod.log("get_state bp",true);
+        }
         if (palette_slots.size() > 0) {
             PaletteMode palette_mode = PaletteItem.getMode(item);
             int bound = palette_slots.size();
