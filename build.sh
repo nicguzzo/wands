@@ -8,8 +8,14 @@ pushd "versions"
   fi
   for v in ${mcvers[@]}; do  
     pushd mc$v      
+	echo "building $v"
         #./gradlew --no-daemon --parallel build &>../../build_log_${mod}_mc${v} || exit
-        if [ "$v" == "1.20" ]; then
+        v1=$( cat ../../versions/${v}_build.properties|grep MC|tr -d "MC=")
+	echo "v1 $v1"
+	if [ "$v1" == "" ]; then 
+		exit 
+	fi
+        if [ "$v1" > "1194" ]; then
           echo "copying netherite_wand_post_1_20.json" 
           cp ../../recipes/netherite_wand_post_1_20.json common/src/main/resources/data/wands/recipes/netherite_wand.json
         else
