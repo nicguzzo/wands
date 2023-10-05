@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.utils.Compat;
 #if MC >= "1200"
@@ -14,6 +15,9 @@ import net.minecraft.client.gui.GuiGraphics;
 #endif
 
 public class WandToast implements Toast {
+    #if MC > "1201"
+    private static final ResourceLocation TEXTURE = new ResourceLocation("toast/advancement");
+    #endif
     Component text;
     WandToast(String s){
         text= Compat.literal(s);
@@ -35,7 +39,7 @@ public class WandToast implements Toast {
         #if MC < "1200"
         toastComponent.blit(poseStack, 0, 0, 0, 96, this.width(), this.height());
         #else
-            guiGraphics.blit(TEXTURE, 0, 0, 0, 96, this.width(), this.height());
+        guiGraphics.blit(TEXTURE, 0, 0, 0, 96, this.width(), this.height());
         #endif
         if(client.player!=null) {
             ItemStack s = client.player.getMainHandItem();

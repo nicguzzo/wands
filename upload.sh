@@ -1,4 +1,5 @@
 #!/bin/bash
+#. ../wands_env_token
 pushd "versions"
 #	mcvers=`ls |grep -P "mc1\..+"|tr "\n" " "|sed 's/mc//g'`
 

@@ -2,10 +2,15 @@ package net.nicguzzo.wands.wand;
 
 import java.util.*;
 import java.util.function.Consumer;
-
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
+
+#if MC > "1201"
+import net.minecraft.advancements.AdvancementHolder;
+#else
 import net.minecraft.advancements.Advancement;
+#endif
+
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -1741,7 +1746,11 @@ public class Wand {
             WandsMod.log("bad advancement: "+res,prnt);
             return false;
         }
+        #if MC > "1201"
+        AdvancementHolder adv= server_advancements.get(res);
+        #else
         Advancement adv= server_advancements.getAdvancement(res);
+        #endif
         if(adv==null){
             WandsMod.log("bad advancement: "+res,prnt);
             return false;
