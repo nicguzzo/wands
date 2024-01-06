@@ -1,7 +1,8 @@
 #!/bin/bash
 
-#on windows: git bash only, enable sylinks on gitconfig, export MSYS=winsymlinks:nativestrict and run git bash console as admin.
+#on windows: git bash only, run git bash console as admin , enable sylinks on gitconfig and export MSYS=winsymlinks:nativestrict
 
+export MSYS=winsymlinks:nativestrict
 
 mcvers=( "1.16.5" "1.17.1" "1.18.1" "1.18.2" "1.19" "1.19.1" "1.19.2" "1.19.3" "1.19.4" "1.20" "1.20.1" "1.20.2")
 pushd "versions"

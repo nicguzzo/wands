@@ -40,8 +40,8 @@ allprojects {
         
     }
     dependencies {
-        annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.29'
-        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.29'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.33'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.33'
         //annotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.29'
         //testAnnotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.29'
     }
