@@ -72,6 +72,26 @@ import java.util.Random;
 import net.minecraft.world.level.Explosion;
 #endif
 
+
+//TODO implement https://github.com/Patbox/common-protection-api for claimed chunks
+//TODO fix mirroring and rotation
+//TODO augmentation items, durability, range, damage?, planting?
+//TODO support other mods tools
+//TODO infinite (cretive) wand recipe, optional
+//TODO drop items on wand merge craft
+//TODO fix plants place, force samestate, needs air bug
+//TODO fix tunnel mode only on netherite, should be iron+
+//TODO stone wand no blast
+//TODO support tags in allow/deny list
+//TODO palette pattern mode
+//TODO banner placement not working on sides
+//DONE fix leaves default state
+//DONE bug, copy undoes last destroy
+//DONE place bamboo
+//DONE walls/fences state
+//DONE bug, mud with potion on survival
+//DONE bug shear pumpkins
+
 public class Wand {
     public int x = 0;
     public int y = 0;
@@ -316,21 +336,6 @@ public class Wand {
             once=false;
             WandsMod.config.generate_lists();
         }
-
-        //TODO fix plants place, force samestate, needs air bug
-        //TODO drop items on wand merge craft
-        //TODO fix tunnel mode only on netherite, should be iron+
-        //TODO stone wand no blast
-        //DONE fix leaves default state
-        //DONE bug, copy undoes last destroy
-        //DONE place bamboo
-        //DONE walls/fences state
-        //DONE bug, mud with potion on survival
-        //DONE bug shear pumpkins
-        //TODO support tags in allow/deny list
-        //TODO palette pattern mode
-        //TODO banner placement not working on sides
-
 
         switch(Tiers.values()[wand_item.getTier().getLevel()]){
             case STONE:
