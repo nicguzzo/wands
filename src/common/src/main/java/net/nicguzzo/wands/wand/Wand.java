@@ -32,6 +32,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -40,7 +41,11 @@ import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,6 +62,12 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.utils.*;
 import net.nicguzzo.wands.wand.WandProps.Mode;
+
+#if MC>="1190"
+import net.minecraft.world.level.block.DropExperienceBlock;
+#else
+import net.minecraft.world.level.block.OreBlock;
+#endif
 
 #if MC == "1165"
 import net.minecraft.util.Mth;
@@ -1230,10 +1241,12 @@ public class Wand {
                         if(!drop(blockPos,blockState,blockEntity,null)) {
                             return false;
                         }
+
                     }
                 }else{
                     blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
                 }
+
             }
             player.awardStat(Stats.BLOCK_MINED.get(blockState.getBlock()));
             player.causeFoodExhaustion(0.005F);
@@ -1275,6 +1288,24 @@ public class Wand {
                         }
                     });
         }
+        #if MC>="1190"
+
+        if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  DropExperienceBlock  && 0==EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,digger_item) ) {
+            DropExperienceBlock dblock=(DropExperienceBlock) blockState.getBlock();
+            int xp= dblock.xpRange.sample(level.random);
+            //WandsMod.LOGGER.info("drop xp "+xp);
+            if(xp>0){
+                if (level.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
+                    ExperienceOrb.award((ServerLevel)level, Vec3.atCenterOf(drop_pos), xp);
+                }
+            }
+        }
+        #else
+        if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  OreBlock  ) {
+            OreBlock dblock=(OreBlock) blockState.getBlock();
+            dblock.spawnAfterBreak(blockState, (ServerLevel)level,drop_pos,digger_item);
+        }
+        #endif
         if (stop) {
             if (!preview) {
                 player.displayClientMessage(Compat.literal("inventory full"), false);
@@ -1508,7 +1539,13 @@ public class Wand {
         return false;
     }
     boolean can_dig(BlockState state,boolean check_speed,ItemStack digger){
+        #if MC >= "1204"
+        boolean is_glass=state.getBlock() instanceof TransparentBlock;
+        #else
         boolean is_glass=state.getBlock() instanceof AbstractGlassBlock;
+        #endif
+
+
         boolean is_snow_layer=false;
         boolean can_shear=false;
         Block blk=state.getBlock();
@@ -1590,7 +1627,11 @@ public class Wand {
         return (
                         state.is(BlockTags.LEAVES) ||
                         state.is(Blocks.COBWEB) ||
+                        #if MC<"1204"
                         state.is(Blocks.GRASS) ||
+                        #else
+                        state.is(Blocks.SHORT_GRASS) ||
+                        #endif
                         state.is(Blocks.FERN) ||
                         state.is(Blocks.DEAD_BUSH) ||
                         state.is(Blocks.VINE) ||

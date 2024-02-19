@@ -67,19 +67,20 @@ shadowJar {
     exclude "architectury.common.json"
 
     configurations = [project.configurations.shadowCommon]
-    classifier "dev-shadow"
+    //classifier "dev-shadow"
+    archiveClassifier = "dev-shadow"
 }
 
 remapJar {
     injectAccessWidener = true
     input.set shadowJar.archiveFile
     dependsOn shadowJar
-    classifier "fabric"
+    //classifier "fabric"
 }
 
-jar {
-    classifier "dev"
-}
+//jar {
+//    classifier "dev"
+//}
 
 sourcesJar {
     def commonSources = project(":common").sourcesJar

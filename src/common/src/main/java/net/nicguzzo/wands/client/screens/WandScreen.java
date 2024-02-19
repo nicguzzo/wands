@@ -515,7 +515,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             diag_grp_btn.selected=(!WandProps.getFlag(wand_stack, WandProps.Flag.DIAGSPREAD)?0:-1);
             match_state_sel.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE)?0:-1);
             target_air_grp_btn.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR)?0:-1);
-            drop_pos_sel.selected=(ClientRender.wand.drop_on_player ?0:-1);
+            drop_pos_sel.selected=(ClientRender.wand.drop_on_player ?0:1);
             tunnel_w.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();
             tunnel_h.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();
             tunnel_d.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();

@@ -10,6 +10,7 @@ pushd "versions"
   	fi
 	for v in ${mcvers[@]}; do
 		pushd mc$v
+			#cp -av common/src/main/resources/${v}_wands.accesswidener common/src/main/resources/wands.accesswidener
 			./gradlew --no-daemon publishUnified
 		popd
 	done
