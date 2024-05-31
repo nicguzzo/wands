@@ -149,7 +149,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDM,1, wand_item.limit);
+                WandProps.decVal(wand_stack,Value.GRIDM,1);
                 WandsModClient.send_wand(wand_stack);
             }
         };
@@ -163,7 +163,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 WandsModClient.send_wand(wand_stack);
             }
             public void onDec(int mx,int my,int value){
-                WandProps.decVal(wand_stack,Value.GRIDN,1, wand_item.limit);
+                WandProps.decVal(wand_stack,Value.GRIDN,1);
                 WandsModClient.send_wand(wand_stack);
             }
         };
