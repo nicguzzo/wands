@@ -25,12 +25,17 @@ configurations {
     runtimeClasspath.extendsFrom common
     developmentForge.extendsFrom common
 }
-
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+}
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.forge_version}"
     // Remove the next line if you don't want to depend on the API
     modApi "${architectury}:architectury-forge:${rootProject.architectury_version}"
     modApi "me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config_version}"
+    modCompileOnly "curse.maven:open-parties-and-claims-636608:${rootProject.opac_forge_cursmaven_fileid}"
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
 }

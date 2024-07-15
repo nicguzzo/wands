@@ -9,6 +9,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Registry;
 #endif
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -111,14 +112,24 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                 }else{
                                     ItemStack bag_item= MagicBagItem.getItem(bag);
                                     ItemStack itemStack3 =Compat.get_carried(player,this);
-                                    if(bag_item.isEmpty()){
-                                        MagicBagItem.setItem(bag, itemStack3);
-                                        bag_item=itemStack3.copy();
-                                        bag_item.setCount(1);
-                                    }
-                                    if(itemStack3.getItem()==bag_item.getItem()){
-                                        if(MagicBagItem.inc(bag,itemStack3.getCount())) {
-                                            Compat.set_carried(player, this, ItemStack.EMPTY);
+                                    if(itemStack3.isStackable()){
+                                        if(bag_item.isEmpty()){
+                                            MagicBagItem.setItem(bag, itemStack3);
+                                            bag_item=itemStack3.copy();
+                                            bag_item.setCount(1);
+                                        }
+                                        if(itemStack3.getItem()==bag_item.getItem()){
+                                            boolean tags_match=true;
+
+                                            if(itemStack3.hasTag() || bag_item.hasTag()){
+                                                CompoundTag tag1=itemStack3.getOrCreateTag();
+                                                CompoundTag tag2=bag_item.getOrCreateTag();
+                                                tags_match=tag1.equals(tag2);
+                                            }
+
+                                            if(tags_match &&  MagicBagItem.inc(bag,itemStack3.getCount())) {
+                                                Compat.set_carried(player, this, ItemStack.EMPTY);
+                                            }
                                         }
                                     }
                                 }

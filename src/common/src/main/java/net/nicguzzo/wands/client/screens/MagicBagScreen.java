@@ -84,6 +84,11 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         #else
             gui.drawString(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
         #endif
+        #if MC < "1200"
+            this.renderTooltip(poseStack, mouseX,mouseY);
+        #else
+        this.renderTooltip(gui, mouseX,mouseY);
+        #endif
         RenderSystem.enableDepthTest();
 
     }

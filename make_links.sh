@@ -38,6 +38,12 @@ pushd "versions"
         ln -s ../../../src/forge/build.gradle  
         ln -s ../../../src/forge/gradle.properties
       popd
+      mkdir -p neoforge
+      pushd "neoforge"
+        ln -s ../../../src/neoforge/src
+        ln -s ../../../src/neoforge/build.gradle  
+        ln -s ../../../src/neoforge/gradle.properties
+      popd
     popd
   done
 popd

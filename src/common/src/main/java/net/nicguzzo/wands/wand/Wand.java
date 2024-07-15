@@ -57,6 +57,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.nicguzzo.wands.WandsExpectPlatform;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.*;
@@ -83,6 +84,8 @@ import java.util.Random;
 import net.minecraft.world.level.Explosion;
 #endif
 
+//import com.github.clevernucleus.opc.api.OfflinePlayerCacheAPI;
+//import com.github.clevernucleus.opc.api.claim.Claim;
 
 //TODO implement https://github.com/Patbox/common-protection-api for claimed chunks
 //TODO fix mirroring and rotation
@@ -1034,6 +1037,18 @@ public class Wand {
         if(destroy && (mode!=Mode.VEIN) && has_offhand && offhand_block!=null && offhand_state!=st){
             return false;
         }
+
+        //claims
+        if (destroy||replace ) {
+            if(!WandsExpectPlatform.claim_can_break((ServerLevel) level,block_pos,player)){
+                return false;
+            }
+        }else{
+            if(!WandsExpectPlatform.claim_can_place((ServerLevel) level,block_pos,player)){
+                return false;
+            }
+        }
+        //CommonPro
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
         int tool_durability = -1;
 

@@ -10,6 +10,10 @@ import dev.architectury.platform.Platform;
 
 import java.nio.file.Path;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
+
 public class WandsExpectPlatform {
     /**
      * We can use {@link Platform#getConfigFolder()} but this is just an example of {@link ExpectPlatform}.
@@ -26,5 +30,15 @@ public class WandsExpectPlatform {
     public static Path getConfigDirectory() {
         // Just throw an error, the content should get replaced at runtime.
         throw new AssertionError();
+    }
+    @ExpectPlatform
+    public static boolean claim_can_break(ServerLevel world, BlockPos pos, Player player){
+        throw new AssertionError();
+        //return true;
+    }
+    @ExpectPlatform
+    public static boolean claim_can_place(ServerLevel world, BlockPos pos, Player player){
+        throw new AssertionError();
+        //return true;
     }
 }

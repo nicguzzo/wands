@@ -70,6 +70,9 @@ public class WandsMod {
     public static final String MOD_ID = "wands";
     
     public static final Logger LOGGER = LogManager.getLogger();
+
+    public static boolean has_opac=false;
+
     // We can use this if we don't want to use DeferredRegister
 
     #if MC>="1193"
@@ -653,4 +656,5 @@ public class WandsMod {
             LOGGER.info(s);
         }
     }
+
 }

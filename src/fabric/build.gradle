@@ -23,7 +23,10 @@ configurations {
 repositories {
     maven{
         url "https://maven.terraformersmc.com/releases"
-    }    
+    }
+    maven {
+        url "https://cursemaven.com"
+    }
 }
 
 dependencies {
@@ -37,6 +40,11 @@ dependencies {
     modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+    //modImplementation include("eu.pb4:common-protection-api:${common_protection_api}")
+
+
+    modCompileOnly "curse.maven:open-parties-and-claims-636608:${rootProject.opac_fabric_cursmaven_fileid}"
+
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 }

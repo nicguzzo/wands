@@ -1,6 +1,6 @@
 plugins {    
     id "architectury-plugin" version "3.4-SNAPSHOT"
-    id "dev.architectury.loom" version "1.5-SNAPSHOT" apply false
+    id "dev.architectury.loom" version "1.6-SNAPSHOT" apply false
     id 'systems.manifold.manifold-gradle-plugin' version '0.0.2-alpha'
 }
 
@@ -37,13 +37,14 @@ allprojects {
         // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
         // See https://docs.gradle.org/current/userguide/declaring_repositories.html
         // for more information about repositories.
-        
+        maven { url "https://maven.nucleoid.xyz/" }
     }
     dependencies {
-        annotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.1'
-        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.1'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.0'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.0'
         //annotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.29'
         //testAnnotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.29'
+
     }
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"

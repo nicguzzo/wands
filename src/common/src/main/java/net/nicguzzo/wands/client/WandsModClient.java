@@ -62,6 +62,7 @@ public class WandsModClient {
     static boolean shift =false;
     static boolean alt =false;
     public static boolean has_optifine=false;
+    public static boolean has_opac=false;
     public static KeyMapping wand_menu_km;
     //public static KeyMapping palette_menu_km;
     public static final Logger LOGGER = LogManager.getLogger();

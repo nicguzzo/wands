@@ -5,6 +5,7 @@ pluginManagement {
         maven { url "https://maven.minecraftforge.net/" }
         maven { url "https://maven.shedaniel.me/" }
         maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url "https://cursemaven.com" }
         gradlePluginPortal()
     }
 }
@@ -12,5 +13,6 @@ pluginManagement {
 include("common")
 include("fabric")
 include("forge")
+//include("neoforge")
 
 rootProject.name = "wands"
