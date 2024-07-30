@@ -27,6 +27,18 @@ repositories {
     maven {
         url "https://cursemaven.com"
     }
+    maven {
+        url "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.ftb.mods"
+        }
+    }
+    maven {
+        url = "https://maven.jamieswhiteshirt.com/libs-release/"
+        content {
+            includeGroup 'com.jamieswhiteshirt'
+        }
+    }
 }
 
 dependencies {
@@ -43,7 +55,12 @@ dependencies {
     //modImplementation include("eu.pb4:common-protection-api:${common_protection_api}")
 
 
-    modCompileOnly "curse.maven:open-parties-and-claims-636608:${rootProject.opac_fabric_cursmaven_fileid}"
+    modCompileOnly("curse.maven:open-parties-and-claims-636608:${rootProject.opac_fabric_cursmaven_fileid}")
+    modCompileOnly("curse.maven:get-off-my-lawn-reserved-572651:${rootProject.goml_fabric_cursmaven_fileid}")
+    modCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${project.rtree_version}")
+    modCompileOnly("curse.maven:flan-404578:${rootProject.flan_fabric_cursmaven_fileid}") { transitive = false }
+    modCompileOnly("dev.ftb.mods:ftb-library-fabric:${rootProject.ftblibrary_version}") { transitive = false }
+    modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${rootProject.ftbchunks_version}") { transitive = false }
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }

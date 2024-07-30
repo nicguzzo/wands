@@ -474,11 +474,11 @@ public class ClientRender {
                                 Compat.set_render_quads_pos_tex(bufferBuilder);
                                 preview_block_fat(bufferBuilder,
                                         (float)(wand.bb1_x - off2),
-                                                (float)(wand.bb1_y - off2),
-                                                        (float)(wand.bb1_z - off2),
-                                                                (float)(wand.bb2_x + off2),
-                                                                        (float)(wand.bb2_y + off2),
-                                                                                (float)(wand.bb2_z + off2),
+                                        (float)(wand.bb1_y - off2),
+                                                (float)(wand.bb1_z - off2),
+                                                        (float)(wand.bb2_x + off2),
+                                                                (float)(wand.bb2_y + off2),
+                                                                        (float)(wand.bb2_z + off2),
                                         bbox_col,false);
                                 tesselator.end();
                                 Compat.disableTexture();

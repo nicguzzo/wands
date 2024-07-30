@@ -72,6 +72,9 @@ public class WandsMod {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static boolean has_opac=false;
+    public static boolean has_ftbchunks=false;
+    public static boolean has_flan=false;
+    public static boolean has_goml=false;
 
     // We can use this if we don't want to use DeferredRegister
 

@@ -10,13 +10,18 @@ public class WandsModFabric implements ModInitializer {
     @Override
     public void onInitialize() {
 
-        Optional<ModContainer> opac= FabricLoader.getInstance().getModContainer("openpartiesandclaims");
-         if(opac.isPresent()){
-            WandsMod.has_opac=true;
-            WandsMod.log("has opac!!!!!!!!!!!!",true);
-        }else{
-             WandsMod.log("NO opac!!!!!!!!!!!!",true);
-         }
+
+        WandsMod.has_opac=FabricLoader.getInstance().getModContainer("openpartiesandclaims").isPresent();
+        WandsMod.log("Has opac!! "+WandsMod.has_opac,true);
+
+        WandsMod.has_ftbchunks=FabricLoader.getInstance().getModContainer("ftbchunks").isPresent();
+        WandsMod.log("Has ftbchunks!! "+WandsMod.has_ftbchunks,true);
+
+        WandsMod.has_flan=FabricLoader.getInstance().getModContainer("flan").isPresent();
+        WandsMod.log("Has flan!! "+WandsMod.has_flan,true);
+
+        WandsMod.has_goml=FabricLoader.getInstance().getModContainer("goml").isPresent();
+        WandsMod.log("Has goml!! "+WandsMod.has_goml,true);
 
         WandsMod.init();
     }

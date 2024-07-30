@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
-
+import net.minecraftforge.fml.ModList;
 @Mod(WandsMod.MOD_ID)
 
 public class WandsModForge {
@@ -24,6 +24,17 @@ public class WandsModForge {
         WandsMod.is_forge=true;
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(WandsMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
+
+        WandsMod.has_opac=ModList.get().isLoaded("openpartiesandclaims");
+        WandsMod.log("Has opac!! "+WandsMod.has_goml,true);
+
+        WandsMod.has_ftbchunks=ModList.get().isLoaded("ftbchunks");
+        WandsMod.log("Has ftbchunks!! "+WandsMod.has_goml,true);
+
+        WandsMod.has_flan=ModList.get().isLoaded("flan");
+        WandsMod.log("Has flan!! "+WandsMod.has_goml,true);
+
+
         WandsMod.init();
         EnvExecutor.runInEnv(Env.CLIENT, () -> 
             ()-> {

@@ -35,6 +35,11 @@ public class WandsConfig {
 	final public static String[] default_hoe_allowed={"minecraft:moss_block"};
 	final public static String[] default_shears_allowed={};
 	final public static String[] default_denied={};
+	final public static String[] default_modded_pickaxes={};
+	final public static String[] default_modded_axes={};
+	final public static String[] default_modded_shovels={};
+	final public static String[] default_modded_hoes={};
+	final public static String[] default_modded_shears={};
 	static public float def_blocks_per_xp=0.0f;
 	static public int def_stone_wand_limit = 16;
 	static public int def_iron_wand_limit = 32;

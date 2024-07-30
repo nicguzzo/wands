@@ -32,12 +32,7 @@ public class WandsExpectPlatform {
         throw new AssertionError();
     }
     @ExpectPlatform
-    public static boolean claim_can_break(ServerLevel world, BlockPos pos, Player player){
-        throw new AssertionError();
-        //return true;
-    }
-    @ExpectPlatform
-    public static boolean claim_can_place(ServerLevel world, BlockPos pos, Player player){
+    public static boolean claimCanInteract(ServerLevel world, BlockPos pos, Player player){
         throw new AssertionError();
         //return true;
     }

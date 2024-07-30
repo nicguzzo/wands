@@ -29,6 +29,18 @@ repositories {
     maven {
         url "https://cursemaven.com"
     }
+    maven {
+        url "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.ftb.mods"
+        }
+    }
+    maven {
+        url = "https://maven.jamieswhiteshirt.com/libs-release/"
+        content {
+            includeGroup 'com.jamieswhiteshirt'
+        }
+    }
 }
 dependencies {
     forge "net.minecraftforge:forge:${rootProject.forge_version}"
@@ -36,6 +48,9 @@ dependencies {
     modApi "${architectury}:architectury-forge:${rootProject.architectury_version}"
     modApi "me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config_version}"
     modCompileOnly "curse.maven:open-parties-and-claims-636608:${rootProject.opac_forge_cursmaven_fileid}"
+    modCompileOnly("dev.ftb.mods:ftb-library-forge:${rootProject.ftblibrary_version}") { transitive = false }
+    modCompileOnly("dev.ftb.mods:ftb-chunks-forge:${rootProject.ftbchunks_version}") { transitive = false }
+    modCompileOnly("curse.maven:flan-forge-493246:${rootProject.flan_forge_cursmaven_fileid}") { transitive = false }
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
 }

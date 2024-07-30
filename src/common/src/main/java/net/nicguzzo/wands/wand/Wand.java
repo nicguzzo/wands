@@ -1019,6 +1019,11 @@ public class Wand {
         if (level.isClientSide) {
             return false;
         }
+
+        if(!WandsExpectPlatform.claimCanInteract((ServerLevel) level,block_pos,player)){
+            player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"),false);
+            return false;
+        }
         if(state==null /*&& !destroy*/){
             //log("state is null");
             return false;
@@ -1038,16 +1043,6 @@ public class Wand {
             return false;
         }
 
-        //claims
-        if (destroy||replace ) {
-            if(!WandsExpectPlatform.claim_can_break((ServerLevel) level,block_pos,player)){
-                return false;
-            }
-        }else{
-            if(!WandsExpectPlatform.claim_can_place((ServerLevel) level,block_pos,player)){
-                return false;
-            }
-        }
         //CommonPro
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
         int tool_durability = -1;
