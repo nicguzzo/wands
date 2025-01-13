@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#P#",
+    "RER",
+    "RRR"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:string"
+    },
+    "P": {
+      "item": "minecraft:orange_dye"
+    },
+    "R": {
+      "item": "minecraft:rabbit_hide"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    }
+  },
+  "result": {
+    "item": "wands:magic_bag_2",
+    "count": 1
+  }
+}
