@@ -1,0 +1,170 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id "me.shedaniel.unified-publishing" version "0.1.+"
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven{
+        url "https://maven.terraformersmc.com/releases"
+    }
+    maven {
+        url "https://cursemaven.com"
+    }
+    maven {
+        url "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.ftb.mods"
+        }
+    }
+    maven {
+        url = "https://maven.jamieswhiteshirt.com/libs-release/"
+        content {
+            includeGroup 'com.jamieswhiteshirt'
+        }
+    }
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "${architectury}:architectury-fabric:${rootProject.architectury_version}"
+    modImplementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    modApi("me.shedaniel.cloth:cloth-config-fabric:${rootProject.cloth_config_version}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+
+    if(rootProject.rtree_version!=""){
+        modCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${rootProject.rtree_version}")
+    }
+    if(rootProject.opac_fabric!=""){
+        modCompileOnly("${rootProject.opac_fabric}")   { transitive = false }
+    }    
+    if(rootProject.goml_fabric!=""){
+        modCompileOnly("${rootProject.goml_fabric}")       { transitive = false }
+    }
+    if(rootProject.flan_fabric!=""){
+        modCompileOnly("${rootProject.flan_fabric}")       { transitive = false }
+    }
+    if(rootProject.ftb_chunks_fabric!=""){
+        modCompileOnly("${rootProject.ftb_chunks_fabric}")  { transitive = false }
+    }
+    if(rootProject.ftb_library_fabric!=""){
+        modCompileOnly("${rootProject.ftb_library_fabric}") { transitive = false }
+    }
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowBundle project(path: ':common', configuration: 'transformProductionFabric')
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", rootProject.minecraft_version
+    inputs.property "architectury_version", rootProject.architectury_version 
+    inputs.property "fabric_cloth_config", rootProject.fabric_cloth_config
+    inputs.property "fabric_loader_version", rootProject.fabric_loader_version
+    inputs.property "fabric_api_version", rootProject.fabric_api_version
+    inputs.property "cloth_config_version", rootProject.cloth_config_version    
+    inputs.property "java_version", rootProject.java_version
+
+    filesMatching("wands.fabric.mixins.json") {
+        expand "java_version": rootProject.java_version
+    }
+    filesMatching("fabric.mod.json") {
+        expand ( 
+            "version": project.version,
+            "minecraft_version": rootProject.minecraft_version,
+            "architectury_version": rootProject.architectury_version,
+            "fabric_cloth_config": rootProject.fabric_cloth_config,
+            "fabric_loader_version": rootProject.fabric_loader_version,
+            "fabric_api_version": rootProject.fabric_api_version,
+            "cloth_config_version": rootProject.cloth_config_version,
+			"java_version": rootProject.java_version
+        )
+    }
+
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
+}
+
+unifiedPublishing {
+    project {
+        gameVersions = ["${rootProject.minecraft_version}"]
+        gameLoaders = ["fabric"]
+        displayName= "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - fabric - ${rootProject.minecraft_version}"
+        version = "${rootProject.mod_version}_${rootProject.release_type}_fabric_${rootProject.minecraft_version}"
+        releaseType = "${rootProject.release_type}"
+        var chlog= System.getenv("WANDS_CHANGELOG")
+        if (chlog != null) {
+           changelog= chlog
+        }
+        mainPublication tasks.remapJar
+        relations {        
+            depends {
+                curseforge = "fabric-api" // Optional, project slug
+                modrinth = "P7dR8mSH" // Optional, project slug or id
+            }
+            depends {
+                curseforge = "architectury-api" // Optional, project slug
+                modrinth = "lhGA9TYQ" // Optional, project slug or id
+            }
+            depends {
+                curseforge = "cloth-config" // Optional, project slug
+                modrinth = "9s6osm5g" // Optional, project slug or id
+            }
+            includes {} // Mark as an included dependency
+            optional {
+                curseforge="modmenu"
+                modrinth="mOgUt4GM"
+            } // Mark as an optional dependency
+            conflicts {} // Mark as a conflicted dependency
+        }
+
+        var cfToken = System.getenv("CF_TOKEN")
+        if (cfToken != null) {
+            curseforge {
+                token = cfToken
+                id = "363392" // Required, must be a string, ID of CurseForge project
+            }
+        }
+
+        var mrToken = System.getenv("MODRINTH_TOKEN")
+        if (mrToken != null) {
+            modrinth {
+                //displayName= "Building Wands"
+                displayName= "v${rootProject.mod_version} - ${rootProject.release_type} - fabric - ${rootProject.minecraft_version}"
+                token = mrToken
+                id = "XkisZUfp" // Required, must be a string, ID of Modrinth project
+            }
+        }
+    }
+}
