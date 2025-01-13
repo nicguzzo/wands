@@ -1,24 +1,27 @@
 package net.nicguzzo.wands.forge;
 
-#if MC=="1165"
 import me.shedaniel.architectury.platform.forge.EventBuses;
 import me.shedaniel.architectury.utils.Env;
 import me.shedaniel.architectury.utils.EnvExecutor;
-#else
-import dev.architectury.platform.forge.EventBuses;
-import dev.architectury.utils.Env;
-import dev.architectury.utils.EnvExecutor;
-#endif
 
-//import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.minecraftforge.fml.ModList;
+
+import javax.swing.text.html.parser.Entity;
+
 @Mod(WandsMod.MOD_ID)
 
 public class WandsModForge {
+
+
 
     public WandsModForge() {
         WandsMod.is_forge=true;
@@ -42,13 +45,8 @@ public class WandsModForge {
                 //MinecraftForge.EVENT_BUS.register(new KeyBindingRegistry());
             }
         );
+        PlayerDataCapabilityForge.register();
         //MinecraftForge.EVENT_BUS.register(this);
+        //CapabilityManager.INSTANCE.register(PlayerDataCapability.IPlayerData.class, new PlayerDataCapability.Storage(), PlayerDataCapability.PlayerData::new);
     }
-    /*@Mod.EventBusSubscriber(modid = WandsMod.MOD_ID, value = Dist.CLIENT)
-    public static class ClientModBusEvents {
-        @SubscribeEvent
-        public static void onKeyRegister(RegisterKeyMappingsEvent event) {
-            WandsModClient.keys.forEach((km,v) -> event.register((KeyMapping)km));
-        }
-    }*/
 }

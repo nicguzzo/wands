@@ -10,7 +10,6 @@
   ],
   "mixins": [
     "AxeItemAccessor",
-    "DropExperienceBlockAccessor",
     "HoeItemAccessor",
     "ShovelItemAccessor"
   ],

@@ -3,6 +3,7 @@ package net.nicguzzo.wands.wand;
 import java.util.*;
 
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 
 #if MC > "1201"
@@ -14,6 +15,8 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.MutableComponent;
 
 import net.minecraft.resources.ResourceLocation;
@@ -30,10 +33,10 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -55,7 +58,6 @@ import net.nicguzzo.wands.WandsExpectPlatform;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.*;
-import net.nicguzzo.wands.mixin.DropExperienceBlockAccessor;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.*;
 import net.nicguzzo.wands.wand.WandProps.Mode;
@@ -85,6 +87,7 @@ import dev.architectury.networking.NetworkManager;
 import net.minecraft.util.RandomSource;
 #else
 import java.util.Random;
+import java.util.function.Consumer;
 #endif
 
 #if MC<"1193"
@@ -183,9 +186,9 @@ public class Wand {
     public boolean has_water_bucket = false;
     public boolean has_lava_bucket  = false;
     public boolean has_empty_bucket = false;
-    #if MC>="1190"
+
     boolean has_water_potion = false;
-    #endif
+
     int send_sound=-1;
     boolean has_offhand = false;
     public boolean has_hoe=false;
@@ -1023,7 +1026,8 @@ public class Wand {
     void hurt_main_hand(ItemStack stack) {
         if (!this.unbreakable) {
       #if MC<"1205"
-            stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
+            //stack.hurtAndBreak(1, player, (Consumer<? super Player>) <LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
+            stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
       #else
             stack.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
       #endif
@@ -1334,6 +1338,7 @@ public class Wand {
 
         if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  DropExperienceBlock  && !Compat.has_silktouch(digger_item,level) ) {
             DropExperienceBlock dblock=(DropExperienceBlock) blockState.getBlock();
+
             int xp=( (DropExperienceBlockAccessor)dblock).getXpRange().sample(level.random);
             //WandsMod.LOGGER.info("drop xp "+xp);
             if(xp>0){
@@ -1553,7 +1558,7 @@ public class Wand {
         int[] tools_slots=this.player_data.getIntArray("Tools");
 
         for(int t=0;t<tools_slots.length; t++){
-            ItemStack tool_item = player.getInventory().getItem(tools_slots[t]);
+            ItemStack tool_item = player.inventory.getItem(tools_slots[t]);
             if(tool_item.isEmpty()) continue;
             tools[n_tools]=tool_item;
             n_tools++;

@@ -44,36 +44,12 @@ subprojects {
         // if it is present.
         // If you remove this line, sources will not be generated.
         // withSourcesJar()
-        int v=rootProject.java_version as Integer;
-        if( v == 8){
             sourceCompatibility = JavaVersion.VERSION_1_8
             targetCompatibility = JavaVersion.VERSION_1_8
-        }
-        if( v == 16){
-            sourceCompatibility = JavaVersion.VERSION_16
-            targetCompatibility = JavaVersion.VERSION_16
-        }
-        if( v == 17){
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-        if( v == 21 || v == 22){
-            sourceCompatibility = JavaVersion.VERSION_21
-            targetCompatibility = JavaVersion.VERSION_21
-        }
     }
 
     tasks.withType(JavaCompile).configureEach {
-
-        if( rootProject.java_version as Integer == 8){
-            def targetVersion = 8
-            if (JavaVersion.current().isJava9Compatible()) {
-                options.release = targetVersion
-            }
-        }else{
-            options.release = rootProject.java_version as Integer   
-        }
-        //it.options.release = rootProject.java_version
+        it.options.release = 8
         it.options.compilerArgs += ['-Xplugin:Manifold']
     }
 }
