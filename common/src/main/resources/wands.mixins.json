@@ -1,0 +1,20 @@
+{
+  "minVersion": "0.8",
+  "required": true,
+  "package": "net.nicguzzo.wands.mixin",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "client": [
+    "ItemRendererMixin",
+    "LevelRendererMixin",
+    "RenderWorldMixin"
+  ],
+  "mixins": [
+    "AxeItemAccessor",
+    "DropExperienceBlockAccessor",
+    "HoeItemAccessor",
+    "ShovelItemAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
