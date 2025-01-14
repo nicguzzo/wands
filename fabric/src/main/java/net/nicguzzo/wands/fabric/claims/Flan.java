@@ -3,12 +3,7 @@ package net.nicguzzo.wands.fabric.claims;
 #if HAS_FLAN
     import io.github.flemmli97.flan.api.ClaimHandler;
     import io.github.flemmli97.flan.api.data.IPermissionContainer;
-
-    #if MC=="1165" || MC=="1171"
-    import io.github.flemmli97.flan.api.permission.PermissionRegistry ;
-    #else
     import io.github.flemmli97.flan.api.permission.BuiltinPermission;
-    #endif
 #endif
 
 import net.minecraft.core.BlockPos;
@@ -23,11 +18,7 @@ public class Flan {
 #if HAS_FLAN
         IPermissionContainer check = ClaimHandler.getPermissionStorage(level).getForPermissionCheck(pos);
 
-        #if MC=="1165" || MC=="1171"
-            r= check.canInteract((ServerPlayer) player, PermissionRegistry.PLACE, pos) && check.canInteract((ServerPlayer) player, PermissionRegistry.BREAK, pos);
-        #else
             r= check.canInteract((ServerPlayer) player, BuiltinPermission.PLACE, pos) && check.canInteract((ServerPlayer) player, BuiltinPermission.BREAK, pos);
-        #endif
 #endif
         //WandsMod.LOGGER.info(" Flan canInteract "+r);
         return r;

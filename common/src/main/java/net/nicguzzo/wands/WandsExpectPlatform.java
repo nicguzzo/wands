@@ -1,15 +1,8 @@
 package net.nicguzzo.wands;
 
-#if MC=="1165"
-import me.shedaniel.architectury.ExpectPlatform;
-import me.shedaniel.architectury.platform.Platform;
-#else
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
-#endif
-
 import java.nio.file.Path;
-
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;

@@ -4,28 +4,22 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.client.Minecraft;
-#if MC >= "1205"
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.component.CustomData;
-#endif
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
-
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
@@ -34,8 +28,6 @@ import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public class WandMenu extends AbstractContainerMenu {
@@ -55,33 +47,19 @@ public class WandMenu extends AbstractContainerMenu {
     }
 
     public WandMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
-#if MC<"1205"
-        this(syncId, playerInventory, buf.readItem());
-#else
+
 		this( syncId,playerInventory,
                 ItemStack.parse(
                         ((Level) playerInventory.player.level()).registryAccess(),
                         buf.readNbt()).orElse(ItemStack.EMPTY
                 )
         );
-#endif
     }
 
     public WandMenu(int syncId, Inventory playerInventory, ItemStack _wand) {
         super(WandsMod.WAND_CONTAINER.get(), syncId);
         this.wand=_wand;
         this.playerInventory=playerInventory;
-#if MC<"1205"
-        ListTag tag = wand.getOrCreateTag().getList("Tools", Compat.NbtType.COMPOUND);
-        this.simplecontainer= new SimpleContainer(9){
-            @Override
-            public void setChanged() {
-                wand.getOrCreateTag().put("Tools", toTag(this));
-                super.setChanged();
-            }
-        };
-        fromTag(tag, simplecontainer);
-#else
         CompoundTag tag= Compat.getTags(wand);
         ListTag tools_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
         this.simplecontainer=  new SimpleContainer(9){
@@ -92,7 +70,7 @@ public class WandMenu extends AbstractContainerMenu {
             }
         };
         this.getInventory(this.wand);
-#endif
+
         Wand wnd= PlayerWand.get(playerInventory.player);
         if( wnd.player_data!=null){
            ClientRender.wand.player_data=wnd.player_data;
@@ -122,64 +100,16 @@ public class WandMenu extends AbstractContainerMenu {
         return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
-        //for(int o = s; o < e; ++o) {
-        //    Slot slot = this.slots.get(o);
-        //    if(!slot.hasItem() && mayPlace(itemStack)){
-        //        slot.set(itemStack);
-        //        slot.setChanged();
-        //        return true;
-        //    }
-        //}
+
         return false;
     }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        //WandsMod.LOGGER.info("quick move "+index);
-        //TODO: only quickmove while wand inv is visible
-        //Slot slot = (Slot)this.slots.get(index);
-        //if(index>=0 && index<36) { //player inv
-        //        if (insert(slot.getItem(), 36, 45)) {
-        //            slot.set(ItemStack.EMPTY);
-        //        }
-//
-        //}else{
-        //    if(index>=36 && index<45){
-        //        if (insert(slot.getItem(), 0, 36)) {
-        //            slot.set(ItemStack.EMPTY);
-        //        }
-        //    }
-        //}
-        //#if MC>="1205"
-        //WandMenu.setInventory(this.wand,this.simplecontainer);
-        //#endif
+
         return ItemStack.EMPTY;
     }
-#if MC<"1205"
-    public static ListTag toTag(SimpleContainer inventory) {
-        ListTag list = new ListTag();
-        for(int i = 0; i < inventory.getContainerSize(); i++) {
-            CompoundTag stackTag = new CompoundTag();
-            stackTag.putInt("Slot", i);
-            ItemStack tool=inventory.getItem(i);
-            if(!tool.isEmpty()) {
-                stackTag.put("Tool", tool.save(new CompoundTag()));
-                list.add(stackTag);
-            }
-        }
-        return list;
-    }
 
-    public static void fromTag(ListTag tag, SimpleContainer inventory) {
-        inventory.clearContent();
-        tag.forEach(element -> {
-            CompoundTag stackTag = (CompoundTag) element;
-            int slot = stackTag.getInt("Slot");
-            ItemStack stack = ItemStack.of(stackTag.getCompound("Tool"));
-            inventory.setItem(slot, stack);
-        });
-    }
-#else
     public void getInventory(ItemStack stack) {
         Level level= Minecraft.getInstance().level;
         if(level ==null ) return;
@@ -228,13 +158,9 @@ public class WandMenu extends AbstractContainerMenu {
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
     }
-#endif
+
     @Override
-    #if MC=="1165"
-    public ItemStack clicked(int slotIndex, int button, ClickType actionType, Player player)
-    #else
     public void clicked(int slotIndex, int button, ClickType actionType, Player player)
-    #endif
     {
         System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
@@ -303,26 +229,19 @@ public class WandMenu extends AbstractContainerMenu {
                         }
                     }
                     if(button==1) {
-
                         //ListTag tools=wnd.player_data.getList("Tools",Tag.TAG_INT);
                         //tools.clear();
                         //wnd.player_data.put("Tools",tools);
                         //wnd.player_data.remove("Tools");
                     }
-
                     System.out.println("player data  "+wnd.player_data.toString());
                 }
             }
-
          } catch (Exception var8) {
             CrashReport crashReport = CrashReport.forThrowable(var8, "Container click");
             CrashReportCategory crashReportCategory = crashReport.addCategory("Click info");
             crashReportCategory.setDetail("Menu Type", () -> {
-                #if MC>="1193"
                     return this.getType() != null ? BuiltInRegistries.MENU.getKey(this.getType()).toString() : "<no type>";
-                #else
-                    return this.getType() != null ? Registry.MENU.getKey(this.getType()).toString() : "<no type>";
-                #endif
             });
             crashReportCategory.setDetail("Menu Class", () -> {
                 return this.getClass().getCanonicalName();
@@ -333,10 +252,5 @@ public class WandMenu extends AbstractContainerMenu {
             crashReportCategory.setDetail("Type", (Object)actionType);
             throw new ReportedException(crashReport);
          }
-        #if MC=="1165"
-        return ItemStack.EMPTY;
-        #else
-        return;
-        #endif
     }
 }

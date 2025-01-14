@@ -3,13 +3,7 @@ package net.nicguzzo.wands.menues;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
-#if MC>="1193"
 import net.minecraft.core.registries.BuiltInRegistries;
-#else
-import net.minecraft.core.Registry;
-#endif
-
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -22,27 +16,19 @@ import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.Compat;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
 
 public class MagicBagMenu extends AbstractContainerMenu {
     public ItemStack bag;
     public final Inventory playerInventory;
     private final BagContainer bagcontainer;
-    //public static final Logger LOGGER = LogManager.getLogger();
-
 
     public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        #if MC<"1205"
-        this(syncId, playerInventory, packetByteBuf.readItem());
-        #else
             this( syncId,playerInventory,
                 ItemStack.parse(
                    ((Level) playerInventory.player.level()).registryAccess(),
                    packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
                 )
             );
-        #endif
     }
 
     public MagicBagMenu(int syncId, Inventory playerInventory, ItemStack bag) {
@@ -79,11 +65,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
     }
 
     @Override
-    #if MC=="1165"
-    public ItemStack clicked(int slotIndex, int button, ClickType actionType, Player player)
-    #else
     public void clicked(int slotIndex, int button, ClickType actionType, Player player)
-    #endif
     {
         //LOGGER.info("clicked "+button+" index "+slotIndex +" action: "+actionType);
         try {
@@ -132,18 +114,9 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                         if(itemStack3.getItem()==bag_item.getItem()){
                                             boolean tags_match=true;
                                             //TODO: verify
-                                            #if MC>="1205"
                                             if(itemStack3.getTags().findAny().isPresent() || bag_item.getTags().findAny().isPresent()){
                                                 tags_match=itemStack3.getTags().equals(bag_item.getTags());
                                             }
-                                            #else
-                                            if(itemStack3.hasTag() || bag_item.hasTag()){
-                                                CompoundTag tag1=itemStack3.getOrCreateTag();
-                                                CompoundTag tag2=bag_item.getOrCreateTag();
-                                                tags_match=tag1.equals(tag2);
-                                            }
-                                            #endif
-
                                             if(tags_match &&  MagicBagItem.inc(bag,itemStack3.getCount())) {
                                                 Compat.set_carried(player, this, ItemStack.EMPTY);
                                             }
@@ -193,11 +166,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                         }
                     }
                 }else {
-                    #if MC=="1165"
-                    return super.clicked(slotIndex,button,actionType,player);
-                    #else
                     super.clicked(slotIndex, button, actionType, player);
-                    #endif
                 }
             }
 
@@ -205,11 +174,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
             CrashReport crashReport = CrashReport.forThrowable(var8, "Container click");
             CrashReportCategory crashReportCategory = crashReport.addCategory("Click info");
             crashReportCategory.setDetail("Menu Type", () -> {
-                #if MC>="1193"
                 return this.getType() != null ? BuiltInRegistries.MENU.getKey(this.getType()).toString() : "<no type>";
-                #else
-                    return this.getType() != null ? Registry.MENU.getKey(this.getType()).toString() : "<no type>";
-                #endif
             });
             crashReportCategory.setDetail("Menu Class", () -> {
                 return this.getClass().getCanonicalName();
@@ -220,11 +185,6 @@ public class MagicBagMenu extends AbstractContainerMenu {
             crashReportCategory.setDetail("Type", (Object)actionType);
             throw new ReportedException(crashReport);
         }
-        #if MC=="1165"
-        return ItemStack.EMPTY;
-        #else
         return;
-        #endif
     }
-
 }
