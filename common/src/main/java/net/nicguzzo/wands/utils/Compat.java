@@ -115,7 +115,7 @@ public class Compat {
             RenderSystem.setShaderTexture(0, tex);
     }
     static public void set_shader_block(){
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_CUTOUT);
+                RenderSystem.setShader(CoreShaders.RENDERTYPE_SOLID);
     }
     static public void set_shader_pos_col_tex_light(){
                 RenderSystem.setShader(CoreShaders.POSITION_COLOR_TEX_LIGHTMAP);
