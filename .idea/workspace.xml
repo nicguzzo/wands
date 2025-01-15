@@ -5,48 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c4e7fe89-77b2-42b1-a794-91138f96f639" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Minecraft_Server___fabric__fabric.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Minecraft_Server___fabric__fabric.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/WandsExpectPlatform.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/WandsExpectPlatform.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/WandsMod.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/WandsMod.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/WandToast.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/WandToast.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/WandsModClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/WandsModClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Btn.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Btn.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Select.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Select.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Spinner.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Spinner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Wdgt.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/gui/Wdgt.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/render/ClientRender.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/render/ClientRender.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/MagicBagScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/MagicBagScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/PaletteScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/PaletteScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/WandConfigScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/WandConfigScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/WandScreen.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/client/screens/WandScreen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/config/WandsConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/config/WandsConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/MagicBagItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/MagicBagItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/PaletteItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/PaletteItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/WandItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/items/WandItem.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/BagContainer.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/BagContainer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/MagicBagMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/MagicBagMenu.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/PaletteMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/PaletteMenu.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/WandMenu.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/menues/WandMenu.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/AxeItemAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/AxeItemAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/DropExperienceBlockAccessor.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/DropExperienceBlockAccessor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/ExperienceOrbMixin.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/GuiGraphicsMixin.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/ItemRendererMixin.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/ItemRendererMixin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/LevelRendererMixin.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/LevelRendererMixin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/RenderWorldMixin.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/mixin/RenderWorldMixin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/networking/Networking.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/networking/Networking.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/utils/Compat.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/utils/Compat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/utils/WandUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/utils/WandUtils.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/Palette.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/Palette.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/Wand.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/Wand.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/WandMode.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/WandMode.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/WandProps.java" beforeDir="false" afterPath="$PROJECT_DIR$/common/src/main/java/net/nicguzzo/wands/wand/WandProps.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,24 +31,26 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 5
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 5
+}</component>
   <component name="ProjectId" id="2reBoEr6BmjqkscVBQdFpoRkIVF" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build wands_mc1.21.2.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "mc1.21.2",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build wands_mc1.21.2.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;mc1.21.2&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/nico/projects/mods/branches/wands_mc1.21.0&quot;
   }
-}]]></component>
+}</component>
+  <component name="RunManager" selected="Application.Minecraft Client (:fabric)" />
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
