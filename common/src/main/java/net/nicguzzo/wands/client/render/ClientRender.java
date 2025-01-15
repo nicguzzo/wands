@@ -10,7 +10,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -312,8 +311,6 @@ public class ClientRender {
             float off2 = 0.05f;
             float off3 = off2/2;
             Compat.set_color(1.0F, 1.0F, 1.0F, 0.8f);
-            //RenderSystem.lineWidth(5.0f);
-            Compat.disableTexture();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             switch (mode) {
@@ -326,7 +323,6 @@ public class ClientRender {
                         List<AABB> list = preview_shape.toAabbs();
                         if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                             if (fancy) {
-                                Compat.enableTexture();
                                 RenderSystem.disableCull();
                                 //RenderSystem.enableCull();
                                 RenderSystem.enableBlend();
@@ -410,7 +406,6 @@ public class ClientRender {
                                 Compat.tesselator_end(tesselator,bufferBuilder);
 
                                 RenderSystem.enableBlend();
-                                Compat.disableTexture();
                             }
                             if (!fancy || !fat_lines) {
                                 Compat.set_shader_lines();
@@ -518,57 +513,85 @@ public class ClientRender {
                             random.setSeed(0);
                             int block_buffer_length=wand.block_buffer.get_length();
                             if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
-                                //Compat.enableTexture();
-                                //RenderSystem.enableCull();
-                                //Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
-                                //Compat.set_shader_block();
-                                //BufferBuilder bufferBuilder =tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+
                                 BlockState st;
-                                for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
-                                    if (wand.block_buffer.state[idx] != null) {
-                                        //preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
-                                        st = wand.block_buffer.state[idx];
-                                        if (wand.has_water_bucket) {
-                                            st = Blocks.WATER.defaultBlockState();
-                                        } else {
-                                            if (wand.has_lava_bucket) {
-                                                st = Blocks.LAVA.defaultBlockState();
-                                            }
-                                        }
+                                if (wand.has_water_bucket) {
+                                    st = Blocks.WATER.defaultBlockState();
+                                } else {
+                                    if (wand.has_lava_bucket) {
+                                        st = Blocks.LAVA.defaultBlockState();
+                                    }
+                                }
+                                if(wand.has_water_bucket || wand.has_lava_bucket) {
+                                    Compat.set_shader_pos_tex();
+                                    BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+                                    int i;
+                                    RenderSystem.enableCull();
+                                    TextureAtlasSprite sprite;
+                                    if (wand.has_water_bucket) {
+                                        sprite = ModelBakery.WATER_FLOW.sprite();
+                                        i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
+                                        Compat.set_texture(sprite.atlasLocation());
+                                    } else {
+                                        sprite = ModelBakery.LAVA_FLOW.sprite();
+                                        i = 16777215;
+                                        Compat.set_texture(sprite.atlasLocation());
+                                    }
 
-                                        matrixStack.pushPose();
-                                        matrixStack.translate(
-                                                wand.block_buffer.buffer_x[idx],
-                                                wand.block_buffer.buffer_y[idx],
-                                                wand.block_buffer.buffer_z[idx]
-                                        );
-                                        //blockRenderer.renderSingleBlock(st,matrixStack,bufferSource,15728880, OverlayTexture.NO_OVERLAY);
-                                        blockRenderer.renderSingleBlock(st,matrixStack,bufferSource,15728880, OverlayTexture.NO_OVERLAY);
-                                        matrixStack.popPose();
-                                        /*render_shape(matrixStack, tesselator, bufferBuilder,bufferSource, st,
-                                                wand.block_buffer.buffer_x[idx],
-                                                wand.block_buffer.buffer_y[idx],
-                                                wand.block_buffer.buffer_z[idx]);
+                                    //Compat.set_texture(TextureAtlas.LOCATION_BLOCKS);
+                                    float u0 = sprite.getU0();
+                                    float v0 = sprite.getV0();
+                                    float u1 = sprite.getU1();
+                                    float v1 = sprite.getV1();
 
-                                        //TODO: all double blocks!!
-                                        if (wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)) {
-                                            render_shape(matrixStack, tesselator, bufferBuilder,bufferSource,
-                                                    wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
+                                    for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
+                                        bp.set(wand.block_buffer.buffer_x[idx],wand.block_buffer.buffer_y[idx],wand.block_buffer.buffer_z[idx]);
+                                        render_fluid(
+                                                bufferBuilder,
+                                                (float) wand.block_buffer.buffer_x[idx] - cx,
+                                                (float) wand.block_buffer.buffer_y[idx] - cy,
+                                                (float) wand.block_buffer.buffer_z[idx] - cz,i,u0,v0,u1,v1);
+                                    }
+                                    Compat.tesselator_end(tesselator,bufferBuilder);
+                                }else {
+                                     for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
+                                         if (wand.block_buffer.state[idx] != null) {
+                                             //preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                                             st = wand.block_buffer.state[idx];
+                                             matrixStack.pushPose();
+                                             matrixStack.translate(
+                                                     wand.block_buffer.buffer_x[idx],
+                                                     wand.block_buffer.buffer_y[idx],
+                                                     wand.block_buffer.buffer_z[idx]
+                                             );
+                                             //blockRenderer.renderSingleBlock(st,matrixStack,bufferSource,15728880, OverlayTexture.NO_OVERLAY);
+                                             blockRenderer.renderSingleBlock(st, matrixStack, bufferSource, 15728880, OverlayTexture.NO_OVERLAY);
+                                             matrixStack.popPose();
+                                            /*render_shape(matrixStack, tesselator, bufferBuilder,bufferSource, st,
                                                     wand.block_buffer.buffer_x[idx],
-                                                    wand.block_buffer.buffer_y[idx] + 1,
+                                                    wand.block_buffer.buffer_y[idx],
                                                     wand.block_buffer.buffer_z[idx]);
-                                        } else {
-                                            if (wand.block_buffer.state[idx].getBlock() instanceof DoorBlock) {
 
+                                            //TODO: all double blocks!!
+                                            if (wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)) {
                                                 render_shape(matrixStack, tesselator, bufferBuilder,bufferSource,
-                                                        wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                                        wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
                                                         wand.block_buffer.buffer_x[idx],
                                                         wand.block_buffer.buffer_y[idx] + 1,
                                                         wand.block_buffer.buffer_z[idx]);
-                                            }
-                                        }*/
-                                    }
-                                }
+                                            } else {
+                                                if (wand.block_buffer.state[idx].getBlock() instanceof DoorBlock) {
+
+                                                    render_shape(matrixStack, tesselator, bufferBuilder,bufferSource,
+                                                            wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
+                                                            wand.block_buffer.buffer_x[idx],
+                                                            wand.block_buffer.buffer_y[idx] + 1,
+                                                            wand.block_buffer.buffer_z[idx]);
+                                                }
+                                            }*/
+                                         }
+                                     }
+                                 }
                                 //Compat.tesselator_end(tesselator,bufferBuilder);
                                 //Compat.disableTexture();
                             }
@@ -631,8 +654,6 @@ public class ClientRender {
                                         Compat.tesselator_end(tesselator,bufferBuilder);
                                     }
                                 }
-
-                                //Compat.disableTexture();
                                 RenderSystem.enableDepthTest();
                                 RenderSystem.enableCull();
                             } else {
@@ -679,20 +700,9 @@ public class ClientRender {
                     case 2://Y
                         mz=-1;
                         break;
-                    /*case 3://Z
-                        mz=-1;
-                        break;*/
                 }
                 BlockPos b_pos = wand.pos;
-                /*if(!targeting_air && !(wand.replace || wand.destroy)) {
-                    b_pos = last_pos.relative(last_side, 1);
-                }*/
                 if (!wand.destroy &&fancy) {
-                    //RenderSystem.enableCull();
-                    //Compat.enableTexture();
-                    //Compat.set_color(1.0f, 1.0f, 1.0f, opacity);
-                    //Compat.set_shader_block();
-                    //BufferBuilder bufferBuilder =tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
                     random.setSeed(0);
                     //wand.random.setSeed(wand.palette.seed);
                     BlockPos po=wand.copy_paste_buffer.get(0).pos;
@@ -747,14 +757,11 @@ public class ClientRender {
                         int py=b_pos.getY() + p.getY();
                         int pz=b_pos.getZ() + p.getZ()*mz;
 
-                        //render_shape(matrixStack, tesselator, bufferBuilder,bufferSource, st, px,py,pz);
                         matrixStack.pushPose();
                         matrixStack.translate( px,py,pz);
                         blockRenderer.renderSingleBlock(st,matrixStack,bufferSource,15728880, OverlayTexture.NO_OVERLAY);
                         matrixStack.popPose();
                     }
-                    //Compat.tesselator_end(tesselator,bufferBuilder);
-                    //Compat.disableTexture();
                 }
                 if (drawlines && paste_outlines) {
                     Colorf c=(wand.destroy? destroy_col: paste_bb_col);
@@ -766,7 +773,6 @@ public class ClientRender {
                     z2 = Integer.MIN_VALUE;
                     BufferBuilder bufferBuilder;
                     if (fat_lines) {
-                        Compat.enableTexture();
                         Compat.set_shader_pos_color();
                         bufferBuilder =tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
                     } else {
@@ -797,9 +803,7 @@ public class ClientRender {
                         if (z + 1 > z2) z2 = z + 1;
                     }
                     Compat.tesselator_end(tesselator,bufferBuilder);
-                    Compat.disableTexture();
                     if (fat_lines) {
-                        Compat.enableTexture();
                         Compat.set_shader_pos_color();
                         bufferBuilder =tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
                     } else {
@@ -827,14 +831,10 @@ public class ClientRender {
                                 c);
                     }
                     Compat.tesselator_end(tesselator,bufferBuilder);
-                    Compat.disableTexture();
                 }
             }
-
-            //RenderSystem.lineWidth(1.0f);
         }
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0f);
-        //Compat.post_render(matrixStack);
         matrixStack.popPose();
         RenderSystem.depthMask(true);
     }
@@ -852,7 +852,6 @@ public class ClientRender {
         {
             BufferBuilder bufferBuilder;
             if (fat_lines) {
-                Compat.enableTexture();
                 Compat.set_shader_pos_color();
                 bufferBuilder =tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
             } else {
@@ -1238,6 +1237,43 @@ public class ClientRender {
         }
         //WandsMod.log("x: "+x+" y: "+y+" z: "+z,prnt);
 
+    }
+    static void render_fluid(BufferBuilder bufferBuilder,float x, float y,float z,int color,float u1,float v1,float u0,float v0) {
+
+            float h = 0.875f;
+            float o = 0.1f;
+            //up
+            bufferBuilder.addVertex(x + o    , y + h - o, z + o).setUv(u1, v1).setColor(color);
+            bufferBuilder.addVertex(x + o    , y + h - o, z + 1 - o).setUv(u1, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + 1 - o).setUv(u0, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + o).setUv(u0, v1).setColor(color);
+            //down
+            bufferBuilder.addVertex(x + o    , y + o, z + o).setUv(u1, v1).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + o).setUv(u0, v1).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + 1 - o).setUv(u0, v0).setColor(color);
+            bufferBuilder.addVertex(x + o    , y + o, z + 1 - o).setUv(u1, v0).setColor(color);
+            //north -z
+            bufferBuilder.addVertex(x + o, y + o, z + o).setUv(u1, v1).setColor(color);
+            bufferBuilder.addVertex(x + o, y + h - o, z + o).setUv(u1, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + o).setUv(u0, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + o).setUv(u0, v1).setColor(color);
+            //south +z
+            bufferBuilder.addVertex(x + o, y + o, z + 1 - o).setUv(u1, v1).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + 1 - o).setUv(u0, v1).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + 1 - o).setUv(u0, v0).setColor(color);
+            bufferBuilder.addVertex(x + o, y + h - o, z + 1 - o).setUv(u1, v0).setColor(color);
+            //east
+            bufferBuilder.addVertex(x + o, y + o, z + o).setUv(u0, v1).setColor(color);
+            bufferBuilder.addVertex(x + o, y + o, z + 1 - o).setUv(u1, v1).setColor(color);
+            bufferBuilder.addVertex(x + o, y + h - o, z + 1 - o).setUv(u1, v0).setColor(color);
+            bufferBuilder.addVertex(x + o, y + h - o, z + o).setUv(u0, v0).setColor(color);
+            //weast
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + o).setUv(u0, v1).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + o).setUv(u0, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + h - o, z + 1 - o).setUv(u1, v0).setColor(color);
+            bufferBuilder.addVertex(x + 1 - o, y + o, z + 1 - o).setUv(u1, v1).setColor(color);
+
+        //}
     }
 #if false
     static void render_shape(PoseStack matrixStack,Tesselator tesselator,BufferBuilder bufferBuilder,MultiBufferSource.BufferSource bufferSource,BlockState state,double x, double y,double z){

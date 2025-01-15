@@ -1,7 +1,9 @@
 package net.nicguzzo.wands.utils;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.items.MagicBagItem;
@@ -9,6 +11,8 @@ import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.mixin.AxeItemAccessor;
 import net.nicguzzo.wands.mixin.HoeItemAccessor;
 import net.nicguzzo.wands.mixin.ShovelItemAccessor;
+
+import java.util.Iterator;
 
 public class WandUtils{
 
@@ -33,31 +37,25 @@ public class WandUtils{
     static public int count_in_shulker(ItemStack shulker, Item item){
         int n=0;
         if(item!=null){
-            #if MC < "1205"
-            CompoundTag entity_tag =shulker.getTagElement("BlockEntityTag");
-            if(entity_tag!=null){
-                ListTag shulker_items = entity_tag.getList("Items", Compat.NbtType.COMPOUND);
-                for (int i = 0, len = shulker_items.size(); i < len; ++i) {
-                    CompoundTag itemTag = shulker_items.getCompound(i);
-                    ItemStack s = ItemStack.of(itemTag);
+            ItemContainerContents contents= shulker.get(DataComponents.CONTAINER);
+            if(contents!=null){
+                Iterable<ItemStack> shulker_items=contents.nonEmptyItems();
+                Iterator<ItemStack> it=shulker_items.iterator();
+                while(it.hasNext()) {
+                    ItemStack s = it.next();
                     if( WandUtils.is_magicbag(s)) {
                         int total=MagicBagItem.getTotal(s);
                         ItemStack stack2=MagicBagItem.getItem(s);
-                        if(!stack2.isEmpty()&& total >0 && stack2.getItem()==item){
+                        if(!stack2.isEmpty()&& stack2.is(item) && total >0 ){
                             n+=total;
                         }
                     }else{
-                        if(!s.isEmpty() && s.getTag()==null && s.getItem()== item){
+                        if(!s.isEmpty() && s.is(item)){
                             n+=s.getCount();
                         }
                     }
                 }
             }
-            #else
-            //TODO: count_in_shulker  mc >= 1.20.5
-            //Iterator var7 = ((ItemContainerContents)shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY)).nonEmptyItems().iterator();
-            //ItemContainerContents contents=shulker.getOrDefault(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
-            #endif
         }
         return n;
     }

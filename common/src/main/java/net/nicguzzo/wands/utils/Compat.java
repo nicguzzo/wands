@@ -136,28 +136,6 @@ public class Compat {
     static public void set_shader_lines(){
                 RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
     }
-    static public void set_render_quads_block(BufferBuilder bufferBuilder){
-    }
-    static public void set_render_quads_pos_tex(BufferBuilder bufferBuilder){
-    }
-    static public void set_render_lines(BufferBuilder bufferBuilder){
-    }
-    static public void set_render_quads_pos_col(BufferBuilder bufferBuilder){
-    }
-    static public void pre_render(PoseStack poseStack){
-        Minecraft client=Minecraft.getInstance();
-        Camera camera = client.gameRenderer.getMainCamera();
-        Vec3 c = camera.getPosition();
-        Matrix4fStack poseMatrix = RenderSystem.getModelViewStack();
-        poseMatrix.pushMatrix();
-        poseMatrix.mul(poseStack.last().pose());
-        poseMatrix.translate((float)-c.x,(float)-c.y,(float)-c.z);
-    }
-    static public void post_render(PoseStack poseStack){
-        Matrix4fStack poseMatrix = RenderSystem.getModelViewStack();
-        poseMatrix.popMatrix();
-    }
-
 
     static public void open_menu(ServerPlayer player, ItemStack item, int m){
         MenuRegistry.openExtendedMenu(player, new MenuProvider(){
@@ -210,23 +188,13 @@ public class Compat {
     static public MutableComponent literal(String msg){
         return Component.literal(msg);
     }
-    static public boolean shouldRenderFace(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos, Direction direction, BlockPos blockPos2){
-        //TODO: ???
-        //return Block.shouldRenderFace(blockState,blockState,direction);
-        return true;
-    }
     static public void register_key(KeyMapping k){
             KeyMappingRegistry.register(k);
     }
     static public void render_info(){
             ClientGuiEvent.RENDER_HUD.register((e,d)->{ WandsModClient.render_wand_info(e);});
     }
-    static public void enableTexture() {
 
-    }
-    static public void disableTexture() {
-
-    }
     static public BlockPos get_player_pos(Player player){
         return player.getOnPos();
     }
