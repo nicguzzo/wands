@@ -1,8 +1,7 @@
 package net.nicguzzo.wands.client.screens;
-
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -16,20 +15,14 @@ import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.utils.Compat;
-#if MC >= "1200"
 import net.minecraft.client.gui.GuiGraphics;
-#endif
 
-#if MC >= "1212"
-import net.minecraft.client.renderer.RenderType;
-#endif
 public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     
     private static final ResourceLocation TEXTURE = Compat.create_resource_mc("textures/gui/container/shulker_box.png");
     private Btn btn_mode;
     private Btn btn_rotate;
-    
-    
+
     Component mode_val;
     Component rot_on = Compat.literal("rotate: on");
     Component rot_off=Compat.literal("rotate: off");
@@ -52,33 +45,13 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 WandsModClient.send_palette(false,true);
             }
         });
-/*
-        #if MC=="1165"
-            this.addWidget(btn_mode);
-            this.addWidget(btn_rotate);
-        #else
-            this.addRenderableWidget(btn_mode);
-            this.addRenderableWidget(btn_rotate);
-        #endif
-*/
     }
 
     @Override
-    #if MC < "1200"
-        public void render(PoseStack poseStack, int mouseX, int mouseY, float delta){
-    #else
-        public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
-    #endif
-        #if MC < "1200"
-            super.render(poseStack, mouseX, mouseY, delta);
-        #else
-            super.render(gui, mouseX, mouseY, delta);
-            net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getInstance();
-        #endif
-        
-        //this.btn_mode.render(poseStack, mouseX, mouseY, delta);
-        //this.btn_rotate.render(poseStack, mouseX, mouseY, delta);
-        
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
+        super.render(gui, mouseX, mouseY, delta);
+        net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getInstance();
+
         if(this.menu.palette!=null){
             PaletteMode mode=PaletteItem.getMode(this.menu.palette);            
             switch(mode){
@@ -94,41 +67,20 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             };
             CompoundTag tag= Compat.getTags(this.menu.palette);
             boolean rot=tag.getBoolean("rotate");
-            #if MC < "1200"
-                this.font.draw(poseStack,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77, 4210752);
-                this.font.draw(poseStack,mode_val , (width/2)+30, (height/2)-77, 4210752);
-                btn_mode.render(poseStack,this.font, mouseX, mouseY);
-                btn_rotate.render(poseStack,this.font, mouseX, mouseY);
-            #else
-                gui.drawString(client.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77,4210752,false);
-                gui.drawString(client.font,mode_val , (width/2)+30, (height/2)-77, 4210752,false);
-                btn_mode.render(gui,this.font, mouseX, mouseY);
-                btn_rotate.render(gui,this.font, mouseX, mouseY);
-            #endif
+            gui.drawString(client.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-77,4210752,false);
+            gui.drawString(client.font,mode_val , (width/2)+30, (height/2)-77, 4210752,false);
+            btn_mode.render(gui,this.font, mouseX, mouseY);
+            btn_rotate.render(gui,this.font, mouseX, mouseY);
         }
     }
     @Override
-    #if MC < "1200"
-    protected void renderBg(PoseStack matrices, float delta, int mouseX, int mouseY) {
-    #else
-        protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-    #endif
+    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        #if MC < "1200"
-            Compat.set_texture(TEXTURE);
-            Compat.set_pos_tex_shader();
-            blit(matrices, x, y, 0, 0, imageWidth, imageHeight);
-        #else
-            gui.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
-            //#if MC < "1212"
-                //gui.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
-            //#else
-                //gui.blit(RenderType::guiTextured,TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
-            //#endif
-        #endif
+        gui.blitSprite(RenderType::guiTextured,TEXTURE, x, y,  imageWidth, imageHeight);
+
     }
     boolean is_hovering(int i, int j, int k, int l, double d, double e) {
         int m = this.leftPos;

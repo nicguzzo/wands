@@ -1,18 +1,11 @@
 package net.nicguzzo.wands.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
 
-#if MC == "1165"
-import me.shedaniel.architectury.networking.NetworkManager;
-#else
 import dev.architectury.networking.NetworkManager;
-#endif
 
-import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -29,17 +22,11 @@ import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.client.gui.Wdgt;
 import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.networking.Networking;
-import net.nicguzzo.wands.utils.IEntityDataSaver;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Value;
 import net.nicguzzo.wands.utils.Compat;
-import org.jetbrains.annotations.NotNull;
-#if MC >= "1200"
 import net.minecraft.client.gui.GuiGraphics;
-#endif
-#if MC >= "1212"
 import net.minecraft.client.renderer.RenderType;
-#endif
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandMenu> {
@@ -49,6 +36,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     static final int img_h=256;
     private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
     private static final ResourceLocation INV_TEX = Compat.create_resource("textures/gui/inventory.png");
+    private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
 
     Vector<Wdgt> wdgets =new Vector<>();
     Select modes_grp;
@@ -299,26 +287,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         drop_pos_sel.add(new Btn(Compat.translatable("screen.wands.drop_pos.player"),(int mx,int my)->{
 
             ClientRender.wand.drop_on_player=true;
-            #if MC < "1205"
-                FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-                packet.writeBoolean(true);
-                NetworkManager.sendToServer(Networking.GLOBAL_SETTINGS_PACKET, packet);
-                //Compat.send_to_server(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
-
-            #else
             NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(true));
-            #endif
         }));
         drop_pos_sel.add(new Btn(Compat.translatable("screen.wands.drop_pos.block"),(int mx,int my)->{
             ClientRender.wand.drop_on_player=false;
-            #if MC < "1205"
-            FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-            packet.writeBoolean(false);
-            NetworkManager.sendToServer(Networking.GLOBAL_SETTINGS_PACKET, packet);
-            //Compat.send_to_server(WandsMod.GLOBAL_SETTINGS_PACKET, packet);
-            #else
             NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(false));
-            #endif
         }));
         wdgets.add(drop_pos_sel);
 
@@ -547,12 +520,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         }
     }
     @Override 
-    #if MC < "1200"
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
-    #else
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
-    #endif
-
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
         Compat.set_texture(BG_TEX);
         Compat.set_pos_tex_shader();
@@ -567,21 +535,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             Compat.set_texture(INV_TEX);
             x =( (width - imageWidth) / 2);
             y =( (height - imageHeight) / 2);
-            #if MC < "1200"
-                blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
-                super.render(poseStack,mouseX,mouseY,delta);
-                show_inv_btn.render(poseStack,this.font,mouseX,mouseY);
-            #else
-                #if MC < "1212"
-                    gui.blit(INV_TEX, x, y, 0, 0, imageWidth, imageHeight);
-                #else
-                    gui.blit(RenderType::guiTextured, INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);
-                #endif
+                gui.blit(RenderType::guiTextured, INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);
                 super.render(gui,mouseX,mouseY,delta);
                 if(ClientRender.wand!=null && ClientRender.wand.player_data !=null){
                     for (int tool : ClientRender.wand.player_data.getIntArray("Tools")) {
                         Slot slot = (Slot)this.menu.slots.get(tool);
-                        renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
+                        //renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
+                        gui.blitSprite(RenderType::guiTextured, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
                     }
                 }
                 gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
@@ -589,25 +549,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 gui.drawString(font,"click on a player inventory slot",leftPos+3,topPos+50,0xffffffff);
                 gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);
                 show_inv_btn.render(gui,this.font,mouseX,mouseY);
-            #endif
+
         }else{
-            #if MC < "1200"
-                blit(poseStack, x, y, 0, 0, img_w, img_h);
-            #else
-                #if MC < "1212"
-                    gui.blit(BG_TEX, x, y, 0, 0, img_w, img_h);
-                #else
-                    gui.blit(RenderType::guiTextured, BG_TEX, x, y, 0, 0, img_w, img_h,256,256);
-                #endif
-            #endif
+            gui.blit(RenderType::guiTextured, BG_TEX, x, y, 0, 0, img_w, img_h,256,256);
             update_selections();
             for (Wdgt wdget : wdgets) {
                 if (wdget.visible) {
-                    #if MC < "1200"
-                        wdget.render(poseStack, this.font, mouseX, mouseY);
-                    #else
                         wdget.render(gui, this.font, mouseX, mouseY);
-                    #endif
                 }
             }
             x = ((width - img_w)/2 +48)-xoff;
@@ -615,38 +563,18 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             for (int i=0;i<9;i++) {
                 Slot s=this.menu.slots.get(36+i);
                 int xx=x+i*18;
-                #if MC < "1200"
-                    #if MC <= "1193"
-                        this.itemRenderer.renderAndDecorateItem(s.getItem(),xx, y);
-                        this.itemRenderer.renderGuiItemDecorations(this.font, s.getItem(),xx, y , null);
-                    #else
-                        this.itemRenderer.renderAndDecorateItem(poseStack,s.getItem(),xx, y);
-                        this.itemRenderer.renderGuiItemDecorations(poseStack,this.font, s.getItem(),xx, y , null);
-                    #endif
-                #else
                     gui.renderFakeItem(s.getItem(),xx, y);
                     gui.renderItemDecorations(font,s.getItem(),xx, y);
-                    //this.itemRenderer.renderAndDecorateItem(poseStack,s.getItem(),xx, y);
-                    //this.itemRenderer.renderGuiItemDecorations(poseStack,this.font, s.getItem(),xx, y , null);
-                #endif
                 if(mouseX>xx && mouseX<xx+16 && mouseY>y && mouseY<y+16) {
                     this.hoveredSlot=s;
                 }
             }
         }
-        #if MC < "1200"
-            this.renderTooltip(poseStack, mouseX,mouseY);
-        #else
-            this.renderTooltip(gui, mouseX,mouseY);
-        #endif
+        this.renderTooltip(gui, mouseX,mouseY);
         RenderSystem.depthMask(true);
     }
     @Override
-    #if MC < "1200"
-        protected void renderBg(PoseStack poseStack, float f, int i, int j) {
-    #else
-        protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-    #endif
+    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
 
     }
     @Override
