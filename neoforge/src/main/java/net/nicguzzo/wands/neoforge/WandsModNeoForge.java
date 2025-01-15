@@ -1,15 +1,9 @@
 package net.nicguzzo.wands.neoforge;
 
-#if MC=="1165"
-import me.shedaniel.architectury.platform.forge.EventBuses;
-import me.shedaniel.architectury.utils.Env;
-import me.shedaniel.architectury.utils.EnvExecutor;
-#else
 import com.mojang.serialization.Codec;
 import dev.architectury.registry.menu.MenuRegistry;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
-#endif
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.inventory.MenuType;
@@ -44,9 +38,6 @@ class ModMenuTypes {
         event.register(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
         event.register(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
         event.register(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
-        //MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-        //MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
-        //MenuRegistry.registerScreenFactory(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
     }
 }
 

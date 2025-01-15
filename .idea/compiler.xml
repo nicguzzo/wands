@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\common\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\common\build\classes\java\main\BuildingWands-common-MC1.21.2-common-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.common.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\common\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\common\build\classes\java\test\test-BuildingWands-common-MC1.21.2-common-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.common.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\fabric\build\classes\java\main\BuildingWands-fabric-MC1.21.2-fabric-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.fabric.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\fabric\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\fabric\build\classes\java\test\test-BuildingWands-fabric-MC1.21.2-fabric-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.fabric.test" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\forge\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.main.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\forge\build\classes\java\main\BuildingWands-forge-MC1.21.2-forge-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.forge.main" />
+      </profile>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <option name="defaultObfuscationEnv" value="named:intermediary" />
+        <option name="inMapFileNamedIntermediary" value="C:\Users\nicol\.gradle\caches\fabric-loom\1.21.2\loom.mappings.1_21_2.layered+hash.40359-v2\mappings.tiny" />
+        <option name="outMapFileNamedIntermediary" value="C:\nico\projects\mods\branches\wands_mc1.21.2\forge\build\loom-cache\mixin-map-loom.mappings.1_21_2.layered+hash.40359-v2.test.tiny" />
+        <option name="outRefMapFile" value="C:\nico\projects\mods\branches\wands_mc1.21.2\forge\build\classes\java\test\test-BuildingWands-forge-MC1.21.2-forge-refmap.json" />
+        <option name="quiet" value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-preprocessor/2024.1.47/3e71fe5bf548cd3adac238c7c4d583a81bd100e3/manifold-preprocessor-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold/2024.1.47/3587eb1e8e4412842b9114442e9f98112c5f897f/manifold-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-rt/2024.1.47/1e0b11aabd52ee065b8f4e8ecaeb9fa77ab6bfdc/manifold-rt-2024.1.47.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/systems.manifold/manifold-util/2024.1.47/703ccd6e416806c050918b146e573308710955f7/manifold-util-2024.1.47.jar" />
+        </processorPath>
+        <module name="wands.forge.test" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="21" />
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xplugin:Manifold " />
+  </component>
+</project>
