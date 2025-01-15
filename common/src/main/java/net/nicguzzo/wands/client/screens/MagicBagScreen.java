@@ -1,10 +1,8 @@
 package net.nicguzzo.wands.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-
-
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,13 +11,8 @@ import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.Compat;
-
-#if MC >= "1200"
 import net.minecraft.client.gui.GuiGraphics;
-#if MC >= "1212"
 import net.minecraft.client.renderer.RenderType;
-#endif
-#endif
 
 public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
     private static final ResourceLocation TEXTURE = Compat.create_resource("textures/gui/magicbag.png");
@@ -39,67 +32,31 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         }
     }
     @Override
-    #if MC < "1200"
-        protected void renderBg(PoseStack poseStack, float f, int i, int j) {
-    #else
-        protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-    #endif
+    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
         Compat.set_texture(TEXTURE);
         Compat.set_pos_tex_shader();
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        #if MC < "1200"
-            blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
-            blit(poseStack, x+imageWidth-64, y+10, 200, 64*tier, 41, 64);
-        #else
-            #if MC < "1212"
-                gui.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
-                gui.blit(TEXTURE, x+imageWidth-64, y+10, 200, 64*tier, 41, 64);
-            #else
-                gui.blit(RenderType::guiTextured, TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
-                gui.blit(RenderType::guiTextured, TEXTURE, x+imageWidth-64, y+10, 200, 64*tier,41, 64,256,256);
-            #endif
-        #endif
+        gui.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
+        gui.blit(TEXTURE, x+imageWidth-64, y+10, 200, 64*tier,41, 64,256,256);
     }
     @Override
-    #if MC < "1200"
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
-    #else
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
-    #endif
-        #if MC < "1200"
-            super.render(poseStack, mouseX, mouseY, delta);
-        #else
-             net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getInstance();
-             super.render(gui, mouseX, mouseY, delta);
-        #endif
+        super.render(gui, mouseX, mouseY, delta);
+        Minecraft client=Minecraft.getInstance();
         int text_color=0xffffffff;
         RenderSystem.disableDepthTest();
         ItemStack item=MagicBagItem.getItem(bag_stack);
-
         if(!item.isEmpty()) {
             Component text = Compat.translatable_item_name(item);
             int w = font.width(text);
-            #if MC < "1200"
-                font.draw(poseStack, text, (width / 2.0f) - w / 2.0f, (height / 2.0f) - 20, text_color);
-            #else
-                gui.drawString(client.font, text, (width / 2) - w / 2, (height / 2) - 20, text_color,false);
-            #endif
+            gui.drawString(client.font, text, (width / 2) - w / 2, (height / 2) - 20, text_color,false);
         }
         Component text2=Compat.literal(""+MagicBagItem.getTotal(bag_stack));
         int w2=font.width(text2);
-        #if MC < "1200"
-            font.draw(poseStack,text2 ,(width/2.0f)-w2/2.0f,(height/2.0f)-32, text_color);
-        #else
-            gui.drawString(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
-        #endif
-        #if MC < "1200"
-            this.renderTooltip(poseStack, mouseX,mouseY);
-        #else
+        gui.drawString(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
         this.renderTooltip(gui, mouseX,mouseY);
-        #endif
         RenderSystem.enableDepthTest();
-
     }
 }
