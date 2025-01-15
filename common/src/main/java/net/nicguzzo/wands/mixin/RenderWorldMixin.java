@@ -15,10 +15,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class RenderWorldMixin {
     
     @Inject(method = "render", at = @At(value = "HEAD"))
-    public void render(PoseStack matrices, Frustum frustum, MultiBufferSource.BufferSource bufferIn, double d, double e, double f, CallbackInfo ci){
+    public void render(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource, double d, double e, double f, CallbackInfo ci){
         if(!WandsMod.config.render_last)
         {
-            ClientRender.render(matrices,bufferIn);
+            ClientRender.render(poseStack,bufferSource);
         }
     }
 }
