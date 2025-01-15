@@ -1,159 +1,133 @@
 package net.nicguzzo.wands.items;
 
-#if MC >= "1205"
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.CustomData;
-#endif
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-#if MC<"1212"
 import net.minecraft.world.InteractionResultHolder;
-#endif
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.utils.Compat;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 
 public class MagicBagItem extends Item {
     public int tier;
-    public int limit=Integer.MAX_VALUE;
-    public MagicBagItem(int tier,int limit,Properties properties) {
+    public int limit = Integer.MAX_VALUE;
+
+    public MagicBagItem(int tier, int limit, Properties properties) {
         super(properties);
-        this.tier=tier;
-        if(limit>0) {
+        this.tier = tier;
+        if (limit > 0) {
             this.limit = limit;
         }
     }
+
     @Override
-    #if MC>="1212"
-    public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
-    #else
-    public  InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
-    #endif
-        ItemStack magic_bag =player.getItemInHand(interactionHand);
-        if(!world.isClientSide()) {
-            Compat.open_menu((ServerPlayer) player,magic_bag,2);
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
+        ItemStack magic_bag = player.getItemInHand(interactionHand);
+        if (!world.isClientSide()) {
+            Compat.open_menu((ServerPlayer) player, magic_bag, 2);
         }
-        #if MC>="1212"
-            return InteractionResult.PASS;
-        #else
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
-        #endif
     }
+
     static public int getTotal(ItemStack bag) {
-        if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            CompoundTag tag= Compat.getTags(bag);
+        if (bag != null && bag.getItem() instanceof MagicBagItem) {
+            CompoundTag tag = Compat.getTags(bag);
             return tag.getInt("total");
         }
         return 0;
     }
 
     //returns false if it reached the limit;
-    static public boolean inc(ItemStack bag,int n) {
-        if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            int lim=((MagicBagItem)bag.getItem()).limit;
-            CompoundTag tag= Compat.getTags(bag);
-            int total=tag.getInt("total");
-            if(total+n<lim) {
+    static public boolean inc(ItemStack bag, int n) {
+        if (bag != null && bag.getItem() instanceof MagicBagItem) {
+            int lim = ((MagicBagItem) bag.getItem()).limit;
+            CompoundTag tag = Compat.getTags(bag);
+            int total = tag.getInt("total");
+            if (total + n < lim) {
                 tag.putInt("total", total + n);
-                #if MC>="1205"
                 CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
-                #endif
                 return true;
             }
         }
         return false;
     }
-    static public void dec(ItemStack bag,int n) {
-        if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            CompoundTag tag= Compat.getTags(bag);
-            int total=tag.getInt("total");
-            if(total-n>=0) {
+
+    static public void dec(ItemStack bag, int n) {
+        if (bag != null && bag.getItem() instanceof MagicBagItem) {
+            CompoundTag tag = Compat.getTags(bag);
+            int total = tag.getInt("total");
+            if (total - n >= 0) {
                 tag.putInt("total", total - n);
-            }else{
+            } else {
                 tag.putInt("total", 0);
             }
-            #if MC>="1205"
             CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
-            #endif
         }
     }
-    static public void setItem(ItemStack bag, ItemStack item) {
-        if(bag != null && item!=null && !item.isEmpty() && bag.getItem() instanceof MagicBagItem) {
-            ItemStack item2=item.copy();
-            item2.setCount(1);
-            CompoundTag tag= Compat.getTags(bag);
 
-            #if MC>="1205"
-            Level level= Minecraft.getInstance().level;
-            if(level !=null ) {
-               tag.put("item",item2.save(level.registryAccess(),new CompoundTag()));
-               CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
+    static public void setItem(ItemStack bag, ItemStack item) {
+        if (bag != null && item != null && !item.isEmpty() && bag.getItem() instanceof MagicBagItem) {
+            ItemStack item2 = item.copy();
+            item2.setCount(1);
+            CompoundTag tag = Compat.getTags(bag);
+
+            Level level = Minecraft.getInstance().level;
+            if (level != null) {
+                tag.put("item", item2.save(level.registryAccess(), new CompoundTag()));
+                CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
             }
-            #else
-            tag.put("item",item2.save(new CompoundTag()));
-            #endif
         }
-        #if MC>="1205"
-        if(item.isEmpty()){
-            CustomData.set(DataComponents.CUSTOM_DATA, bag,new CompoundTag());
+        if (item.isEmpty()) {
+            CustomData.set(DataComponents.CUSTOM_DATA, bag, new CompoundTag());
         }
-        #endif
     }
 
     static public ItemStack getItem(ItemStack bag) {
-        if(bag != null && bag.getItem() instanceof MagicBagItem) {
-            CompoundTag tag= Compat.getTags(bag);
-            #if MC>="1205"
-                Level level= Minecraft.getInstance().level;
-                if(level !=null && tag.contains("item")) {
-                    Optional<ItemStack> item = ItemStack.parse(level.registryAccess(), tag.getCompound("item"));
-                    if(item.isPresent()) {
-                        return item.get();
-                    }
+        if (bag != null && bag.getItem() instanceof MagicBagItem) {
+            CompoundTag tag = Compat.getTags(bag);
+            Level level = Minecraft.getInstance().level;
+            if (level != null && tag.contains("item")) {
+                Optional<ItemStack> item = ItemStack.parse(level.registryAccess(), tag.getCompound("item"));
+                if (item.isPresent()) {
+                    return item.get();
                 }
-            #else
-            return ItemStack.of(tag.getCompound("item"));
-            #endif
+            }
         }
         return ItemStack.EMPTY;
     }
+
     @Environment(EnvType.CLIENT)
     @Override
-    #if MC>="1205"
-    public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag)
-    #else
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, @NotNull TooltipFlag tooltipFlag)
-    #endif
-    {
-        ItemStack i=MagicBagItem.getItem(stack);
-        if(i.isEmpty()) {
+    public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
+        ItemStack i = MagicBagItem.getItem(stack);
+        if (i.isEmpty()) {
             list.add(Compat.literal("item: none"));
-        }else{
+        } else {
             list.add(Compat.literal("item: ").append(Compat.translatable_item_name(i)));
         }
-        list.add(Compat.literal("total: " + MagicBagItem.getTotal(stack) ));
+        list.add(Compat.literal("total: " + MagicBagItem.getTotal(stack)));
     }
+
     @Override
     public @NotNull Component getName(ItemStack itemStack) {
-        if(!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem){
-            ItemStack item= MagicBagItem.getItem(itemStack);
-            if(!item.isEmpty()) {
-                return Compat.literal("Bag of ").append(Compat.translatable_item_name(item)).append(" - Tier "+(tier+1));
+        if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
+            ItemStack item = MagicBagItem.getItem(itemStack);
+            if (!item.isEmpty()) {
+                return Compat.literal("Bag of ").append(Compat.translatable_item_name(item)).append(" - Tier " + (tier + 1));
             }
         }
         return super.getName(itemStack);

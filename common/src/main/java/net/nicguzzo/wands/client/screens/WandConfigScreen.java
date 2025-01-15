@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.nicguzzo.wands.utils.Compat;
-import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;

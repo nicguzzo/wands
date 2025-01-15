@@ -20,20 +20,14 @@ import java.util.Optional;
 import java.util.Vector;
 
 import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
-#if MC>="1190"
+
 import net.minecraft.util.RandomSource;
-#else
-import java.util.Random;
-#endif
+
 public class Palette {
     public ItemStack item = null;
     public boolean has_palette = false;
     public int slot = 0;
-    #if MC>="1190"
     public RandomSource random = RandomSource.create();
-    #else
-    public Random random = new Random();
-    #endif
     public volatile long seed = System.currentTimeMillis();
     public Vector<PaletteSlot> palette_slots = new Vector<>();
     public static class PaletteSlot {
@@ -59,13 +53,9 @@ public class Palette {
             for (int i = 0; i < s; i++) {
                 CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
                 ItemStack stack =ItemStack.EMPTY;
-                #if MC>="1205"
                 if(level !=null) {
                     stack= ItemStack.parse(level.registryAccess(), stackTag.getCompound("Block")).orElse(ItemStack.EMPTY);
                 }
-                #else
-                stack = ItemStack.of(stackTag.getCompound("Block"));
-                #endif
                 if (!stack.isEmpty()) {
                     Block blk = Block.byItem(stack.getItem());
                     if (blk != Blocks.AIR) {
@@ -110,13 +100,8 @@ public class Palette {
             //if (palette_mode == PaletteItem.PaletteMode.RANDOM)
             {
                 if (PaletteItem.getRotate(item)) {
-                    #if MC>="1205"
                     //TODO: fix rotation
                     st = ps.state.getBlock().defaultBlockState().rotate(Rotation.getRandom(random));
-                    //st = ps.state.getBlock().rotate(ps.state, Rotation.getRandom(random));
-                    #else
-                    st = ps.state.getBlock().rotate(ps.state, Rotation.getRandom(random));
-                    #endif
                 }
             }
         }

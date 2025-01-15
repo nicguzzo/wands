@@ -1,6 +1,5 @@
 package net.nicguzzo.wands.mixin;
 
-
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,14 +9,8 @@ import java.util.Map;
 
 @Mixin(AxeItem.class)
 public interface AxeItemAccessor {
-    #if MC=="1165"
-        @Accessor("STRIPABLES")
-
-    #else
-        @Accessor("STRIPPABLES")
-    #endif
+    @Accessor("STRIPPABLES")
     static Map<Block, Block> getStrippables(){
         throw new AssertionError();
     }
-
 }
