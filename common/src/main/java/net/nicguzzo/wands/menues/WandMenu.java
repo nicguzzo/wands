@@ -8,8 +8,6 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.FriendlyByteBuf;

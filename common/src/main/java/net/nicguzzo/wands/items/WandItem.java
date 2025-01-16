@@ -166,6 +166,5 @@ public class WandItem extends Item {
         list.add(Compat.literal("plane: " + WandProps.Plane.values()[tag.getInt("plane")].toString()));
         list.add(Compat.literal("fill circle: " + tag.getBoolean("cfill")));
         list.add(Compat.literal("rotation: " + tag.getInt("rotation")));
-        ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
     }
 }
