@@ -79,7 +79,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        gui.blitSprite(RenderType::guiTextured,TEXTURE, x, y,  imageWidth, imageHeight);
+
+        gui.blit(RenderType::guiTextured, TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
 
     }
     boolean is_hovering(int i, int j, int k, int l, double d, double e) {

@@ -3,6 +3,7 @@ package net.nicguzzo.wands.networking;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -20,6 +21,7 @@ public class Networking {
     static public ResourceLocation PALETTE_PACKET = Compat.create_resource("palette_packet");
     static public ResourceLocation STATE_PACKET = Compat.create_resource("state_packet");
     static public ResourceLocation WAND_PACKET = Compat.create_resource("wand_packet");
+    static public ResourceLocation PLAYER_DATA_PACKET = Compat.create_resource("player_data_packet");
     static public ResourceLocation POS_PACKET = Compat.create_resource("pos_packet");
     static public ResourceLocation CONF_PACKET = Compat.create_resource("conf_packet");
     static public ResourceLocation GLOBAL_SETTINGS_PACKET = Compat.create_resource("global_settings_packet");
@@ -134,6 +136,20 @@ public class Networking {
                 ItemStack.STREAM_CODEC,
                 WandPacket::item_stack,
                 WandPacket::new
+        );
+
+        @Override
+        public CustomPacketPayload.@NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record PlayerDataPacket(CompoundTag tag) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<PlayerDataPacket> TYPE = new CustomPacketPayload.Type<>(PLAYER_DATA_PACKET);
+        public static final StreamCodec<RegistryFriendlyByteBuf, PlayerDataPacket> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.fromCodec(CompoundTag.CODEC),
+                PlayerDataPacket::tag,
+                PlayerDataPacket::new
         );
 
         @Override

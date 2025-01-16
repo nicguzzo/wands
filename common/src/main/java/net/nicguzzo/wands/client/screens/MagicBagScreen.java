@@ -49,9 +49,9 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         RenderSystem.disableDepthTest();
         ItemStack item=MagicBagItem.getItem(bag_stack,client.level.registryAccess());
         if(!item.isEmpty()) {
-            Component text = Compat.translatable_item_name(item);
+            Component text = Component.translatable(item.getItem().getDescriptionId());
             int w = font.width(text);
-            gui.drawString(client.font, text, (width / 2) - w / 2, (height / 2) - 20, text_color,false);
+            gui.drawString(client.font, text.getString(), (width / 2) - w / 2, (height / 2) - 20, text_color,false);
         }
         Component text2=Compat.literal(""+MagicBagItem.getTotal(bag_stack));
         int w2=font.width(text2);

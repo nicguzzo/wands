@@ -182,9 +182,9 @@ public class Compat {
     static public MutableComponent translatable(String key){
         return Component.translatable(key);
     }
-    static public MutableComponent translatable_item_name(ItemStack item){
-        return Component.translatable(item.getItemName().toString());
-    }
+    //static public MutableComponent translatable_item_name(ItemStack item){
+    //    return Component.translatable(item.getDescriptionId().toString());
+    //}
     static public MutableComponent literal(String msg){
         return Component.literal(msg);
     }

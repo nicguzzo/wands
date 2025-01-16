@@ -11,18 +11,14 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -33,7 +29,6 @@ import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.wand.CopyBuffer;
-import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.wand.WandProps;
@@ -116,10 +111,8 @@ public class ClientRender {
     static Colorf paste_bb_col = new Colorf(0.0f, 0.0f, 0.0f, 1.0f);
 
     public static boolean has_target = false;
-    static PoseStack matrixStack2 = new PoseStack();
     static BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
     static boolean water = false;
-    static BlockState AIR = Blocks.AIR.defaultBlockState();
     static int mirroraxis=0;
 
 
@@ -129,10 +122,10 @@ public class ClientRender {
         if (player == null)
             return;
 
-        Wand wnd= PlayerWand.get(player);
+        //Wand wnd= PlayerWand.get(player);
         //System.out.println("player data  "+wnd.player_data.toString());
         //if(ClientRender.wand!=null){
-            ClientRender.wand.player_data=wnd.player_data;
+            //ClientRender.wand.player_data=wnd.player_data;
             //ClientRender.wand.player_data=((IEntityDataSaver)player).getPersistentData();
         //}
 

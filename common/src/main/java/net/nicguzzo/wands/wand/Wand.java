@@ -629,7 +629,7 @@ public class Wand {
 
                 remove_from_inventory(placed);
             }
-            System.out.println("placed " + placed);
+            //System.out.println("placed " + placed);
             if ((placed > 0) || (no_tool || damaged_tool)) {
 
                 if (blocks_sent_to_inv > 0) {

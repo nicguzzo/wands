@@ -54,7 +54,7 @@ public class PaletteItem extends Item {
                 }
             }
             if (!stack2.isEmpty()) {
-                list.add(Compat.translatable_item_name(stack2).withStyle(ChatFormatting.GREEN));
+                list.add(Component.translatable(stack2.getItem().getDescriptionId() ).withStyle(ChatFormatting.GREEN));
             }
         }
         PaletteMode mode = PaletteItem.getMode(stack);
