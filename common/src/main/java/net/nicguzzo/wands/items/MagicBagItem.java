@@ -6,6 +6,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -117,7 +118,7 @@ public class MagicBagItem extends Item {
         if (i.isEmpty()) {
             list.add(Compat.literal("item: none"));
         } else {
-            list.add(Compat.literal("item: ").append(Compat.translatable_item_name(i)));
+            list.add(Compat.literal("item: ").append(Component.translatable (i.getItem().getDescriptionId())));
         }
         list.add(Compat.literal("total: " + MagicBagItem.getTotal(stack)));
     }
@@ -128,7 +129,7 @@ public class MagicBagItem extends Item {
             if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
                 ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level.registryAccess());
                 if (!item.isEmpty()) {
-                    return Compat.literal("Bag of ").append(Compat.translatable_item_name(item)).append(" - Tier " + (tier + 1));
+                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier + 1));
                 }
             }
         }

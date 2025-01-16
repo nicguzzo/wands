@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.menues;
 
+import dev.architectury.networking.NetworkManager;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -8,6 +9,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.FriendlyByteBuf;
@@ -24,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
@@ -71,10 +74,10 @@ public class WandMenu extends AbstractContainerMenu {
         };
         this.getInventory(this.wand);
 
-        Wand wnd= PlayerWand.get(playerInventory.player);
-        if( wnd.player_data!=null){
-           ClientRender.wand.player_data=wnd.player_data;
-        }
+        //Wand wnd= PlayerWand.get(playerInventory.player);
+        //if( wnd.player_data!=null){
+        //   ClientRender.wand.player_data=wnd.player_data;
+        //}
         int o;
         int n;
         int k=0;
@@ -163,15 +166,10 @@ public class WandMenu extends AbstractContainerMenu {
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player)
     {
-        System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
+        //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
-            if(player.level().isClientSide()){
-                Wand wnd= PlayerWand.get(player);
-                System.out.println("player data  "+wnd.player_data.toString());
-                if(ClientRender.wand!=null){
-                    ClientRender.wand.player_data=wnd.player_data;
-                }
+            if(player.level().isClientSide()) {
                 return;
             }
             if(actionType == ClickType.PICKUP && slotIndex>=36 && slotIndex<45 && this.wand!=null){
@@ -209,7 +207,7 @@ public class WandMenu extends AbstractContainerMenu {
             }
             if(actionType == ClickType.PICKUP && slotIndex>=0 && slotIndex<36 && this.wand!=null){
                 Wand wnd= PlayerWand.get(player);
-                if(wnd.player_data!=null){
+                if(wnd!=null && wnd.player_data!=null){
                     if(button==0) {
                         //ListTag tools;
                         IntArrayTag tools;
@@ -236,6 +234,7 @@ public class WandMenu extends AbstractContainerMenu {
                         //wnd.player_data.remove("Tools");
                     }
                     System.out.println("player data  "+wnd.player_data.toString());
+                    NetworkManager.sendToPlayer((ServerPlayer) player,new Networking.PlayerDataPacket(wnd.player_data));
                 }
             }
          } catch (Exception var8) {

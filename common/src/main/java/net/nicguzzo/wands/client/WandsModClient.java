@@ -14,6 +14,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -150,10 +151,16 @@ public class WandsModClient {
             }
         }
 
+        NetworkManager.registerReceiver(Side.S2C, Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC, (data, context) -> {
+            LOGGER.info("got PlayerDataPacket");
+            if(ClientRender.wand!=null){
+                ClientRender.wand.player_data=data.tag();
+            }
+        });
+
         NetworkManager.registerReceiver(Side.S2C, Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC, (data, context) -> {
             LOGGER.info("got ConfPacket");
-            ServerData srv = Minecraft.getInstance().getCurrentServer();
-            if (srv != null && WandsMod.config != null) {
+            if (WandsMod.config != null) {
                 WandsMod.config.blocks_per_xp = data.blocks_per_xp();
                 WandsMod.config.destroy_in_survival_drop = data.destroy_in_survival_drop();
                 WandsMod.config.survival_unenchanted_drops = data.survival_unenchanted_drops();
@@ -161,8 +168,6 @@ public class WandsModClient {
                 WandsMod.config.allow_offhand_to_break = data.allow_offhand_to_break();
                 WandsMod.config.mend_tools = data.mend_tools();
                 LOGGER.info("got config");
-                //context.queue(()->{
-                //});
             }
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC, (data, context) -> {
@@ -263,7 +268,7 @@ public class WandsModClient {
                     if (main) {
                         y_off = -font.lineHeight * 3;
                     }
-                    gui.drawString(font, "Item: " + Compat.translatable_item_name(bgi).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffff);
+                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId() ).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffff);
                     gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffff);
                 }
                 if (main) {

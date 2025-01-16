@@ -142,6 +142,7 @@ public class WandsMod {
             NetworkManager.registerS2CPayloadType(Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC);
             NetworkManager.registerS2CPayloadType(Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC);
             NetworkManager.registerS2CPayloadType(Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC);
+            NetworkManager.registerS2CPayloadType(Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC);
         }
         NetworkManager.registerReceiver(NetworkManager.Side.C2S, Networking.KbPacket.TYPE, Networking.KbPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got KbPacket");
@@ -257,7 +258,7 @@ public class WandsMod {
                     NetworkManager.sendToPlayer(player, new Networking.ConfPacket(WandsMod.config.blocks_per_xp, WandsMod.config.destroy_in_survival_drop, WandsMod.config.survival_unenchanted_drops, WandsMod.config.allow_wand_to_break, WandsMod.config.allow_offhand_to_break, WandsMod.config.mend_tools));
                     //LOGGER.info("config sent");
                 }
-
+                NetworkManager.sendToPlayer(player,new Networking.PlayerDataPacket(wand.player_data));
             }
         });
         PlayerEvent.PLAYER_QUIT.register((player) -> {

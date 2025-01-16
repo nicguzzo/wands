@@ -129,10 +129,10 @@ public class ClientRender {
         if (player == null)
             return;
 
-        Wand wnd= PlayerWand.get(player);
+        //Wand wnd= PlayerWand.get(player);
         //System.out.println("player data  "+wnd.player_data.toString());
         //if(ClientRender.wand!=null){
-            ClientRender.wand.player_data=wnd.player_data;
+            //ClientRender.wand.player_data=wnd.player_data;
             //ClientRender.wand.player_data=((IEntityDataSaver)player).getPersistentData();
         //}
 
