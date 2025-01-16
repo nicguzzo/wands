@@ -47,7 +47,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         Minecraft client=Minecraft.getInstance();
         int text_color=0xffffffff;
         RenderSystem.disableDepthTest();
-        ItemStack item=MagicBagItem.getItem(bag_stack);
+        ItemStack item=MagicBagItem.getItem(bag_stack,client.level.registryAccess());
         if(!item.isEmpty()) {
             Component text = Compat.translatable_item_name(item);
             int w = font.width(text);

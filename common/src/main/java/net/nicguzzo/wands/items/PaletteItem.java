@@ -111,9 +111,9 @@ public class PaletteItem extends Item {
         return InteractionResult.PASS;
     }
 
-    public static SimpleContainer getInventory(ItemStack stack) {
+    public static SimpleContainer getInventory(ItemStack stack,Level level) {
         SimpleContainer inventory = new SimpleContainer(27); // Default size
-        Level level = Minecraft.getInstance().level;
+        //Level level = Minecraft.getInstance().level;
         if (level == null) return inventory;
 
         CompoundTag tag = Compat.getTags(stack);
@@ -135,8 +135,8 @@ public class PaletteItem extends Item {
         return inventory;
     }
 
-    public static void setInventory(ItemStack stack, SimpleContainer inventory) {
-        Level level = Minecraft.getInstance().level;
+    public static void setInventory(ItemStack stack, SimpleContainer inventory,Level level) {
+
         if (level != null) {
             CompoundTag tag = Compat.getTags(stack);
 

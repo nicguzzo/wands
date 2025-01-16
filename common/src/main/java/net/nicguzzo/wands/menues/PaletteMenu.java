@@ -4,6 +4,8 @@ import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -28,11 +30,10 @@ public class PaletteMenu extends AbstractContainerMenu {
     public final Inventory playerInventory;
 
     public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        this(syncId, playerInventory,
-                ItemStack.parse(
-                        ((Level) playerInventory.player.level()).registryAccess(),
-                        packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
-                )
+        this(syncId, playerInventory,ItemStack.parse(
+                        playerInventory.player.level().registryAccess(),
+                        packetByteBuf.readNbt()
+                ).orElse(ItemStack.EMPTY)
         );
     }
 
@@ -40,7 +41,7 @@ public class PaletteMenu extends AbstractContainerMenu {
         super(WandsMod.PALETTE_CONTAINER.get(), syncId);
         this.palette = palette;
         this.playerInventory = playerInventory;
-        this.inventory = PaletteItem.getInventory(palette);
+        this.inventory = PaletteItem.getInventory(palette,playerInventory.player.level());
         if (palette.getItem() instanceof PaletteItem) {
             int o;
             int n;
@@ -118,7 +119,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                     if (slotIndex < 27) {
                         ItemStack itemStack = Compat.get_carried(player, this);
                         slot.set(itemStack);
-                        PaletteItem.setInventory(palette, this.inventory);
+                        PaletteItem.setInventory(palette, this.inventory,player.level());
                         return;
 
                     }
@@ -145,7 +146,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                                 }
                             }
                         }
-                        PaletteItem.setInventory(palette, this.inventory);
+                        PaletteItem.setInventory(palette, this.inventory,player.level());
                         return;
                     }
                     if (button == 0) {
@@ -195,7 +196,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                     }
                 }
             }
-            PaletteItem.setInventory(palette, this.inventory);
+            PaletteItem.setInventory(palette, this.inventory,player.level());
         } catch (Exception var8) {
             CrashReport crashReport = CrashReport.forThrowable(var8, "Container click");
             CrashReportCategory crashReportCategory = crashReport.addCategory("Click info");

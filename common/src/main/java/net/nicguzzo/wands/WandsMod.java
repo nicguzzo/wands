@@ -58,13 +58,6 @@ public class WandsMod {
     public static boolean has_flan = false;
     public static boolean has_goml = false;
 
-    // We can use this if we don't want to use DeferredRegister
-
-    public static final Supplier<RegistrarManager> REGISTRIES = Suppliers.memoize(() -> RegistrarManager.get(MOD_ID));
-    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(MOD_ID, Registries.CREATIVE_MODE_TAB);
-    public static final RegistrySupplier<CreativeModeTab> WANDS_TAB = TABS.register("wands_tab", () -> CreativeTabRegistry.create(Component.translatable("itemGroup.wands.wands_tab"), () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get())));
-
-
     static ResourceLocation stone_wand = Compat.create_resource("stone_wand");
     static ResourceLocation iron_wand = Compat.create_resource("iron_wand");
     static ResourceLocation diamond_wand = Compat.create_resource("diamond_wand");
@@ -85,6 +78,8 @@ public class WandsMod {
     static ResourceKey<Item> magic_bag_2_key = ResourceKey.create(Registries.ITEM, magic_bag_2);
     static ResourceKey<Item> magic_bag_3_key = ResourceKey.create(Registries.ITEM, magic_bag_3);
 
+    public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(MOD_ID, Registries.CREATIVE_MODE_TAB);
+    public static final RegistrySupplier<CreativeModeTab> WANDS_TAB = TABS.register("wands_tab", () -> CreativeTabRegistry.create(Component.translatable("itemGroup.wands.wands_tab"), () -> new ItemStack(WandsMod.DIAMOND_WAND_ITEM.get())));
 
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(MOD_ID, Registries.ITEM);
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registries.MENU);
@@ -104,7 +99,6 @@ public class WandsMod {
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register(creative_wand, () -> {
         return new WandItem(4, config.creative_wand_limit, true, true, true, true, new Item.Properties().fireResistant().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(creative_wand_key));
     });
-
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () -> {
         return new PaletteItem(new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(palette_key));
     });

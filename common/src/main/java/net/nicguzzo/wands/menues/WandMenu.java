@@ -8,6 +8,8 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.FriendlyByteBuf;
@@ -50,7 +52,7 @@ public class WandMenu extends AbstractContainerMenu {
 
 		this( syncId,playerInventory,
                 ItemStack.parse(
-                        ((Level) playerInventory.player.level()).registryAccess(),
+                       playerInventory.player.level().registryAccess(),
                         buf.readNbt()).orElse(ItemStack.EMPTY
                 )
         );
@@ -65,7 +67,7 @@ public class WandMenu extends AbstractContainerMenu {
         this.simplecontainer=  new SimpleContainer(9){
             @Override
             public void setChanged() {
-                WandMenu.setInventory(wand,simplecontainer);
+                WandMenu.setInventory(wand,simplecontainer,playerInventory.player.level());
                 super.setChanged();
             }
         };
@@ -111,9 +113,9 @@ public class WandMenu extends AbstractContainerMenu {
     }
 
     public void getInventory(ItemStack stack) {
-        Level level= Minecraft.getInstance().level;
-        if(level ==null ) return;
-
+        //Level level= Minecraft.getInstance().level;
+        //if(level ==null ) return;
+        if(playerInventory.player.level().isClientSide()) return;
         CompoundTag tag= Compat.getTags(stack);
         ListTag inventory_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
         //inventory.fromTag(inventory_tag,level.registryAccess());
@@ -122,7 +124,7 @@ public class WandMenu extends AbstractContainerMenu {
              if (slot_tag.contains("Slot") && slot_tag.contains("Tool")){
                  int slot=slot_tag.getInt("Slot");
                 Tag item_tag= slot_tag.get("Tool");
-                Optional<ItemStack> is= ItemStack.parse(level.registryAccess(), item_tag);
+                Optional<ItemStack> is= ItemStack.parse(playerInventory.player.level().registryAccess(), item_tag);
                 if(is.isPresent()) {
                     simplecontainer.setItem(slot, is.get());
                 }
@@ -130,14 +132,15 @@ public class WandMenu extends AbstractContainerMenu {
         }
     }
 
-    public static void setInventory(ItemStack stack, SimpleContainer inventory) {
-        Level level= Minecraft.getInstance().level;
-        if(level !=null ) {
-            if (level.isClientSide()) {
-                // Handle client-side case (e.g., return null or log a warning)
-                System.out.println("Cannot save ItemStack on client side.");
-                return;
-            }
+    public static void setInventory(ItemStack stack, SimpleContainer inventory,Level level) {
+        if(level.isClientSide()) return;
+        //Level level= Minecraft.getInstance().level;
+        //if(level !=null ) {
+            //if (level.isClientSide()) {
+            //    // Handle client-side case (e.g., return null or log a warning)
+            //    System.out.println("Cannot save ItemStack on client side.");
+            //    return;
+            //}
             CompoundTag tag= Compat.getTags(stack);
 
             ListTag inventory_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
@@ -156,7 +159,7 @@ public class WandMenu extends AbstractContainerMenu {
             }
             tag.put("Tools",inventory_tag);
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        }
+        //}
     }
 
     @Override

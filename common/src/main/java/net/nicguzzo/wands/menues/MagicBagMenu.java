@@ -3,6 +3,7 @@ package net.nicguzzo.wands.menues;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -25,7 +26,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
     public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
             this( syncId,playerInventory,
                 ItemStack.parse(
-                   ((Level) playerInventory.player.level()).registryAccess(),
+                   playerInventory.player.level().registryAccess(),
                    packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
                 )
             );
@@ -36,7 +37,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
         this.playerInventory=playerInventory;
         this.bag=bag;
 
-        this.bagcontainer = new BagContainer(1,bag);
+        this.bagcontainer = new BagContainer(1,bag,playerInventory.player.level().registryAccess());
 
         int o;
         int n;
@@ -49,7 +50,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(playerInventory, k++, 8 + n * 18, 84 + o * 18));
             }
         }
-        this.addSlot(new BagSlot(bagcontainer, 0, 80,32,bag));
+        this.addSlot(new BagSlot(bagcontainer, 0, 80,32,bag,playerInventory.player.level().registryAccess()));
 
     }
 
@@ -69,6 +70,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
     {
         //LOGGER.info("clicked "+button+" index "+slotIndex +" action: "+actionType);
         try {
+            HolderLookup.Provider ra= player.level().registryAccess();
             if(slotIndex==36) {
                 Slot slot = this.slots.get(slotIndex);
                 if (button == 0 || button == 1) {
@@ -94,20 +96,20 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                         itemStack2.setCount(c);
                                         MagicBagItem.dec(bag, c);
                                         if (total - c == 0) {
-                                            MagicBagItem.setItem(bag, ItemStack.EMPTY);
+                                            MagicBagItem.setItem(bag, ItemStack.EMPTY,ra);
                                             slot.set(ItemStack.EMPTY);
                                         }
                                         Compat.set_carried(player, this, itemStack2);
                                     }else{
-                                        MagicBagItem.setItem(bag, ItemStack.EMPTY);
+                                        MagicBagItem.setItem(bag, ItemStack.EMPTY,ra);
                                         slot.set(ItemStack.EMPTY);
                                     }
                                 }else{
-                                    ItemStack bag_item= MagicBagItem.getItem(bag);
+                                    ItemStack bag_item= MagicBagItem.getItem(bag,ra);
                                     ItemStack itemStack3 =Compat.get_carried(player,this);
                                     if(itemStack3.isStackable()){
                                         if(bag_item.isEmpty()){
-                                            MagicBagItem.setItem(bag, itemStack3);
+                                            MagicBagItem.setItem(bag, itemStack3,ra);
                                             bag_item=itemStack3.copy();
                                             bag_item.setCount(1);
                                         }
@@ -128,7 +130,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                         case QUICK_MOVE:{
                             int free_slot=playerInventory.getFreeSlot();
                             if(free_slot!=-1){
-                                ItemStack bag_item= MagicBagItem.getItem(bag);
+                                ItemStack bag_item= MagicBagItem.getItem(bag,ra);
                                 int total = MagicBagItem.getTotal(bag);
                                 int m = bag_item.getMaxStackSize();
                                 int c=m;
@@ -159,7 +161,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                 }
                             }
                         }else{
-                            MagicBagItem.setItem(bag,item_src);
+                            MagicBagItem.setItem(bag,item_src,ra);
                             if(MagicBagItem.inc(bag,item_src.getCount())) {
                                 slot_src.set(ItemStack.EMPTY);
                             }

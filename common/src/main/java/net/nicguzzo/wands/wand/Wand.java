@@ -1298,10 +1298,10 @@ public class Wand {
     }
 
     boolean place_into_bag(ItemStack bag, ItemStack item_to_place) {
-        ItemStack mb_item = MagicBagItem.getItem(bag);
+        ItemStack mb_item = MagicBagItem.getItem(bag,this.level.registryAccess());
         int total = MagicBagItem.getTotal(bag);
         if (mb_item.isEmpty() && total == 0) {
-            MagicBagItem.setItem(bag, item_to_place);
+            MagicBagItem.setItem(bag, item_to_place,this.level.registryAccess());
             mb_item = item_to_place;
         }
         if (mb_item.getItem() == item_to_place.getItem()) {
@@ -1320,7 +1320,7 @@ public class Wand {
         while(it.hasNext()){
             ItemStack slot_item=it.next();
             if(WandUtils.is_magicbag(slot_item) ) {
-                ItemStack bag_with_same_item=MagicBagItem.getItem(slot_item);
+                ItemStack bag_with_same_item=MagicBagItem.getItem(slot_item,this.level.registryAccess());
                 if(bag_with_same_item.getItem()==item_to_place.getItem()){
                     if(place_into_bag(slot_item,item_to_place)){
                         return true;
@@ -1575,11 +1575,11 @@ public class Wand {
                 if (stack.getItem() != Items.AIR) {
                     if (WandUtils.is_shulker(stack)) {
                         for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
-                            pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
+                            pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey(),level.registryAccess());
                         }
                     } else if (WandUtils.is_magicbag(stack)) {
                         int total = MagicBagItem.getTotal(stack);
-                        ItemStack stack2 = MagicBagItem.getItem(stack);
+                        ItemStack stack2 = MagicBagItem.getItem(stack,this.level.registryAccess());
                         if (!stack2.isEmpty() && total > 0) {
                             BlockAccounting ba = block_accounting.get(stack2.getItem());
                             if (ba != null) {
@@ -1602,7 +1602,7 @@ public class Wand {
             ItemStack oh = player.getOffhandItem();
             if (oh != null && !oh.isEmpty()) {
                 if (oh.getItem() instanceof MagicBagItem) {
-                    stack = MagicBagItem.getItem(oh);
+                    stack = MagicBagItem.getItem(oh,this.level.registryAccess());
                     int total = MagicBagItem.getTotal(oh);
                     if (!stack.isEmpty() && total > 0) {
                         BlockAccounting ba = block_accounting.get(stack.getItem());
@@ -1648,7 +1648,7 @@ public class Wand {
                             stack_item = it.next();
                             if (!stack_item.isEmpty() ) {
                                 if (WandUtils.is_magicbag(stack_item)) {
-                                    ItemStack bag_it=MagicBagItem.getItem(stack_item);
+                                    ItemStack bag_it=MagicBagItem.getItem(stack_item,this.level.registryAccess());
                                     BlockAccounting pa = block_accounting.get(bag_it.getItem());
                                     consume_item(pa, stack_item);
                                 } else {
@@ -1663,7 +1663,7 @@ public class Wand {
 
             ItemStack oh = player.getOffhandItem();
             if (!oh.isEmpty() && oh.getItem() instanceof MagicBagItem) {
-                stack_item = MagicBagItem.getItem(oh);
+                stack_item = MagicBagItem.getItem(oh,this.level.registryAccess());
                 BlockAccounting pa = block_accounting.get(stack_item.getItem());
                 consume_item(pa, oh);
             }
@@ -1671,7 +1671,7 @@ public class Wand {
             for (int i = 0; i < 36; ++i) {
                 stack_item = player_inv.getItem(i);
                 if (WandUtils.is_magicbag(stack_item)) {
-                    ItemStack bag_it = MagicBagItem.getItem(stack_item);
+                    ItemStack bag_it = MagicBagItem.getItem(stack_item,this.level.registryAccess());
                     BlockAccounting pa = block_accounting.get(bag_it.getItem());
                     consume_item(pa, stack_item);
                 }
