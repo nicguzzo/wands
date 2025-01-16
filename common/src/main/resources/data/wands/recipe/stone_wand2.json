@@ -1,20 +1,17 @@
 {
     "type": "minecraft:crafting_shaped",
+    "category": "misc",
     "pattern": [
         "  #",
         " / ",
         "/  "
     ],
     "key": {
-        "#": {
-            "item": "minecraft:diamond"
-        },
-        "/": {
-            "item": "minecraft:stick"
-        }
+        "#": "minecraft:cobbled_deepslate",
+        "/": "minecraft:stick"
     },
     "result": {
-        "id": "wands:diamond_wand",
+        "id": "wands:stone_wand",
         "count": 1
     }
 }

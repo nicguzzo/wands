@@ -1,17 +1,14 @@
 {
     "type": "minecraft:crafting_shaped",
+    "category": "misc",
     "pattern": [
         "  #",
         " / ",
         "/  "
     ],
     "key": {
-        "#": {
-            "item": "minecraft:cobbled_deepslate"
-        },
-        "/": {
-            "item": "minecraft:stick"
-        }
+        "#": "minecraft:cobblestone",
+        "/": "minecraft:stick"
     },
     "result": {
         "id": "wands:stone_wand",
