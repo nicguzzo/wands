@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.utils;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.*;
@@ -34,7 +35,7 @@ public class WandUtils{
     static public boolean is_magicbag(ItemStack item_stack){
         return item_stack.getItem() instanceof MagicBagItem;
     }
-    static public int count_in_shulker(ItemStack shulker, Item item){
+    static public int count_in_shulker(ItemStack shulker, Item item, HolderLookup.Provider provider){
         int n=0;
         if(item!=null){
             ItemContainerContents contents= shulker.get(DataComponents.CONTAINER);
@@ -45,7 +46,7 @@ public class WandUtils{
                     ItemStack s = it.next();
                     if( WandUtils.is_magicbag(s)) {
                         int total=MagicBagItem.getTotal(s);
-                        ItemStack stack2=MagicBagItem.getItem(s);
+                        ItemStack stack2=MagicBagItem.getItem(s,provider);
                         if(!stack2.isEmpty()&& stack2.is(item) && total >0 ){
                             n+=total;
                         }

@@ -258,7 +258,7 @@ public class WandsModClient {
                     float x = (int) (screenWidth * ((WandsMod.config.wand_mode_display_x_pos) / 100.0f));
                     float y = (int) ((screenHeight - h) * ((WandsMod.config.wand_mode_display_y_pos) / 100.0f));
                     ItemStack s = main_bag ? stack : offhand_stack;
-                    ItemStack bgi = MagicBagItem.getItem(s);
+                    ItemStack bgi = MagicBagItem.getItem(s,client.level.registryAccess());
                     int y_off = 0;
                     if (main) {
                         y_off = -font.lineHeight * 3;

@@ -130,12 +130,8 @@ public class WandItem extends Item {
         }
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
     }
-
+    @Environment(EnvType.CLIENT)
     public void send_placement(Direction side, BlockPos p1, BlockPos p2, Vec3 hit, long seed) {
-        Minecraft client = Minecraft.getInstance();
-        if (client.getConnection() == null) {
-            return;
-        }
         BlockPos _p1 = new BlockPos(0, 0, 0);
         BlockPos _p2 = new BlockPos(0, 0, 0);
         int has_p1_p2 = 0;
@@ -174,21 +170,5 @@ public class WandItem extends Item {
         list.add(Compat.literal("plane: " + WandProps.Plane.values()[tag.getInt("plane")].toString()));
         list.add(Compat.literal("fill circle: " + tag.getBoolean("cfill")));
         list.add(Compat.literal("rotation: " + tag.getInt("rotation")));
-        ListTag tools = tag.getList("Tools", Compat.NbtType.COMPOUND);
-        if (ClientRender.wand != null) {
-            tools.forEach(element -> {
-                CompoundTag stackTag = (CompoundTag) element;
-                //int slot = stackTag.getInt("Slot");
-
-                Level level = Minecraft.getInstance().level;
-                if (level != null) {
-                    Optional<ItemStack> item = ItemStack.parse(level.registryAccess(), stackTag.getCompound("Tool"));
-                    item.ifPresent(itemStack -> list.add(Compat.literal("tool: ").append(itemStack.getDisplayName())));
-                }
-
-
-            });
-        }
     }
-
 }

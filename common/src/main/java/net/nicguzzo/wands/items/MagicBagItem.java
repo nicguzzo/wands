@@ -1,8 +1,11 @@
 package net.nicguzzo.wands.items;
 
+import dev.architectury.platform.Platform;
+import dev.architectury.utils.Env;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -79,15 +82,13 @@ public class MagicBagItem extends Item {
         }
     }
 
-    static public void setItem(ItemStack bag, ItemStack item) {
+    static public void setItem(ItemStack bag, ItemStack item,HolderLookup.Provider ra) {
         if (bag != null && item != null && !item.isEmpty() && bag.getItem() instanceof MagicBagItem) {
             ItemStack item2 = item.copy();
             item2.setCount(1);
             CompoundTag tag = Compat.getTags(bag);
-
-            Level level = Minecraft.getInstance().level;
-            if (level != null) {
-                tag.put("item", item2.save(level.registryAccess(), new CompoundTag()));
+            if (ra != null) {
+                tag.put("item", item2.save(ra, new CompoundTag()));
                 CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
             }
         }
@@ -96,12 +97,11 @@ public class MagicBagItem extends Item {
         }
     }
 
-    static public ItemStack getItem(ItemStack bag) {
+    static public ItemStack getItem(ItemStack bag, HolderLookup.Provider ra) {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = Compat.getTags(bag);
-            Level level = Minecraft.getInstance().level;
-            if (level != null && tag.contains("item")) {
-                Optional<ItemStack> item = ItemStack.parse(level.registryAccess(), tag.getCompound("item"));
+            if (ra != null && tag.contains("item")) {
+                Optional<ItemStack> item = ItemStack.parse(ra, tag.getCompound("item"));
                 if (item.isPresent()) {
                     return item.get();
                 }
@@ -113,7 +113,7 @@ public class MagicBagItem extends Item {
     @Environment(EnvType.CLIENT)
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
-        ItemStack i = MagicBagItem.getItem(stack);
+        ItemStack i = MagicBagItem.getItem(stack,tooltipContext.registries());
         if (i.isEmpty()) {
             list.add(Compat.literal("item: none"));
         } else {
@@ -124,10 +124,12 @@ public class MagicBagItem extends Item {
 
     @Override
     public @NotNull Component getName(ItemStack itemStack) {
-        if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
-            ItemStack item = MagicBagItem.getItem(itemStack);
-            if (!item.isEmpty()) {
-                return Compat.literal("Bag of ").append(Compat.translatable_item_name(item)).append(" - Tier " + (tier + 1));
+        if (Platform.getEnvironment() == Env.CLIENT) {
+            if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
+                ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level.registryAccess());
+                if (!item.isEmpty()) {
+                    return Compat.literal("Bag of ").append(Compat.translatable_item_name(item)).append(" - Tier " + (tier + 1));
+                }
             }
         }
         return super.getName(itemStack);

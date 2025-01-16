@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.menues;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
@@ -17,19 +18,21 @@ import java.util.stream.Collectors;
 public class BagContainer implements Container, StackedContentsCompatible {
     private final int size;
     private final NonNullList<ItemStack> items;
+    private final HolderLookup.Provider ra;
     public ItemStack bag;
     public static final Logger LOGGER = LogManager.getLogger();
 
-    public BagContainer(int i, ItemStack bag) {
+    public BagContainer(int i, ItemStack bag,HolderLookup.Provider ra) {
         this.size = i;
+        this.ra=ra;
         this.items = NonNullList.withSize(i, ItemStack.EMPTY);
         this.bag = bag;
         clearContent();
         //ListTag tag = bag.getOrCreateTag().getList("bag", Compat.NbtType.COMPOUND);
         //fromTag(tag);
-        ItemStack bag_item = MagicBagItem.getItem(bag);
+        ItemStack bag_item = MagicBagItem.getItem(bag,ra);
         if (!bag_item.isEmpty()) {
-            this.items.set(0, MagicBagItem.getItem(bag));
+            this.items.set(0, MagicBagItem.getItem(bag,ra));
         }
     }
 
@@ -58,9 +61,9 @@ public class BagContainer implements Container, StackedContentsCompatible {
 
     public void setItem(int i, ItemStack itemStack) {
         //LOGGER.info("setItem slot: "+i+" item: "+itemStack);
-        ItemStack bag_item = MagicBagItem.getItem(bag);
+        ItemStack bag_item = MagicBagItem.getItem(bag,ra);
         if (bag_item.isEmpty()) {
-            MagicBagItem.setItem(bag, itemStack);
+            MagicBagItem.setItem(bag, itemStack,ra);
             ItemStack item2 = itemStack.copy();
             item2.setCount(1);
             this.items.set(i, item2);

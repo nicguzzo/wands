@@ -31,8 +31,8 @@ public abstract class ItemRendererMixin {
     @Inject(method = "renderStatic", at = @At(value = "TAIL"))
     public void renderStatic(ItemStack itemStack, ItemDisplayContext itemDisplayContext, int i, int j, PoseStack poseStack, MultiBufferSource multiBufferSource, @Nullable Level level, int k, CallbackInfo cb){
 
-        if (WandUtils.is_magicbag(itemStack)) {
-            ItemStack item_in_bag = MagicBagItem.getItem(itemStack);
+        if (level !=null && WandUtils.is_magicbag(itemStack)) {
+            ItemStack item_in_bag = MagicBagItem.getItem(itemStack,level.registryAccess());
             if (!item_in_bag.isEmpty()) {
                 BakedModel bakedModel2 = this.itemModelShaper.getItemModel(item_in_bag);
                 if (bakedModel2 != null) {
