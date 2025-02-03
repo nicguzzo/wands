@@ -205,6 +205,38 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
+        }, SPHERE {
+            public String toString() {
+                return "wands.modes.sphere";
+            }
+
+            public WandMode get_mode() {
+                return new SphereMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 2;
+            }
+        }, ROCK {
+            public String toString() {
+                return "wands.modes.rock";
+            }
+
+            public WandMode get_mode() {
+                return new RockMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 1;
+            }
         };
 
         public abstract WandMode get_mode();
@@ -426,6 +458,14 @@ public class WandProps {
             public String toString() {
                 return "tunnel_d";
             }
+        }, ROCK_RADIUS {
+            public String toString() {
+                return "rock_radius";
+            }
+        }, ROCK_NOISE {
+            public String toString() {
+                return "rock_noise";
+            }
         };
         public int def = 0;
         public int min = 0;
@@ -453,6 +493,11 @@ public class WandProps {
             TUNNEL_H.def = 2;
             TUNNEL_DEPTH.def = 3;
             TUNNEL_DEPTH.min = 1;
+            ROCK_RADIUS.min=0;
+            ROCK_RADIUS.def=2;
+            ROCK_NOISE.min=0;
+            ROCK_NOISE.max=16;
+            ROCK_NOISE.def=3;
         }
     }
 
@@ -545,7 +590,12 @@ public class WandProps {
             return -1;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int i = tag.getInt(v.toString());
+        int i;
+        if(!tag.contains(v.toString())){
+            i=v.def;
+        }else {
+            i = tag.getInt(v.toString());
+        }
         if (i > v.max) {
             i = v.max;
             tag.putInt(v.toString(), i);

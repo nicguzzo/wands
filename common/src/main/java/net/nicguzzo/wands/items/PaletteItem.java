@@ -20,6 +20,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -105,10 +106,13 @@ public class PaletteItem extends Item {
     @Override
     public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
         ItemStack paletteItemStack = player.getItemInHand(interactionHand);
-        if (!world.isClientSide()) {
+        //ItemStack wand = player.getItemInHand(InteractionHand.MAIN_HAND);
+        //boolean is_wand=WandUtils.is_wand(wand);
+        if (!world.isClientSide() && interactionHand==InteractionHand.MAIN_HAND) {
             Compat.open_menu((ServerPlayer) player, paletteItemStack, 1);
+            return InteractionResult.SUCCESS;
         }
-        return InteractionResult.PASS;
+        return InteractionResult.FAIL;
     }
 
     public static SimpleContainer getInventory(ItemStack stack,Level level) {

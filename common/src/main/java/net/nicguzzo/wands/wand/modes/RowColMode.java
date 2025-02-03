@@ -17,7 +17,7 @@ public class RowColMode implements WandMode {
         boolean preview = level.isClientSide();
         Direction dir = Direction.EAST;
         BlockPos pos_m= wand.pos.relative(wand.side, 1);;
-        WandItem wand_item = (WandItem) wand.wand_stack.getItem();
+        //WandItem wand_item = (WandItem) wand.wand_stack.getItem();
         BlockState state = level.getBlockState(pos_m);
 
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);

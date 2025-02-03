@@ -177,21 +177,21 @@ public class WandMenu extends AbstractContainerMenu {
                          n_items++;
                      }
                 }
-                System.out.println("invnetory size  "+player.getInventory().items.size());
+                //System.out.println("invnetory size  "+player.getInventory().items.size());
                 int inv_free=0;
                 for(int i=0;i<player.getInventory().items.size();i++) {
                      if(player.getInventory().getItem(i).isEmpty()){
                          inv_free++;
                      }
                 }
-                System.out.println("invnetory size left  "+ inv_free);
+                //System.out.println("invnetory size left  "+ inv_free);
                 if ( n_items<= inv_free){
                     for(int i=0;i<9;i++) {
                         if(!simplecontainer.getItem(i).isEmpty()) {
                             int free_slot = player.getInventory().getFreeSlot();
                             if (free_slot != -1) {
                                 player.getInventory().setItem(free_slot, simplecontainer.removeItem(i , 1));
-                                System.out.println("invnetory moving from " + i + " to " + free_slot);
+                                //System.out.println("invnetory moving from " + i + " to " + free_slot);
                                 CompoundTag tag= Compat.getTags(wand);
                                 tag.remove("Tools");
                                 CustomData.set(DataComponents.CUSTOM_DATA, wand, tag);
@@ -231,7 +231,7 @@ public class WandMenu extends AbstractContainerMenu {
                         //wnd.player_data.put("Tools",tools);
                         //wnd.player_data.remove("Tools");
                     }
-                    System.out.println("player data  "+wnd.player_data.toString());
+                    //System.out.println("player data  "+wnd.player_data.toString());
                     NetworkManager.sendToPlayer((ServerPlayer) player,new Networking.PlayerDataPacket(wnd.player_data));
                 }
             }

@@ -114,6 +114,13 @@ public class WandsModClient {
                     } else {
                         send_key(key.ordinal(), Screen.hasShiftDown(), Screen.hasAltDown());
                     }
+                    if(key==WandsMod.WandKeys.ROTATE){
+
+                        //TODO:move this to another key?
+                        if( ClientRender.wand!=null && ClientRender.wand.mode == WandProps.Mode.ROCK){
+                            ClientRender.wand.get_mode().randomize();
+                        }
+                    }
                 }
             }
 
@@ -352,6 +359,7 @@ public class WandsModClient {
                                 }
                                 break;
                             case CIRCLE:
+                            case SPHERE:
                                 ln1 = "Radius: " + wand.radius + " N: " + wand.block_buffer.get_length();
                                 break;
                             case COPY:

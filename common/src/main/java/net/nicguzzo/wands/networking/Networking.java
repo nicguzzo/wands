@@ -25,7 +25,7 @@ public class Networking {
     static public ResourceLocation POS_PACKET = Compat.create_resource("pos_packet");
     static public ResourceLocation CONF_PACKET = Compat.create_resource("conf_packet");
     static public ResourceLocation GLOBAL_SETTINGS_PACKET = Compat.create_resource("global_settings_packet");
-
+    static public ResourceLocation SYNC_ROCK_PACKET = Compat.create_resource("sync_rock_packet");
 
     public static class Vec3d {
         public double x;
@@ -248,6 +248,24 @@ public class Networking {
                 ByteBufCodecs.BOOL,
                 GlobalSettingsPacket::drop_pos,
                 GlobalSettingsPacket::new
+        );
+
+        @Override
+        public CustomPacketPayload.@NotNull Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    public record SyncRockPacket(int rx,int ry,int rz) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<SyncRockPacket> TYPE = new CustomPacketPayload.Type<>(SYNC_ROCK_PACKET);
+        public static final StreamCodec<ByteBuf, SyncRockPacket> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT,
+                SyncRockPacket::rx,
+                ByteBufCodecs.VAR_INT,
+                SyncRockPacket::ry,
+                ByteBufCodecs.VAR_INT,
+                SyncRockPacket::rz,
+                SyncRockPacket::new
         );
 
         @Override
