@@ -108,7 +108,8 @@ public class Wand {
     //public boolean p2 = false;
     public BlockState p1_state = null;
     public HitResult lastHitResult = null;
-
+    //public int min_y = 0;
+    //public int max_y = 0;
     public boolean valid = false;
 
     public Player player;
@@ -243,7 +244,7 @@ public class Wand {
         }
     }
     public WandMode get_mode(){
-        if(modes!=null)
+        if(modes!=null && mode!=null)
             return modes[mode.ordinal()];
         else{
             return null;
@@ -260,7 +261,7 @@ public class Wand {
         fill_nx = 0;
         fill_ny = 0;
         fill_nz = 0;
-
+        Palette.version++;
         //WandsMod.LOGGER.info("clear");
         /*if(player!=null)
             player.displayClientMessage(Compat.literal("wand cleared"),false);*/
@@ -437,9 +438,6 @@ public class Wand {
         }
         block_accounting.clear();
         if (palette.has_palette /*&& !destroy && !is_copy_paste*/) {
-            //if(!preview){
-            //WandsMod.log("update_palette bp",true);
-            //}
             palette.update_palette(block_accounting, level);
         }
 
@@ -469,6 +467,7 @@ public class Wand {
         int m = mode.ordinal();
         if (m >= 0 && m < modes.length && modes[m] != null) {
             modes[m].place_in_buffer(this);
+            //block_buffer.calc_min_max();
         }
 
         //server stuff
@@ -775,7 +774,8 @@ public class Wand {
             bb2_y = y2;
             bb2_z = z2;
         }
-
+        //min_y=bb1_y;
+        //max_y=bb2_y;
         //valid = true;
     }
 
@@ -798,10 +798,13 @@ public class Wand {
         }
     }
 
-    public BlockState get_state() {
+    public BlockState get_state(int y) {
         BlockState st = block_state;
         if (palette.has_palette) {
-            st = palette.get_state(this);
+            int min_y=level.isInsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
+            int max_y=level.isInsideBuildHeight(block_buffer.max_y)?block_buffer.max_y:0;
+
+            st = palette.get_state(this,min_y,max_y,y);
         } else {
             if (offhand_state != null && !offhand_state.isAir()) {
                 st = offhand_state;

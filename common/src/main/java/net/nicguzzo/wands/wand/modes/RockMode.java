@@ -15,12 +15,12 @@ import net.nicguzzo.wands.wand.WandProps;
 
 import java.util.stream.IntStream;
 
-public class RockMode implements WandMode {
+public class RockMode extends WandMode {
     SimplexNoise noise=null;
     public long seed=123427349;
     public RandomSource random = RandomSource.create();
     int rx=0,ry=0,rz=0;
-    BlockPos last_pos=null;
+
     @Override
     public void randomize(){
         if (Platform.getEnvironment() == Env.CLIENT) {
@@ -46,13 +46,16 @@ public class RockMode implements WandMode {
             noise = new SimplexNoise(random);
             randomize();
         }
-        if(wand.preview && last_pos!=null && last_pos.getX()==wand.pos.getX() && last_pos.getY()==wand.pos.getY() && last_pos.getZ()==wand.pos.getZ()){
-            if(wand.block_buffer.get_length()>0) {
-                wand.valid = true;
-            }
+        if(!need_update(wand,true)){
             return;
         }
-        last_pos=wand.pos;
+        //if(wand.preview && last_pos!=null && last_pos.getX()==wand.pos.getX() && last_pos.getY()==wand.pos.getY() && last_pos.getZ()==wand.pos.getZ()){
+        //    if(wand.block_buffer.get_length()>0) {
+        //        wand.valid = true;
+        //    }
+        //    return;
+        //}
+        //last_pos=wand.pos;
         wand.block_buffer.reset();
         if (wand.pos != null) {
             int xc;
@@ -61,7 +64,7 @@ public class RockMode implements WandMode {
             xc = wand.pos.getX();
             yc = wand.pos.getY();
             zc = wand.pos.getZ();
-            int r= WandProps.getVal(wand.wand_stack, WandProps.Value.ROCK_RADIUS);
+            int r = WandProps.getVal(wand.wand_stack, WandProps.Value.ROCK_RADIUS);
             int nf= WandProps.getVal(wand.wand_stack, WandProps.Value.ROCK_NOISE);
             //int r = 2;
             if(r<1){

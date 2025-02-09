@@ -142,8 +142,8 @@ public class WandsMod {
         });
 
         NetworkManager.registerReceiver(Side.C2S, Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC, (data, context) -> {
-            //LOGGER.info("got PalettePacket");
-            process_palette(context.getPlayer(), data.mode(), data.rotate());
+            LOGGER.info("got PalettePacket");
+            process_palette(context.getPlayer(), data.mode(), data.rotate(),data.grad_h());
         });
         NetworkManager.registerReceiver(Side.C2S, Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got WandPacket");
@@ -300,7 +300,7 @@ public class WandsMod {
         }
     }
 
-    public static void process_palette(Player player, boolean mode, boolean rotate) {
+    public static void process_palette(Player player, boolean mode, boolean rotate,int grad_h) {
 
         ItemStack item_stack = player.getMainHandItem();
         ItemStack palette = null;
@@ -319,7 +319,11 @@ public class WandsMod {
             if (rotate) {
                 PaletteItem.toggleRotate(palette);
             }
+            if(grad_h>0){
+                PaletteItem.setGradientHeight(palette,grad_h);
+            }
         }
+
     }
 
     public static void process_keys(Player player, int key, boolean shift, boolean alt) {

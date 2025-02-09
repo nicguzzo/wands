@@ -239,8 +239,8 @@ public class WandsModClient {
         }
     }
 
-    public static void send_palette(boolean next_mode, boolean toggle_rotate) {
-        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate));
+    public static void send_palette(boolean next_mode, boolean toggle_rotate,int grad_h) {
+        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate,grad_h));
     }
 
     public static void send_wand(ItemStack item) {

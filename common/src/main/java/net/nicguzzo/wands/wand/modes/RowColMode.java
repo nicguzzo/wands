@@ -10,7 +10,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class RowColMode implements WandMode {
+public class RowColMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         WandProps.Orientation orientation = WandProps.getOrientation(wand.wand_stack);
         Level level= Compat.player_level(wand.player);

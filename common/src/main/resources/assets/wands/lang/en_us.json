@@ -10,6 +10,7 @@
     "item.wands.magic_bag_3": "Magic Bag Tier 3",
     "item.wands.random": "Random",
     "item.wands.round_robin": "Sequential",
+    "item.wands.gradient": "Gradient",
     "key.wands.wand_mode": "Mode",
     "key.wands.wand_orientation": "Orientation",
     "key.wands.wand_invert": "Invert",

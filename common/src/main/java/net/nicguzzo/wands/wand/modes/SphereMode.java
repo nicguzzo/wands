@@ -7,7 +7,7 @@ import net.nicguzzo.wands.wand.WandMode;
 
 import java.util.stream.IntStream;
 
-public class SphereMode implements WandMode {
+public class SphereMode extends WandMode {
     PerlinNoise noise=null;
 
 

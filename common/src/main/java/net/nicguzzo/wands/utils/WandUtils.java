@@ -102,4 +102,12 @@ public class WandUtils{
     public static boolean pickaxe_minable(BlockState state) {
         return state.is(BlockTags.MINEABLE_WITH_PICKAXE);
     }
+    public static double mapRange(double a1, double a2, double b1, double b2, double s){
+		return b1 + ((s - a1)*(b2 - b1))/(a2 - a1);
+	}
+    public static int mapRange(int a1, int a2, int b1, int b2, int s){
+        int den=a2 - a1;
+        if(den==0) return b1;
+		return b1 + ((s - a1)*(b2 - b1))/den;
+	}
 }

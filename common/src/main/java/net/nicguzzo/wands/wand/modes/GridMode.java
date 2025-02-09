@@ -7,7 +7,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class GridMode implements WandMode {
+public class GridMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         Direction playerdir=wand.player.getDirection();;
 

@@ -114,13 +114,15 @@ public class Networking {
         }
     }
 
-    public record PalettePacket(boolean mode, boolean rotate) implements CustomPacketPayload {
+    public record PalettePacket(boolean mode, boolean rotate,int grad_h) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<PalettePacket> TYPE = new CustomPacketPayload.Type<>(PALETTE_PACKET);
         public static final StreamCodec<ByteBuf, PalettePacket> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.BOOL,
                 PalettePacket::mode,
                 ByteBufCodecs.BOOL,
                 PalettePacket::rotate,
+                ByteBufCodecs.VAR_INT,
+                PalettePacket::grad_h,
                 PalettePacket::new
         );
 

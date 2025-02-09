@@ -22,7 +22,7 @@ import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.utils.Compat;
 
 public class PaletteMenu extends AbstractContainerMenu {
-
+    private final int containerRows=6;
     public ItemStack palette;
     private final SimpleContainer inventory;
     public final Inventory playerInventory;
@@ -41,9 +41,14 @@ public class PaletteMenu extends AbstractContainerMenu {
         this.playerInventory = playerInventory;
         this.inventory = PaletteItem.getInventory(palette,playerInventory.player.level());
         if (palette.getItem() instanceof PaletteItem) {
-            int o;
+            int k = 18;
+    		this.addPaletteGrid(inventory, 8, k);
+            int l = k + this.containerRows * k + 13;
+		    this.addStandardInventorySlots(playerInventory, 8, l);
+
+            /*int o;
             int n;
-            for (o = 0; o < 3; ++o) {
+            for (o = 0; o < 6; ++o) {
                 for (n = 0; n < 9; ++n) {
                     this.addSlot(new Slot(inventory, n + o * 9,
                             8 + n * 18, 18 + o * 18));
@@ -57,13 +62,20 @@ public class PaletteMenu extends AbstractContainerMenu {
             }
             for (o = 0; o < 9; ++o) {
                 this.addSlot(new Slot(playerInventory, o, 8 + o * 18, 142));
-            }
+            }*/
         } else {
             Player player = playerInventory.player;
             this.removed(player);
         }
     }
 
+    private void addPaletteGrid(Container container, int i, int j) {
+		for (int k = 0; k < 6; k++) {
+			for (int l = 0; l < 9; l++) {
+				this.addSlot(new Slot(container, l + k * 9, i + l * 18, j + k * 18));
+			}
+		}
+	}
     @Override
     public void slotsChanged(Container inventory) {
         super.slotsChanged(inventory);
@@ -91,7 +103,7 @@ public class PaletteMenu extends AbstractContainerMenu {
     }
 
     void insert(ItemStack itemStack) {
-        for (int o = 0; o < 27; ++o) {
+        for (int o = 0; o < this.inventory.getContainerSize(); ++o) {
             Slot slot = this.slots.get(o);
             if (slot.getItem().isEmpty()) {
                 slot.set(itemStack);
@@ -103,7 +115,7 @@ public class PaletteMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-        //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
+        System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
 
@@ -111,10 +123,10 @@ public class PaletteMenu extends AbstractContainerMenu {
                 Compat.set_carried(player, this, ItemStack.EMPTY);
             }
 
-            if (slotIndex >= 0 && slotIndex < 63) {
+            if (slotIndex >= 0 && slotIndex < 90) {
                 Slot slot = this.slots.get(slotIndex);
                 if (actionType == ClickType.QUICK_CRAFT) {
-                    if (slotIndex < 27) {
+                    if (slotIndex < this.inventory.getContainerSize()) {
                         ItemStack itemStack = Compat.get_carried(player, this);
                         slot.set(itemStack);
                         PaletteItem.setInventory(palette, this.inventory,player.level());
@@ -134,7 +146,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                     }
                     //System.out.println("itemStack2: "+itemStack);
                     if (button == 1) {
-                        if (slotIndex < 27) {
+                        if (slotIndex < 54) {
                             if (actionType == ClickType.PICKUP) {
                                 ItemStack itemStack = slot.getItem();
                                 if (!itemStack.isEmpty()) {
@@ -148,7 +160,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                         return;
                     }
                     if (button == 0) {
-                        if (slotIndex < 27) {
+                        if (slotIndex < 54) {
                             if (actionType == ClickType.PICKUP || actionType == ClickType.QUICK_CRAFT) {
 
                                 ItemStack itemStack = slot.getItem();

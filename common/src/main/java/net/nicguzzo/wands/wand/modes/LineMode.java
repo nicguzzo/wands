@@ -3,7 +3,7 @@ package net.nicguzzo.wands.wand.modes;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 
-public class LineMode implements WandMode {
+public class LineMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         wand.block_buffer.reset();
         if (wand.getP1() != null && (wand.getP2() !=null || wand.preview)) {

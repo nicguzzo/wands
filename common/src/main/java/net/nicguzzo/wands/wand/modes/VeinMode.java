@@ -7,7 +7,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class VeinMode implements WandMode {
+public class VeinMode extends WandMode {
     private BlockPos[] vein_dirs=new BlockPos[26];
     public void place_in_buffer(Wand wand) {
         if (!(wand.destroy || wand.replace ||wand.use)) {
