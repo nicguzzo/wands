@@ -45,24 +45,6 @@ public class PaletteMenu extends AbstractContainerMenu {
     		this.addPaletteGrid(inventory, 8, k);
             int l = k + this.containerRows * k + 13;
 		    this.addStandardInventorySlots(playerInventory, 8, l);
-
-            /*int o;
-            int n;
-            for (o = 0; o < 6; ++o) {
-                for (n = 0; n < 9; ++n) {
-                    this.addSlot(new Slot(inventory, n + o * 9,
-                            8 + n * 18, 18 + o * 18));
-                }
-            }
-            for (o = 0; o < 3; ++o) {
-                for (n = 0; n < 9; ++n) {
-                    this.addSlot(new Slot(playerInventory, n + o * 9 + 9,
-                            8 + n * 18, 84 + o * 18));
-                }
-            }
-            for (o = 0; o < 9; ++o) {
-                this.addSlot(new Slot(playerInventory, o, 8 + o * 18, 142));
-            }*/
         } else {
             Player player = playerInventory.player;
             this.removed(player);
@@ -115,7 +97,7 @@ public class PaletteMenu extends AbstractContainerMenu {
 
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
-        System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
+        //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
 

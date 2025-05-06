@@ -72,7 +72,7 @@ public class Palette {
             //palette_grid.clear();
             CompoundTag tag= Compat.getTags(item);
             ListTag palette_inv = tag.getList("Palette", Compat.NbtType.COMPOUND);
-            WandsMod.log("palette_inv: "+palette_inv,true);
+            //WandsMod.log("palette_inv: "+palette_inv,true);
             int s = palette_inv.size();
 
             for (int i = 0; i < s; i++) {
@@ -105,13 +105,13 @@ public class Palette {
                     }
                 }
             }
-            for (int i = 0; i < palette_grid.size(); i++) {
-                StringBuilder row= new StringBuilder();
-                for (int j = 0; j < palette_grid.get(i).size(); j++) {
-                    row.append(" ").append(palette_grid.get(i).get(j).state.toString());
-                }
-                WandsMod.log("row "+i + " "+ row, true);
-            }
+            //for (int i = 0; i < palette_grid.size(); i++) {
+            //    StringBuilder row= new StringBuilder();
+            //    for (int j = 0; j < palette_grid.get(i).size(); j++) {
+            //        row.append(" ").append(palette_grid.get(i).get(j).state.toString());
+            //    }
+            //   WandsMod.log("row "+i + " "+ row, true);
+            //}
         }
     }
     public BlockState get_state(Wand wand,int min,int max,int y){
@@ -195,4 +195,3 @@ public class Palette {
         return cond;
     }
 }
-

@@ -108,8 +108,7 @@ public class Wand {
     //public boolean p2 = false;
     public BlockState p1_state = null;
     public HitResult lastHitResult = null;
-    //public int min_y = 0;
-    //public int max_y = 0;
+
     public boolean valid = false;
 
     public Player player;
@@ -173,6 +172,7 @@ public class Wand {
     public boolean mine_to_inventory = true;
     public boolean stop_on_full_inventory = true;
     public boolean target_air = false;
+    public int target_air_distance = 0;
     public boolean unbreakable = false;
     public boolean removes_water = false;
     public boolean removes_lava = false;
@@ -326,6 +326,7 @@ public class Wand {
         send_sound = -1;
         random.setSeed(palette.seed);
         palette.random.setSeed(palette.seed);
+        target_air_distance = WandProps.getVal(wand_stack, WandProps.Value.AIR_TARGET_DISTANCE);
 
         if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
@@ -467,7 +468,6 @@ public class Wand {
         int m = mode.ordinal();
         if (m >= 0 && m < modes.length && modes[m] != null) {
             modes[m].place_in_buffer(this);
-            //block_buffer.calc_min_max();
         }
 
         //server stuff
@@ -774,8 +774,7 @@ public class Wand {
             bb2_y = y2;
             bb2_z = z2;
         }
-        //min_y=bb1_y;
-        //max_y=bb2_y;
+
         //valid = true;
     }
 
@@ -1769,6 +1768,9 @@ public class Wand {
     public BlockPos get_pos_from_air(Vec3 hit) {
         if (player == null)
             return new BlockPos((int) hit.x, (int) hit.y, (int) hit.z);
+        float r=player.getYRot();
+        Vec3 eye=player.getEyePosition();
+        hit=hit.add(hit.subtract(eye).normalize().scale(target_air_distance));
         Direction dir = player.getDirection();
         int offx = 0;
         int offy = 0;
@@ -1794,6 +1796,8 @@ public class Wand {
         if (hit.y < 0) {
             offy = -1;
         }
+
+        //BlockPos p=new BlockPos((int) hit.x + offx, (int) hit.y + offy, (int) hit.z + offz).relative(dir,target_air_distance);
         return new BlockPos((int) hit.x + offx, (int) hit.y + offy, (int) hit.z + offz);
     }
 

@@ -41,7 +41,6 @@ public class AreaMode extends WandMode {
         }
         wand.skip();
         wand.validate_buffer();
-        //wand.block_buffer.calc_min_max();
     }
 
     int add_neighbour(BlockPos bpos, BlockState state,Wand wand) {

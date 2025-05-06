@@ -466,6 +466,10 @@ public class WandProps {
             public String toString() {
                 return "rock_noise";
             }
+        }, AIR_TARGET_DISTANCE {
+            public String toString() {
+                return "air_target_distance";
+            }
         };
         public int def = 0;
         public int min = 0;
@@ -498,6 +502,9 @@ public class WandProps {
             ROCK_NOISE.min=0;
             ROCK_NOISE.max=16;
             ROCK_NOISE.def=3;
+            AIR_TARGET_DISTANCE.def=0;
+            AIR_TARGET_DISTANCE.min=0;
+            AIR_TARGET_DISTANCE.max=10;
         }
     }
 

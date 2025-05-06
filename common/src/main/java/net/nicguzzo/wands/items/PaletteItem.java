@@ -141,13 +141,14 @@ public class PaletteItem extends Item {
     @Override
     public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
         ItemStack paletteItemStack = player.getItemInHand(interactionHand);
-        //ItemStack wand = player.getItemInHand(InteractionHand.MAIN_HAND);
-        //boolean is_wand=WandUtils.is_wand(wand);
+        ItemStack wand = player.getItemInHand(InteractionHand.MAIN_HAND);
+        boolean is_wand=WandUtils.is_wand(wand);
         //boolean has_target=false;
-        //if(is_wand){
+        if(is_wand){
         //    Wand w= PlayerWand.get(player);
         //    w.
-        //}
+            return InteractionResult.FAIL;
+        }
         if (!world.isClientSide()) {
             Compat.open_menu((ServerPlayer) player, paletteItemStack, 1);
             return InteractionResult.SUCCESS;

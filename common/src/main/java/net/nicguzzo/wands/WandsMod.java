@@ -323,7 +323,6 @@ public class WandsMod {
                 PaletteItem.setGradientHeight(palette,grad_h);
             }
         }
-
     }
 
     public static void process_keys(Player player, int key, boolean shift, boolean alt) {

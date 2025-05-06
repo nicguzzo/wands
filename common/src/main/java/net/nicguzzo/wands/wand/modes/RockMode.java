@@ -82,7 +82,7 @@ public class RockMode extends WandMode {
             int xx,yy,zz;
             double n;
             //WandsMod.log( String.format("%d,%d,%d",x1,y1,z1),true);
-            WandsMod.log( String.format("%d,%d,%d",rx,ry,rz),true);
+            //WandsMod.log( String.format("%d,%d,%d",rx,ry,rz),true);
 
             x=-r;
             for(int i=x1;i<=x2;i++,x++){

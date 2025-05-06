@@ -242,7 +242,12 @@ public class ClientRender {
                 }else{
                     if(wand.target_air && mode.can_target_air() ) {
                         targeting_air=true;
+                        if(hitResult==null){
+                            //WandsMod.LOGGER.info("hit result null");
+                            return;
+                        }
                         Vec3 hit=hitResult.getLocation();
+
                         BlockPos pos=wand.get_pos_from_air(hit);
                         ItemStack offhand = player.getOffhandItem();
                         Block offhand_block;
@@ -540,7 +545,6 @@ public class ClientRender {
                                     if (wand.has_water_bucket) {
                                         sprite = ModelBakery.WATER_FLOW.sprite();
                                         i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
-                                        //i = 16777215;
                                         Compat.set_texture(sprite.atlasLocation());
                                     } else {
                                         sprite = ModelBakery.LAVA_FLOW.sprite();
@@ -1032,13 +1036,11 @@ public class ClientRender {
         grid_i++;
     }
     private static void draw_lines(BufferBuilder bufferBuilder,int from,int to,float r,float g,float b,float a){
-    //private static void draw_lines(VertexConsumer bufferBuilder,int from,int to,float r,float g,float b,float a){
         for(int i=from;i<to && i< grid_n;i++) {
             bufferBuilder.addVertex(grid_vx[i],grid_vy[i],grid_vz[i]).setColor(r, g, b, a);
         }
     }
     private static void grid(BufferBuilder bufferBuilder,Direction side, float x, float y, float z,AABB aabb) {
-    //private static void grid(VertexConsumer bufferBuilder,Direction side, float x, float y, float z,AABB aabb) {
         float w=1;
         float h=1;
         float w2=w*0.33333333f;
