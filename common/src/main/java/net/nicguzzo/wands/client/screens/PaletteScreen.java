@@ -15,6 +15,7 @@ import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.menues.PaletteMenu;
+import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
 import net.nicguzzo.wands.wand.Palette;
@@ -71,6 +72,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             }
         };
         gradient_h.label_side=true;
+        gradient_h.label_col = new Colorf(1.0f, 1.0f, 1.0f, 1.0f).toInt();
+        gradient_h.label_bg  = new Colorf(0.2f, 0.2f, 0.2f, 1.0f).toInt();
 
     }
 
