@@ -151,7 +151,7 @@ public class WandItem extends Item {
     }
 
     @Environment(EnvType.CLIENT)
-    @Override
+    //@Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag = Compat.getTags(stack);
         //CompoundTag tag=stack.getOrCreateTag();
@@ -159,11 +159,11 @@ public class WandItem extends Item {
         //TODO add tools info
         list.add(Compat.literal("mode: ").append(Compat.translatable(WandProps.getMode(stack).toString())));
         list.add(Compat.literal("limit: " + this.limit));
-        list.add(Compat.literal("orientation: ").append(Compat.translatable(WandProps.orientations[tag.getInt("orientation")].toString())));
-        int a = tag.getInt("axis");
+        list.add(Compat.literal("orientation: ").append(Compat.translatable(WandProps.orientations[tag.getInt("orientation").orElse(0)].toString())));
+        int a = tag.getInt("axis").orElse(0);
         if (a < WandProps.axes.length) list.add(Compat.literal("axis: " + WandProps.axes[a].toString()));
         else list.add(Compat.literal("axis: none"));
-        list.add(Compat.literal("plane: " + WandProps.Plane.values()[tag.getInt("plane")].toString()));
+        list.add(Compat.literal("plane: " + WandProps.Plane.values()[tag.getInt("plane").orElse(0)].toString()));
         list.add(Compat.literal("fill circle: " + tag.getBoolean("cfill")));
         list.add(Compat.literal("rotation: " + tag.getInt("rotation")));
     }

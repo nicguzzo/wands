@@ -71,7 +71,9 @@ public class Palette {
             }
             //palette_grid.clear();
             CompoundTag tag= Compat.getTags(item);
-            ListTag palette_inv = tag.getList("Palette", Compat.NbtType.COMPOUND);
+            Optional<ListTag> o_palette_inv = tag.getList("Palette");
+            if (o_palette_inv.isEmpty())return;
+            ListTag palette_inv=o_palette_inv.get();
             //WandsMod.log("palette_inv: "+palette_inv,true);
             int s = palette_inv.size();
 
@@ -79,9 +81,11 @@ public class Palette {
                 CompoundTag stackTag = (CompoundTag) palette_inv.get(i);
                 ItemStack stack =ItemStack.EMPTY;
                 if(level !=null) {
-                    stack= ItemStack.parse(level.registryAccess(), stackTag.getCompound("Block")).orElse(ItemStack.EMPTY);
+                    if(stackTag.getCompound("Block").isPresent()) {
+                        stack = ItemStack.parse(level.registryAccess(), stackTag.getCompound("Block").get()).orElse(ItemStack.EMPTY);
+                    }
                 }
-                int inv_slot=stackTag.getInt("Slot");
+                int inv_slot=stackTag.getInt("Slot").orElse(0);
                 if (!stack.isEmpty()) {
                     Block blk = Block.byItem(stack.getItem());
                     if (blk != Blocks.AIR) {

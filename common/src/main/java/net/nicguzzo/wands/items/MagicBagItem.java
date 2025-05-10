@@ -49,7 +49,7 @@ public class MagicBagItem extends Item {
     static public int getTotal(ItemStack bag) {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = Compat.getTags(bag);
-            return tag.getInt("total");
+            return tag.getInt("total").orElse(0);
         }
         return 0;
     }
@@ -59,7 +59,7 @@ public class MagicBagItem extends Item {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             int lim = ((MagicBagItem) bag.getItem()).limit;
             CompoundTag tag = Compat.getTags(bag);
-            int total = tag.getInt("total");
+            int total = tag.getInt("total").orElse(0);
             if (total + n < lim) {
                 tag.putInt("total", total + n);
                 CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
@@ -72,7 +72,7 @@ public class MagicBagItem extends Item {
     static public void dec(ItemStack bag, int n) {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = Compat.getTags(bag);
-            int total = tag.getInt("total");
+            int total = tag.getInt("total").orElse(0);
             if (total - n >= 0) {
                 tag.putInt("total", total - n);
             } else {
@@ -100,8 +100,8 @@ public class MagicBagItem extends Item {
     static public ItemStack getItem(ItemStack bag, HolderLookup.Provider ra) {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = Compat.getTags(bag);
-            if (ra != null && tag.contains("item")) {
-                Optional<ItemStack> item = ItemStack.parse(ra, tag.getCompound("item"));
+            if (ra != null && tag.getCompound("item").isPresent()) {
+                Optional<ItemStack> item = ItemStack.parse(ra, tag.getCompound("item").get());
                 if (item.isPresent()) {
                     return item.get();
                 }
@@ -111,7 +111,7 @@ public class MagicBagItem extends Item {
     }
 
     @Environment(EnvType.CLIENT)
-    @Override
+    //@Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
         ItemStack i = MagicBagItem.getItem(stack,tooltipContext.registries());
         if (i.isEmpty()) {

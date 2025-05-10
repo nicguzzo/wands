@@ -6,6 +6,7 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponentHolder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
@@ -1457,7 +1458,9 @@ public class Wand {
     public void update_tools() {
         digger_item_slot = -1;
         n_tools = 0;
-        int[] tools_slots = this.player_data.getIntArray("Tools");
+        Optional<int[]> a =this.player_data.getIntArray("Tools");
+        if(a.isEmpty()) return;
+        int[] tools_slots = a.get();
         for (int t = 0; t < tools_slots.length; t++) {
             ItemStack tool_item = player.getInventory().getItem(tools_slots[t]);
             if (tool_item.isEmpty()) continue;
@@ -1506,25 +1509,25 @@ public class Wand {
             is_snow_layer = state.getValue(SnowLayerBlock.LAYERS) == 1;
         }
         Item item_digger = digger.getItem();
-        if (digger != null && !digger.isEmpty() && (item_digger instanceof DiggerItem || item_digger instanceof ShearsItem)) {
+        Tool tool = digger.get(DataComponents.TOOL);
+        if (digger != null && !digger.isEmpty() && (tool!=null || item_digger instanceof ShearsItem)) {
             boolean is_allowed = false;
             boolean minable = false;
             if (item_digger instanceof ShearsItem) {
                 can_shear = can_shear(state);
                 is_allowed = is_allowed || WandsConfig.shears_allowed.contains(blk);
             } else {
-                if (item_digger instanceof PickaxeItem) {
-                    is_allowed = is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
+                if (item_digger instanceof AxeItem) {
+                    is_allowed = is_allowed || WandsConfig.axe_allowed.contains(blk);
                 } else {
-                    if (item_digger instanceof AxeItem) {
-                        is_allowed = is_allowed || WandsConfig.axe_allowed.contains(blk);
+                    if (item_digger instanceof ShovelItem) {
+                        is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
                     } else {
-                        if (item_digger instanceof ShovelItem) {
-                            is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
-                        } else {
-                            if (item_digger instanceof HoeItem) {
-                                is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
-                            }
+                        if (item_digger instanceof HoeItem) {
+                            is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
+                        }else{
+                            //TODO: find a new way to check if it's a pickaxe
+                            is_allowed = is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
                         }
                     }
                 }
@@ -1533,8 +1536,8 @@ public class Wand {
                 float destroy_speed = item_digger.getDestroySpeed(digger, state);
                 boolean correct_tool = false;
                 if (!digger.isEmpty()) {
-                    Tool tool = (Tool) digger.get(DataComponents.TOOL);
-                    correct_tool = tool != null && tool.isCorrectForDrops(state);
+                    Tool dtool = digger.get(DataComponents.TOOL);
+                    correct_tool = dtool != null && dtool.isCorrectForDrops(state);
                 }
                 return creative || (destroy_speed > 1.0f && correct_tool)
                         || is_glass || is_snow_layer || is_allowed || can_shear;

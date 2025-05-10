@@ -1,7 +1,6 @@
 package net.nicguzzo.wands.utils;
 
-import com.mojang.blaze3d.vertex.BufferUploader;
-import net.minecraft.client.renderer.CoreShaders;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.core.*;
@@ -10,7 +9,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -20,8 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.player.Player;
@@ -39,8 +35,6 @@ import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandMenu;
 import org.jetbrains.annotations.NotNull;
-
-import org.joml.Matrix4fStack;
 
 import java.util.NoSuchElementException;
 
@@ -86,15 +80,6 @@ public class Compat {
         return ResourceLocation.withDefaultNamespace(res);
     }
 
-    static public void addVertex(BufferBuilder bufferBuilder,float x,float y,float z,Colorf c,float u,float v,float nx,float ny,float nz){
-        bufferBuilder.addVertex(x,y,z,c.toInt(), u, v, 0, 0, nx, ny,nz);
-    }
-    static public void addVertex_pos_uv(BufferBuilder bufferBuilder,float x,float y,float z,float u,float v){
-        bufferBuilder.addVertex(x,y,z).setUv(u,v);
-    }
-    static public void addVertex_pos_color(BufferBuilder bufferBuilder,float x,float y,float z,Colorf c){
-        bufferBuilder.addVertex(x,y,z).setColor(c.r,c.g,c.b,c.a);
-    }
     static public CreativeModeTab create_tab(ResourceLocation res){
         return null;
     }
@@ -105,37 +90,7 @@ public class Compat {
     static public Inventory get_inventory(Player player){
             return player.getInventory();
     }
-    static public void set_color(float r, float g, float b, float a){
-            RenderSystem.setShaderColor(r,g,b,a);
-    }
-    static public void set_pos_tex_shader(){
-                RenderSystem.setShader(CoreShaders.POSITION_TEX);
-    }
-    static public void set_texture(ResourceLocation tex){
-            RenderSystem.setShaderTexture(0, tex);
-    }
-    static public void set_shader_block(){
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_SOLID);
-    }
-    static public void set_shader_pos_col_tex_light(){
-                RenderSystem.setShader(CoreShaders.POSITION_COLOR_TEX_LIGHTMAP);
-    }
-    static public void tesselator_end(Tesselator tesselator,BufferBuilder bufferBuilder){
-        try {
-            BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
-        } catch (Exception e) {
-            //WandsMod.LOGGER.error("tesselator_end exception "+e.getMessage());
-        }
-    }
-    static public void set_shader_pos_tex(){
-                RenderSystem.setShader(CoreShaders.POSITION_TEX);
-    }
-    static public void set_shader_pos_color(){
-                RenderSystem.setShader(CoreShaders.POSITION_COLOR);
-    }
-    static public void set_shader_lines(){
-                RenderSystem.setShader(CoreShaders.RENDERTYPE_LINES);
-    }
+
 
     static public void open_menu(ServerPlayer player, ItemStack item, int m){
         MenuRegistry.openExtendedMenu(player, new MenuProvider(){

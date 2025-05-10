@@ -14,9 +14,10 @@ public class Btn extends Wdgt {
     int ox = 2;
     int oy = 2;
     Component text;
-    Colorf c1 = new Colorf(0.1f, 0.1f, 0.1f, 0.8f);
-    Colorf c2 = new Colorf(0.4f, 0.4f, 0.40f, 0.9f);
-    Colorf c_disabled = new Colorf(0.7f, 0.7f, 0.70f, 0.7f);
+    int c1 = new Colorf(0.1f, 0.1f, 0.1f, 0.8f).toInt();
+    int c2 = new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
+    int c_disabled = new Colorf(0.7f, 0.7f, 0.70f, 0.7f).toInt();
+    int c_selected=  new Colorf(0.0f, 0.8f, 0.8f, 0.5f).toInt();
     boolean selected = false;
     public boolean disabled = false;
     BtnClick on_click = null;
@@ -63,38 +64,18 @@ public class Btn extends Wdgt {
     }
 
     public void render(GuiGraphics gui, Font font, int mx, int my) {
-        float r, g, b, a;
+        int c;
         if (disabled) {
-            r = c_disabled.r;
-            g = c_disabled.g;
-            b = c_disabled.b;
-            a = c_disabled.a;
+            c = c_disabled;
         } else if (selected || inside(mx, my)) {
-            r = c2.r;
-            g = c2.g;
-            b = c2.b;
-            a = c2.a;
+            c=c2;
         } else {
-            r = c1.r;
-            g = c1.g;
-            b = c1.b;
-            a = c1.a;
+            c=c1;
         }
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        BufferBuilder bufferBuilder = init_quads();
-        quad(bufferBuilder, x, y, w, h, r, g, b, a);
+        gui.fill(x,y,x+w,y+h,c);
         if (selected) {
-            int border = 1;
-            quad(bufferBuilder, x, y, w, h, 0.0f, 0.8f, 0.8f, 0.5f);
-            /*quad(bufferBuilder,x-border,y-border,w+border*2,border,0.0f, 0.8f, 0.8f, 0.5f);
-            quad(bufferBuilder,x-border,y+h,w+border*2,border,0.0f, 0.8f, 0.8f, 0.5f);
-            quad(bufferBuilder,x-border,y-border,border,h+border*2,0.0f, 0.8f, 0.8f, 0.5f);
-            quad(bufferBuilder,x+w,y-border,border,h+border*2,0.0f, 0.8f, 0.8f, 0.5f);*/
+            gui.fill(x,y,x+w,y+h,c_selected);
         }
-
-        end_quads(bufferBuilder);
-        RenderSystem.disableBlend();
         int text_color = 0xffffffff;
         if (selected)
             text_color = 0xff000000;

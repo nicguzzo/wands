@@ -31,8 +31,8 @@ public abstract class PlayerMixin implements IEntityDataSaver {
 
     @Inject(method = "readAdditionalSaveData", at = @At(value = "HEAD"))
     public void readAdditionalSaveData(CompoundTag compoundTag, CallbackInfo cb) {
-        if(compoundTag.contains("wands.wand_data", Compat.NbtType.COMPOUND)){
-            wandPlayerData =compoundTag.getCompound("wands.wand_data");
+        if(compoundTag.getCompound("wands.wand_data").isPresent()){
+            wandPlayerData =compoundTag.getCompound("wands.wand_data").get();
         }
     }
 }

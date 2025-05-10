@@ -142,7 +142,7 @@ public class WandsMod {
         });
 
         NetworkManager.registerReceiver(Side.C2S, Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got PalettePacket");
+            //LOGGER.info("got PalettePacket");
             process_palette(context.getPlayer(), data.mode(), data.rotate(),data.grad_h());
         });
         NetworkManager.registerReceiver(Side.C2S, Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC, (data, context) -> {
@@ -223,7 +223,7 @@ public class WandsMod {
                 p2 = data.p2();
             }
             if (p1 == null) {
-                WandsMod.LOGGER.info("needs at least 1 position");
+                //WandsMod.LOGGER.info("needs at least 1 position");
                 return;
             }
             BlockState block_state;

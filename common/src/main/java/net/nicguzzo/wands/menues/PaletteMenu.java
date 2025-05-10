@@ -68,7 +68,7 @@ public class PaletteMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         Inventory inventory = Compat.get_inventory(player);
-        if (!inventory.getSelected().isEmpty()) {
+        if (!inventory.getSelectedItem().isEmpty()) {
             Compat.set_carried(player, this, ItemStack.EMPTY);
         }
     }

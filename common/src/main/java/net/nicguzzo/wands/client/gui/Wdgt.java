@@ -19,21 +19,23 @@ public class Wdgt {
     public void click(int mx, int my) {
 
     }
-
-    public BufferBuilder init_quads() {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        Compat.set_shader_pos_color();
-        return Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+/*
+    public VertexConsumer init_quads(GuiGraphics gui) {
+        //RenderSystem.enableBlend();
+        //RenderSystem.defaultBlendFunc();
+        //Compat.set_shader_pos_color();
+        //return Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        return gui.
     }
 
     public void end_quads(BufferBuilder buffer) {
         try {
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
+            buffer.buildOrThrow();
+            //BufferUploader.drawWithShader(buffer.buildOrThrow());
         } catch (Exception ignore) {
 
         }
-        RenderSystem.disableBlend();
+        //RenderSystem.disableBlend();
     }
 
     void quad(BufferBuilder bufferBuilder, float x, float y, float w, float h, float r, float g, float b, float a) {
@@ -42,7 +44,7 @@ public class Wdgt {
         bufferBuilder.addVertex(x + w, y + h, 0.0F).setColor(r, g, b, a);
         bufferBuilder.addVertex(x + w, y, 0.0F).setColor(r, g, b, a);
     }
-
+*/
     public boolean inside(int mx, int my) {
         return mx >= x && mx <= (x + w) && my >= y && my <= (y + h);
     }

@@ -18,7 +18,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.level.Level;
@@ -28,8 +27,12 @@ import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
+import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.IntStream;
 
 public class WandMenu extends AbstractContainerMenu {
     
@@ -43,7 +46,8 @@ public class WandMenu extends AbstractContainerMenu {
         }
         @Override
         public boolean mayPlace(ItemStack itemStack) {
-            return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
+            boolean is_tool=itemStack.get(DataComponents.TOOL)!=null;
+            return (is_tool||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
         }
     }
 
@@ -61,8 +65,8 @@ public class WandMenu extends AbstractContainerMenu {
         super(WandsMod.WAND_CONTAINER.get(), syncId);
         this.wand=_wand;
         this.playerInventory=playerInventory;
-        CompoundTag tag= Compat.getTags(wand);
-        ListTag tools_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
+        //CompoundTag tag= Compat.getTags(wand);
+        //Optional<ListTag> tools_tag = tag.getList("Tools");
         this.simplecontainer=  new SimpleContainer(9){
             @Override
             public void setChanged() {
@@ -98,7 +102,8 @@ public class WandMenu extends AbstractContainerMenu {
         return wand.getItem() instanceof WandItem;
     }
     boolean mayPlace(ItemStack itemStack){
-        return (itemStack.getItem() instanceof DiggerItem||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
+        boolean is_tool=itemStack.get(DataComponents.TOOL)!=null;
+        return (is_tool||itemStack.getItem() instanceof ShearsItem) && !(itemStack.getItem() instanceof WandItem);
     }
     boolean insert(ItemStack itemStack,int s,int e){
 
@@ -112,53 +117,44 @@ public class WandMenu extends AbstractContainerMenu {
     }
 
     public void getInventory(ItemStack stack) {
-        //Level level= Minecraft.getInstance().level;
-        //if(level ==null ) return;
         if(playerInventory.player.level().isClientSide()) return;
         CompoundTag tag= Compat.getTags(stack);
-        ListTag inventory_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
-        //inventory.fromTag(inventory_tag,level.registryAccess());
-        for(int i=0;i<inventory_tag.size();i++) {
-             CompoundTag slot_tag= (CompoundTag) inventory_tag.get(i);
-             if (slot_tag.contains("Slot") && slot_tag.contains("Tool")){
-                 int slot=slot_tag.getInt("Slot");
-                Tag item_tag= slot_tag.get("Tool");
-                Optional<ItemStack> is= ItemStack.parse(playerInventory.player.level().registryAccess(), item_tag);
-                if(is.isPresent()) {
-                    simplecontainer.setItem(slot, is.get());
-                }
-             }
+        Optional<ListTag> o_inventory_tag = tag.getList("Tools");
+        if(o_inventory_tag.isEmpty()) return;
+        ListTag inventory_tag=o_inventory_tag.get();
+        for (Tag value : inventory_tag) {
+            CompoundTag slot_tag = (CompoundTag) value;
+            if (slot_tag.contains("Slot") && slot_tag.contains("Tool")) {
+                Optional<Integer> slot = slot_tag.getInt("Slot");
+                if (slot.isEmpty()) continue;
+                Tag item_tag = slot_tag.get("Tool");
+                Optional<ItemStack> is = ItemStack.parse(playerInventory.player.level().registryAccess(), item_tag);
+                if (is.isEmpty()) continue;
+                simplecontainer.setItem(slot.get(), is.get());
+            }
         }
     }
 
     public static void setInventory(ItemStack stack, SimpleContainer inventory,Level level) {
         if(level.isClientSide()) return;
-        //Level level= Minecraft.getInstance().level;
-        //if(level !=null ) {
-            //if (level.isClientSide()) {
-            //    // Handle client-side case (e.g., return null or log a warning)
-            //    System.out.println("Cannot save ItemStack on client side.");
-            //    return;
-            //}
-            CompoundTag tag= Compat.getTags(stack);
+        CompoundTag tag= Compat.getTags(stack);
 
-            ListTag inventory_tag = tag.getList("Tools", Compat.NbtType.COMPOUND);
-            inventory_tag.clear();
-            RegistryAccess ra=null;
-                ra = level.getServer().registryAccess();
+        ListTag inventory_tag = tag.getList("Tools").orElse(new ListTag());
+        inventory_tag.clear();
+        RegistryAccess ra=null;
+            ra = level.getServer().registryAccess();
 
-            for(int i=0;i<inventory.getContainerSize();i++) {
-                if(!inventory.getItem(i).isEmpty()) {
-                    Tag item_tag=inventory.getItem(i).save(ra);
-                    CompoundTag slot_tag=new CompoundTag();
-                    slot_tag.putInt("Slot",i);
-                    slot_tag.put("Tool",item_tag);
-                    inventory_tag.add(slot_tag);
-                }
+        for(int i=0;i<inventory.getContainerSize();i++) {
+            if(!inventory.getItem(i).isEmpty()) {
+                Tag item_tag=inventory.getItem(i).save(ra);
+                CompoundTag slot_tag=new CompoundTag();
+                slot_tag.putInt("Slot",i);
+                slot_tag.put("Tool",item_tag);
+                inventory_tag.add(slot_tag);
             }
-            tag.put("Tools",inventory_tag);
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        //}
+        }
+        tag.put("Tools",inventory_tag);
+        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
     @Override
@@ -179,7 +175,7 @@ public class WandMenu extends AbstractContainerMenu {
                 }
                 //System.out.println("invnetory size  "+player.getInventory().items.size());
                 int inv_free=0;
-                for(int i=0;i<player.getInventory().items.size();i++) {
+                for(int i=0;i<player.getInventory().getContainerSize();i++) {
                      if(player.getInventory().getItem(i).isEmpty()){
                          inv_free++;
                      }
@@ -213,16 +209,26 @@ public class WandMenu extends AbstractContainerMenu {
                             int[] i ={};
                             wnd.player_data.putIntArray("Tools",i);
                         }
-                        if(wnd.player_data.get("Tools")!=null){
-                            int[] a =wnd.player_data.getIntArray("Tools");
-                            tools=new IntArrayTag(a);
-                            IntTag it = IntTag.valueOf(slotIndex);
-                            if (tools.contains(it)) {
-                                tools.remove(it);
-                            } else {
-                                tools.addLast(it);
+                        if(wnd.player_data.get("Tools")!=null) {
+                            Optional<int[]> a = wnd.player_data.getIntArray("Tools");
+                            if (a.isPresent()) {
+                                tools = new IntArrayTag(a.get());
+                                //WandsMod.LOGGER.info("tools "+tools.toString());
+                                IntTag it = IntTag.valueOf(slotIndex);
+                                IntStream oi= Arrays.stream(a.get()).filter(aa-> aa==it.value());
+                                OptionalInt tool_slot=oi.findFirst();
+                                if(tool_slot.isPresent()) {
+                                    int idx=ArrayUtils.indexOf(a.get(),tool_slot.getAsInt());
+                                    //WandsMod.LOGGER.info("index "+idx);
+                                    if(idx>=0 && idx< tools.size()) {
+                                        tools.remove(idx);
+                                    }
+                                } else {
+                                    tools.addTag(tools.size(),it);
+                                    //tools.addLast(it);
+                                }
+                                wnd.player_data.put("Tools", tools);
                             }
-                            wnd.player_data.put("Tools",tools);
                         }
                     }
                     if(button==1) {

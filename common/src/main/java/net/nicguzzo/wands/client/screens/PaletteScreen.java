@@ -1,4 +1,5 @@
 package net.nicguzzo.wands.client.screens;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderType;
@@ -15,6 +16,7 @@ import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.menues.PaletteMenu;
+import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
 import net.nicguzzo.wands.wand.Palette;
@@ -71,7 +73,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             }
         };
         gradient_h.label_side=true;
-
+        gradient_h.label_col = new Colorf(1.0f, 1.0f, 1.0f, 1.0f).toInt();
+        gradient_h.label_bg  = new Colorf(0.2f, 0.2f, 0.2f, 1.0f).toInt();
     }
 
     @Override
@@ -95,7 +98,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 break;
             };
             CompoundTag tag= Compat.getTags(this.menu.palette);
-            boolean rot=tag.getBoolean("rotate");
+            boolean rot=tag.getBoolean("rotate").orElse(false);
             gui.drawString(this.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-105,4210752,false);
             gui.drawString(this.font,mode_val , (width/2)+30, (height/2)-105, 4210752,false);
             btn_mode.render(gui,this.font, mouseX, mouseY);
@@ -106,7 +109,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     }
     @Override
     protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-        Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;

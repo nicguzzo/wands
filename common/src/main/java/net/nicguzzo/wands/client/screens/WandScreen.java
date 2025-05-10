@@ -1,11 +1,11 @@
 package net.nicguzzo.wands.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
+import com.mojang.blaze3d.textures.GpuTexture;
 import dev.architectury.networking.NetworkManager;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -32,6 +32,9 @@ import java.util.Vector;
 public class WandScreen extends AbstractContainerScreen<WandMenu> {
     ItemStack wand_stack=null;
     WandItem wand_item =null;
+    GpuTexture wand_bg_Texture;
+    GpuTexture wand_inv_Texture;
+    //GpuTexture wand_slot_Texture;
     static final int img_w=256;
     static final int img_h=256;
     private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
@@ -87,6 +90,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     int yoff;
     public WandScreen(WandMenu handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
+        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+        wand_bg_Texture=textureManager.getTexture(BG_TEX).getTexture();
+        wand_inv_Texture=textureManager.getTexture(INV_TEX).getTexture();
+        //wand_slot_Texture=textureManager.getTexture(SLOT_HIGHLIGHT_BACK_SPRITE).getTexture();
     }
     private Spinner valSpinner(WandProps.Value val,int x,int y,int w,int h,Component label) {
         int v=WandProps.getVal(wand_stack, val);
@@ -538,24 +545,24 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
     @Override 
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
-        Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-        Compat.set_texture(BG_TEX);
-        Compat.set_pos_tex_shader();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, wand_bg_Texture);
+        //Compat.set_pos_tex_shader();
+        //RenderSystem.depthMask(false);
+        //RenderSystem.disableDepthTest();
         int x = ((width - img_w) / 2)-xoff;
         int y = ((height - img_h) / 2)-yoff;
 
         if(show_inv) {
-            RenderSystem.depthMask(true);
-            RenderSystem.enableDepthTest();
-            Compat.set_texture(INV_TEX);
+            //RenderSystem.depthMask(true);
+            //RenderSystem.enableDepthTest();
+            RenderSystem.setShaderTexture(0, wand_inv_Texture);
             x =( (width - imageWidth) / 2);
             y =( (height - imageHeight) / 2);
                 gui.blit(RenderType::guiTextured, INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);
                 super.render(gui,mouseX,mouseY,delta);
-                if(ClientRender.wand!=null && ClientRender.wand.player_data !=null){
-                    for (int tool : ClientRender.wand.player_data.getIntArray("Tools")) {
+                if(ClientRender.wand!=null && ClientRender.wand.player_data !=null && ClientRender.wand.player_data.getIntArray("Tools").isPresent()){
+                    for (int tool : ClientRender.wand.player_data.getIntArray("Tools").get()) {
                         Slot slot = (Slot)this.menu.slots.get(tool);
                         //renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
                         gui.blitSprite(RenderType::guiTextured, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
@@ -588,7 +595,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             }
         }
         this.renderTooltip(gui, mouseX,mouseY);
-        RenderSystem.depthMask(true);
+        //RenderSystem.depthMask(true);
     }
     @Override
     protected void renderBg(GuiGraphics gui, float f, int i, int j) {

@@ -139,7 +139,7 @@ public class WandsModClient {
 
         if (WandsMod.is_forge) {
             ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
-                WandsMod.LOGGER.info("registering menues...");
+                //WandsMod.LOGGER.info("registering menues...");
                 try {
                     MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
                     MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
@@ -147,7 +147,7 @@ public class WandsModClient {
                 } catch (Exception ex) {
                     WandsMod.LOGGER.error(ex.getMessage());
                 }
-                WandsMod.LOGGER.info("registering menues.");
+                //WandsMod.LOGGER.info("registering menues.");
             });
         } else {
 
@@ -159,14 +159,14 @@ public class WandsModClient {
         }
 
         NetworkManager.registerReceiver(Side.S2C, Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got PlayerDataPacket");
+            //LOGGER.info("got PlayerDataPacket");
             if(ClientRender.wand!=null){
                 ClientRender.wand.player_data=data.tag();
             }
         });
 
         NetworkManager.registerReceiver(Side.S2C, Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got ConfPacket");
+            //LOGGER.info("got ConfPacket");
             if (WandsMod.config != null) {
                 WandsMod.config.blocks_per_xp = data.blocks_per_xp();
                 WandsMod.config.destroy_in_survival_drop = data.destroy_in_survival_drop();
@@ -174,11 +174,11 @@ public class WandsModClient {
                 WandsMod.config.allow_wand_to_break = data.allow_wand_to_break();
                 WandsMod.config.allow_offhand_to_break = data.allow_offhand_to_break();
                 WandsMod.config.mend_tools = data.mend_tools();
-                LOGGER.info("got config");
+                //LOGGER.info("got config");
             }
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got SndPacket");
+            //LOGGER.info("got SndPacket");
             BlockPos pos = data.pos();
             boolean destroy = data.destroy();
             ItemStack item_stack = data.item_stack();
@@ -201,7 +201,7 @@ public class WandsModClient {
 
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got ToastPacket");
+            //LOGGER.info("got ToastPacket");
             boolean no_tool = data.no_tool();
             boolean damaged_tool = data.damaged_tool();
             if (no_tool) {
@@ -212,7 +212,7 @@ public class WandsModClient {
             }
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got StatePacket");
+            //LOGGER.info("got StatePacket");
             ///long seed=data.seed();
             int mode = data.mode();
             int slot = data.slot();
@@ -261,11 +261,11 @@ public class WandsModClient {
             if (main_bag || off_bag || main) {
                 if (main_bag || off_bag) {
                     //MagicBagItem bag=(MagicBagItem)stack.getItem();
-                    RenderSystem.enableBlend();
-                    RenderSystem.defaultBlendFunc();
+                    //RenderSystem.enableBlend();
+                    //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
-                    Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-                    Compat.set_pos_tex_shader();
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    //Compat.set_pos_tex_shader();
                     int h = 3 * font.lineHeight;
                     float x = (int) (screenWidth * ((WandsMod.config.wand_mode_display_x_pos) / 100.0f));
                     float y = (int) ((screenHeight - h) * ((WandsMod.config.wand_mode_display_y_pos) / 100.0f));
@@ -279,12 +279,12 @@ public class WandsModClient {
                     gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffff);
                 }
                 if (main) {
-                    RenderSystem.enableBlend();
-                    RenderSystem.defaultBlendFunc();
+                    //RenderSystem.enableBlend();
+                    //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
 
-                    Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-                    Compat.set_pos_tex_shader();
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    //Compat.set_pos_tex_shader();
 
                     Wand wand = ClientRender.wand;
                     WandProps.Mode mode = WandProps.getMode(stack);

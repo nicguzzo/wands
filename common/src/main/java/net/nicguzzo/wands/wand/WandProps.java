@@ -521,7 +521,7 @@ public class WandProps {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
             if (tag.contains(flag.toString())) {
-                return tag.getBoolean(flag.toString());
+                return tag.getBoolean(flag.toString()).orElse(flag.get_default());
             } else {
                 tag.putBoolean(flag.toString(), flag.get_default());
                 return flag.get_default();
@@ -561,7 +561,7 @@ public class WandProps {
     static public void incVal(ItemStack stack, Value v, int inc, int max) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int n = tag.getInt(v.toString());
+            int n = tag.getInt(v.toString()).orElse(v.def);
             if (n > v.max) n = v.max;
             if (n < v.min) n = v.min;
             if (n + inc <= max) {
@@ -578,7 +578,7 @@ public class WandProps {
     static public void decVal(ItemStack stack, Value v, int inc, int min) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int n = tag.getInt(v.toString());
+            int n = tag.getInt(v.toString()).orElse(v.def);
             if (n > v.max) n = v.max;
             if (n < v.min) n = v.min;
             if (n - inc >= min) {
@@ -601,7 +601,7 @@ public class WandProps {
         if(!tag.contains(v.toString())){
             i=v.def;
         }else {
-            i = tag.getInt(v.toString());
+            i = tag.getInt(v.toString()).orElse(v.def);
         }
         if (i > v.max) {
             i = v.max;
@@ -626,7 +626,7 @@ public class WandProps {
             return Mode.DIRECTION;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int m = tag.getInt("mode");
+        int m = tag.getInt("mode").orElse(0);
         if (m >= 0 && m < modes.length) {
             return modes[m];
         }
@@ -647,7 +647,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int mode = (tag.getInt("mode") + 1) % (modes.length);
+        int mode = (tag.getInt("mode").orElse(0) + 1) % (modes.length);
 
         if (mode == Mode.VEIN.ordinal() && !WandsMod.config.enable_vein_mode) {
             mode = Mode.BLAST.ordinal();
@@ -664,7 +664,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int mode = tag.getInt("mode") - 1;
+        int mode = tag.getInt("mode").orElse(1) - 1;
         if (mode < 0) {
             mode = modes.length - 1;
         }
@@ -683,7 +683,7 @@ public class WandProps {
             return Orientation.ROW;
         }
         CompoundTag tag = Compat.getTags(stack);
-        return orientations[tag.getInt("orientation")];
+        return orientations[tag.getInt("orientation").orElse(0)];
     }
 
     static public void setOrientation(ItemStack stack, Orientation o) {
@@ -701,7 +701,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int o = (tag.getInt("orientation") + 1) % 2;
+        int o = (tag.getInt("orientation").orElse(0) + 1) % 2;
         tag.putInt("orientation", o);
 
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
@@ -714,7 +714,7 @@ public class WandProps {
             return plane;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int p = tag.getInt("plane");
+        int p = tag.getInt("plane").orElse(0);
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         if (p >= 0 && p < planes.length) plane = planes[p];
         return plane;
@@ -735,7 +735,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int plane = (tag.getInt("plane") + 1) % 3;
+        int plane = (tag.getInt("plane").orElse(0) + 1) % 3;
         tag.putInt("plane", plane);
 
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
@@ -747,7 +747,7 @@ public class WandProps {
             return Rotation.NONE;
         }
         CompoundTag tag = Compat.getTags(stack);
-        return rotations[tag.getInt("rotation")];
+        return rotations[tag.getInt("rotation").orElse(0)];
     }
 
     static public void nextRotation(ItemStack stack) {
@@ -755,7 +755,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        int rot = (tag.getInt("rotation") + 1) % rotations.length;
+        int rot = (tag.getInt("rotation").orElse(0) + 1) % rotations.length;
         tag.putInt("rotation", rot);
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
@@ -772,7 +772,7 @@ public class WandProps {
     static public Action getAction(ItemStack stack) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int m = tag.getInt("action");
+            int m = tag.getInt("action").orElse(0);
             if (m < actions.length) return actions[m];
         }
         return Action.PLACE;
@@ -792,7 +792,7 @@ public class WandProps {
     static public void nextAction(ItemStack stack) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int a = (tag.getInt("action") + 1) % (actions.length);
+            int a = (tag.getInt("action").orElse(0) + 1) % (actions.length);
             if (WandsMod.config.disable_destroy_replace && (a == Action.DESTROY.ordinal() || a == Action.REPLACE.ordinal())) {
                 a = Action.USE.ordinal();
             }
@@ -804,7 +804,7 @@ public class WandProps {
     static public void prevAction(ItemStack stack) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int a = tag.getInt("action") - 1;
+            int a = tag.getInt("action").orElse(0) - 1;
             if (a < 0) {
                 a = actions.length - 1;
             }
@@ -820,7 +820,7 @@ public class WandProps {
         Direction.Axis axis = Direction.Axis.Y;
         CompoundTag tag = Compat.getTags(stack);
         if (WandUtils.is_wand(stack)) {
-            int p = tag.getInt("axis");
+            int p = tag.getInt("axis").orElse(0);
             if (p >= 0 && p < axes.length) axis = axes[p];
         }
         return axis;
@@ -845,7 +845,7 @@ public class WandProps {
     static public void nextAxis(ItemStack stack) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int axis = (tag.getInt("axis") + 1) % 3;
+            int axis = (tag.getInt("axis").orElse(0) + 1) % 3;
             tag.putInt("axis", axis);
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
@@ -854,7 +854,7 @@ public class WandProps {
     static public StateMode getStateMode(ItemStack stack) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
-            int m = tag.getInt("state_mode");
+            int m = tag.getInt("state_mode").orElse(0);
             if (m < state_modes.length) return state_modes[m];
         }
         return StateMode.TARGET;
@@ -872,9 +872,9 @@ public class WandProps {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
             if (v.coval != null) {
-                int c = tag.getInt(v.coval.toString());
+                int c = tag.getInt(v.coval.toString()).orElse(v.def);
                 if ((c * n) <= limit) {
-                    int nn = tag.getInt(v.toString());
+                    int nn = tag.getInt(v.toString()).orElse(v.def);
                     tag.putInt(v.toString(), nn + n);
                     CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
                 }

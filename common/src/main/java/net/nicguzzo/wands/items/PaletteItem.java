@@ -41,24 +41,25 @@ public class PaletteItem extends Item {
     }
 
     @Environment(EnvType.CLIENT)
-    @Override
+    //@Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
         CompoundTag tag = Compat.getTags(stack);
-        ListTag inventory = tag.getList("Palette", Compat.NbtType.COMPOUND);//10 COMPOUND
-        int s = inventory.size();
-        for (int i = 0; i < s; i++) {
-            //CompoundTag stackTag = (CompoundTag) inventory.get(i);
-
-            ItemStack stack2 = ItemStack.EMPTY;
-            Level level = Minecraft.getInstance().level;
-            if (level != null && tag.contains("Block")) {
-                Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), tag.getCompound("Block"));
-                if (is2.isPresent()) {
-                    stack2 = is2.get();
+        Optional<ListTag> inventory = tag.getList("Palette");//10 COMPOUND
+        if(inventory.isPresent()) {
+            int s = inventory.get().size();
+            for (int i = 0; i < s; i++) {
+                ItemStack stack2 = ItemStack.EMPTY;
+                Level level = Minecraft.getInstance().level;
+                Optional<CompoundTag> block_ct=tag.getCompound("Block");
+                if (level != null && block_ct.isPresent()) {
+                    Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), block_ct.get());
+                    if (is2.isPresent()) {
+                        stack2 = is2.get();
+                    }
                 }
-            }
-            if (!stack2.isEmpty()) {
-                list.add(Component.translatable(stack2.getItem().getDescriptionId() ).withStyle(ChatFormatting.GREEN));
+                if (!stack2.isEmpty()) {
+                    list.add(Component.translatable(stack2.getItem().getDescriptionId()).withStyle(ChatFormatting.GREEN));
+                }
             }
         }
         PaletteMode mode = PaletteItem.getMode(stack);
@@ -76,13 +77,13 @@ public class PaletteItem extends Item {
         }
         if(mode_val!=null)
             list.add(mode_val);
-        list.add(Compat.literal("rotate: " + (tag.getBoolean("rotate") ? "on" : "off")));
+        list.add(Compat.literal("rotate: " + (tag.getBoolean("rotate").orElse(false) ? "on" : "off")));
     }
 
     static public PaletteMode getMode(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            int mode = tag.getInt("mode");
+            int mode = tag.getInt("mode").orElse(0);
             if (mode < PaletteMode.values().length)
                 return PaletteMode.values()[mode];
         }
@@ -92,7 +93,7 @@ public class PaletteItem extends Item {
     static public boolean getRotate(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            return tag.getBoolean("rotate");
+            return tag.getBoolean("rotate").orElse(false);
         }
         return false;
     }
@@ -100,7 +101,7 @@ public class PaletteItem extends Item {
         int v=0;
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            v=tag.getInt("gradient_height");
+            v=tag.getInt("gradient_height").orElse(6);
         }
         if(v==0) {
             return 6;
@@ -123,7 +124,7 @@ public class PaletteItem extends Item {
     static public void toggleRotate(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            boolean rotate = tag.getBoolean("rotate");
+            boolean rotate = tag.getBoolean("rotate").orElse(false);
             tag.putBoolean("rotate", !rotate);
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
@@ -132,7 +133,7 @@ public class PaletteItem extends Item {
     static public void nextMode(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            int mode = (tag.getInt("mode") + 1) % (PaletteMode.values().length);
+            int mode = (tag.getInt("mode").orElse(0) + 1) % (PaletteMode.values().length);
             tag.putInt("mode", mode);
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
@@ -162,30 +163,27 @@ public class PaletteItem extends Item {
         if (level == null) return inventory;
 
         CompoundTag tag = Compat.getTags(stack);
-        ListTag inventory_tag = tag.getList("Palette", Compat.NbtType.COMPOUND);
-        //inventory.fromTag(inventory_tag,level.registryAccess());
-        for (int i = 0; i < inventory_tag.size(); i++) {
-
-            CompoundTag slot_tag = (CompoundTag) inventory_tag.get(i);
-            if (slot_tag.contains("Slot") && slot_tag.contains("Block")) {
-                int slot = slot_tag.getInt("Slot");
-                Tag item_tag = slot_tag.get("Block");
-                Optional<ItemStack> is = ItemStack.parse(level.registryAccess(), item_tag);
-                if (is.isPresent()) {
-                    inventory.setItem(slot, is.get());
+        Optional<ListTag> inventory_tag = tag.getList("Palette");
+        if(inventory_tag.isPresent()) {
+            for (int i = 0; i < inventory_tag.get().size(); i++) {
+                CompoundTag slot_tag = (CompoundTag) inventory_tag.get().get(i);
+                if (slot_tag.contains("Slot") && slot_tag.contains("Block") && slot_tag.getInt("Slot").isPresent()) {
+                    int slot = slot_tag.getInt("Slot").get();
+                    Tag item_tag = slot_tag.get("Block");
+                    Optional<ItemStack> is = ItemStack.parse(level.registryAccess(), item_tag);
+                    if (is.isPresent()) {
+                        inventory.setItem(slot, is.get());
+                    }
                 }
             }
-
         }
         return inventory;
     }
 
     public static void setInventory(ItemStack stack, SimpleContainer inventory,Level level) {
-
         if (level != null) {
             CompoundTag tag = Compat.getTags(stack);
-
-            ListTag inventory_tag = tag.getList("Palette", Compat.NbtType.COMPOUND);
+            ListTag inventory_tag = tag.getList("Palette").orElse(new ListTag());
             inventory_tag.clear();
             for (int i = 0; i < inventory.getContainerSize(); i++) {
                 if (!inventory.getItem(i).isEmpty()) {
@@ -195,11 +193,8 @@ public class PaletteItem extends Item {
                     slot_tag.put("Block", item_tag);
                     inventory_tag.add(slot_tag);
                 }
-//                //tag.put("Palette", item2.save(level.registryAccess(), new CompoundTag()));
             }
             tag.put("Palette", inventory_tag);
-            //CompoundTag tag= Compat.getTags(stack);
-            //tag.put("Palette",inventory.createTag(level.registryAccess()));
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
     }

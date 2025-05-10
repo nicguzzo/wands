@@ -42,17 +42,17 @@ public abstract class ItemRendererMixin {
             if (!item_in_bag.isEmpty()) {
                 if (itemStack.get(DataComponents.ITEM_MODEL) != null) {
 
-                    RenderSystem.enableDepthTest();
+                    //RenderSystem.enableDepthTest();
                     RenderSystem.disableScissor();
-                    RenderSystem.disableColorLogicOp();
+                    //RenderSystem.disableColorLogicOp();
                     pose.pushPose();
-                    pose.translate((float)(i + 8), (float)(j + 8),(float)(150 + (this.scratchItemStackRenderState.isGui3d() ? l : 0)));
+                    pose.translate((float)(i + 8), (float)(j + 8),(float)(150));
                     pose.scale(0.5f, 0.5f, 0.5f);
                     pose.translate(0, -0.3, 0);
-                    pose.translate(-(float)(i + 8), -(float)(j + 8),-(float)(150 + (this.scratchItemStackRenderState.isGui3d() ? l : 0)));
+                    pose.translate(-(float)(i + 8), -(float)(j + 8),-(float)(150));
                     this.renderItem(livingEntity,level,item_in_bag,i,j+5,k,151);
                     pose.popPose();
-                    RenderSystem.disableDepthTest();
+                    //RenderSystem.disableDepthTest();
 
                 }
             }

@@ -21,9 +21,9 @@ public class WandToast implements Toast {
     @Override
     public void render(GuiGraphics guiGraphics, Font font, long l){
         Minecraft client=Minecraft.getInstance();
-        Compat.set_pos_tex_shader();
-        Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-          guiGraphics.blit(RenderType::guiTextured,TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
+        //Compat.set_pos_tex_shader();
+        //Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blit(RenderType::guiTextured,TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
         if(client.player!=null) {
             ItemStack s = client.player.getMainHandItem();
                 guiGraphics.renderFakeItem(s,10,6);
