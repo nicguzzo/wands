@@ -402,7 +402,7 @@ public class ClientRender {
                                     x + (float) aabb.maxX, y + (float) aabb.maxY, z + (float) aabb.maxZ,
                                     mode_outline_color,wand.destroy);
                         } else {
-                            preview_block(consumer,
+                            preview_block(matrix,consumer,
                                     x + (float)aabb.minX, y + (float)aabb.minY, z + (float)aabb.minZ,
                                     x + (float)aabb.maxX, y + (float)aabb.maxY, z + (float)aabb.maxZ,
                                     mode_outline_color);
@@ -413,37 +413,37 @@ public class ClientRender {
             bufferSource.endLastBatch();
         }
     }
-    static void preview_block(VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
+    static void preview_block(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
         fx1 += p_o;
         fy1 += p_o;
         fz1 += p_o;
         fx2 -= p_o;
         fy2 -= p_o;
         fz2 -= p_o;
-        consumer.addVertex(fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
     }
 
     static void preview_block_fat(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
@@ -1101,7 +1101,7 @@ public class ClientRender {
 
         } else {
             VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
-            preview_block(consumer,
+            preview_block(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
                     bb1_z - off2,
@@ -1211,7 +1211,7 @@ public class ClientRender {
                             x + 1, y + 1, z + 1, col,
                     true);
                 } else {
-                    preview_block(consumer,
+                    preview_block(matrix,consumer,
                             x, y, z,
                             x + 1, y + 1, z + 1, col
                     );
@@ -1227,7 +1227,7 @@ public class ClientRender {
             if (fat_lines) {
                 preview_block_fat(matrix,consumer,x1,y1,z1,x2,y2,z2,col,false);
             } else {
-                preview_block(consumer,x1,y1,z1,x2,y2,z2,col);
+                preview_block(matrix,consumer,x1,y1,z1,x2,y2,z2,col);
             }
             bufferSource.endLastBatch();
         }
@@ -1270,7 +1270,7 @@ public class ClientRender {
             bufferSource.endLastBatch();
         } else {
             VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
-            preview_block(consumer,
+            preview_block(matrix,consumer,
                     pos_x  - off, pos_y  - off, pos_z  - off,
                     pos_x+1+ off, pos_y+1+ off, pos_z+1+ off,
                     start_col);
@@ -1338,11 +1338,11 @@ public class ClientRender {
                 .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
             consumer.addVertex(wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)
                 .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
-            preview_block(consumer,
+            preview_block(matrix,consumer,
                     p1_x,p1_y,p1_z,
                     p1_x + 1, p1_y + 1, p1_z + 1,
                     start_col);
-            preview_block(consumer,
+            preview_block(matrix,consumer,
                     p2_x - off2,
                     p2_y - off2,
                     p2_z - off2,

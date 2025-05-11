@@ -37,6 +37,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     //GpuTexture wand_slot_Texture;
     static final int img_w=256;
     static final int img_h=256;
+    Component rock_msg  = Compat.literal("rotate for new rock");
     private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
     private static final ResourceLocation INV_TEX = Compat.create_resource("textures/gui/inventory.png");
     private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
@@ -592,6 +593,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 if(mouseX>xx && mouseX<xx+16 && mouseY>y && mouseY<y+16) {
                     this.hoveredSlot=s;
                 }
+            }
+            if(modes_grp.selected==WandProps.Mode.ROCK.ordinal()) {
+                gui.drawString(font, rock_msg, leftPos + 103, topPos + 62, 0x00ff0000);
             }
         }
         this.renderTooltip(gui, mouseX,mouseY);
