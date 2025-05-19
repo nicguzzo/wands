@@ -57,6 +57,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Select mirror_axis;
     Btn conf_btn;
     Spinner mult_spn;
+    Spinner rock_rad_spn;
+    Spinner rock_noise_spn;
     Spinner grid_m_spn;
     Spinner grid_n_spn;
     Spinner grid_mskp_spn;
@@ -87,7 +89,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
     private Spinner valSpinner(WandProps.Value val,int x,int y,int w,int h,Component label) {
         int v=WandProps.getVal(wand_stack, val);
-        return new Spinner(v, val.min, val.max,x,y,w,h,label) {
+        return new Spinner(v, val.def, val.max,x,y,w,h,label) {
             public void onInc(int mx, int my, int value) {
                 WandProps.setVal(wand_stack, val, value);
                 WandsModClient.send_wand(wand_stack);
@@ -125,6 +127,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         right=(width/2)+(img_w/2)-xoff;
         bottom=(height/2)-(h/2)-12-yoff;
         top=(height/2)+(h/2)-yoff;
+
+        rock_rad_spn=valSpinner(Value.ROCK_RADIUS,left+200,bottom+25,30,14, Compat.translatable("screen.wands.rock_rad"));
+        rock_rad_spn.label_side=true;
+        wdgets.add(rock_rad_spn);
+
+        rock_noise_spn=valSpinner(Value.ROCK_RADIUS,left+200,bottom+40,30,14,Compat.translatable("screen.wands.rock_noise"));
+        rock_noise_spn.label_side=true;
+        wdgets.add(rock_noise_spn);
 
 
         mult_spn=valSpinner(Value.MULTIPLIER,left+200,bottom+25,25,14, Compat.translatable("screen.wands.multiplier"));
@@ -209,7 +219,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         tunnel_oy.label_side=true;
         wdgets.add(tunnel_oy);
 
-        modes_grp=new Select(left+80,bottom+5,btn_w,btn_h,Compat.translatable("screen.wands.mode"));
+        modes_grp=new Select(left+80,bottom-20,btn_w,btn_h,Compat.translatable("screen.wands.mode"));
         int l=WandProps.modes.length-1;
         if(wand_item.can_blast){
             l+=1;
@@ -226,7 +236,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         }
         wdgets.add(modes_grp);
 
-        action_grp =new Select(left+10,bottom+5,btn_w,btn_h,Compat.translatable("screen.wands.action"));
+        action_grp =new Select(left+10,bottom-20,btn_w,btn_h,Compat.translatable("screen.wands.action"));
         for (int i=0;i<WandProps.actions.length;i++) {
             int finalp=i;
             Btn b=new Btn(Compat.translatable(WandProps.actions[i].toString())){
@@ -480,6 +490,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             mirror_axis.selected=WandProps.getVal(wand_stack,Value.MIRRORAXIS);
             mirror_axis.visible=modes_grp.selected==WandProps.Mode.PASTE.ordinal();
             modes_grp.selected=WandProps.getMode(wand_stack).ordinal();
+            rock_rad_spn.visible=modes_grp.selected==WandProps.Mode.ROCK.ordinal();
+            rock_noise_spn.visible=modes_grp.selected==WandProps.Mode.ROCK.ordinal();
             mult_spn.visible=modes_grp.selected==WandProps.Mode.DIRECTION.ordinal();
             action_grp.selected=WandProps.getAction(wand_stack).ordinal();
             orientation_grp.selected=WandProps.getOrientation(wand_stack).ordinal();

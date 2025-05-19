@@ -242,6 +242,13 @@ public class Wand {
             modes[i] = WandProps.modes[i].get_mode();
         }
     }
+    public WandMode get_mode(){
+        if(modes!=null && mode!=null)
+            return modes[mode.ordinal()];
+        else{
+            return null;
+        }
+    }
 
     public void clear() {
         setP1(null);
@@ -253,6 +260,7 @@ public class Wand {
         fill_nx = 0;
         fill_ny = 0;
         fill_nz = 0;
+        Palette.version++;
         //WandsMod.LOGGER.info("clear");
         /*if(player!=null)
             player.displayClientMessage(Compat.literal("wand cleared"),false);*/
@@ -397,14 +405,15 @@ public class Wand {
                 }
             }
         }
-
+        boolean has_torch=false;
         if (offhand != null) {
             offhand_block = Block.byItem(offhand.getItem());
             if (offhand_block != Blocks.AIR) {
                 has_offhand = true;
             }
+            has_torch=offhand_block instanceof TorchBlock;
         }
-        if (offhand != null && !offhand.isEmpty() && !palette.has_palette && !has_bucket && !destroy) {
+        if (offhand != null && !offhand.isEmpty() && !palette.has_palette && !has_bucket /*&& !destroy*/) {
             if (offhand.get(DataComponents.CUSTOM_DATA) != null) {
                 offhand = null;
                 has_offhand = false;
@@ -412,20 +421,22 @@ public class Wand {
                 //return;
             }
             if (offhand != null && !offhand.isStackable() && !has_water_potion) {
-                if (!preview) {
-                    player.displayClientMessage(Compat.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
-                }
+                //if (!preview) {
+                //    player.displayClientMessage(Compat.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
+                //}
                 offhand = null;
                 has_offhand = false;
                 offhand_block = null;
-                return;
+                //return;
+            }
+            if(destroy && has_torch){
+                offhand = null;
+                has_offhand = false;
+                offhand_block = null;
             }
         }
         block_accounting.clear();
         if (palette.has_palette /*&& !destroy && !is_copy_paste*/) {
-            //if(!preview){
-            //WandsMod.log("update_palette bp",true);
-            //}
             palette.update_palette(block_accounting, level);
         }
 
@@ -784,15 +795,18 @@ public class Wand {
         }
     }
 
-    public BlockState get_state() {
+    public BlockState get_state(int y) {
         BlockState st = block_state;
         if (palette.has_palette) {
-            st = palette.get_state(this);
+            int min_y=!level.isOutsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
+            int max_y=!level.isOutsideBuildHeight(block_buffer.max_y)?block_buffer.max_y:0;
+
+            st = palette.get_state(this,min_y,max_y,y);
         } else {
             if (offhand_state != null && !offhand_state.isAir()) {
                 st = offhand_state;
             } else {
-                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE/*|| mode==Mode.RECT*/) {
+                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode==Mode.SPHERE) {
                     if (p1_state != null)
                         st = p1_state;
                 }

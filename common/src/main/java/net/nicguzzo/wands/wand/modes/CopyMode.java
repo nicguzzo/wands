@@ -10,7 +10,7 @@ import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 
-public class CopyMode implements WandMode {
+public class CopyMode extends WandMode {
 
     public void place_in_buffer(Wand wand) {
         int copy_x1 = 0;

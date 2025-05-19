@@ -5,7 +5,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class CircleMode implements WandMode {
+public class CircleMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         int plane = WandProps.getPlane(wand.wand_stack).ordinal();
         boolean fill = WandProps.getFlag(wand.wand_stack, WandProps.Flag.CFILLED);

@@ -8,10 +8,15 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class AreaMode implements WandMode {
+public class AreaMode extends WandMode {
 
     @Override
     public void place_in_buffer(Wand wand) {
+
+        if(!need_update(wand,true)){
+            return;
+        }
+
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.AREALIM);
         if(limit2<=0 || limit2 >wand.limit){
             limit2=wand.limit;

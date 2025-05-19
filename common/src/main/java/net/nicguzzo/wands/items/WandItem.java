@@ -3,7 +3,6 @@ package net.nicguzzo.wands.items;
 import dev.architectury.networking.NetworkManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -29,8 +28,6 @@ import net.nicguzzo.wands.wand.WandProps.Mode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Optional;
-
 
 public class WandItem extends Item {
 

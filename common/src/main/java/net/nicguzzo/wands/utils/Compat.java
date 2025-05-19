@@ -40,6 +40,7 @@ import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandMenu;
 import org.jetbrains.annotations.NotNull;
 
+import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 
 import java.util.NoSuchElementException;
@@ -86,13 +87,10 @@ public class Compat {
         return ResourceLocation.withDefaultNamespace(res);
     }
 
-    static public void addVertex(BufferBuilder bufferBuilder,float x,float y,float z,Colorf c,float u,float v,float nx,float ny,float nz){
-        bufferBuilder.addVertex(x,y,z,c.toInt(), u, v, 0, 0, nx, ny,nz);
+    static public void addVertex_pos_uv(BufferBuilder bufferBuilder, float x, float y, float z, float u, float v, Matrix4f m){
+        bufferBuilder.addVertex(m,x,y,z).setUv(u,v);
     }
-    static public void addVertex_pos_uv(BufferBuilder bufferBuilder,float x,float y,float z,float u,float v){
-        bufferBuilder.addVertex(x,y,z).setUv(u,v);
-    }
-    static public void addVertex_pos_color(BufferBuilder bufferBuilder,float x,float y,float z,Colorf c){
+    static public void addVertex_pos_color(VertexConsumer bufferBuilder,float x,float y,float z,Colorf c, Matrix4f m){
         bufferBuilder.addVertex(x,y,z).setColor(c.r,c.g,c.b,c.a);
     }
     static public CreativeModeTab create_tab(ResourceLocation res){

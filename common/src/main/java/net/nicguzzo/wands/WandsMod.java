@@ -40,7 +40,9 @@ import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
+import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.wand.modes.RockMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -150,8 +152,8 @@ public class WandsMod {
         });
 
         NetworkManager.registerReceiver(Side.C2S, Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC, (data, context) -> {
-            //LOGGER.info("got PalettePacket");
-            process_palette(context.getPlayer(), data.mode(), data.rotate());
+            LOGGER.info("got PalettePacket");
+            process_palette(context.getPlayer(), data.mode(), data.rotate(),data.grad_h());
         });
         NetworkManager.registerReceiver(Side.C2S, Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got WandPacket");
@@ -166,7 +168,30 @@ public class WandsMod {
             //wand_stack.setTag(tag);
             //}
         });
-
+        NetworkManager.registerReceiver(Side.C2S, Networking.SyncRockPacket.TYPE, Networking.SyncRockPacket.STREAM_CODEC, (data, context) -> {
+            //LOGGER.info("got PalettePacket");
+            Player player = context.getPlayer();
+            if (player == null) {
+                WandsMod.LOGGER.error("player is null");
+                return;
+            }
+            ItemStack stack = context.getPlayer().getMainHandItem();
+            if (!WandUtils.is_wand(stack)) {
+                WandsMod.LOGGER.error("player doesn't have a wand in main hand");
+                return;
+            }
+            Wand wand = PlayerWand.get(player);
+            if (wand == null) {
+                WandsMod.LOGGER.error("wand is null");
+                return;
+            }
+            if(wand.mode == WandProps.Mode.ROCK) {
+                WandMode m=wand.get_mode();
+                if( m instanceof RockMode){
+                    ((RockMode)m).set_random_pos(data.rx(),data.ry(),data.rz());
+                }
+            }
+        });
         NetworkManager.registerReceiver(Side.C2S, Networking.PosPacket.TYPE, Networking.PosPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got PosPacket");
             Player player = context.getPlayer();
@@ -285,7 +310,7 @@ public class WandsMod {
         }
     }
 
-    public static void process_palette(Player player, boolean mode, boolean rotate) {
+    public static void process_palette(Player player, boolean mode, boolean rotate,int grad_h) {
 
         ItemStack item_stack = player.getMainHandItem();
         ItemStack palette = null;
@@ -303,6 +328,9 @@ public class WandsMod {
             }
             if (rotate) {
                 PaletteItem.toggleRotate(palette);
+            }
+            if(grad_h>0){
+                PaletteItem.setGradientHeight(palette,grad_h);
             }
         }
     }
@@ -454,14 +482,10 @@ public class WandsMod {
                         }
                         break;
                     case ROTATE:
-                    /*ItemStack offhand_stack2 = player.getOffhandItem();
-                    if (!shift && !offhand_stack2.isEmpty() && offhand_stack2.getItem() instanceof PaletteItem) {
-                        PaletteItem.nextMode(offhand_stack2);
-                        player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack2)), false);
-                    } else {*/
-                        WandProps.nextRotation(main_stack);
-                        WandProps.setStateMode(main_stack, WandProps.StateMode.APPLY);
-//                    }
+                        if(mode != WandProps.Mode.ROCK){
+                            WandProps.nextRotation(main_stack);
+                            WandProps.setStateMode(main_stack, WandProps.StateMode.APPLY);
+                        }
                         break;
                     case UNDO:
                         if (creative && !Compat.player_level(player).isClientSide()) {
@@ -479,9 +503,9 @@ public class WandsMod {
                         }
                         break;
                     case CLEAR:
-                        if (wand != null) {
-                            wand.clear();
-                        }
+
+                        wand.clear();
+
                         if (player != null) player.displayClientMessage(Compat.literal("wand cleared"), false);
                         break;
                 }

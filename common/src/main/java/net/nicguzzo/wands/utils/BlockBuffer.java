@@ -18,6 +18,8 @@ public class BlockBuffer{
     public  int[] buffer_z=null;
     public  BlockState[] state=null;
     public  Item[] item=null;
+    public int min_y = 1000;
+    public int max_y = -1000;
 
     public BlockBuffer(int n){
         max=n;
@@ -31,21 +33,34 @@ public class BlockBuffer{
     static public List<Item> denied_item=new ArrayList<Item>();
 
     public void reset(){
-        length=0;
+        length = 0;
+        min_y  = 1000;
+        max_y  = -1000;
     }
     public int get_length(){
         return length;
     }
     public boolean in_buffer(BlockPos p){
         for(int i=0;i<length && i<max;i++){
-            if( p.getX() == buffer_x[i] && 
-                p.getY() == buffer_y[i] && 
+            if( p.getX() == buffer_x[i] &&
+                p.getY() == buffer_y[i] &&
                 p.getZ() == buffer_z[i]
             ){
                 return true;
             }
         }
         return false;
+    }
+    public void calc_min_max(){
+        for(int i=0;i<length && i<max;i++){
+            int y=buffer_y[i];
+            if(y<min_y){
+                min_y=y;
+            }
+            if(y>max_y){
+                max_y=y;
+            }
+        }
     }
     public BlockPos get(int i){
         if(i<max)
@@ -57,6 +72,12 @@ public class BlockBuffer{
             buffer_x[i]=x;
             buffer_y[i]=y;
             buffer_z[i]=z;
+            //if(y<min_y){
+            //    min_y=y;
+            //}
+            //if(y>max_y){
+            //    max_y=y;
+            //}
         }
     }
     public void add(int x, int y, int z,BlockState s,Item i) {
@@ -67,20 +88,27 @@ public class BlockBuffer{
             state[length]=s;
             item[length]=i;
             length++;
+            //if(y<min_y){
+            //    min_y=y;
+            //}
+            //if(y>max_y){
+            //    max_y=y;
+            //}
         }
     }
     public boolean add(int x, int y, int z, Wand w){
         if(length<max){
-            BlockState st=w.get_state();
+            BlockState st=w.get_state(y);
             if(st!=null){
                 Item it=w.get_item(st);
                 if(!WandsConfig.denied.contains(st.getBlock())){
-                    buffer_x[length]=x;
-                    buffer_y[length]=y;
-                    buffer_z[length]=z;
-                    state[length]=st;
-                    item[length]=it;
-                    length++;
+                    add(x,y,z,st,it);
+                    //buffer_x[length]=x;
+                    //buffer_y[length]=y;
+                    //buffer_z[length]=z;
+                    //state[length]=st;
+                    //item[length]=it;
+                    //length++;
                     return true;
                 }
             }

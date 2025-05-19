@@ -114,6 +114,13 @@ public class WandsModClient {
                     } else {
                         send_key(key.ordinal(), Screen.hasShiftDown(), Screen.hasAltDown());
                     }
+                    if(key==WandsMod.WandKeys.ROTATE){
+
+                        //TODO:move this to another key?
+                        if( ClientRender.wand!=null && ClientRender.wand.mode == WandProps.Mode.ROCK){
+                            ClientRender.wand.get_mode().randomize();
+                        }
+                    }
                 }
             }
 
@@ -232,8 +239,8 @@ public class WandsModClient {
         }
     }
 
-    public static void send_palette(boolean next_mode, boolean toggle_rotate) {
-        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate));
+    public static void send_palette(boolean next_mode, boolean toggle_rotate,int grad_h) {
+        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate,grad_h));
     }
 
     public static void send_wand(ItemStack item) {
@@ -352,6 +359,7 @@ public class WandsModClient {
                                 }
                                 break;
                             case CIRCLE:
+                            case SPHERE:
                                 ln1 = "Radius: " + wand.radius + " N: " + wand.block_buffer.get_length();
                                 break;
                             case COPY:

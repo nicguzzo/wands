@@ -21,16 +21,20 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
+import net.nicguzzo.wands.wand.PlayerWand;
+import net.nicguzzo.wands.wand.Wand;
 
 import java.util.List;
 import java.util.Optional;
 
 public class PaletteItem extends Item {
     public enum PaletteMode {
-        RANDOM, ROUND_ROBIN
+        RANDOM, ROUND_ROBIN, GRADIENT
     }
 
     static public Component mode_val_random = Compat.translatable("item.wands.random");
+    static public Component mode_val_gradient = Compat.translatable("item.wands.gradient");
     static public Component mode_val_rr = Compat.translatable("item.wands.round_robin");
 
     public PaletteItem(Properties properties) {
@@ -44,7 +48,7 @@ public class PaletteItem extends Item {
         ListTag inventory = tag.getList("Palette", Compat.NbtType.COMPOUND);//10 COMPOUND
         int s = inventory.size();
         for (int i = 0; i < s; i++) {
-            CompoundTag stackTag = (CompoundTag) inventory.get(i);
+            //CompoundTag stackTag = (CompoundTag) inventory.get(i);
 
             ItemStack stack2 = ItemStack.EMPTY;
             Level level = Minecraft.getInstance().level;
@@ -59,13 +63,20 @@ public class PaletteItem extends Item {
             }
         }
         PaletteMode mode = PaletteItem.getMode(stack);
-        Component mode_val;
-        if (mode == PaletteMode.ROUND_ROBIN) {
-            mode_val = Compat.literal("mode: " + PaletteItem.mode_val_rr.getString());
-        } else {
-            mode_val = Compat.literal("mode: " + PaletteItem.mode_val_random.getString());
+        Component mode_val = null;
+        switch (mode ) {
+            case RANDOM:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_random.getString());
+            break;
+            case ROUND_ROBIN:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_rr.getString());
+            break;
+            case GRADIENT:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_gradient.getString());
+            break;
         }
-        list.add(mode_val);
+        if(mode_val!=null)
+            list.add(mode_val);
         list.add(Compat.literal("rotate: " + (tag.getBoolean("rotate") ? "on" : "off")));
     }
 
@@ -86,20 +97,45 @@ public class PaletteItem extends Item {
         }
         return false;
     }
+    static public int getGradientHeight(ItemStack stack) {
+        int v=0;
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            v=tag.getInt("gradient_height");
+        }
+        if(v==0) {
+            return 6;
+        }else{
+            return v;
+        }
+    }
+    static public void setGradientHeight(ItemStack stack,int height) {
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            if(height>0) {
+                tag.putInt("gradient_height", height);
+            }else{
+                tag.putInt("gradient_height", 1);
+            }
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+        }
+    }
 
     static public void toggleRotate(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
             boolean rotate = tag.getBoolean("rotate");
             tag.putBoolean("rotate", !rotate);
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
     }
 
     static public void nextMode(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
-            int mode = (tag.getInt("mode") + 1) % (2);
+            int mode = (tag.getInt("mode") + 1) % (PaletteMode.values().length);
             tag.putInt("mode", mode);
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
         }
     }
 
@@ -108,12 +144,13 @@ public class PaletteItem extends Item {
         ItemStack paletteItemStack = player.getItemInHand(interactionHand);
         if (!world.isClientSide()) {
             Compat.open_menu((ServerPlayer) player, paletteItemStack, 1);
+	        return InteractionResultHolder.success(player.getItemInHand(interactionHand));
         }
-        return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
+        return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
     }
 
     public static SimpleContainer getInventory(ItemStack stack,Level level) {
-        SimpleContainer inventory = new SimpleContainer(27); // Default size
+        SimpleContainer inventory = new SimpleContainer(27*2);
         //Level level = Minecraft.getInstance().level;
         if (level == null) return inventory;
 
