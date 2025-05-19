@@ -41,28 +41,34 @@ public class PaletteMenu extends AbstractContainerMenu {
         this.playerInventory = playerInventory;
         this.inventory = PaletteItem.getInventory(palette,playerInventory.player.level());
         if (palette.getItem() instanceof PaletteItem) {
-            int k = (this.containerRows - 4) * 18;
-            int l;
-            int m;
-            for(l = 0; l < this.containerRows; ++l) {
-                for(m = 0; m < 9; ++m) {
-                    this.addSlot(new Slot( this.inventory, m + l * 9, 8 + m * 18, 18 + l * 18));
-                }
-            }
-
-            for(l = 0; l < 3; ++l) {
-                for(m = 0; m < 9; ++m) {
-                    this.addSlot(new Slot(inventory, m + l * 9 + 9, 8 + m * 18, 103 + l * 18 + k));
-                }
-            }
-
-            for(l = 0; l < 9; ++l) {
-                this.addSlot(new Slot(inventory, l, 8 + l * 18, 161 + k));
-            }
+            int k = 18;
+    		this.addPaletteGrid(inventory, 8, k);
+            int l = k + this.containerRows * k + 13;
+		    this.addStandardInventorySlots(playerInventory, 8, l);
         } else {
             Player player = playerInventory.player;
             this.removed(player);
         }
+    }
+
+    void addInventoryHotbarSlots(Container container, int i, int j) {
+        for(int k = 0; k < 9; ++k) {
+            this.addSlot(new Slot(container, k, i + k * 18, j));
+        }
+
+    }
+
+    void addInventoryExtendedSlots(Container container, int i, int j) {
+        for(int k = 0; k < 3; ++k) {
+            for(int l = 0; l < 9; ++l) {
+                this.addSlot(new Slot(container, l + (k + 1) * 9, i + l * 18, j + k * 18));
+            }
+        }
+    }
+
+    protected void addStandardInventorySlots(Container container, int i, int j) {
+        this.addInventoryExtendedSlots(container, i, j);
+        this.addInventoryHotbarSlots(container, i, j + 58);
     }
 
     private void addPaletteGrid(Container container, int i, int j) {

@@ -142,6 +142,11 @@ public class PaletteItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
         ItemStack paletteItemStack = player.getItemInHand(interactionHand);
+        ItemStack wand = player.getItemInHand(InteractionHand.MAIN_HAND);
+        boolean is_wand=WandUtils.is_wand(wand);
+        if(is_wand){
+            return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+        }
         if (!world.isClientSide()) {
             Compat.open_menu((ServerPlayer) player, paletteItemStack, 1);
 	        return InteractionResultHolder.success(player.getItemInHand(interactionHand));

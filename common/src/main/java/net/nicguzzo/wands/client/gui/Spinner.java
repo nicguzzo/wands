@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
 
 public class Spinner extends Wdgt {
@@ -17,6 +18,9 @@ public class Spinner extends Wdgt {
     public boolean label_side = false;
     public int shift_inc_val = 10;
     Component label = null;
+    int col=  new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
+    public int label_col=  new Colorf(0.0f, 0.0f, 0.0f, 1.0f).toInt();
+    public int label_bg =  new Colorf(0.5f, 0.5f, 0.50f, 0.1f).toInt();
 
     public Spinner(int _value, int min, int max, int x, int y, int w, int h, Component label) {
         this.value = _value;
@@ -79,16 +83,15 @@ public class Spinner extends Wdgt {
         int fh = 0;
         if (label != null) {
             int lw = font.width(label);
-            gui.drawString(font, label, x - lw - 1, y + 3, 0xff000000, false);
             if (!label_side) {
                 fh = font.lineHeight;
             }
+            gui.fill(x-lw-2,y+ fh,x-2,y+ fh +h,label_bg);
+            gui.drawString(font, label, x - lw - 1, y + 3, label_col, false);
         }
         int sw = font.width(String.valueOf(value));
 
-        BufferBuilder bufferBuilder = init_quads();
-        quad(bufferBuilder, x, y + fh, w, h, 0.4f, 0.4f, 0.40f, 0.9f);
-        end_quads(bufferBuilder);
+        gui.fill(x,y+ fh,x+w,y+ fh +h,col);
         inc.y = y + fh;
 
         dec.y = y + h / 2 + fh;

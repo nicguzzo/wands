@@ -34,6 +34,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     WandItem wand_item =null;
     static final int img_w=256;
     static final int img_h=256;
+    Component rock_msg  = Compat.literal("rotate for new rock");
     private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
     private static final ResourceLocation INV_TEX = Compat.create_resource("textures/gui/inventory.png");
     private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
@@ -74,6 +75,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner tunnel_d;
     Spinner tunnel_ox;
     Spinner tunnel_oy;
+    Spinner target_air_dist_spn;
     Select match_state_sel;
     Select drop_pos_sel;
     Btn show_inv_btn;
@@ -428,6 +430,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         target_air_grp_btn.add(target_air_btn);
         wdgets.add(target_air_grp_btn);
 
+        target_air_dist_spn=valSpinner(Value.AIR_TARGET_DISTANCE,left+170,bottom+200,70,12, Compat.translatable("screen.wands.target_air_distance"));
+        target_air_dist_spn.label_side=true;
+        wdgets.add(target_air_dist_spn);
+
         skip_spn=valSpinner(Value.SKIPBLOCK, left+215,bottom+180,25,14,Compat.translatable("screen.wands.skip_block"));
         skip_spn.label_side=true;
         wdgets.add(skip_spn);
@@ -580,6 +586,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 if(mouseX>xx && mouseX<xx+16 && mouseY>y && mouseY<y+16) {
                     this.hoveredSlot=s;
                 }
+            }
+            if(modes_grp.selected==WandProps.Mode.ROCK.ordinal()) {
+                gui.drawString(font, rock_msg, leftPos + 103, topPos + 62, 0x00ff0000);
             }
         }
         this.renderTooltip(gui, mouseX,mouseY);

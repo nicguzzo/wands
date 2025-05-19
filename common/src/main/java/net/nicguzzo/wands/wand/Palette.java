@@ -60,7 +60,7 @@ public class Palette {
                 return;
             version = last_version;
         }
-        WandsMod.log("update_palette",true);
+        //WandsMod.log("update_palette",true);
         //if(mode!= Mode.DIRECTION)
         slot=0;
         if(item!=null && item.getItem() instanceof PaletteItem) {

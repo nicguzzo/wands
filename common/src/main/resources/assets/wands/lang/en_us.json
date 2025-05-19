@@ -159,6 +159,7 @@
     "screen.wands.tunnel_ox": "Offset x",
     "screen.wands.tunnel_oy": "Offset y",
     "screen.wands.target_air": "Target air",
+    "screen.wands.target_air_distance": "Target air dist",
     "screen.wands.rock_rad": "Radius",
     "screen.wands.rock_noise": "Noise",
     "wands.modes.direction": "Direction",
