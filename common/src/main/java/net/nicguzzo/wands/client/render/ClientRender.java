@@ -2,10 +2,12 @@ package net.nicguzzo.wands.client.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -97,8 +99,8 @@ public class ClientRender {
     static Minecraft client;
     private static final ResourceLocation GRID_TEXTURE = Compat.create_resource("textures/blocks/grid.png");
     private static final ResourceLocation LINE_TEXTURE = Compat.create_resource("textures/blocks/line.png");
-    private static GpuTexture water_texture=null;
-    private static GpuTexture lava_texture=null;
+    private static GpuTextureView water_texture=null;
+    private static GpuTextureView lava_texture=null;
     //private static GpuTexture grid_texture=null;
     static public RandomSource random = RandomSource.create();
     static Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null};
@@ -331,7 +333,7 @@ public class ClientRender {
             float off2 = 0.05f;
             float off3 = off2/2;
 
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.8f);
+            //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.8f);
             switch (mode) {
                 case DIRECTION:
                     preview_direction_mode(bufferSource,matrixStack.last().pose(),last_pos_x,last_pos_y,last_pos_z);
@@ -365,7 +367,7 @@ public class ClientRender {
                 preview_paste(bufferSource,matrixStack);
             }
         }
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
         matrixStack.popPose();
     }
     public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource){
@@ -384,7 +386,7 @@ public class ClientRender {
             if (fat_lines) {
                 consumer= bufferSource.getBuffer(RenderType.debugQuads());
             } else {
-                consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+                consumer= bufferSource.getBuffer(RenderType.lines());
             }
 
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
@@ -454,7 +456,7 @@ public class ClientRender {
         fx2 += off;
         fy2 += off;
         fz2 += off;
-        RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
+        //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
         //Compat.set_texture(LINE_TEXTURE);
         float w=fat_lines_width;
         //north -z
@@ -547,7 +549,7 @@ public class ClientRender {
             ny=(ny/l)*w;
             nz=(nz/l)*w;
         }
-        RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
+        //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
 
         consumer.addVertex(lx1-nx, ly1-ny, lz1-nz).setColor(c.r,c.g,c.b,c.a);
         consumer.addVertex(lx1+nx, ly1+ny, lz1+nz).setColor(c.r,c.g,c.b,c.a);
@@ -813,7 +815,7 @@ public class ClientRender {
     static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
         BlockStateModel bakedModel;
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        RenderSystem.setShaderColor(1.0f,1.0f,1.0f,1.0f);
+        //RenderSystem.setShaderColor(1.0f,1.0f,1.0f,1.0f);
         try {
             bakedModel = blockRenderer.getBlockModel(state);
             List<BlockModelPart> parts_list = bakedModel.collectParts(random);
@@ -849,7 +851,7 @@ public class ClientRender {
                                 //quad.sprite().atlasLocation().
                                 TextureManager textureManager = Minecraft.getInstance().getTextureManager();
                                 AbstractTexture abstractTexture = textureManager.getTexture(quad.sprite().atlasLocation());
-                                RenderSystem.setShaderTexture(0, abstractTexture.getTexture());
+                                RenderSystem.setShaderTexture(0, abstractTexture.getTextureView());
 
                                 //float f = wand.level.getShade(quad.direction(), quad.shade());
                                 int kk = client.getBlockColors().getColor(state, null, null, 0);
@@ -895,8 +897,10 @@ public class ClientRender {
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                 if (fancy) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.guiTextured(GRID_TEXTURE));
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.entityTranslucent(GRID_TEXTURE));
                     int vi = 0;
+                    int light=LightTexture.FULL_BRIGHT;
+                    int overlay= OverlayTexture.NO_OVERLAY;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
                             switch (wand.side) {
@@ -906,10 +910,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex( matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex( matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,1,0);
+                                    consumer.addVertex( matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,1,0);
+                                    consumer.addVertex( matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,1,0);
+                                    consumer.addVertex( matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,1,0);
                                     break;
                                 case DOWN:
                                     x1 = pos_x + (float)aabb.minX;
@@ -917,10 +921,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,-1,0);
+                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,-1,0);
+                                    consumer.addVertex(matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,-1,0);
+                                    consumer.addVertex(matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,-1,0);
                                     break;
                                 case SOUTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -928,10 +932,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.maxZ + 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y2,z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1,y2,z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,1);
+                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,1);
+                                    consumer.addVertex(matrix,x2,y2,z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,1);
+                                    consumer.addVertex(matrix,x1,y2,z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,1);
                                     break;
                                 case NORTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -939,10 +943,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ - 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2, y2, z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2, y1, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,-1);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,-1);
+                                    consumer.addVertex(matrix,x2, y2, z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,-1);
+                                    consumer.addVertex(matrix,x2, y1, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(0,0,-1);
                                     break;
                                 case EAST:
                                     x1 = pos_x + (float)aabb.maxX + 0.02f;
@@ -950,10 +954,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(1,0,0);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(1,0,0);
+                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(1,0,0);
+                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(1,0,0);
                                     break;
                                 case WEST:
                                     x1 = pos_x + (float)aabb.minX - 0.02f;
@@ -961,10 +965,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(-1,0,0);
+                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(-1,0,0);
+                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(-1,0,0);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setLight(light).setOverlay(overlay).setNormal(-1,0,0);
                                     break;
                             }
                         }
@@ -973,7 +977,7 @@ public class ClientRender {
                     bufferSource.endLastBatch();
                 }
                 if (!fancy || !fat_lines) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
                     int vi = 0;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
@@ -1011,7 +1015,7 @@ public class ClientRender {
                         i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
                         if(water_texture==null) {
                             TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            water_texture=textureManager.getTexture(sprite.atlasLocation()).getTexture();
+                            water_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
                         }
                         RenderSystem.setShaderTexture(0,water_texture );
                     } else {
@@ -1019,7 +1023,7 @@ public class ClientRender {
                         i = 16777215;
                         if(lava_texture==null) {
                             TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            lava_texture=textureManager.getTexture(sprite.atlasLocation()).getTexture();
+                            lava_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
                         }
                         RenderSystem.setShaderTexture(0,lava_texture );
                     }
@@ -1040,7 +1044,7 @@ public class ClientRender {
                     }
                     bufferSource.endLastBatch();
                 }else {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucent());
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
                     //WandsMod.log("block_buffer_length "+block_buffer_length ,prnt);
                      for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
                          //WandsMod.log("state "+wand.block_buffer.state[idx] ,prnt);
@@ -1100,7 +1104,7 @@ public class ClientRender {
                     bbox_col,false);
 
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
             preview_block(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -1131,7 +1135,7 @@ public class ClientRender {
             random.setSeed(0);
             //wand.random.setSeed(wand.palette.seed);
             //BlockPos po=wand.copy_paste_buffer.getFirst().pos;
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucent());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockState st =b.state;
                 if (wand.palette.has_palette) {
@@ -1198,7 +1202,7 @@ public class ClientRender {
             if (fat_lines) {
                 consumer= bufferSource.getBuffer(RenderType.debugQuads());
             } else {
-                consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+                consumer= bufferSource.getBuffer(RenderType.lines());
             }
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(last_rot);
@@ -1252,7 +1256,7 @@ public class ClientRender {
             mode == Mode.ROCK )){
         if (fancy && wand.offhand_state!=null){
             random.setSeed(0);
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucent());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
             render_shape(matrixStack,consumer, wand.offhand_state,
                                     pos_x,pos_y,pos_z);
             bufferSource.endLastBatch();
@@ -1269,7 +1273,7 @@ public class ClientRender {
                     start_col,false);
             bufferSource.endLastBatch();
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
             preview_block(matrix,consumer,
                     pos_x  - off, pos_y  - off, pos_z  - off,
                     pos_x+1+ off, pos_y+1+ off, pos_z+1+ off,
@@ -1333,7 +1337,7 @@ public class ClientRender {
                }
            }
        } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugLine(3.0));
+            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
             consumer.addVertex(p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F)
                 .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
             consumer.addVertex(wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)

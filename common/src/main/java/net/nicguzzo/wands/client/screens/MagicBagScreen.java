@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
@@ -45,8 +46,8 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         //Compat.set_pos_tex_shader();
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        gui.blit(RenderType::guiTextured, TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
-        gui.blit(RenderType::guiTextured, TEXTURE, x+imageWidth-64, y+10, 200, 64*tier,41, 64,256,256);
+        gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
+        gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x+imageWidth-64, y+10, 200, 64*tier,41, 64,256,256);
     }
     @Override
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {

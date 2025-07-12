@@ -4,6 +4,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -19,6 +20,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.PlayerWand;
@@ -52,7 +55,8 @@ public class PaletteItem extends Item {
                 Level level = Minecraft.getInstance().level;
                 Optional<CompoundTag> block_ct=tag.getCompound("Block");
                 if (level != null && block_ct.isPresent()) {
-                    Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), block_ct.get());
+                    //Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), block_ct.get());
+                    Optional<ItemStack> is2 = WandUtils.ItemStack_read(block_ct.get(),level.registryAccess());
                     if (is2.isPresent()) {
                         stack2 = is2.get();
                     }
@@ -161,16 +165,21 @@ public class PaletteItem extends Item {
         SimpleContainer inventory = new SimpleContainer(27*2);
         //Level level = Minecraft.getInstance().level;
         if (level == null) return inventory;
-
         CompoundTag tag = Compat.getTags(stack);
         Optional<ListTag> inventory_tag = tag.getList("Palette");
         if(inventory_tag.isPresent()) {
+            HolderLookup.Provider provider=level.registryAccess();
             for (int i = 0; i < inventory_tag.get().size(); i++) {
                 CompoundTag slot_tag = (CompoundTag) inventory_tag.get().get(i);
                 if (slot_tag.contains("Slot") && slot_tag.contains("Block") && slot_tag.getInt("Slot").isPresent()) {
                     int slot = slot_tag.getInt("Slot").get();
                     Tag item_tag = slot_tag.get("Block");
-                    Optional<ItemStack> is = ItemStack.parse(level.registryAccess(), item_tag);
+                    if(item_tag==null){
+                        continue;
+                    }
+                    //Optional<ItemStack> is = ItemStack.parse(level.registryAccess(), item_tag);
+                    Optional<ItemStack> is= WandUtils.ItemStack_read(item_tag.asCompound().get(), provider);
+
                     if (is.isPresent()) {
                         inventory.setItem(slot, is.get());
                     }
@@ -187,7 +196,8 @@ public class PaletteItem extends Item {
             inventory_tag.clear();
             for (int i = 0; i < inventory.getContainerSize(); i++) {
                 if (!inventory.getItem(i).isEmpty()) {
-                    Tag item_tag = inventory.getItem(i).save(level.registryAccess());
+                    //Tag item_tag = inventory.getItem(i).save(level.registryAccess());
+                    Tag item_tag =WandUtils.ItemStack_save(inventory.getItem(i), level.registryAccess());
                     CompoundTag slot_tag = new CompoundTag();
                     slot_tag.putInt("Slot", i);
                     slot_tag.put("Block", item_tag);
@@ -196,6 +206,7 @@ public class PaletteItem extends Item {
             }
             tag.put("Palette", inventory_tag);
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+
         }
     }
 }

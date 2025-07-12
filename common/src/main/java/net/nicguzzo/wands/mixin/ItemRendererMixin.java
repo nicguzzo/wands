@@ -13,6 +13,7 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.WandUtils;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import net.minecraft.client.renderer.entity.ItemRenderer;
@@ -24,18 +25,17 @@ import net.minecraft.world.item.ItemDisplayContext;
 
 @Mixin(GuiGraphics.class)
 public abstract class ItemRendererMixin {
+    //@Final
+    //@Shadow
+    //private ItemStackRenderState scratchItemStackRenderState;
     @Final
     @Shadow
-    private ItemStackRenderState scratchItemStackRenderState;
-    @Final
+    private Matrix3x2fStack pose;
     @Shadow
-    private PoseStack pose;
-    @Shadow
-    protected abstract void renderItem(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k, int l);
+    protected abstract void renderItem(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k);
 
-
-    @Inject(method = "renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;IIII)V", at = @At(value = "TAIL"))
-    public void renderItem(LivingEntity livingEntity,Level level, ItemStack itemStack, int i, int j, int k, int l, CallbackInfo cb){
+    @Inject(method = "renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At(value = "TAIL"))
+    public void renderItem(LivingEntity livingEntity,Level level, ItemStack itemStack, int i, int j, int k, CallbackInfo cb){
         //System.out.println("renderItem");
         if (level !=null && WandUtils.is_magicbag(itemStack)) {
             ItemStack item_in_bag = MagicBagItem.getItem(itemStack,level.registryAccess());
@@ -43,15 +43,15 @@ public abstract class ItemRendererMixin {
                 if (itemStack.get(DataComponents.ITEM_MODEL) != null) {
 
                     //RenderSystem.enableDepthTest();
-                    RenderSystem.disableScissor();
+                    //RenderSystem.disableScissor();
                     //RenderSystem.disableColorLogicOp();
-                    pose.pushPose();
-                    pose.translate((float)(i + 8), (float)(j + 8),(float)(150));
-                    pose.scale(0.5f, 0.5f, 0.5f);
-                    pose.translate(0, -0.3, 0);
-                    pose.translate(-(float)(i + 8), -(float)(j + 8),-(float)(150));
-                    this.renderItem(livingEntity,level,item_in_bag,i,j+5,k,151);
-                    pose.popPose();
+                    pose.pushMatrix();
+                    pose.translate((float)(i + 8), (float)(j + 8));
+                    pose.scale(0.5f, 0.5f);
+                    pose.translate(0.0f, -0.3f);
+                    pose.translate(-(float)(i + 8), -(float)(j + 8));
+                    this.renderItem(livingEntity,level,item_in_bag,i,j+5,k);
+                    pose.popMatrix();
                     //RenderSystem.disableDepthTest();
 
                 }

@@ -2,11 +2,15 @@ package net.nicguzzo.wands.utils;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.mixin.AxeItemAccessor;
@@ -14,6 +18,7 @@ import net.nicguzzo.wands.mixin.HoeItemAccessor;
 import net.nicguzzo.wands.mixin.ShovelItemAccessor;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 public class WandUtils{
 
@@ -110,4 +115,16 @@ public class WandUtils{
         if(den==0) return b1;
 		return b1 + ((s - a1)*(b2 - b1))/den;
 	}
+    public static CompoundTag ItemStack_save(ItemStack item,HolderLookup.Provider provider){
+        ProblemReporter.Collector reporter = new ProblemReporter.Collector();
+        TagValueOutput tvo=TagValueOutput.createWithContext(reporter,provider);
+        tvo.store(ItemStack.MAP_CODEC,item);
+        return tvo.buildResult();
+    }
+    public static Optional<ItemStack> ItemStack_read(CompoundTag item,HolderLookup.Provider provider){
+        ProblemReporter.Collector reporter = new ProblemReporter.Collector();
+        TagValueInput tvi= (TagValueInput) TagValueInput.create(reporter,provider,item);
+        return tvi.read(ItemStack.MAP_CODEC);
+
+    }
 }

@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.toasts.ToastManager;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -23,7 +24,7 @@ public class WandToast implements Toast {
         Minecraft client=Minecraft.getInstance();
         //Compat.set_pos_tex_shader();
         //Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(RenderType::guiTextured,TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED,TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
         if(client.player!=null) {
             ItemStack s = client.player.getMainHandItem();
                 guiGraphics.renderFakeItem(s,10,6);

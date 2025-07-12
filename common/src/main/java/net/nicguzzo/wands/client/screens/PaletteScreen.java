@@ -2,6 +2,7 @@ package net.nicguzzo.wands.client.screens;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -109,13 +110,13 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     }
     @Override
     protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
-        gui.blit(RenderType::guiTextured, TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, containerRows * 18 + 17, 256, 256);
-		gui.blit(RenderType::guiTextured, TEXTURE, x, y + containerRows * 18 + 17, 0.0F, 126.0F, this.imageWidth, 96, 256, 256);
+        gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, containerRows * 18 + 17, 256, 256);
+		gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y + containerRows * 18 + 17, 0.0F, 126.0F, this.imageWidth, 96, 256, 256);
 
         //gui.blit(RenderType::guiTextured, TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
 

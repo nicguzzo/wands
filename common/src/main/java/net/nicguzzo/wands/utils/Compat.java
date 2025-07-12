@@ -119,7 +119,8 @@ public class Compat {
           buf -> {
             Level level = player.level();
             HolderLookup.Provider provider = level.registryAccess();
-            Tag tag = item.save(provider);
+            //Tag tag = item.save(provider);
+            Tag tag = WandUtils.ItemStack_save(item,provider);
             buf.writeNbt(tag);
           }
         );

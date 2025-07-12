@@ -18,18 +18,15 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.Compat;
 
+import java.util.Objects;
+
 public class MagicBagMenu extends AbstractContainerMenu {
     public ItemStack bag;
     public final Inventory playerInventory;
     private final BagContainer bagcontainer;
 
     public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-            this( syncId,playerInventory,
-                ItemStack.parse(
-                   playerInventory.player.level().registryAccess(),
-                   packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
-                )
-            );
+        this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
     }
 
     public MagicBagMenu(int syncId, Inventory playerInventory, ItemStack bag) {

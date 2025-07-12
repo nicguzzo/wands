@@ -1,14 +1,17 @@
 package net.nicguzzo.wands.menues;
 
+import com.mojang.serialization.DynamicOps;
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.FriendlyByteBuf;
@@ -21,6 +24,10 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueInputContextHelper;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.networking.Networking;
@@ -30,6 +37,7 @@ import net.nicguzzo.wands.wand.Wand;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -52,13 +60,14 @@ public class WandMenu extends AbstractContainerMenu {
     }
 
     public WandMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
+        this( syncId,playerInventory,Objects.requireNonNull(buf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
 
-		this( syncId,playerInventory,
-                ItemStack.parse(
-                       playerInventory.player.level().registryAccess(),
-                        buf.readNbt()).orElse(ItemStack.EMPTY
-                )
-        );
+		//this( syncId,playerInventory,
+        //        ItemStack.parse(
+        //               playerInventory.player.level().registryAccess(),
+        //                buf.readNbt()).orElse(ItemStack.EMPTY
+        //        )
+        //);
     }
 
     public WandMenu(int syncId, Inventory playerInventory, ItemStack _wand) {
@@ -70,11 +79,10 @@ public class WandMenu extends AbstractContainerMenu {
         this.simplecontainer=  new SimpleContainer(9){
             @Override
             public void setChanged() {
-                WandMenu.setInventory(wand,simplecontainer,playerInventory.player.level());
                 super.setChanged();
             }
         };
-        this.getInventory(this.wand);
+
 
         //Wand wnd= PlayerWand.get(playerInventory.player);
         //if( wnd.player_data!=null){
@@ -114,47 +122,6 @@ public class WandMenu extends AbstractContainerMenu {
     public ItemStack quickMoveStack(Player player, int index) {
 
         return ItemStack.EMPTY;
-    }
-
-    public void getInventory(ItemStack stack) {
-        if(playerInventory.player.level().isClientSide()) return;
-        CompoundTag tag= Compat.getTags(stack);
-        Optional<ListTag> o_inventory_tag = tag.getList("Tools");
-        if(o_inventory_tag.isEmpty()) return;
-        ListTag inventory_tag=o_inventory_tag.get();
-        for (Tag value : inventory_tag) {
-            CompoundTag slot_tag = (CompoundTag) value;
-            if (slot_tag.contains("Slot") && slot_tag.contains("Tool")) {
-                Optional<Integer> slot = slot_tag.getInt("Slot");
-                if (slot.isEmpty()) continue;
-                Tag item_tag = slot_tag.get("Tool");
-                Optional<ItemStack> is = ItemStack.parse(playerInventory.player.level().registryAccess(), item_tag);
-                if (is.isEmpty()) continue;
-                simplecontainer.setItem(slot.get(), is.get());
-            }
-        }
-    }
-
-    public static void setInventory(ItemStack stack, SimpleContainer inventory,Level level) {
-        if(level.isClientSide()) return;
-        CompoundTag tag= Compat.getTags(stack);
-
-        ListTag inventory_tag = tag.getList("Tools").orElse(new ListTag());
-        inventory_tag.clear();
-        RegistryAccess ra=null;
-            ra = level.getServer().registryAccess();
-
-        for(int i=0;i<inventory.getContainerSize();i++) {
-            if(!inventory.getItem(i).isEmpty()) {
-                Tag item_tag=inventory.getItem(i).save(ra);
-                CompoundTag slot_tag=new CompoundTag();
-                slot_tag.putInt("Slot",i);
-                slot_tag.put("Tool",item_tag);
-                inventory_tag.add(slot_tag);
-            }
-        }
-        tag.put("Tools",inventory_tag);
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
     @Override

@@ -264,7 +264,7 @@ public class WandsModClient {
                     //RenderSystem.enableBlend();
                     //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
-                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                     //Compat.set_pos_tex_shader();
                     int h = 3 * font.lineHeight;
                     float x = (int) (screenWidth * ((WandsMod.config.wand_mode_display_x_pos) / 100.0f));
@@ -283,7 +283,7 @@ public class WandsModClient {
                     //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
 
-                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                     //Compat.set_pos_tex_shader();
 
                     Wand wand = ClientRender.wand;

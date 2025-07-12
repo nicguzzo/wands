@@ -21,6 +21,8 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.utils.Compat;
 
+import java.util.Objects;
+
 public class PaletteMenu extends AbstractContainerMenu {
     private final int containerRows=6;
     public ItemStack palette;
@@ -28,11 +30,7 @@ public class PaletteMenu extends AbstractContainerMenu {
     public final Inventory playerInventory;
 
     public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        this(syncId, playerInventory,ItemStack.parse(
-                        playerInventory.player.level().registryAccess(),
-                        packetByteBuf.readNbt()
-                ).orElse(ItemStack.EMPTY)
-        );
+        this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
     }
 
     public PaletteMenu(int syncId, Inventory playerInventory, ItemStack palette) {

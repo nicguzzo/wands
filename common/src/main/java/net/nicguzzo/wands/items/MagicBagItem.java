@@ -20,6 +20,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -88,7 +89,8 @@ public class MagicBagItem extends Item {
             item2.setCount(1);
             CompoundTag tag = Compat.getTags(bag);
             if (ra != null) {
-                tag.put("item", item2.save(ra, new CompoundTag()));
+                WandUtils.ItemStack_save(item2,ra);
+                //tag.put("item", item2.save(ra, new CompoundTag()));
                 CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
             }
         }
@@ -101,7 +103,8 @@ public class MagicBagItem extends Item {
         if (bag != null && bag.getItem() instanceof MagicBagItem) {
             CompoundTag tag = Compat.getTags(bag);
             if (ra != null && tag.getCompound("item").isPresent()) {
-                Optional<ItemStack> item = ItemStack.parse(ra, tag.getCompound("item").get());
+                //Optional<ItemStack> item = ItemStack.parse(ra, tag.getCompound("item").get());
+                Optional<ItemStack> item = WandUtils.ItemStack_read(tag.getCompound("item").get(),ra);
                 if (item.isPresent()) {
                     return item.get();
                 }

@@ -2,6 +2,7 @@ package net.nicguzzo.wands.wand;
 
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.Item;
@@ -60,7 +61,8 @@ public class Palette {
                 return;
             version = last_version;
         }
-        WandsMod.log("update_palette",true);
+
+        //WandsMod.log("update_palette",true);
         //if(mode!= Mode.DIRECTION)
         slot=0;
         if(item!=null && item.getItem() instanceof PaletteItem) {
@@ -82,7 +84,9 @@ public class Palette {
                 ItemStack stack =ItemStack.EMPTY;
                 if(level !=null) {
                     if(stackTag.getCompound("Block").isPresent()) {
-                        stack = ItemStack.parse(level.registryAccess(), stackTag.getCompound("Block").get()).orElse(ItemStack.EMPTY);
+                        //stack = ItemStack.parse(level.registryAccess(), stackTag.getCompound("Block").get()).orElse(ItemStack.EMPTY);
+                        HolderLookup.Provider provider=level.registryAccess();
+                        stack = WandUtils.ItemStack_read(stackTag.getCompound("Block").get(),provider).orElse(ItemStack.EMPTY);
                     }
                 }
                 int inv_slot=stackTag.getInt("Slot").orElse(0);
@@ -117,7 +121,9 @@ public class Palette {
             //   WandsMod.log("row "+i + " "+ row, true);
             //}
         }
+
     }
+
     public BlockState get_state(Wand wand,int min,int max,int y){
         BlockState st=wand.block_state;
         if(!wand.preview){
