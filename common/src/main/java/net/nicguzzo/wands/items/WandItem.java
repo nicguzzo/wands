@@ -29,8 +29,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class WandItem extends Item {
-
-    public int tier; //0 stone, 1 iron, 2 diamond, 3 netherite 4 creative
+    public enum WandTier{
+        STONE_WAND,
+        IRON_WAND,
+        DIAMOND_WAND,
+        NETHERITE_WAND,
+        CREATIVE_WAND
+    }
+    public WandTier tier; //0 stone, 1 iron, 2 diamond, 3 netherite 4 creative
     public int limit;
     public boolean can_blast;
     public boolean unbreakable;
@@ -38,7 +44,7 @@ public class WandItem extends Item {
     public boolean removes_lava;
     //TODO: check ecnchantments!
 
-    public WandItem(int tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, boolean can_blast, Properties properties) {
+    public WandItem(WandTier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, boolean can_blast, Properties properties) {
         super(properties);
         this.tier = tier;
         this.limit = limit;

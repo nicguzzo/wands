@@ -638,6 +638,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
+        //WandsMod.LOGGER.info("tag: "+tag);
         tag.putInt("mode", mode.ordinal());
         CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
@@ -647,6 +648,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
+        //WandsMod.LOGGER.info("tag: "+tag);
         int mode = (tag.getInt("mode").orElse(0) + 1) % (modes.length);
 
         if (mode == Mode.VEIN.ordinal() && !WandsMod.config.enable_vein_mode) {
@@ -664,6 +666,7 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
+        //WandsMod.LOGGER.info("tag: "+tag);
         int mode = tag.getInt("mode").orElse(1) - 1;
         if (mode < 0) {
             mode = modes.length - 1;

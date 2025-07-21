@@ -9,6 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -19,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import org.jetbrains.annotations.NotNull;
@@ -27,10 +29,16 @@ import java.util.List;
 import java.util.Optional;
 
 public class MagicBagItem extends Item {
-    public int tier;
+    public enum MagicBagItemTier{
+        MAGIC_BAG_TIER_1,
+        MAGIC_BAG_TIER_2,
+        MAGIC_BAG_TIER_3,
+    }
+    public MagicBagItemTier tier;
     public int limit = Integer.MAX_VALUE;
 
-    public MagicBagItem(int tier, int limit, Properties properties) {
+
+    public MagicBagItem(MagicBagItemTier tier, int limit, Properties properties) {
         super(properties);
         this.tier = tier;
         if (limit > 0) {
@@ -88,8 +96,10 @@ public class MagicBagItem extends Item {
             ItemStack item2 = item.copy();
             item2.setCount(1);
             CompoundTag tag = Compat.getTags(bag);
+            //WandsMod.LOGGER.info("tag: "+tag);
             if (ra != null) {
-                WandUtils.ItemStack_save(item2,ra);
+                Tag t= WandUtils.ItemStack_save(item2,ra);
+                tag.put("item",t);
                 //tag.put("item", item2.save(ra, new CompoundTag()));
                 CustomData.set(DataComponents.CUSTOM_DATA, bag, tag);
             }
@@ -131,7 +141,7 @@ public class MagicBagItem extends Item {
             if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
                 ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level.registryAccess());
                 if (!item.isEmpty()) {
-                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier + 1));
+                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier.ordinal() + 1));
                 }
             }
         }

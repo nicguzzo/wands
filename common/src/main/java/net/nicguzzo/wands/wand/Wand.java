@@ -6,7 +6,6 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.component.DataComponentHolder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
@@ -86,6 +85,7 @@ import java.util.*;
 //DONE bug shear pumpkins
 
 public class Wand {
+    private static final int TOOL_DAMAGE_STOP = 5;
     public int x = 0;
     public int y = 0;
     public int z = 0;
@@ -381,9 +381,9 @@ public class Wand {
                 this.use = false;
             }
         }
+        this.has_water_potion = false;
         if (offhand != null && offhand.getItem() instanceof PotionItem) {
 
-            this.has_water_potion = false;
             if (offhand.has(DataComponents.POTION_CONTENTS)) {
                 PotionContents potion_c = offhand.get(DataComponents.POTION_CONTENTS);
                 if (potion_c != null) {
@@ -1031,6 +1031,39 @@ public class Wand {
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
         int tool_durability = -1;
 
+
+        boolean _can_destroy = creative;
+        no_tool = false;
+        boolean _tool_would_break=false;
+        boolean _wand_would_break=wand_would_break();
+        if (!creative) {
+            if (!_wand_would_break) {
+                damaged_tool = true;
+                return false;
+            }
+            if (destroy || replace || (use && !has_water_potion)) {
+                _can_destroy = can_destroy(st, true);
+                if (digger_item != null) {
+                    _tool_would_break = tool_would_break((WandItem)wand_stack.getItem(),digger_item);
+                } else {
+                    no_tool = true;
+                    return false;
+                }
+                if (!_tool_would_break) {
+                    damaged_tool = true;
+                    return false;
+                }
+            }
+        } else {
+            if (creative && use) {
+                can_destroy(st, true);
+                if (digger_item == null && !has_water_potion) {
+                    no_tool = true;
+                    return false;
+
+                }
+            }
+        }
         if ((use) && has_shear && state.is(Blocks.PUMPKIN)) {
             BlockState carved_pumpkin = Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, player.getDirection().getOpposite());
             level.setBlockAndUpdate(block_pos, carved_pumpkin);
@@ -1038,7 +1071,9 @@ public class Wand {
                 ItemStack pumpkin_seeds = Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
                 drop(block_pos, state, null, pumpkin_seeds);
-                hurt_main_hand(wand_stack);
+                if(_wand_would_break) {
+                    hurt_main_hand(wand_stack);
+                }
                 consume_xp();
             }
             return true;
@@ -1048,38 +1083,12 @@ public class Wand {
             level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
             send_sound = Sounds.SPLASH.ordinal();
             if (!creative) {
-                hurt_main_hand(wand_stack);
+                if(_wand_would_break) {
+                    hurt_main_hand(wand_stack);
+                }
                 consume_xp();
             }
             return true;
-        }
-
-        boolean _can_destroy = creative;
-        no_tool = false;
-        if (!creative) {
-            if (destroy || replace || use) {
-                _can_destroy = can_destroy(st, true);
-                if (digger_item != null) {
-                    tool_durability = digger_item.getMaxDamage() - digger_item.getDamageValue();
-                } else {
-                    no_tool = true;
-                    return false;
-                }
-            }
-            boolean will_break = (wand_durability == 1) || (tool_durability == 1);
-            if (will_break) {
-                damaged_tool = true;
-                return false;
-            }
-        } else {
-            if (creative && use) {
-                can_destroy(st, true);
-                if (digger_item == null) {
-                    no_tool = true;
-                    return false;
-
-                }
-            }
         }
 
         p1_state = state;
@@ -1115,9 +1124,13 @@ public class Wand {
             BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
             if (digger_item.useOn(ctx) != InteractionResult.PASS) {
-                if (!creative) {
-                    hurt_main_hand(wand_stack);
-                    hurt_tool(digger_item, digger_item_slot);
+                if (!creative ) {
+                    if(_wand_would_break) {
+                        hurt_main_hand(wand_stack);
+                    }
+                    if(_tool_would_break) {
+                        hurt_tool(digger_item, digger_item_slot);
+                    }
                     consume_xp();
                 }
             } else {
@@ -1185,7 +1198,7 @@ public class Wand {
                     if (wand_durability == 1) {
                         player.displayClientMessage(Compat.literal("wand damaged"), false);
                         if (WandsMod.config.allow_wand_to_break &&
-                                digger_item != null && digger_item.getItem() == Items.AIR
+                           digger_item != null && digger_item.getItem() == Items.AIR
                         ) {
 
                         } else {
@@ -1193,11 +1206,12 @@ public class Wand {
                         }
                     }
                 }
+
                 if (placed) {
-                    if ((destroy || replace) && digger_item != null) {
+                    if ((destroy || replace) && digger_item != null && _tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
-                    if (!this.unbreakable) {
+                    if (!this.unbreakable && _wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
                     consume_xp();
@@ -1476,16 +1490,16 @@ public class Wand {
 
     public boolean can_destroy(BlockState state, boolean check_speed) {
         digger_item = null;
+        WandItem wand_item=(WandItem)this.wand_stack.getItem();
         for (int i = 0; i < n_tools; i++) {
             if (tools[i] != null) {
-                int dmg = tools[i].getMaxDamage() - tools[i].getDamageValue();
-                if (!tools[i].isEmpty() && dmg > 1) {
+                if (!tools[i].isEmpty() && tool_would_break(wand_item,tools[i])) {
                     if (((destroy || replace) && can_dig(state, check_speed, tools[i])) ||
                             ((use) && (
                                     (tools[i].getItem() instanceof HoeItem && WandUtils.is_tillable(state)) ||
-                                            (tools[i].getItem() instanceof AxeItem && WandUtils.is_strippable(state)) ||
-                                            (tools[i].getItem() instanceof ShovelItem && WandUtils.is_flattenable(state)) ||
-                                            (tools[i].getItem() instanceof ShearsItem && can_shear(state))
+                                    (tools[i].getItem() instanceof AxeItem && WandUtils.is_strippable(state)) ||
+                                    (tools[i].getItem() instanceof ShovelItem && WandUtils.is_flattenable(state)) ||
+                                    (tools[i].getItem() instanceof ShearsItem && can_shear(state))
                             ))
                     ) {
                         if (digger_item == null) {
@@ -1744,23 +1758,23 @@ public class Wand {
             ServerAdvancementManager advancements = server.getAdvancements();
             if (advancements == null) return;
 
-            if (!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem) (wand_stack.getItem())).tier == 0) {
+            if (!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.STONE_WAND) {
                 if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)) {
                     return;
                 }
             }
-            if (!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem) (wand_stack.getItem())).tier == 1) {
+            if (!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.IRON_WAND) {
                 if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)) {
                     return;
                 }
             }
-            if (!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem) (wand_stack.getItem())).tier == 2) {
+            if (!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.DIAMOND_WAND) {
                 if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)) {
                     //WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
                     return;
                 }
             }
-            if (!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem) (wand_stack.getItem())).tier == 3) {
+            if (!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.NETHERITE_WAND) {
                 if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)) {
                     return;
                 }
@@ -1811,4 +1825,63 @@ public class Wand {
         }
     }
 
+    private boolean tool_would_break(WandItem wand_item,ItemStack tool){
+
+        int dmg = tool.getMaxDamage() - tool.getDamageValue();
+        Item tool_item=tool.getItem();
+        if(WandsMod.config.allow_stone_tools_to_break) {
+            if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
+               Items.STONE_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.STONE_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return true;
+            }
+        }else if(WandsMod.config.allow_iron_tools_to_break) {
+            if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
+               Items.IRON_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.IRON_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return true;
+            }
+        }else if(WandsMod.config.allow_diamond_tools_to_break) {
+            if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
+               Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return true;
+            }
+        } else if(WandsMod.config.allow_netherite_tools_to_break) {
+            if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
+               Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return true;
+            }
+        }
+        return dmg>= TOOL_DAMAGE_STOP;
+    }
+    private boolean wand_would_break(){
+        if(this.wand_stack==null){
+            return true;
+        }
+        int dmg = this.wand_stack.getMaxDamage() - this.wand_stack.getDamageValue();
+        if(dmg<=1) {
+            WandItem wand_item = (WandItem) this.wand_stack.getItem();
+            switch (wand_item.tier) {
+                case STONE_WAND:
+                    return WandsMod.config.allow_stone_wand_to_break;
+                case IRON_WAND:
+                    return WandsMod.config.allow_iron_wand_to_break;
+                case DIAMOND_WAND:
+                    return WandsMod.config.allow_diamond_wand_to_break;
+                case NETHERITE_WAND:
+                    return WandsMod.config.allow_netherite_wand_to_break;
+            }
+        }
+        return dmg>=1;
+    }
 }

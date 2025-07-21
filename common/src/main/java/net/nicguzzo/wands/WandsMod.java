@@ -11,7 +11,9 @@ import dev.architectury.registry.registries.RegistrySupplier;
 import dev.architectury.utils.Env;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +23,7 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -83,32 +86,32 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registries.MENU);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register(stone_wand, () -> {
-        return new WandItem(0, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(stone_wand_key));
+        return new WandItem(WandItem.WandTier.STONE_WAND, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(stone_wand_key));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register(iron_wand, () -> {
-        return new WandItem(1, config.iron_wand_limit, false, false, false, false, new Item.Properties().durability(config.iron_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(iron_wand_key));
+        return new WandItem(WandItem.WandTier.IRON_WAND, config.iron_wand_limit, false, false, false, false, new Item.Properties().durability(config.iron_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(iron_wand_key));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register(diamond_wand, () -> {
-        return new WandItem(2, config.diamond_wand_limit, true, false, false, false, new Item.Properties().durability(config.diamond_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(diamond_wand_key));
+        return new WandItem(WandItem.WandTier.DIAMOND_WAND, config.diamond_wand_limit, true, false, false, false, new Item.Properties().durability(config.diamond_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(diamond_wand_key));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register(netherite_wand, () -> {
-        return new WandItem(3, config.netherite_wand_limit, true, true, false, true, new Item.Properties().fireResistant().durability(config.netherite_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(netherite_wand_key));
+        return new WandItem(WandItem.WandTier.NETHERITE_WAND, config.netherite_wand_limit, true, true, false, true, new Item.Properties().fireResistant().durability(config.netherite_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(netherite_wand_key));
     });
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register(creative_wand, () -> {
-        return new WandItem(4, config.creative_wand_limit, true, true, true, true, new Item.Properties().fireResistant().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(creative_wand_key));
+        return new WandItem(WandItem.WandTier.CREATIVE_WAND, config.creative_wand_limit, true, true, true, true, new Item.Properties().fireResistant().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(creative_wand_key));
     });
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () -> {
         return new PaletteItem(new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(palette_key));
     });
     public static final RegistrySupplier<Item> MAGIC_BAG_1 = ITEMS.register("magic_bag_1", () -> {
-        return new MagicBagItem(0, config.magic_bag_1_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_1_key));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_1, config.magic_bag_1_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_1_key));
     });
     public static final RegistrySupplier<Item> MAGIC_BAG_2 = ITEMS.register("magic_bag_2", () -> {
-        return new MagicBagItem(1, config.magic_bag_2_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_2_key));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_2, config.magic_bag_2_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_2_key));
     });
 
     public static final RegistrySupplier<Item> MAGIC_BAG_3 = ITEMS.register("magic_bag_3", () -> {
-        return new MagicBagItem(2, Integer.MAX_VALUE, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_3_key));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_3, Integer.MAX_VALUE, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB).setId(magic_bag_3_key));
     });
 
     public static final RegistrySupplier<MenuType<PaletteMenu>> PALETTE_CONTAINER = MENUES.register("palette_menu", () -> MenuRegistry.ofExtended(PaletteMenu::new));
@@ -148,15 +151,14 @@ public class WandsMod {
         NetworkManager.registerReceiver(Side.C2S, Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got WandPacket");
             ItemStack wand_stack = context.getPlayer().getMainHandItem();
-            wand_stack.applyComponents(data.item_stack().getComponents());
+            //wand_stack.applyComponents(data.item_stack().getComponents());
+            var custom_data=data.item_stack().get(DataComponents.CUSTOM_DATA);
+            if(custom_data!=null) {
+                CompoundTag tag = custom_data.copyTag();
+                //WandsMod.LOGGER.info("tag: " + tag);
+                CustomData.set(DataComponents.CUSTOM_DATA, wand_stack, tag);
+            }
 
-            //TODO: wand packet
-            //wand_stack.set()
-            //wand_stack.set(data.item_stack().get);
-            //CompoundTag tag=item.getTag();
-            //if(tag!=null) {
-            //wand_stack.setTag(tag);
-            //}
         });
         NetworkManager.registerReceiver(Side.C2S, Networking.SyncRockPacket.TYPE, Networking.SyncRockPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got PalettePacket");
