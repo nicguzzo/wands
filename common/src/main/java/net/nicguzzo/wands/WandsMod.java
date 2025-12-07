@@ -61,6 +61,7 @@ public class WandsMod {
 
     static ResourceLocation stone_wand = Compat.create_resource("stone_wand");
     static ResourceLocation iron_wand = Compat.create_resource("iron_wand");
+    static ResourceLocation copper_wand = Compat.create_resource("copper_wand");
     static ResourceLocation diamond_wand = Compat.create_resource("diamond_wand");
     static ResourceLocation netherite_wand = Compat.create_resource("netherite_wand");
     static ResourceLocation creative_wand = Compat.create_resource("creative_wand");
@@ -70,6 +71,7 @@ public class WandsMod {
     static ResourceLocation magic_bag_3 = Compat.create_resource("magic_bag_3");
 
     static ResourceKey<Item> stone_wand_key = ResourceKey.create(Registries.ITEM, stone_wand);
+    static ResourceKey<Item> copper_wand_key = ResourceKey.create(Registries.ITEM, copper_wand);
     static ResourceKey<Item> iron_wand_key = ResourceKey.create(Registries.ITEM, iron_wand);
     static ResourceKey<Item> diamond_wand_key = ResourceKey.create(Registries.ITEM, diamond_wand);
     static ResourceKey<Item> netherite_wand_key = ResourceKey.create(Registries.ITEM, netherite_wand);
@@ -87,6 +89,9 @@ public class WandsMod {
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register(stone_wand, () -> {
         return new WandItem(WandItem.WandTier.STONE_WAND, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(stone_wand_key));
+    });
+    public static final RegistrySupplier<Item> COPPER_WAND_ITEM = ITEMS.register(copper_wand, () -> {
+        return new WandItem(WandItem.WandTier.COPPER_WAND, config.copper_wand_limit, false, false, false, false, new Item.Properties().durability(config.copper_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(copper_wand_key));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register(iron_wand, () -> {
         return new WandItem(WandItem.WandTier.IRON_WAND, config.iron_wand_limit, false, false, false, false, new Item.Properties().durability(config.iron_wand_durability).arch$tab(WandsMod.WANDS_TAB).setId(iron_wand_key));

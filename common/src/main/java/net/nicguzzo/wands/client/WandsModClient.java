@@ -2,6 +2,7 @@ package net.nicguzzo.wands.client;
 
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import dev.architectury.event.events.client.ClientGuiEvent;
 import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.networking.NetworkManager;
@@ -11,10 +12,12 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -69,7 +72,8 @@ public class WandsModClient {
     static final public int toggle_stair_slab_key = GLFW.GLFW_KEY_PERIOD;//InputConstants.KEY_PERIOD;
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
-    static final String tab = "key.categories.wands";
+    //static final String tab = "key.categories.wands";
+    public static final KeyMapping.Category tab = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(WandsMod.MOD_ID, "key.categories.wands"));
     static final String k = "key.wands.";
 
     public static void initialize() {
@@ -103,6 +107,7 @@ public class WandsModClient {
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any = false;
             Iterator<Map.Entry<KeyMapping, WandsMod.WandKeys>> itr = keys.entrySet().iterator();
+            Minecraft client=e;
             while (itr.hasNext()) {
                 Map.Entry<KeyMapping, WandsMod.WandKeys> me = itr.next();
                 KeyMapping km = me.getKey();
@@ -112,7 +117,7 @@ public class WandsModClient {
                     if (key == WandsMod.WandKeys.CLEAR) {
                         cancel_wand();
                     } else {
-                        send_key(key.ordinal(), Screen.hasShiftDown(), Screen.hasAltDown());
+                        send_key(key.ordinal(), client.hasShiftDown(), client.hasAltDown());
                     }
                     if(key==WandsMod.WandKeys.ROTATE){
 
@@ -125,9 +130,9 @@ public class WandsModClient {
             }
 
             if (!any) {
-                if (alt != Screen.hasAltDown() || shift != Screen.hasShiftDown()) {
-                    alt = Screen.hasAltDown();
-                    shift = Screen.hasShiftDown();
+                if (alt != client.hasAltDown() || shift != client.hasShiftDown()) {
+                    alt = client.hasAltDown();
+                    shift = client.hasShiftDown();
                     ClientRender.wand.is_alt_pressed = alt;
                     ClientRender.wand.is_shift_pressed = shift;
                     send_key(-1, shift, alt);
@@ -135,28 +140,8 @@ public class WandsModClient {
             }
         });
 
-        Compat.render_info();
-
-        if (WandsMod.is_forge) {
-            ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
-                //WandsMod.LOGGER.info("registering menues...");
-                try {
-                    MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-                    MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
-                    MenuRegistry.registerScreenFactory(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
-                } catch (Exception ex) {
-                    WandsMod.LOGGER.error(ex.getMessage());
-                }
-                //WandsMod.LOGGER.info("registering menues.");
-            });
-        } else {
-
-            if (!WandsMod.is_neoforge) {
-                MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-                MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
-                MenuRegistry.registerScreenFactory(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
-            }
-        }
+        //Compat.render_info();
+        ClientGuiEvent.RENDER_HUD.register((e, d)->{ WandsModClient.render_wand_info(e);});
 
         NetworkManager.registerReceiver(Side.S2C, Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got PlayerDataPacket");
@@ -275,8 +260,8 @@ public class WandsModClient {
                     if (main) {
                         y_off = -font.lineHeight * 3;
                     }
-                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId() ).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffff);
-                    gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffff);
+                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId() ).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffffff);
+                    gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffffff);
                 }
                 if (main) {
                     //RenderSystem.enableBlend();
@@ -371,11 +356,11 @@ public class WandsModClient {
                     int h = 3 * font.lineHeight;
                     float x = (int) (screenWidth * (((float) WandsMod.config.wand_mode_display_x_pos) / 100.0f));
                     float y = (int) ((screenHeight - h) * (((float) WandsMod.config.wand_mode_display_y_pos) / 100.0f));
-                    gui.drawString(font, ln1, (int) x, (int) y, 0xffffff);
-                    gui.drawString(font, ln2, (int) x, (int) y + font.lineHeight, 0xffffff);
-                    gui.drawString(font, ln3, (int) x, (int) y + font.lineHeight * 2, 0xffffff);
-                    gui.drawString(font, p1, (int) x, (int) y - font.lineHeight * 2, 0xffffff);
-                    gui.drawString(font, p2, (int) x, (int) y - font.lineHeight, 0xffffff);
+                    gui.drawString(font, ln1, (int) x, (int) y, 0xffffffff);
+                    gui.drawString(font, ln2, (int) x, (int) y + font.lineHeight, 0xffffffff);
+                    gui.drawString(font, ln3, (int) x, (int) y + font.lineHeight * 2, 0xffffffff);
+                    gui.drawString(font, p1, (int) x, (int) y - font.lineHeight * 2, 0xffffffff);
+                    gui.drawString(font, p2, (int) x, (int) y - font.lineHeight, 0xffffffff);
                 }
             }
         }

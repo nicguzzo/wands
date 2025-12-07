@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
+import dev.architectury.platform.Mod;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -14,10 +15,10 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.*;
+import net.minecraft.client.resources.model.AtlasManager;
+import net.minecraft.client.resources.model.MaterialSet;
+import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -213,6 +214,7 @@ public class ClientRender {
                 Direction side = block_hit.getDirection();
                 BlockPos pos = block_hit.getBlockPos();
                 BlockState block_state = client.level.getBlockState(pos);
+                //WandsMod.log("state "+block_state,prnt);
                 if (force) {
                     wand.force_render = false;
                     if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY|| mode == Mode.PASTE) {
@@ -1011,7 +1013,9 @@ public class ClientRender {
                     //RenderSystem.enableCull();
                     TextureAtlasSprite sprite;
                     if (wand.has_water_bucket) {
-                        sprite = ModelBakery.WATER_FLOW.sprite();
+                        AtlasManager am= Minecraft.getInstance().getAtlasManager();
+                        TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.WATER_FLOW.atlasLocation());
+                        sprite = atlas.getSprite(ModelBakery.WATER_FLOW.texture());
                         i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
                         if(water_texture==null) {
                             TextureManager textureManager = Minecraft.getInstance().getTextureManager();
@@ -1019,7 +1023,10 @@ public class ClientRender {
                         }
                         RenderSystem.setShaderTexture(0,water_texture );
                     } else {
-                        sprite = ModelBakery.LAVA_FLOW.sprite();
+                        //sprite = ModelBakery.LAVA_FLOW.sprite();
+                        AtlasManager am= Minecraft.getInstance().getAtlasManager();
+                        TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
+                        sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
                         i = 16777215;
                         if(lava_texture==null) {
                             TextureManager textureManager = Minecraft.getInstance().getTextureManager();
@@ -1139,7 +1146,7 @@ public class ClientRender {
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockState st =b.state;
                 if (wand.palette.has_palette) {
-                    st = wand.get_state(b.pos.getY());
+                    st = wand.get_state(b.pos.getY(),null);
                 }else{
                     st=wand.rotate_mirror(st,mirroraxis);
                     //Mirror

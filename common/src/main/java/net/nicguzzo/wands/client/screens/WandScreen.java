@@ -6,6 +6,8 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
@@ -608,23 +610,26 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     }
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl)
+    {
         if(!show_inv) {
             for (Wdgt wdget : wdgets) {
-                wdget.click((int) mouseX, (int) mouseY);
+                wdget.click((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
             }            
         }else{
-            super.mouseClicked(mouseX, mouseY, button);
-            show_inv_btn.click((int)mouseX,(int)mouseY);
+            super.mouseClicked( mouseButtonEvent,bl);
+            show_inv_btn.click((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
         }
         
         return true;
     }
 
     @Override
-    public boolean keyPressed(int i, int j, int k)
+    //public boolean keyPressed(int i, int j, int k)
+    public boolean keyPressed(KeyEvent keyEvent)
     {
-        if ((WandsModClient.wand_menu_km.matches(i, j) || i==256) ) {
+        int i=keyEvent.scancode();
+        if ((WandsModClient.wand_menu_km.matches(keyEvent) || i==256) ) {
             if(show_inv) {
                 show_inv = false;
             }else{
@@ -632,7 +637,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             }
             return true;
         }else {
-            return super.keyPressed(i, j, k);
+            return super.keyPressed(keyEvent);
         }
     }
 }

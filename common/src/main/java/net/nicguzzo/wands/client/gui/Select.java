@@ -25,6 +25,7 @@ public class Select extends Wdgt {
     }
 
     public void render(GuiGraphics gui, Font font, int mx, int my) {
+        super.render(gui,font,mx,my);
         int k = 0;
         if (label != null) {
             gui.drawString(font, label, x, y, 0xff000000, false);

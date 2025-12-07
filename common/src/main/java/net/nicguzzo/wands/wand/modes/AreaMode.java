@@ -3,6 +3,7 @@ package net.nicguzzo.wands.wand.modes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
@@ -57,7 +58,7 @@ public class AreaMode extends WandMode {
                     ) &&
                     (((wand.destroy ||wand.replace) && bs2.isAir()) || wand.can_place(bs2,pos2)))
             {
-                wand.add_to_buffer(pos2.getX(),pos2.getY(),pos2.getZ());
+                wand.add_to_buffer(pos2.getX(),pos2.getY(),pos2.getZ(),(wand.state_mode== WandProps.StateMode.CLONE? bs1:null));
                 return 1;
 
             }

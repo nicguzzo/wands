@@ -43,7 +43,7 @@ public class WandsModNeoForge {
     private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, WandsMod.MOD_ID);
 
     public static final Supplier<AttachmentType<CompoundTag>> PLAYER_DATA = ATTACHMENT_TYPES.register("player_data",
-            () -> AttachmentType.builder(CompoundTag::new).serialize(CompoundTag.CODEC.fieldOf("value")).build());
+            () -> AttachmentType.builder(holder -> new CompoundTag()).serialize(CompoundTag.CODEC.fieldOf("value")).build());
 
     public WandsModNeoForge(IEventBus modEventBus) {
         WandsMod.is_neoforge = true;
@@ -64,9 +64,7 @@ public class WandsModNeoForge {
         ModMenuTypes.clientRegister(modEventBus);
         EnvExecutor.runInEnv(Env.CLIENT, () -> () -> {
             WandsModClient.initialize();
-            //MinecraftForge.EVENT_BUS.register(new KeyBindingRegistry());
         });
-        //MinecraftForge.EVENT_BUS.register(this);
     }
 
     @SubscribeEvent

@@ -1,9 +1,9 @@
 package net.nicguzzo.wands.client.gui;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
@@ -34,10 +34,10 @@ public class Spinner extends Wdgt {
         inc = new Btn(x + w - 10, y, 10, h / 2, Compat.literal("+")) {
             public void onClick(int mx, int my) {
                 int iv = inc_val;
-                if (Screen.hasControlDown()) {
+                if (Minecraft.getInstance().hasControlDown()) {
                     value = max;
                 } else {
-                    if (Screen.hasShiftDown()) {
+                    if (Minecraft.getInstance().hasShiftDown()) {
                         iv = shift_inc_val;
                     }
                     if (value + iv <= max) {
@@ -54,10 +54,10 @@ public class Spinner extends Wdgt {
         dec = new Btn(x + w - 10, y + h / 2, 10, h / 2, Compat.literal("-")) {
             public void onClick(int mx, int my) {
                 int iv = inc_val;
-                if (Screen.hasControlDown()) {
+                if (Minecraft.getInstance().hasControlDown()) {
                     value = min;
                 } else {
-                    if (Screen.hasShiftDown()) {
+                    if (Minecraft.getInstance().hasShiftDown()) {
                         iv = shift_inc_val;
                     }
                     if (value - iv >= min) {
@@ -80,6 +80,7 @@ public class Spinner extends Wdgt {
     }
 
     public void render(GuiGraphics gui, Font font, int mx, int my) {
+        super.render(gui,font,mx,my);
         int fh = 0;
         if (label != null) {
             int lw = font.width(label);

@@ -64,6 +64,7 @@ public class Btn extends Wdgt {
     }
 
     public void render(GuiGraphics gui, Font font, int mx, int my) {
+        super.render(gui,font,mx,my);
         int c;
         if (disabled) {
             c = c_disabled;

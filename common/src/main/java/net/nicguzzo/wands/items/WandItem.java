@@ -31,6 +31,7 @@ import java.util.List;
 public class WandItem extends Item {
     public enum WandTier{
         STONE_WAND,
+        COPPER_WAND,
         IRON_WAND,
         DIAMOND_WAND,
         NETHERITE_WAND,

@@ -26,16 +26,7 @@ public class LevelRendererMixin {
 
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void renderLevel(
-            GraphicsResourceAllocator graphicsResourceAllocator,
-            DeltaTracker deltaTracker,
-            boolean bl,
-            Camera camera,
-            Matrix4f matrix4f,
-            Matrix4f matrix4f2,
-            GpuBufferSlice gpuBufferSlice,
-            Vector4f vector4f,
-            boolean bl2,
-            CallbackInfo ci)
+            GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci)
     {
         if(WandsMod.config.render_last) {
             PoseStack posestack = new PoseStack();

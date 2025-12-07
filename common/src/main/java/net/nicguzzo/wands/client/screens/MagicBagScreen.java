@@ -47,7 +47,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
         gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0, 0, imageWidth, imageHeight,256,256);
-        gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x+imageWidth-64, y+10, 200, 64*tier.ordinal(),41, 64,256,256);
+        gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x+100, y+33, 256-16, 16*tier.ordinal(), 16, 16, 256, 256);
     }
     @Override
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {

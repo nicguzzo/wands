@@ -2,6 +2,7 @@ package net.nicguzzo.wands.client.screens;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
@@ -83,7 +85,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         super.render(gui, mouseX, mouseY, delta);
 
         if(this.menu.palette!=null){
-            PaletteMode mode=PaletteItem.getMode(this.menu.palette);            
+            PaletteMode mode=PaletteItem.getMode(this.menu.palette);
+
             switch(mode){
                 case RANDOM:
                     mode_val= PaletteItem.mode_val_random;
@@ -93,18 +96,21 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 break;
                 case GRADIENT:
                     mode_val=PaletteItem.mode_val_gradient;
+                    gradient_h.render(gui,this.font, mouseX, mouseY);
                 break;
                 default:
                     mode_val= PaletteItem.mode_val_random;
                 break;
             };
+            //WandsMod.LOGGER.info("palette mode "+mode_val.getString());
             CompoundTag tag= Compat.getTags(this.menu.palette);
             boolean rot=tag.getBoolean("rotate").orElse(false);
-            gui.drawString(this.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-105,4210752,false);
-            gui.drawString(this.font,mode_val , (width/2)+30, (height/2)-105, 4210752,false);
+            gui.drawString(this.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-105,0xff000000,false);
+            gui.drawString(this.font,mode_val , (width/2)+30, (height/2)-105, 0xff000000,false);
+
             btn_mode.render(gui,this.font, mouseX, mouseY);
             btn_rotate.render(gui,this.font, mouseX, mouseY);
-            gradient_h.render(gui,this.font, mouseX, mouseY);
+
         }
         this.renderTooltip(gui, mouseX, mouseY);
     }
@@ -138,7 +144,11 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         return null;
     }
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl)
+    {
+        int mouseX=(int)mouseButtonEvent.x();
+        int mouseY=(int)mouseButtonEvent.y();
+        int button=mouseButtonEvent.button();
         btn_mode.click((int)mouseX, (int)mouseY);
         btn_rotate.click((int)mouseX, (int)mouseY);
         gradient_h.click((int)mouseX, (int)mouseY);
@@ -146,7 +156,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         if(slot!=null){            
             switch(button){
                 case 0:
-                    if (hasShiftDown()) {
+                    if (mouseButtonEvent.hasShiftDown()) {
                         this.slotClicked(slot, slot.index, button, ClickType.QUICK_MOVE);
                     }else{
                         this.slotClicked(slot, slot.index, button, ClickType.PICKUP);
@@ -166,11 +176,18 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         return true;
     }
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent mouseButtonEvent)
+    {
         return true;
     }
+
+    //public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY)
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    public boolean mouseDragged(MouseButtonEvent mouseButtonEvent, double d, double e)
+    {
+        int mouseX=(int)mouseButtonEvent.x();
+        int mouseY=(int)mouseButtonEvent.y();
+        int button=mouseButtonEvent.button();
         Slot slot = this.find_slot(mouseX, mouseY);
         if(slot!=null){
             Minecraft client=Minecraft.getInstance();

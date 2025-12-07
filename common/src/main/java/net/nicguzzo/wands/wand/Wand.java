@@ -798,7 +798,7 @@ public class Wand {
         }
     }
 
-    public BlockState get_state(int y) {
+    public BlockState get_state(int y,BlockState state_behind_block) {
         BlockState st = block_state;
         if (palette.has_palette) {
             int min_y=level.isInsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
@@ -807,7 +807,18 @@ public class Wand {
             st = palette.get_state(this,min_y,max_y,y);
         } else {
             if (offhand_state != null && !offhand_state.isAir()) {
-                st = offhand_state;
+
+                if( state_mode== WandProps.StateMode.CLONE && state_behind_block!=null
+                    /*&&(
+                                (blk instanceof StairBlock && hand_blk instanceof StairBlock)||
+                                (blk instanceof SlabBlock  && hand_blk instanceof SlabBlock)
+                        )*/
+                ){
+                    BlockState st2=offhand_state.getBlock().withPropertiesOf(state_behind_block);
+                    st=st2;
+                }else {
+                    st = offhand_state;
+                }
             } else {
                 if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode==Mode.SPHERE) {
                     if (p1_state != null)
@@ -840,40 +851,44 @@ public class Wand {
             BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
             return st.getBlock().getStateForPlacement(pctx);
         }
-        if (state_mode == WandProps.StateMode.TARGET) {
-            BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
-            BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
-            return st.getBlock().getStateForPlacement(pctx);
-        }
-        if (state_mode == WandProps.StateMode.APPLY) {
-            if (blk instanceof SlabBlock) {
-                SlabType slab_type;
-                if (slab_stair_bottom) {
-                    slab_type = SlabType.BOTTOM;
-                } else {
-                    slab_type = SlabType.TOP;
-                }
-                return blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
-
-            } else {
-                if (blk instanceof StairBlock) {
-                    Half h;
+        switch (state_mode){
+            case TARGET: {
+                BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
+                BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
+                return st.getBlock().getStateForPlacement(pctx);
+            }
+            case APPLY:
+                if (blk instanceof SlabBlock) {
+                    SlabType slab_type;
                     if (slab_stair_bottom) {
-                        h = Half.BOTTOM;
+                        slab_type = SlabType.BOTTOM;
                     } else {
-                        h = Half.TOP;
+                        slab_type = SlabType.TOP;
                     }
-                    return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+                    return blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
 
                 } else {
-                    if (blk instanceof RotatedPillarBlock) {
-                        return blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
+                    if (blk instanceof StairBlock) {
+                        Half h;
+                        if (slab_stair_bottom) {
+                            h = Half.BOTTOM;
+                        } else {
+                            h = Half.TOP;
+                        }
+                        return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+
                     } else {
-                        BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
-                        BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
-                        return st.getBlock().getStateForPlacement(pctx);
+                        if (blk instanceof RotatedPillarBlock) {
+                            return blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
+                        } else {
+                            BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
+                            BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
+                            return st.getBlock().getStateForPlacement(pctx);
+                        }
                     }
                 }
+            case CLONE:{
+                //return st.getBlock().withPropertiesOf(st);
             }
         }
         return st;
@@ -975,7 +990,7 @@ public class Wand {
                         continue;
                     }
                     if (ll < limit && ll < WandsMod.config.max_limit) {
-                        add_to_buffer(x, y, z);
+                        add_to_buffer(x, y, z,null);
                         ll++;
                     }
                 }
@@ -1423,17 +1438,19 @@ public class Wand {
             }
         }
     }
-
     public boolean add_to_buffer(int x, int y, int z) {
+            return add_to_buffer(x,y,z,null);
+    }
+    public boolean add_to_buffer(int x, int y, int z,BlockState with_state) {
         if (!level.isOutsideBuildHeight(y) && block_buffer.get_length() < limit) {
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
             if (destroy || replace || use) {
                 if (!st.isAir() || mode == Mode.AREA) {
-                    return block_buffer.add(x, y, z, this);
+                    return block_buffer.add(x, y, z, this, with_state);
                 }
             } else {
                 if (can_place(st, tmp_pos))
-                    return block_buffer.add(x, y, z, this);
+                    return block_buffer.add(x, y, z, this, with_state);
             }
         } else {
             limit_reached = true;
@@ -1753,7 +1770,8 @@ public class Wand {
     void check_advancements() {
         if (!creative && WandsMod.config.check_advancements && !level.isClientSide()) {
             PlayerAdvancements advs = ((ServerPlayer) player).getAdvancements();
-            MinecraftServer server = player.getServer();
+
+            MinecraftServer server = player.level().getServer();
             if (server == null) return;
             ServerAdvancementManager advancements = server.getAdvancements();
             if (advancements == null) return;
