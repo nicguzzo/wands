@@ -107,9 +107,10 @@ remapJar {
     inputFile.set shadowJar.archiveFile
 }
 
+def supportedMinecraftVersions = project.findProperty('minecraft_versions')?.split(',')*.trim() ?: []
 unifiedPublishing {
     project {
-        gameVersions = ["1.21","1.21.1"]
+        gameVersions = supportedMinecraftVersions
         gameLoaders = ["neoforge"]
         displayName= "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - neoforge - ${rootProject.minecraft_version}"
         version = "${rootProject.mod_version}_${rootProject.release_type}_neoforge_${rootProject.minecraft_version}"
