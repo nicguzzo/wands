@@ -4,10 +4,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
@@ -26,7 +25,7 @@ import net.nicguzzo.wands.wand.Palette;
 
 public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     
-    private static final ResourceLocation TEXTURE = Compat.create_resource_mc("textures/gui/container/generic_54.png");
+    private static final Identifier TEXTURE = Compat.create_resource_mc("textures/gui/container/generic_54.png");
     private Btn btn_mode;
     private Btn btn_rotate;
     private final int containerRows;

@@ -9,7 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
@@ -34,13 +34,13 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -1302,7 +1302,7 @@ public class Wand {
             int xp = ((DropExperienceBlockAccessor) dblock).getXpRange().sample(level.random);
             //WandsMod.LOGGER.info("drop xp "+xp);
             if (xp > 0) {
-                if (((ServerLevel) level).getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
+                if (((ServerLevel) level).getGameRules().get(GameRules.BLOCK_DROPS)) {
                     ExperienceOrb.award((ServerLevel) level, Vec3.atCenterOf(drop_pos), xp);
                 }
             }
@@ -1753,7 +1753,7 @@ public class Wand {
     }
 
     boolean check_advancement(ServerAdvancementManager server_advancements, PlayerAdvancements player_advancements, String a) {
-        ResourceLocation res = ResourceLocation.tryParse(a);
+        Identifier res = Identifier.tryParse(a);
         if (res == null) {
             WandsMod.log("bad advancement: " + res, prnt);
             return false;

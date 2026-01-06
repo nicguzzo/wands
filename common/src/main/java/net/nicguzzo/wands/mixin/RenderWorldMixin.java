@@ -14,11 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(DebugRenderer.class)
 public class RenderWorldMixin {
     
-    @Inject(method = "render", at = @At(value = "HEAD"))
-    public void render(PoseStack poseStack, Frustum frustum, MultiBufferSource.BufferSource bufferSource, double d, double e, double f, boolean bl, CallbackInfo ci){
-        if(!WandsMod.config.render_last)
-        {
-            ClientRender.render(poseStack,bufferSource);
-        }
-    }
+    //@Inject(method = "render", at = @At(value = "HEAD"))
+    //public void render(PoseStack poseStack, Frustum frustum, MultiBufferSource.BufferSource bufferSource, double d, double e, double f, boolean bl, CallbackInfo ci){
+    //    if(!WandsMod.config.render_last)
+    //    {
+    //        ClientRender.render(poseStack,bufferSource);
+    //    }
+    //}
 }

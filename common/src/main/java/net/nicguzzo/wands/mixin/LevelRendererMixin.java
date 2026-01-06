@@ -28,10 +28,10 @@ public class LevelRendererMixin {
     public void renderLevel(
             GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci)
     {
-        if(WandsMod.config.render_last) {
+        //if(WandsMod.config.render_last) {
             PoseStack posestack = new PoseStack();
             posestack.mulPose(matrix4f);
             ClientRender.render(posestack,renderBuffers.bufferSource());
-        }
+        //}
     }
 }

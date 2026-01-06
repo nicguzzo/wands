@@ -1,34 +1,31 @@
 package net.nicguzzo.wands.client.render;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
-import dev.architectury.platform.Mod;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.AtlasManager;
-import net.minecraft.client.resources.model.MaterialSet;
-import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -98,8 +95,8 @@ public class ClientRender {
     //static PoseStack matrixStack2 = new PoseStack();
     static float fat_lines_width = 0.05f;
     static Minecraft client;
-    private static final ResourceLocation GRID_TEXTURE = Compat.create_resource("textures/blocks/grid.png");
-    private static final ResourceLocation LINE_TEXTURE = Compat.create_resource("textures/blocks/line.png");
+    private static final Identifier GRID_TEXTURE = Compat.create_resource("textures/blocks/grid.png");
+    private static final Identifier LINE_TEXTURE = Compat.create_resource("textures/blocks/line.png");
     private static GpuTextureView water_texture=null;
     private static GpuTextureView lava_texture=null;
     //private static GpuTexture grid_texture=null;
@@ -305,7 +302,7 @@ public class ClientRender {
     private static void preview_mode(Mode mode, PoseStack matrixStack,MultiBufferSource.BufferSource bufferSource) {
 
         Camera camera = client.gameRenderer.getMainCamera();
-        Vec3 _c = camera.getPosition();
+        Vec3 _c = camera.position();
         //cam.x=(float)_c.x;
         //cam.y=(float)_c.y;
         //cam.z=(float)_c.z;
@@ -319,6 +316,7 @@ public class ClientRender {
             p1_y = p1.getY();
             p1_z = p1.getZ();
         }
+
         //RenderSystem.depthMask(true);
         //boolean fabulous_depth_buffer = WandsMod.config.render_last && Minecraft.useShaderTransparency();
         //if (Screen.hasControlDown() || fabulous_depth_buffer) {
@@ -369,6 +367,7 @@ public class ClientRender {
                 preview_paste(bufferSource,matrixStack);
             }
         }
+
         //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
         matrixStack.popPose();
     }
@@ -386,9 +385,9 @@ public class ClientRender {
         {
             VertexConsumer consumer;
             if (fat_lines) {
-                consumer= bufferSource.getBuffer(RenderType.debugQuads());
+                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             } else {
-                consumer= bufferSource.getBuffer(RenderType.lines());
+                consumer= bufferSource.getBuffer(RenderTypes.lines());
             }
 
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
@@ -853,7 +852,8 @@ public class ClientRender {
                                 //quad.sprite().atlasLocation().
                                 TextureManager textureManager = Minecraft.getInstance().getTextureManager();
                                 AbstractTexture abstractTexture = textureManager.getTexture(quad.sprite().atlasLocation());
-                                RenderSystem.setShaderTexture(0, abstractTexture.getTextureView());
+
+                                //RenderSystem.setShaderTexture(0, abstractTexture.getTextureView());
 
                                 //float f = wand.level.getShade(quad.direction(), quad.shade());
                                 int kk = client.getBlockColors().getColor(state, null, null, 0);
@@ -899,7 +899,7 @@ public class ClientRender {
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                 if (fancy) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.entityTranslucent(GRID_TEXTURE));
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.entityTranslucent(GRID_TEXTURE));
                     int vi = 0;
                     int light=LightTexture.FULL_BRIGHT;
                     int overlay= OverlayTexture.NO_OVERLAY;
@@ -979,7 +979,7 @@ public class ClientRender {
                     bufferSource.endLastBatch();
                 }
                 if (!fancy || !fat_lines) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
                     int vi = 0;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
@@ -998,7 +998,7 @@ public class ClientRender {
             random.setSeed(0);
             int block_buffer_length=wand.block_buffer.get_length();
             if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
-                BlockState st;
+                BlockState st=null;
                 if (wand.has_water_bucket) {
                     st = Blocks.WATER.defaultBlockState();
                 } else {
@@ -1006,52 +1006,79 @@ public class ClientRender {
                         st = Blocks.LAVA.defaultBlockState();
                     }
                 }
-                if(wand.has_water_bucket || wand.has_lava_bucket) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.solid());
+                //st=Blocks.STONE.defaultBlockState();
+                if(st!=null) {
+                    //FluidState fluidState = st.getFluidState();
+                    ////VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.solidMovingBlock());
+                    //BlockRenderDispatcher renderer= Minecraft.getInstance().getBlockRenderer();
+                    //int l = LevelRenderer.getLightColor(wand.level, bp);
+                    //for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
+                    //    bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
+                    //    //renderer.renderLiquid(bp,wand.level,consumer,st,fluidState);
+                    //    renderer.renderSingleBlock(st,matrixStack,bufferSource,l,OverlayTexture.NO_OVERLAY);
+                    //    bufferSource.endLastBatch();
+                    //}
 
-                    int i;
+                    //bufferSource.endLastBatch();
+                    /*int i;
                     //RenderSystem.enableCull();
-                    TextureAtlasSprite sprite;
-                    if (wand.has_water_bucket) {
-                        AtlasManager am= Minecraft.getInstance().getAtlasManager();
-                        TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.WATER_FLOW.atlasLocation());
-                        sprite = atlas.getSprite(ModelBakery.WATER_FLOW.texture());
-                        i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
-                        if(water_texture==null) {
-                            TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            water_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
-                        }
-                        RenderSystem.setShaderTexture(0,water_texture );
-                    } else {
-                        //sprite = ModelBakery.LAVA_FLOW.sprite();
-                        AtlasManager am= Minecraft.getInstance().getAtlasManager();
-                        TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
-                        sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
-                        i = 16777215;
-                        if(lava_texture==null) {
-                            TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            lava_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
-                        }
-                        RenderSystem.setShaderTexture(0,lava_texture );
-                    }
+                    try {
+                        TextureAtlasSprite sprite;
+                        if (wand.has_water_bucket) {
 
-                    //Compat.set_texture(TextureAtlas.LOCATION_BLOCKS);
-                    float u0 = sprite.getU0();
-                    float v0 = sprite.getV0();
-                    float u1 = sprite.getU1();
-                    float v1 = sprite.getV1();
+                            AtlasManager am = Minecraft.getInstance().getAtlasManager();
+                            TextureAtlas atlas = am.getAtlasOrThrow(ModelBakery.WATER_FLOW.atlasLocation());
+                            sprite = atlas.getSprite(ModelBakery.WATER_FLOW.texture());
+                            i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
+                            //if(water_texture==null) {
+                            //    TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+                            //    water_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
+                            //}
+                            //RenderSystem.setShaderTexture(0,water_texture );
+                        } else {
+                            AtlasManager am = Minecraft.getInstance().getAtlasManager();
+                            TextureAtlas atlas = am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
+                            sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
 
-                    for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
-                        bp.set(wand.block_buffer.buffer_x[idx],wand.block_buffer.buffer_y[idx],wand.block_buffer.buffer_z[idx]);
-                        render_fluid(
-                                consumer,
-                                (float) wand.block_buffer.buffer_x[idx],
-                                (float) wand.block_buffer.buffer_y[idx],
-                                (float) wand.block_buffer.buffer_z[idx],i,u0,v0,u1,v1);
-                    }
-                    bufferSource.endLastBatch();
+                            //AtlasManager am= Minecraft.getInstance().getAtlasManager();
+                            //TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
+                            //sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
+                            i = 16777215;
+                            //if(lava_texture==null) {
+                            //    TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+                            //    lava_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
+                            //}
+
+                            //RenderSystem.setShaderTexture(0,lava_texture );
+                        }
+
+                        //Compat.set_texture(TextureAtlas.LOCATION_BLOCKS);
+                        VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.entitySolid(ModelBakery.LAVA_FLOW.texture()));
+
+                        float u0 = sprite.getU0();
+                        float v0 = sprite.getV0();
+                        float u1 = sprite.getU1();
+                        float v1 = sprite.getV1();
+
+                        for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
+                            bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
+                            render_fluid(
+                                    consumer,
+                                    (float) wand.block_buffer.buffer_x[idx],
+                                    (float) wand.block_buffer.buffer_y[idx],
+                                    (float) wand.block_buffer.buffer_z[idx], i, u0, v0, u1, v1);
+                        }
+                        bufferSource.endLastBatch();
+                    }catch (Exception e){
+                        WandsMod.log("exception " + e.getMessage(),true);
+                    }*/
+
                 }else {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
+                    RenderType rt=RenderTypes.translucentMovingBlock();
+                    //String sampler0=rt.pipeline().getSamplers().getFirst();
+                    //Map<String, RenderSetup.TextureAndSampler> tmap= rt.state.getTextures();
+                    //tmap.get("Sampler0").sampler().
+                    VertexConsumer consumer= bufferSource.getBuffer(rt);
                     //WandsMod.log("block_buffer_length "+block_buffer_length ,prnt);
                      for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
                          //WandsMod.log("state "+wand.block_buffer.state[idx] ,prnt);
@@ -1100,7 +1127,7 @@ public class ClientRender {
         float bb2_y=wand.bb2_y;
         float bb2_z=wand.bb2_z;
         if (fat_lines) {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugQuads());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             preview_block_fat(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -1111,7 +1138,7 @@ public class ClientRender {
                     bbox_col,false);
 
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
             preview_block(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -1142,7 +1169,7 @@ public class ClientRender {
             random.setSeed(0);
             //wand.random.setSeed(wand.palette.seed);
             //BlockPos po=wand.copy_paste_buffer.getFirst().pos;
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockState st =b.state;
                 if (wand.palette.has_palette) {
@@ -1207,9 +1234,9 @@ public class ClientRender {
             z2 = Integer.MIN_VALUE;
             VertexConsumer consumer;
             if (fat_lines) {
-                consumer= bufferSource.getBuffer(RenderType.debugQuads());
+                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             } else {
-                consumer= bufferSource.getBuffer(RenderType.lines());
+                consumer= bufferSource.getBuffer(RenderTypes.lines());
             }
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(last_rot);
@@ -1263,13 +1290,13 @@ public class ClientRender {
             mode == Mode.ROCK )){
         if (fancy && wand.offhand_state!=null){
             random.setSeed(0);
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.translucentMovingBlock());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
             render_shape(matrixStack,consumer, wand.offhand_state,
                                     pos_x,pos_y,pos_z);
             bufferSource.endLastBatch();
         }
         if (fat_lines) {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugQuads());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             preview_block_fat(matrix,consumer,
                     (pos_x  - off),
                     (pos_y  - off),
@@ -1280,7 +1307,7 @@ public class ClientRender {
                     start_col,false);
             bufferSource.endLastBatch();
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
             preview_block(matrix,consumer,
                     pos_x  - off, pos_y  - off, pos_z  - off,
                     pos_x+1+ off, pos_y+1+ off, pos_z+1+ off,
@@ -1303,7 +1330,7 @@ public class ClientRender {
         if (fat_lines) {
            boolean even = WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
            {
-                VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugQuads());
+                VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
                 preview_block_fat(matrix,consumer,
                         p1_x - off,
                         p1_y - off,
@@ -1317,7 +1344,7 @@ public class ClientRender {
             }
            if (has_target) {
                {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugQuads());
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
                     off = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
                     preview_block_fat(matrix,consumer,
                             p2_x - off + off,
@@ -1330,7 +1357,7 @@ public class ClientRender {
                     bufferSource.endLastBatch();
                }
                if(mode!=Mode.FILL) {
-                   VertexConsumer consumer= bufferSource.getBuffer(RenderType.debugQuads());
+                   VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
                    off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
                    player_facing_line(consumer,
                             p1_x + off,
@@ -1344,7 +1371,7 @@ public class ClientRender {
                }
            }
        } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
             consumer.addVertex(p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F)
                 .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
             consumer.addVertex(wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)

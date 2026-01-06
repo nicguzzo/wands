@@ -1,14 +1,12 @@
 package net.nicguzzo.wands.client.screens;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -16,10 +14,9 @@ import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 
 public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
-    private static final ResourceLocation TEXTURE = Compat.create_resource("textures/gui/magicbag.png");
+    private static final Identifier TEXTURE = Compat.create_resource("textures/gui/magicbag.png");
     ItemStack bag_stack=null;
     Item bag_item=null;
     MagicBagItem.MagicBagItemTier tier= MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_1;

@@ -6,17 +6,15 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.Vec3;
@@ -72,17 +70,14 @@ public class Compat {
             return st;
     }
 
-    static public ResourceLocation create_resource(String res){
-        return ResourceLocation.fromNamespaceAndPath(WandsMod.MOD_ID,res);
+    static public Identifier create_resource(String res){
+        return Identifier.fromNamespaceAndPath(WandsMod.MOD_ID,res);
     }
 
-    static public ResourceLocation create_resource_mc(String res){
-        return ResourceLocation.withDefaultNamespace(res);
+    static public Identifier create_resource_mc(String res){
+        return Identifier.withDefaultNamespace(res);
     }
 
-    static public CreativeModeTab create_tab(ResourceLocation res){
-        return null;
-    }
 
     static public boolean is_creative(Player player){
             return player.getAbilities().instabuild;

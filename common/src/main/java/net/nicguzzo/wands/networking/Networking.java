@@ -8,24 +8,24 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.utils.Compat;
 import org.jetbrains.annotations.NotNull;
 
 public class Networking {
 
-    static public ResourceLocation KB_PACKET = Compat.create_resource("key_packet");
-    static public ResourceLocation SND_PACKET = Compat.create_resource("sound_packet");
-    static public ResourceLocation TOAST_PACKET = Compat.create_resource("toast_packet");
-    static public ResourceLocation PALETTE_PACKET = Compat.create_resource("palette_packet");
-    static public ResourceLocation STATE_PACKET = Compat.create_resource("state_packet");
-    static public ResourceLocation WAND_PACKET = Compat.create_resource("wand_packet");
-    static public ResourceLocation PLAYER_DATA_PACKET = Compat.create_resource("player_data_packet");
-    static public ResourceLocation POS_PACKET = Compat.create_resource("pos_packet");
-    static public ResourceLocation CONF_PACKET = Compat.create_resource("conf_packet");
-    static public ResourceLocation GLOBAL_SETTINGS_PACKET = Compat.create_resource("global_settings_packet");
-    static public ResourceLocation SYNC_ROCK_PACKET = Compat.create_resource("sync_rock_packet");
+    static public Identifier KB_PACKET = Compat.create_resource("key_packet");
+    static public Identifier SND_PACKET = Compat.create_resource("sound_packet");
+    static public Identifier TOAST_PACKET = Compat.create_resource("toast_packet");
+    static public Identifier PALETTE_PACKET = Compat.create_resource("palette_packet");
+    static public Identifier STATE_PACKET = Compat.create_resource("state_packet");
+    static public Identifier WAND_PACKET = Compat.create_resource("wand_packet");
+    static public Identifier PLAYER_DATA_PACKET = Compat.create_resource("player_data_packet");
+    static public Identifier POS_PACKET = Compat.create_resource("pos_packet");
+    static public Identifier CONF_PACKET = Compat.create_resource("conf_packet");
+    static public Identifier GLOBAL_SETTINGS_PACKET = Compat.create_resource("global_settings_packet");
+    static public Identifier SYNC_ROCK_PACKET = Compat.create_resource("sync_rock_packet");
 
     public static class Vec3d {
         public double x;

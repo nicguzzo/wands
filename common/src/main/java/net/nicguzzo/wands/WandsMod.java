@@ -16,7 +16,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
@@ -59,16 +59,16 @@ public class WandsMod {
     public static boolean has_flan = false;
     public static boolean has_goml = false;
 
-    static ResourceLocation stone_wand = Compat.create_resource("stone_wand");
-    static ResourceLocation iron_wand = Compat.create_resource("iron_wand");
-    static ResourceLocation copper_wand = Compat.create_resource("copper_wand");
-    static ResourceLocation diamond_wand = Compat.create_resource("diamond_wand");
-    static ResourceLocation netherite_wand = Compat.create_resource("netherite_wand");
-    static ResourceLocation creative_wand = Compat.create_resource("creative_wand");
-    static ResourceLocation palette = Compat.create_resource("palette");
-    static ResourceLocation magic_bag_1 = Compat.create_resource("magic_bag_1");
-    static ResourceLocation magic_bag_2 = Compat.create_resource("magic_bag_2");
-    static ResourceLocation magic_bag_3 = Compat.create_resource("magic_bag_3");
+    static Identifier stone_wand = Compat.create_resource("stone_wand");
+    static Identifier iron_wand = Compat.create_resource("iron_wand");
+    static Identifier copper_wand = Compat.create_resource("copper_wand");
+    static Identifier diamond_wand = Compat.create_resource("diamond_wand");
+    static Identifier netherite_wand = Compat.create_resource("netherite_wand");
+    static Identifier creative_wand = Compat.create_resource("creative_wand");
+    static Identifier palette = Compat.create_resource("palette");
+    static Identifier magic_bag_1 = Compat.create_resource("magic_bag_1");
+    static Identifier magic_bag_2 = Compat.create_resource("magic_bag_2");
+    static Identifier magic_bag_3 = Compat.create_resource("magic_bag_3");
 
     static ResourceKey<Item> stone_wand_key = ResourceKey.create(Registries.ITEM, stone_wand);
     static ResourceKey<Item> copper_wand_key = ResourceKey.create(Registries.ITEM, copper_wand);

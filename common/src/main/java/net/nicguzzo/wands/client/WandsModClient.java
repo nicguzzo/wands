@@ -1,23 +1,17 @@
 package net.nicguzzo.wands.client;
 
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import dev.architectury.event.events.client.ClientGuiEvent;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.menu.MenuRegistry;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -27,9 +21,6 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
-import net.nicguzzo.wands.client.screens.MagicBagScreen;
-import net.nicguzzo.wands.client.screens.PaletteScreen;
-import net.nicguzzo.wands.client.screens.WandScreen;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.networking.Networking;
@@ -73,7 +64,7 @@ public class WandsModClient {
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
     //static final String tab = "key.categories.wands";
-    public static final KeyMapping.Category tab = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(WandsMod.MOD_ID, "key.categories.wands"));
+    public static final KeyMapping.Category tab = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(WandsMod.MOD_ID, "key.categories.wands"));
     static final String k = "key.wands.";
 
     public static void initialize() {

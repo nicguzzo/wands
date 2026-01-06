@@ -11,7 +11,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -30,7 +30,6 @@ import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Value;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandMenu> {
@@ -42,9 +41,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     static final int img_w=256;
     static final int img_h=256;
     Component rock_msg  = Compat.literal("rotate for new rock");
-    private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
-    private static final ResourceLocation INV_TEX = Compat.create_resource("textures/gui/inventory.png");
-    private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
+    private static final Identifier BG_TEX = Compat.create_resource("textures/gui/wand.png");
+    private static final Identifier INV_TEX = Compat.create_resource("textures/gui/inventory.png");
+    private static final Identifier SLOT_HIGHLIGHT_BACK_SPRITE = Identifier.withDefaultNamespace("container/slot_highlight_back");
 
     Vector<Wdgt> wdgets =new Vector<>();
     Select modes_grp;
@@ -551,7 +550,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     @Override 
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
         //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, wand_bg_Texture);
+        RenderSystem.outputColorTextureOverride=wand_bg_Texture;
+        //RenderSystem.setShaderTexture(0, wand_bg_Texture);
         //Compat.set_pos_tex_shader();
         //RenderSystem.depthMask(false);
         //RenderSystem.disableDepthTest();
@@ -561,7 +561,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         if(show_inv) {
             //RenderSystem.depthMask(true);
             //RenderSystem.enableDepthTest();
-            RenderSystem.setShaderTexture(0, wand_inv_Texture);
+            RenderSystem.outputColorTextureOverride=wand_inv_Texture;
+            //RenderSystem.setShaderTexture(0, wand_inv_Texture);
             x =( (width - imageWidth) / 2);
             y =( (height - imageHeight) / 2);
                 gui.blit(RenderPipelines.GUI_TEXTURED, INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);

@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import me.shedaniel.math.Color;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.nicguzzo.wands.WandsExpectPlatform;
 
@@ -166,7 +166,7 @@ public class WandsConfig {
 
     public void generate_allow_list(List<Block> out, String[] str) {
         for (String id : str) {
-            ResourceLocation res = ResourceLocation.tryParse(id);
+            Identifier res = Identifier.tryParse(id);
             if (res != null) {
 
                 //TODO: check this!!

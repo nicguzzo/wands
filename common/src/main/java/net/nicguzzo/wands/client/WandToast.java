@@ -5,15 +5,14 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class WandToast implements Toast {
-    private static final ResourceLocation TEXTURE = Compat.create_resource_mc("toast/advancement");
+    private static final Identifier TEXTURE = Compat.create_resource_mc("toast/advancement");
     Component text;
      private Toast.Visibility wantedVisibility;
     WandToast(String s){
