@@ -37,7 +37,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Component rock_msg  = Compat.literal("rotate for new rock");
     private static final ResourceLocation BG_TEX = Compat.create_resource("textures/gui/wand.png");
     private static final ResourceLocation INV_TEX = Compat.create_resource("textures/gui/inventory.png");
-    private static final ResourceLocation SLOT_HIGHLIGHT_BACK_SPRITE = ResourceLocation.withDefaultNamespace("container/slot_highlight_back");
 
     Vector<Wdgt> wdgets =new Vector<>();
     Select modes_grp;
@@ -553,20 +552,21 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             Compat.set_texture(INV_TEX);
             x =( (width - imageWidth) / 2);
             y =( (height - imageHeight) / 2);
-                gui.blit(INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);
-                super.render(gui,mouseX,mouseY,delta);
-                if(ClientRender.wand!=null && ClientRender.wand.player_data !=null){
-                    for (int tool : ClientRender.wand.player_data.getIntArray("Tools")) {
-                        Slot slot = (Slot)this.menu.slots.get(tool);
-                        //renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
-                        gui.blitSprite(SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
-                    }
+            gui.blit(INV_TEX, x, y, 0, 0, imageWidth, imageHeight,256,256);
+            super.render(gui,mouseX,mouseY,delta);
+            if(ClientRender.wand!=null && ClientRender.wand.player_data !=null){
+                for (int tool : ClientRender.wand.player_data.getIntArray("Tools")) {
+                    Slot slot = (Slot)this.menu.slots.get(tool);
+                    int i=slot.x+this.leftPos;
+                    int j=slot.y+this.topPos;
+                    gui.fillGradient(RenderType.guiOverlay(), i, j, i + 16, j + 16,0x8800AA00,0x1000AA00,0);
                 }
-                gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
+            }
+            //gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
 
-                gui.drawString(font,"click on a player inventory slot",leftPos+3,topPos+50,0xffffffff);
-                gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);
-                show_inv_btn.render(gui,this.font,mouseX,mouseY);
+            gui.drawString(font,"click an inventory slot with a tool",leftPos+3,topPos+50,0xffffffff);
+            gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);
+            show_inv_btn.render(gui,this.font,mouseX,mouseY);
 
         }else{
             gui.blit(BG_TEX, x, y, 0, 0, img_w, img_h,256,256);

@@ -936,11 +936,16 @@ public class ClientRender {
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
                 if (fancy) {
-                    RenderSystem.setShaderTexture(0,GRID_TEXTURE);
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.gui());
+                    //RenderSystem.setShaderTexture(0,GRID_TEXTURE);
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderType.entityTranslucent(GRID_TEXTURE));
+                    int l=15728880;
                     int vi = 0;
+                    float nx = 0.0f, ny = 0.0f, nz = 0.0f;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
+                            nx = wand.side.getNormal().getX();
+                            ny = wand.side.getNormal().getY();
+                            nz = wand.side.getNormal().getZ();
                             switch (wand.side) {
                                 case UP:
                                     x1 = pos_x + (float)aabb.minX;
@@ -948,10 +953,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex( matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex( matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex( matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex( matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
+                                    consumer.addVertex( matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex( matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
                                     break;
                                 case DOWN:
                                     x1 = pos_x + (float)aabb.minX;
@@ -959,10 +964,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
+                                    consumer.addVertex(matrix,x2,y1,z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex(matrix,x1,y1,z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
                                     break;
                                 case SOUTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -970,10 +975,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.maxZ + 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2,y2,z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1,y2,z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1,y1,z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex(matrix,x2,y1,z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
+                                    consumer.addVertex(matrix,x2,y2,z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex(matrix,x1,y2,z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
                                     break;
                                 case NORTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -981,10 +986,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ - 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2, y2, z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x2, y1, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
+                                    consumer.addVertex(matrix,x2, y2, z1).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex(matrix,x2, y1, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
                                     break;
                                 case EAST:
                                     x1 = pos_x + (float)aabb.maxX + 0.02f;
@@ -992,10 +997,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
+                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
                                     break;
                                 case WEST:
                                     x1 = pos_x + (float)aabb.minX - 0.02f;
@@ -1003,10 +1008,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f);
-                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f);
+                                    consumer.addVertex(matrix,x1, y1, z1).setUv(0.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,0);
+                                    consumer.addVertex(matrix,x1, y1, z2).setUv(0.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(0,1);
+                                    consumer.addVertex(matrix,x1, y2, z2).setUv(1.0f, 1.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,1);
+                                    consumer.addVertex(matrix,x1, y2, z1).setUv(1.0f, 0.0f).setColor(1.0f,1.0f,1.0f,1.0f).setNormal(nx,ny,nz).setLight(l).setUv1(1,0);
                                     break;
                             }
                         }
@@ -1169,7 +1174,7 @@ public class ClientRender {
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockState st =b.state;
                 if (wand.palette.has_palette) {
-                    st = wand.get_state(b.pos.getY());
+                    st = wand.get_state(b.pos.getY(),null);
                 }else{
                     st=wand.rotate_mirror(st,mirroraxis);
                     //Mirror

@@ -27,10 +27,15 @@ import java.util.List;
 import java.util.Optional;
 
 public class MagicBagItem extends Item {
-    public int tier;
+    public enum MagicBagItemTier{
+        MAGIC_BAG_TIER_1,
+        MAGIC_BAG_TIER_2,
+        MAGIC_BAG_TIER_3,
+    }
+    public MagicBagItemTier tier;
     public int limit = Integer.MAX_VALUE;
 
-    public MagicBagItem(int tier, int limit, Properties properties) {
+    public MagicBagItem(MagicBagItemTier tier, int limit, Properties properties) {
         super(properties);
         this.tier = tier;
         if (limit > 0) {
@@ -129,7 +134,7 @@ public class MagicBagItem extends Item {
             if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
                 ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level.registryAccess());
                 if (!item.isEmpty()) {
-                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier + 1));
+                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier.ordinal() + 1));
                 }
             }
         }

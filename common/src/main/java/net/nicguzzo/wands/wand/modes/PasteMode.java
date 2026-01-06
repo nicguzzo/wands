@@ -52,7 +52,7 @@ public class PasteMode extends WandMode {
                 int pz=b_pos.getZ() + p.getZ()*mz;
                 st=wand.rotate_mirror(st,mirroraxis);
                 if(wand.palette.has_palette) {
-                    wand.block_buffer.add(px,py,pz,wand);
+                    wand.block_buffer.add(px,py,pz,wand,null);
                 }else {
                     wand.block_buffer.add(px,py,pz,st, st.getBlock().asItem());
                 }

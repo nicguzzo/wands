@@ -55,9 +55,6 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 WandsModClient.send_palette(false,true,-1);
             }
         });
-
-
-
         int v=PaletteItem.getGradientHeight(palette_itemStack);
         gradient_h=new Spinner(v, 1, 1000,(width/2)+(imageWidth/2),(height/2)-122 , 40, 12,Compat.literal("gradient height")) {
             public void onInc(int mx, int my, int value) {
@@ -81,7 +78,8 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         super.render(gui, mouseX, mouseY, delta);
 
         if(this.menu.palette!=null){
-            PaletteMode mode=PaletteItem.getMode(this.menu.palette);            
+            PaletteMode mode=PaletteItem.getMode(this.menu.palette);
+
             switch(mode){
                 case RANDOM:
                     mode_val= PaletteItem.mode_val_random;
@@ -91,6 +89,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 break;
                 case GRADIENT:
                     mode_val=PaletteItem.mode_val_gradient;
+                    gradient_h.render(gui,this.font, mouseX, mouseY);
                 break;
                 default:
                     mode_val= PaletteItem.mode_val_random;
@@ -98,11 +97,12 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             };
             CompoundTag tag= Compat.getTags(this.menu.palette);
             boolean rot=tag.getBoolean("rotate");
-            gui.drawString(this.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-105,4210752,false);
-            gui.drawString(this.font,mode_val , (width/2)+30, (height/2)-105, 4210752,false);
+            gui.drawString(this.font,(rot?rot_on:rot_off)  , (width/2)-30, (height/2)-105,0xff000000,false);
+            gui.drawString(this.font,mode_val , (width/2)+30, (height/2)-105, 0xff000000,false);
+
             btn_mode.render(gui,this.font, mouseX, mouseY);
             btn_rotate.render(gui,this.font, mouseX, mouseY);
-            gradient_h.render(gui,this.font, mouseX, mouseY);
+
         }
         this.renderTooltip(gui, mouseX, mouseY);
     }

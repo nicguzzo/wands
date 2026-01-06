@@ -96,9 +96,9 @@ public class BlockBuffer{
             //}
         }
     }
-    public boolean add(int x, int y, int z, Wand w){
+    public boolean add(int x, int y, int z, Wand w,BlockState with_state){
         if(length<max){
-            BlockState st=w.get_state(y);
+            BlockState st=w.get_state(y,with_state);
             if(st!=null){
                 Item it=w.get_item(st);
                 if(!WandsConfig.denied.contains(st.getBlock())){
@@ -119,7 +119,7 @@ public class BlockBuffer{
         set(i,p.getX(),p.getY(),p.getZ());
     }
 
-    public void add(BlockPos p,Wand w){
-        add(p.getX(),p.getY(),p.getZ(),w);
+    public void add(BlockPos p,Wand w,BlockState with_state){
+        add(p.getX(),p.getY(),p.getZ(),w,with_state);
     }
 }

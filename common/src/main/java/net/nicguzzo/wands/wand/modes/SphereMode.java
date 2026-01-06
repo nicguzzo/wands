@@ -13,9 +13,9 @@ public class SphereMode extends WandMode {
 
     @Override
     public void place_in_buffer(Wand wand) {
-        if(noise==null) {
-            noise = PerlinNoise.create(wand.level.random, IntStream.rangeClosed(-4, 4));
-        }
+        //if(noise==null) {
+        //    noise = PerlinNoise.create(wand.level.random, IntStream.rangeClosed(-4, 4));
+        //}
         wand.block_buffer.reset();
         int diameter=0;
         if (wand.getP1() != null && (wand.getP2() !=null || wand.preview)) {
@@ -33,7 +33,7 @@ public class SphereMode extends WandMode {
             }
             int r2=r*r;
             //diameter=2*r;
-            int margin=2;
+            int margin=0;
             int x1=xc-r-margin;
             int y1=yc-r-margin;
             int z1=zc-r-margin;
@@ -54,7 +54,7 @@ public class SphereMode extends WandMode {
                     z=-r;
                     for(int k=z1;k<=z2;k++,z++){
                         zz=z*z;
-                        n=noise.getValue(i,j,k);
+                        //n=noise.getValue(i,j,k);
                         if( xx + yy + zz < r2+n )
                         {
 

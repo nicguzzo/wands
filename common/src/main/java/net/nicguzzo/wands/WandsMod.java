@@ -69,6 +69,7 @@ public class WandsMod {
 
     static ResourceLocation stone_wand = Compat.create_resource("stone_wand");
     static ResourceLocation iron_wand = Compat.create_resource("iron_wand");
+    static ResourceLocation copper_wand = Compat.create_resource("copper_wand");
     static ResourceLocation diamond_wand = Compat.create_resource("diamond_wand");
     static ResourceLocation netherite_wand = Compat.create_resource("netherite_wand");
     static ResourceLocation creative_wand = Compat.create_resource("creative_wand");
@@ -78,6 +79,7 @@ public class WandsMod {
     static ResourceLocation magic_bag_3 = Compat.create_resource("magic_bag_3");
 
     static ResourceKey<Item> stone_wand_key = ResourceKey.create(Registries.ITEM, stone_wand);
+    static ResourceKey<Item> copper_wand_key = ResourceKey.create(Registries.ITEM, copper_wand);
     static ResourceKey<Item> iron_wand_key = ResourceKey.create(Registries.ITEM, iron_wand);
     static ResourceKey<Item> diamond_wand_key = ResourceKey.create(Registries.ITEM, diamond_wand);
     static ResourceKey<Item> netherite_wand_key = ResourceKey.create(Registries.ITEM, netherite_wand);
@@ -92,33 +94,36 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registries.MENU);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register(stone_wand, () -> {
-        return new WandItem(0, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB));
+        return new WandItem(WandItem.WandTier.STONE_WAND, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB));
+    });
+    public static final RegistrySupplier<Item> COPPER_WAND_ITEM = ITEMS.register(iron_wand, () -> {
+        return new WandItem(WandItem.WandTier.COPPER_WAND, config.copper_wand_limit, false, false, false, false, new Item.Properties().durability(config.copper_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register(iron_wand, () -> {
-        return new WandItem(1, config.iron_wand_limit, false, false, false, false, new Item.Properties().durability(config.iron_wand_durability).arch$tab(WandsMod.WANDS_TAB));
+        return new WandItem(WandItem.WandTier.IRON_WAND, config.iron_wand_limit, false, false, false, false, new Item.Properties().durability(config.iron_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register(diamond_wand, () -> {
-        return new WandItem(2, config.diamond_wand_limit, true, false, false, false, new Item.Properties().durability(config.diamond_wand_durability).arch$tab(WandsMod.WANDS_TAB));
+        return new WandItem(WandItem.WandTier.DIAMOND_WAND, config.diamond_wand_limit, true, false, false, false, new Item.Properties().durability(config.diamond_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register(netherite_wand, () -> {
-        return new WandItem(3, config.netherite_wand_limit, true, true, false, true, new Item.Properties().fireResistant().durability(config.netherite_wand_durability).arch$tab(WandsMod.WANDS_TAB));
+        return new WandItem(WandItem.WandTier.NETHERITE_WAND, config.netherite_wand_limit, true, true, false, true, new Item.Properties().fireResistant().durability(config.netherite_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register(creative_wand, () -> {
-        return new WandItem(4, config.creative_wand_limit, true, true, true, true, new Item.Properties().fireResistant().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
+        return new WandItem(WandItem.WandTier.CREATIVE_WAND, config.creative_wand_limit, true, true, true, true, new Item.Properties().fireResistant().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> PALETTE_ITEM = ITEMS.register("palette", () -> {
         return new PaletteItem(new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> MAGIC_BAG_1 = ITEMS.register("magic_bag_1", () -> {
-        return new MagicBagItem(0, config.magic_bag_1_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_1, config.magic_bag_1_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> MAGIC_BAG_2 = ITEMS.register("magic_bag_2", () -> {
-        return new MagicBagItem(1, config.magic_bag_2_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_2, config.magic_bag_2_limit, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> MAGIC_BAG_3 = ITEMS.register("magic_bag_3", () -> {
-        return new MagicBagItem(2, Integer.MAX_VALUE, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
+        return new MagicBagItem(MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_3, Integer.MAX_VALUE, new Item.Properties().stacksTo(1).arch$tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<MenuType<PaletteMenu>> PALETTE_CONTAINER = MENUES.register("palette_menu", () -> MenuRegistry.ofExtended(PaletteMenu::new));
