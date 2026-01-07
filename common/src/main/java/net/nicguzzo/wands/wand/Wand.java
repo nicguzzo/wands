@@ -1,8 +1,10 @@
 package net.nicguzzo.wands.wand;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 
+import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 
 #if MC > "1201"
@@ -14,6 +16,8 @@ import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.MutableComponent;
 
 import net.minecraft.resources.ResourceLocation;
@@ -30,10 +34,10 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -60,43 +64,13 @@ import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.*;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 
-#if MC>="1205"
-import net.minecraft.world.item.component.Tool;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.entity.EquipmentSlot;
-#else
 import net.minecraft.world.item.alchemy.PotionUtils;
-#endif
 
-#if MC>="1190"
 import net.minecraft.world.level.block.DropExperienceBlock;
-#else
-import net.minecraft.world.level.block.OreBlock;
-#endif
 
-#if MC == "1165"
-import net.minecraft.util.Mth;
-import me.shedaniel.architectury.networking.NetworkManager;
-#else
 import dev.architectury.networking.NetworkManager;
-#endif
-
-#if MC>="1190"
 import net.minecraft.util.RandomSource;
-#else
-import java.util.Random;
-#endif
 
-#if MC<"1193"
-import net.minecraft.world.level.Explosion;
-#endif
-#if MC>="1205"
-#endif
-#if MC>="1212"
-import net.minecraft.world.item.enchantment.Repairable;
-#endif
-//import com.github.clevernucleus.opc.api.OfflinePlayerCacheAPI;
-//import com.github.clevernucleus.opc.api.claim.Claim;
 
 //TODO implement https://github.com/Patbox/common-protection-api for claimed chunks
 //TODO fix mirroring and rotation
@@ -277,6 +251,14 @@ public class Wand {
             modes[i]=WandProps.modes[i].get_mode();
         }
     }
+    public WandMode get_mode(){
+        if(modes!=null && mode!=null)
+            return modes[mode.ordinal()];
+        else{
+            return null;
+        }
+    }
+
     public void clear() {
         setP1(null);
         setP2(null);
@@ -696,7 +678,6 @@ public class Wand {
                         }
                     }
                 }
-                #if MC < "1205"
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
                 packet.writeBlockPos(pos);
                 packet.writeBoolean(destroy);
@@ -706,19 +687,7 @@ public class Wand {
                 //packet.writeBoolean(slab_stair_bottom);
                 packet.writeInt(send_sound);
                 NetworkManager.sendToPlayer((ServerPlayer)player, Networking.SND_PACKET, packet);
-                #else
-                    //BlockPos pos, boolean destroy, ItemStack item_stack,boolean no_tool,boolean damaged_tool,int i_sound
-                if(!is.isEmpty()) {
-                    NetworkManager.sendToPlayer((ServerPlayer) player,
-                            new Networking.SndPacket(pos, destroy, is, send_sound)
-                    );
-                }
-                if(no_tool || damaged_tool) {
-                    NetworkManager.sendToPlayer((ServerPlayer) player,
-                            new Networking.ToastPacket(no_tool, damaged_tool)
-                    );
-                }
-                #endif
+
                 //Compat.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
                 no_tool = false;
                 damaged_tool = false;
@@ -844,15 +813,18 @@ public class Wand {
         }
     }
 
-    public BlockState get_state() {
-        BlockState st=block_state;
+    public BlockState get_state(int y) {
+        BlockState st = block_state;
         if (palette.has_palette) {
-            st = palette.get_state(this);
-        }else{
+            int min_y=!level.isOutsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
+            int max_y=!level.isOutsideBuildHeight(block_buffer.max_y)?block_buffer.max_y:0;
+
+            st = palette.get_state(this,min_y,max_y,y);
+        } else {
             if (offhand_state != null && !offhand_state.isAir()) {
                 st= offhand_state;
             } else {
-                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE/*|| mode==Mode.RECT*/) {
+                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode==Mode.SPHERE) {
                     if (p1_state != null)
                         st=p1_state;
                 }
@@ -1022,40 +994,17 @@ public class Wand {
     }
     void hurt_main_hand(ItemStack stack) {
         if (!this.unbreakable) {
-      #if MC<"1205"
+            //stack.hurtAndBreak(1, player, (Consumer<? super Player>) <LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
             stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
-      #else
-            stack.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
-      #endif
         }
     }
     void hurt_tool(ItemStack stack,int tool_slot) {
         if (!this.unbreakable) {
-      #if MC<"1205"
             stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
-      #else
-          //if(tool_slot>=0 && tool_slot<tools.length) {
-              stack.hurtAndBreak(1, player, EquipmentSlot.OFFHAND);
-              //CompoundTag tags= Compat.getTags(wand_stack);
-              //ListTag tool_list = tags.getList("Tools", Compat.NbtType.COMPOUND);
-              //Optional<Tag> t= tool_list.stream().filter(tag -> ((CompoundTag)tag).getInt("Slot")==tool_slot ).findAny();
-              //if(t.isPresent()) {
-              //    ((CompoundTag)t.get()).put("Tool",stack.save(level.registryAccess()));
-              //    tags.put("Tools",tool_list);
-              //    CustomData.set(DataComponents.CUSTOM_DATA, wand_stack, tags);
-              //}
-          //}
-      #endif
         }
     }
     boolean place_block(BlockPos block_pos,BlockState state) {
         boolean placed = false;
-        //WandsMod.log("place_block "+block_pos+" state: "+state + " destroy: " + destroy,true);
-        //Level level = Compat.player_level(player);
-        //if (level.isClientSide) {
-        //    return false;
-        //}
-
         if(!WandsExpectPlatform.claimCanInteract((ServerLevel) level,block_pos,player)){
             player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"),false);
             return false;
@@ -1096,17 +1045,15 @@ public class Wand {
             return true;
         }
 
-        #if MC>="1190"
-            if((use)&& has_water_potion &&  state.is(BlockTags.CONVERTABLE_TO_MUD)){
-                level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
-                send_sound=Sounds.SPLASH.ordinal();
-                if (!creative) {
-                    hurt_main_hand(wand_stack);
-                    consume_xp();
-                }
-                return true;
+        if((use)&& has_water_potion &&  state.is(BlockTags.CONVERTABLE_TO_MUD)){
+            level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
+            send_sound=Sounds.SPLASH.ordinal();
+            if (!creative) {
+                hurt_main_hand(wand_stack);
+                consume_xp();
             }
-        #endif
+            return true;
+        }
 
         boolean _can_destroy=creative;
         no_tool = false;
@@ -1272,18 +1219,13 @@ public class Wand {
             }
 
             if (bl) {
-#if MC<="1165"
-                BlockEntity blockEntity = blockState.getBlock().isEntityBlock() ? level.getBlockEntity(blockPos) : null;
-#else
                 BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
-#endif
                 //System.out.println("destroyBlock "+bl);
                 if(this.mine_to_inventory) {
                     if (level instanceof ServerLevel) {
                         if(!drop(blockPos,blockState,blockEntity,null)) {
                             return false;
                         }
-
                     }
                 }else{
                     blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
@@ -1302,14 +1244,7 @@ public class Wand {
     boolean drop(BlockPos blockPos,BlockState blockState,BlockEntity blockEntity,ItemStack drop_item){
         BlockPos drop_pos;
         if (drop_on_player) {
-#if MC == "1165"
-                int i = Mth.floor(player.position().x);
-                int j = Mth.floor(player.position().y - 0.20000000298023224);
-                int k = Mth.floor(player.position().z);
-                drop_pos = new BlockPos(i, j, k).above();
-#else
-                drop_pos = player.getOnPos().above();
-#endif
+            drop_pos = player.getOnPos().above();
         } else {
             drop_pos = blockPos;
         }
@@ -1330,28 +1265,17 @@ public class Wand {
                         }
                     });
         }
-        #if MC>="1190"
 
         if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  DropExperienceBlock  && !Compat.has_silktouch(digger_item,level) ) {
             DropExperienceBlock dblock=(DropExperienceBlock) blockState.getBlock();
             int xp=( (DropExperienceBlockAccessor)dblock).getXpRange().sample(level.random);
-            //WandsMod.LOGGER.info("drop xp "+xp);
             if(xp>0){
-                #if MC>="1212"
-                if ( ((ServerLevel)level).getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
-                #else
                 if (level.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
-                #endif
                     ExperienceOrb.award((ServerLevel)level, Vec3.atCenterOf(drop_pos), xp);
                 }
             }
         }
-        #else
-        if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  OreBlock  ) {
-            OreBlock dblock=(OreBlock) blockState.getBlock();
-            dblock.spawnAfterBreak(blockState, (ServerLevel)level,drop_pos,digger_item);
-        }
-        #endif
+
         if (stop) {
             if (!preview) {
                 player.displayClientMessage(Compat.literal("inventory full"), false);
@@ -1401,7 +1325,6 @@ public class Wand {
         return false;
     }
     boolean place_into_shulker(ItemStack shulker,ItemStack item_to_place, boolean bag_only){
-        #if MC<"1205"
         if(shulker.getTag()==null){
             return false;
         }
@@ -1476,9 +1399,6 @@ public class Wand {
                 }
             }
         }
-        #else
-            //TODO: fix place in shulkers or bags
-        #endif
         return false;
     }
     public void update_inv_aux(){
@@ -1538,17 +1458,10 @@ public class Wand {
         }
     }
     public void update_tools(){
+        if(this.player_data==null)
+            return;
         digger_item_slot =-1;
         n_tools=0;
-        //if(level.isClientSide()){
-        //    if(this.player_data==null){
-        //        player_data=((IEntityDataSaver)player).getPersistentData();
-        //    }else{
-        //        if(this.player_data.get("Tools")==null){
-        //            player_data=((IEntityDataSaver)player).getPersistentData();
-        //        }
-        //    }
-        //}
 
         int[] tools_slots=this.player_data.getIntArray("Tools");
 
@@ -1562,59 +1475,8 @@ public class Wand {
             has_shovel = has_shovel || item instanceof ShovelItem;
             has_axe = has_axe || item instanceof AxeItem;
             has_shear = has_shear || item instanceof ShearsItem;
-
-            //if((!creative||use) && preview){
-            //    int dmg=tool_item.getMaxDamage()- tool_item.getDamageValue();
-            //    if(dmg>1 && (
-            //            ((destroy || replace)&& can_dig(block_state, true, tool_item))||
-            //             (use && (
-            //                     (tool_item.getItem() instanceof HoeItem    && WandUtils.is_tillable(block_state))||
-            //                     (tool_item.getItem() instanceof AxeItem    && WandUtils.is_strippable(block_state))||
-            //                     (tool_item.getItem() instanceof ShovelItem && WandUtils.is_flattenable(block_state))||
-            //                     (tool_item.getItem() instanceof ShearsItem && can_shear(block_state))
-            //             ))
-            //    )) {
-            //        //if(digger_item_slot==-1)
-            //            //digger_item_slot = t_slot;
-            //    }
-            //}
         }
-#if false
-        #if MC<"1205"
-           CompoundTag tags= wand_stack.getOrCreateTag();
-        #else
-           CompoundTag tags= Compat.getTags(wand_stack);
-        #endif
-        ListTag tag = tags.getList("Tools", Compat.NbtType.COMPOUND);
 
-        for (int i = 0; i < tag.size() && i<9; i++) {
-            CompoundTag stackTag = (CompoundTag) tag.get(i);
-
-            int t_slot = stackTag.getInt("Slot");
-
-            #if MC<"1205"
-                tools[t_slot] = ItemStack.of(stackTag.getCompound("Tool"));
-            #else
-                tools[t_slot] = ItemStack.parse(level.registryAccess(),stackTag.getCompound("Tool")).orElse(ItemStack.EMPTY);
-            #endif
-            if(tools[t_slot].isEmpty()) continue;
-            if((!creative||use) && preview){
-                int dmg=tools[t_slot].getMaxDamage()- tools[t_slot].getDamageValue();
-                if(dmg>1 && (
-                        ((destroy || replace)&& can_dig(block_state, true, tools[t_slot]))||
-                         (use && (
-                                 (tools[t_slot].getItem() instanceof HoeItem    && WandUtils.is_tillable(block_state))||
-                                 (tools[t_slot].getItem() instanceof AxeItem    && WandUtils.is_strippable(block_state))||
-                                 (tools[t_slot].getItem() instanceof ShovelItem && WandUtils.is_flattenable(block_state))||
-                                 (tools[t_slot].getItem() instanceof ShearsItem && can_shear(block_state))
-                         ))
-                )) {
-                    if(digger_item_slot==-1)
-                        digger_item_slot = t_slot;
-                }
-            }
-        }
-#endif
     }
 
     public boolean can_destroy(BlockState state,boolean check_speed){
@@ -1643,13 +1505,7 @@ public class Wand {
         return false;
     }
     boolean can_dig(BlockState state,boolean check_speed,ItemStack digger){
-        #if MC >= "1204"
-        boolean is_glass=state.getBlock() instanceof TransparentBlock;
-        #else
         boolean is_glass=state.getBlock() instanceof AbstractGlassBlock;
-        #endif
-
-
         boolean is_snow_layer=false;
         boolean can_shear=false;
         Block blk=state.getBlock();
@@ -1665,27 +1521,15 @@ public class Wand {
                 is_allowed = is_allowed || WandsConfig.shears_allowed.contains(blk);
             }else{
                 if(item_digger instanceof PickaxeItem){
-                    #if MC == "1165"
-                    minable=WandUtils.pickaxe_minable(state);
-                    #endif
                     is_allowed= is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
                 }else {
                     if (item_digger instanceof AxeItem) {
-                        #if MC == "1165"
-                            minable=WandUtils.axe_minable(state);
-                        #endif
                         is_allowed = is_allowed || WandsConfig.axe_allowed.contains(blk);
                     } else {
                         if (item_digger instanceof ShovelItem) {
-                            #if MC == "1165"
-                              minable=WandUtils.shovel_minable(state);
-                            #endif
                             is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
                         } else {
                             if (item_digger instanceof HoeItem) {
-                                #if MC == "1165"
-                                    minable=WandUtils.hoe_minable(state);
-                                #endif
                                is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
                             }
                         }
@@ -1694,19 +1538,7 @@ public class Wand {
             }
             if(check_speed){
                 float destroy_speed=item_digger.getDestroySpeed(digger, state);
-                #if MC == "1165"
-                boolean correct_tool=item_digger.isCorrectToolForDrops(state)||minable ;
-                #else
-                    #if MC < "1205"
-                    boolean correct_tool=item_digger.isCorrectToolForDrops(state);
-                    #else
-                    boolean correct_tool=false;
-                    if(!digger.isEmpty()){
-                         Tool tool = (Tool)digger.get(DataComponents.TOOL);
-                        correct_tool= tool != null && tool.isCorrectForDrops(state);
-                    }
-                    #endif
-                #endif
+                boolean correct_tool=item_digger.isCorrectToolForDrops(state);
                 return creative || (destroy_speed > 1.0f&& correct_tool)
                         || is_glass || is_snow_layer || is_allowed ||can_shear;
             }else{
@@ -1739,20 +1571,14 @@ public class Wand {
         return (
                         state.is(BlockTags.LEAVES) ||
                         state.is(Blocks.COBWEB) ||
-                        #if MC<"1204"
                         state.is(Blocks.GRASS) ||
-                        #else
-                        state.is(Blocks.SHORT_GRASS) ||
-                        #endif
                         state.is(Blocks.FERN) ||
                         state.is(Blocks.DEAD_BUSH) ||
                         state.is(Blocks.VINE) ||
                         state.is(Blocks.TRIPWIRE) ||
                         state.is(Blocks.PUMPKIN) ||
                         state.is(BlockTags.WOOL)
-#if MC>="1181"
                         || state.is(Blocks.HANGING_ROOTS)
-#endif
                         );
     }
     void check_inventory(){
@@ -1776,12 +1602,7 @@ public class Wand {
                             }
                         }
                     } else {
-                        #if MC < "1205"
                         if (stack.getTag() == null) {
-                        #else
-                        //if (stack.getTags().findAny().isEmpty()) {
-                        if(stack.get(DataComponents.CUSTOM_DATA)==null){ //TODO: verify
-                        #endif
                             for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                                 Item item = pa.getKey();
                                 if (item != null && !stack.isEmpty() && item == stack.getItem()) {
@@ -1921,11 +1742,7 @@ public class Wand {
             WandsMod.log("bad advancement: "+res,prnt);
             return false;
         }
-        #if MC > "1201"
-        AdvancementHolder adv= server_advancements.get(res);
-        #else
         Advancement adv= server_advancements.getAdvancement(res);
-        #endif
         if(adv==null){
             WandsMod.log("bad advancement: "+res,prnt);
             return false;
@@ -1941,60 +1758,28 @@ public class Wand {
             ServerAdvancementManager advancements=server.getAdvancements();
             if(advancements==null) return;
 
-            if(!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem)(wand_stack.getItem())).tier==0 ) {
+            if(!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem) (wand_stack.getItem())).getTier() == Tiers.STONE ) {
                 if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)){
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem)(wand_stack.getItem())).tier==1 ) {
+            if(!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem) (wand_stack.getItem())).getTier() == Tiers.IRON ) {
                 if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)){
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem)(wand_stack.getItem())).tier==2 ) {
+            if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem) (wand_stack.getItem())).getTier() == Tiers.DIAMOND ) {
                 if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)){
                     //WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem)(wand_stack.getItem())).tier==3 ) {
+            if(!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem)(wand_stack.getItem())).getTier()==Tiers.NETHERITE ) {
                 if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)){
                     return;
                 }
             }
-            /*
-            ItemStack stone=Items.STONE.getDefaultInstance();
-            ItemStack iron=Items.IRON_INGOT.getDefaultInstance();
-            ItemStack diamond=Items.DIAMOND.getDefaultInstance();
-            ItemStack netherite=Items.NETHERITE_INGOT.getDefaultInstance();
-            Repairable dc= wand_stack.get(DataComponents.REPAIRABLE);
-            //TODO: test this!!!!
-            if(dc==null) return;
-            if(!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && dc.isValidRepairItem(stone)) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)){
-                    return;
-                }
-            }
-            if(!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && dc.isValidRepairItem(iron)) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)){
-                    return;
-                }
-            }
-            if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") &&dc.isValidRepairItem(diamond)) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)){
-                    //WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
-                    return;
-                }
-            }
-            if(!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && dc.isValidRepairItem(netherite)) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)){
-                    return;
-                }
-            }*/
 
-            //WandsMod.log("advancement_allow_diamond_wand: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
-            //WandsMod.log("prog: "+prog.isDone(),prnt);
-            //AdvancementList.advancements.get(ResourceLocation.tryParse(WandsMod.config.advancement_allow_diamond_wand));
         }
     }
     public BlockPos get_pos_from_air(Vec3 hit){

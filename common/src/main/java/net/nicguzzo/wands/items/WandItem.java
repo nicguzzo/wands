@@ -10,23 +10,15 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-#if MC<"1212"
 import net.minecraft.world.InteractionResultHolder;
-#endif
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-
-import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.Compat;
@@ -36,44 +28,19 @@ import net.nicguzzo.wands.wand.WandProps.Mode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
-import java.util.Optional;
 
-#if MC=="1165"
-import me.shedaniel.architectury.networking.NetworkManager;
-#else
 import dev.architectury.networking.NetworkManager;
-#endif
-
-#if MC<"1206"
 import net.minecraft.world.item.Vanishable;
 
-public class WandItem extends Item implements Vanishable {
-#else
-    public class WandItem extends Item {
-
-#endif
-    public int tier; //0 stone, 1 iron, 2 diamond, 3 netherite 4 creative
+public class WandItem extends TieredItem implements Vanishable {
     public int limit;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
     //TODO: check ecnchantments!
-
-
-    public static Tool createToolProperties() {
-        return new Tool(List.of(Tool.Rule.minesAndDrops(List.of(Blocks.AIR), 1.0F)), 1.0F, 1);
-    }
-
-    #if MC<"1212"
-    public WandItem(int tier,int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
-        super(properties);
-    #else
-    public WandItem(ToolMaterial toolMaterial, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
-        super(properties.repairable(toolMaterial.repairItems()).enchantable(toolMaterial.enchantmentValue()));
-    #endif
-
-        this.tier=tier;
+    public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
+        super(tier,properties);
         this.limit=limit;
         this.removes_lava=removes_lava;
         this.removes_water=removes_water;

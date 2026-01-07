@@ -9,7 +9,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class BlastMode implements WandMode {
+public class BlastMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         wand.block_buffer.reset();
         if(!wand.preview){

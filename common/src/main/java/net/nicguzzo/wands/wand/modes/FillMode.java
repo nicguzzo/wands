@@ -4,7 +4,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class FillMode implements WandMode {
+public class FillMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         if (wand.getP1() != null ){
             if(wand.getP2() !=null || wand.preview){

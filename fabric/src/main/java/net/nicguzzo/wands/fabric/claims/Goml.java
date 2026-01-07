@@ -20,20 +20,11 @@ public class Goml {
         boolean r=true;
 
 #if HAS_GOML
-        //TODO: GOML check all claims!
-        #if MC=="1165" || MC=="1171" 
-            for(Entry<ClaimBox, Claim> entry : ClaimUtils.getClaimsAt(level, pos).collect(Collectors.toList())) {
-                r = ClaimUtils.claimMatchesWith(entry, player,pos);
-                return r;
-            }
-
-        #else
         for(Entry<ClaimBox, Claim> entry : ClaimUtils.getClaimsAt(level, pos).collect(Collectors.toList())) {
             r=ClaimUtils.canModifyClaimAt(level,pos,entry,player);
             //WandsMod.LOGGER.info(" Goml canInteract "+r);
             return r;
         }
-        #endif
 #endif
         //WandsMod.LOGGER.info(" Goml canInteract "+r);
         return r;

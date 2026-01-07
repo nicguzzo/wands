@@ -12,7 +12,7 @@ import net.nicguzzo.wands.wand.WandProps;
 
 import java.util.List;
 
-public class DirectionMode  implements WandMode {
+public class DirectionMode  extends WandMode {
     public void place_in_buffer(Wand wand) {
         Direction[] dirs = getDirMode0(wand.side, wand.hit.x, wand.hit.y, wand.hit.z,wand);
         boolean invert = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INVERTED);

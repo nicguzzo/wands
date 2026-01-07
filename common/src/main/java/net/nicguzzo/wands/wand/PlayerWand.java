@@ -14,13 +14,8 @@ public class PlayerWand{
         WandsMod.log("add_player wand",true);
         Wand wand=new Wand();
         wand.player=player;
-        if(WandsMod.is_fabric) {
-            wand.player_data = ((IEntityDataSaver) player).getPersistentData();
-        }
+        wand.player_data= WandsExpectPlatform.getPlayerData(player);
 
-        if(WandsMod.is_neoforge) {
-            wand.player_data= WandsExpectPlatform.getPlayerData(player);
-        }
         WandsMod.log("player_data "+wand.player_data.toString(),true);
 
         player_wand.put(player.getStringUUID(), wand) ;

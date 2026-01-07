@@ -86,6 +86,38 @@ public class WandProps {
             public WandMode get_mode(){return new BlastMode();}
             public boolean can_target_air(){return true;}
             public int n_clicks(){return 1;}
+        }, SPHERE {
+            public String toString() {
+                return "wands.modes.sphere";
+            }
+
+            public WandMode get_mode() {
+                return new SphereMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 2;
+            }
+        }, ROCK {
+            public String toString() {
+                return "wands.modes.rock";
+            }
+
+            public WandMode get_mode() {
+                return new RockMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 1;
+            }
         };
 
         public abstract WandMode get_mode();
@@ -142,7 +174,20 @@ public class WandProps {
         TUNNEL_H      { public String toString() {return  "tunnel_h" ;}},
         TUNNEL_OX     { public String toString() {return  "tunnel_ox" ;}},
         TUNNEL_OY     { public String toString() {return  "tunnel_oy" ;}},
-        TUNNEL_DEPTH  { public String toString() {return  "tunnel_d" ;}};
+        TUNNEL_DEPTH  { public String toString() {return  "tunnel_d" ;}},
+        ROCK_RADIUS {
+            public String toString() {
+                return "rock_radius";
+            }
+        }, ROCK_NOISE {
+            public String toString() {
+                return "rock_noise";
+            }
+        }, AIR_TARGET_DISTANCE {
+            public String toString() {
+                return "air_target_distance";
+            }
+        };
         public int def=0;
         public int min=0;
         public int max=2048;
@@ -163,6 +208,14 @@ public class WandProps {
             TUNNEL_H.def=2;
             TUNNEL_DEPTH.def=3;
             TUNNEL_DEPTH.min=1;
+            ROCK_RADIUS.min=0;
+            ROCK_RADIUS.def=2;
+            ROCK_NOISE.min=0;
+            ROCK_NOISE.max=16;
+            ROCK_NOISE.def=3;
+            AIR_TARGET_DISTANCE.def=0;
+            AIR_TARGET_DISTANCE.min=0;
+            AIR_TARGET_DISTANCE.max=10;
         }
     }
 

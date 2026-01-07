@@ -34,32 +34,11 @@ public class LevelRendererMixin {
     @Shadow
     RenderBuffers renderBuffers;
 
-#if MC>="1205"
-    @Inject(method = "renderLevel", at = @At(value = "TAIL"))
-
-    #if MC>="1214"
-        public void renderLevel(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, Matrix4f matrix4f, Matrix4f matrix4f2,CallbackInfo ci) {
-    #elif MC>="1212"
-        public void renderLevel(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2,CallbackInfo ci){
-    #elif MC>="1210"
-        public void renderLevel(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2,CallbackInfo ci) {
-    #else
-        public void renderLevel(float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
-    #endif
-
-        if(WandsMod.config.render_last) {
-            PoseStack posestack = new PoseStack();
-            posestack.mulPose(matrix4f);
-            ClientRender.render(posestack,renderBuffers.bufferSource());
-        }
-    }
-#else
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void renderLevel(PoseStack poseStack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
         if(WandsMod.config.render_last) {
-            ClientRender.render(poseStack);
+            ClientRender.render(poseStack,renderBuffers.bufferSource());
         }
     }
-#endif
 
 }

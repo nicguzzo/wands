@@ -7,7 +7,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class PasteMode implements WandMode {
+public class PasteMode extends WandMode {
 
     public void place_in_buffer(Wand wand) {
         if(wand.copy_paste_buffer==null || wand.copy_paste_buffer.size()==0)

@@ -10,14 +10,14 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class RowColMode implements WandMode {
+public class RowColMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         WandProps.Orientation orientation = WandProps.getOrientation(wand.wand_stack);
         Level level= Compat.player_level(wand.player);
         boolean preview = level.isClientSide();
         Direction dir = Direction.EAST;
         BlockPos pos_m= wand.pos.relative(wand.side, 1);;
-        WandItem wand_item = (WandItem) wand.wand_stack.getItem();
+        //WandItem wand_item = (WandItem) wand.wand_stack.getItem();
         BlockState state = level.getBlockState(pos_m);
 
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);

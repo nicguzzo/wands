@@ -6,7 +6,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class TunnelMode implements WandMode {
+public class TunnelMode extends WandMode {
     BlockPos.MutableBlockPos tp1=new BlockPos.MutableBlockPos(0,0,0);
     BlockPos.MutableBlockPos tp2=new BlockPos.MutableBlockPos(0,0,0);
     public void place_in_buffer(Wand wand) {

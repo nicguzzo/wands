@@ -3,10 +3,6 @@ package net.nicguzzo.wands.items;
 import java.util.List;
 import java.util.Optional;
 
-#if MC>="1205"
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.CustomData;
-#endif
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.SimpleContainer;
@@ -21,11 +17,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-#if MC>="1212"
-import net.minecraft.world.InteractionResult;
-#else
 import net.minecraft.world.InteractionResultHolder;
-#endif
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -34,53 +26,44 @@ import net.minecraft.world.level.Level;
 
 public class PaletteItem extends Item{
     public enum PaletteMode {
-        RANDOM, ROUND_ROBIN
+        RANDOM, ROUND_ROBIN, GRADIENT
     }
     static public Component mode_val_random=Compat.translatable("item.wands.random");
+    static public Component mode_val_gradient = Compat.translatable("item.wands.gradient");
     static public Component mode_val_rr=Compat.translatable("item.wands.round_robin");
     public PaletteItem(Properties properties) {
         super(properties);        
     }
     @Environment(EnvType.CLIENT)
     @Override    
-    #if MC>="1205"
-    public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag)
-    #else
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, @NotNull TooltipFlag tooltipFlag)
-    #endif
     {
         CompoundTag tag= Compat.getTags(stack);
         ListTag inventory = tag.getList("Palette", Compat.NbtType.COMPOUND);//10 COMPOUND
         int s =inventory.size();
         for(int i=0;i<s;i++){
             CompoundTag stackTag = (CompoundTag) inventory.get(i);
-
-            #if MC>="1205"
-                ItemStack stack2 = ItemStack.EMPTY;
-                Level level= Minecraft.getInstance().level;
-                if(level !=null && tag.contains("Block")) {
-                    Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), tag.getCompound("Block"));
-                    if(is2.isPresent()){
-                        stack2= is2.get();
-                    }
-                }
-            #else
-
             ItemStack stack2 = ItemStack.of(stackTag.getCompound("Block"));
-            #endif
             if(!stack2.isEmpty()){
                 list.add( Compat.translatable_item_name(stack2).withStyle(ChatFormatting.GREEN));
             }
         }
-        PaletteMode mode=PaletteItem.getMode(stack);            
-        Component mode_val;
-        if(mode==PaletteMode.ROUND_ROBIN){
-                mode_val=Compat.literal("mode: "+PaletteItem.mode_val_rr.getString());
-        }else{
-            mode_val=Compat.literal("mode: "+PaletteItem.mode_val_random.getString());
+        PaletteMode mode = PaletteItem.getMode(stack);
+        Component mode_val = null;
+        switch (mode ) {
+            case RANDOM:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_random.getString());
+            break;
+            case ROUND_ROBIN:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_rr.getString());
+            break;
+            case GRADIENT:
+                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_gradient.getString());
+            break;
         }
-        list.add( mode_val);
-        list.add(Compat.literal("rotate: "+(tag.getBoolean("rotate")? "on": "off") ));
+        if(mode_val!=null)
+            list.add(mode_val);
+        list.add(Compat.literal("rotate: " + (tag.getBoolean("rotate") ? "on" : "off")));
     }
     static public PaletteMode getMode(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
@@ -98,6 +81,29 @@ public class PaletteItem extends Item{
         }
         return false;
     }
+    static public int getGradientHeight(ItemStack stack) {
+        int v=0;
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            v=tag.getInt("gradient_height");
+        }
+        if(v==0) {
+            return 6;
+        }else{
+            return v;
+        }
+    }
+    static public void setGradientHeight(ItemStack stack,int height) {
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            if(height>0) {
+                tag.putInt("gradient_height", height);
+            }else{
+                tag.putInt("gradient_height", 1);
+            }
+        }
+    }
+
     static public void toggleRotate(ItemStack stack) {
         if(stack!=null && !stack.isEmpty()){
             CompoundTag tag= Compat.getTags(stack);
@@ -106,9 +112,9 @@ public class PaletteItem extends Item{
         }
     }
     static public void nextMode(ItemStack stack) {
-        if(stack!=null && !stack.isEmpty()){
-            CompoundTag tag= Compat.getTags(stack);
-            int mode=(tag.getInt("mode")+1) % (2);
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            int mode = (tag.getInt("mode") + 1) % (PaletteMode.values().length);
             tag.putInt("mode", mode);
         }
     }

@@ -1,6 +1,7 @@
 package net.nicguzzo.wands.fabric;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.nicguzzo.wands.WandsExpectPlatform;
 import net.fabricmc.loader.api.FabricLoader;
@@ -12,6 +13,7 @@ import net.nicguzzo.wands.fabric.claims.FTBChunks;
 import net.nicguzzo.wands.fabric.claims.Flan;
 import net.nicguzzo.wands.fabric.claims.Goml;
 import net.nicguzzo.wands.fabric.claims.Opac;
+import net.nicguzzo.wands.utils.IEntityDataSaver;
 
 public class WandsExpectPlatformImpl {
     /**
@@ -35,5 +37,8 @@ public class WandsExpectPlatformImpl {
             return Goml.canInteract(level,player,pos);
         }
         return true;
+    }
+    public static CompoundTag getPlayerData(Player player){
+        return ((IEntityDataSaver) player).getPersistentData();
     }
 }

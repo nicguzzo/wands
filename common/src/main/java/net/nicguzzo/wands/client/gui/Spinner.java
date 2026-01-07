@@ -1,14 +1,13 @@
 package net.nicguzzo.wands.client.gui;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
-#if MC >= "1200"
 import net.minecraft.client.gui.GuiGraphics;
-#endif
+
 public class Spinner  extends Wdgt{
     int value;
     public int inc_val=1;
@@ -19,6 +18,9 @@ public class Spinner  extends Wdgt{
     public boolean label_side=false;
     public int shift_inc_val=10;
     Component label=null;
+    int col=  new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
+    public int label_col=  new Colorf(0.0f, 0.0f, 0.0f, 1.0f).toInt();
+    public int label_bg =  new Colorf(0.5f, 0.5f, 0.50f, 0.1f).toInt();
     public Spinner(int _value,int min,int max,int x,int y,int w,int h,Component label){
         this.value=_value;
         this.min=min;
@@ -75,41 +77,26 @@ public class Spinner  extends Wdgt{
     }
     public void onDec(int mx,int my,int v){
     }
-    #if MC < "1200"
-        public void render(PoseStack poseStack, Font font, int mx, int my){
-    #else
         public void render(GuiGraphics gui, Font font, int mx, int my){
-    #endif
         int fh=0;
         if(label!=null) {
             int lw=font.width(label);
-
-            #if MC < "1200"
-                font.draw(poseStack, label, x-lw-1, y+3, 0xff000000);
-            #else
-                gui.drawString(font, label, x-lw-1, y+3, 0xff000000,false);
-            #endif
+            gui.drawString(font, label, x-lw-1, y+3, 0xff000000,false);
             if(!label_side) {
                 fh = font.lineHeight;
             }
+            gui.fill(x-lw-2,y+ fh,x-2,y+ fh +h,label_bg);
+            gui.drawString(font, label, x - lw - 1, y + 3, label_col, false);
         }
         int sw=font.width(String.valueOf(value));
 
-        BufferBuilder bufferBuilder=init_quads();
-        quad(bufferBuilder,x,y+fh,w,h,0.4f,0.4f,0.40f,0.9f);
-        end_quads(bufferBuilder);
-        inc.y=y+fh;
+        gui.fill(x,y+ fh,x+w,y+ fh +h,col);
+        inc.y = y + fh;
 
         dec.y=y+h/2+fh;
-        #if MC < "1200"
-            inc.render(poseStack,font,mx,my);
-            font.draw(poseStack, String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000);
-            dec.render(poseStack,font,mx,my);
-        #else
-            inc.render(gui,font,mx,my);
-            gui.drawString(font,String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000,false);
-            dec.render(gui,font,mx,my);
-        #endif
+        inc.render(gui,font,mx,my);
+        gui.drawString(font,String.valueOf(value), x+ w - 12 - sw, y + fh + 3, 0xff000000,false);
+        dec.render(gui,font,mx,my);
     }
     public void click(int mx,int my){
         dec.click(mx,my);

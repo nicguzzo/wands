@@ -1,6 +1,7 @@
 package net.nicguzzo.wands.forge;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.nicguzzo.wands.WandsExpectPlatform;
@@ -32,5 +33,9 @@ public class WandsExpectPlatformImpl {
             return Flan.canInteract(level,player,pos);
         }
         return true;
+    }
+    public static CompoundTag getPlayerData(Player player){
+        //return player.getData(WandsModForge.PLAYER_DATA);
+        throw new AssertionError();
     }
 }

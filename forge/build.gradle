@@ -49,7 +49,7 @@ dependencies {
     modApi "me.shedaniel.cloth:cloth-config-forge:${rootProject.cloth_config_version}"
     
     if(rootProject.opac_forge!=""){
-        modCompileOnly "${rootProject.opac_forge}"
+        modCompileOnly("${rootProject.opac_forge}")  { transitive = false }
     }
     if(rootProject.ftb_chunks_forge!=""){
         modCompileOnly("${rootProject.ftb_chunks_forge}") { transitive = false }
@@ -109,10 +109,10 @@ remapJar {
     input.set shadowJar.archiveFile
 }
 
-
+def supportedMinecraftVersions = project.findProperty('minecraft_versions')?.split(',')*.trim() ?: []
 unifiedPublishing {
     project {
-        gameVersions = ["${rootProject.minecraft_version}"]
+        gameVersions = supportedMinecraftVersions
         gameLoaders = ["forge"]
         displayName= "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - forge - ${rootProject.minecraft_version}"
         version = "${rootProject.mod_version}_${rootProject.release_type}_forge_${rootProject.minecraft_version}"

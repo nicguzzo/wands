@@ -11,6 +11,7 @@ import dev.architectury.utils.EnvExecutor;
 #endif
 
 //import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
@@ -19,6 +20,7 @@ import net.minecraftforge.fml.ModList;
 @Mod(WandsMod.MOD_ID)
 
 public class WandsModForge {
+
 
     public WandsModForge() {
         WandsMod.is_forge=true;
@@ -33,7 +35,6 @@ public class WandsModForge {
 
         WandsMod.has_flan=ModList.get().isLoaded("flan");
         WandsMod.log("Has flan!! "+WandsMod.has_goml,true);
-
 
         WandsMod.init();
         EnvExecutor.runInEnv(Env.CLIENT, () -> 

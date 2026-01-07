@@ -1,50 +1,26 @@
 package net.nicguzzo.wands.client;
 
-#if MC=="1165"
-import me.shedaniel.architectury.event.events.GuiEvent;
-import me.shedaniel.architectury.event.events.client.ClientLifecycleEvent;
-import me.shedaniel.architectury.event.events.client.ClientTickEvent;
-import me.shedaniel.architectury.networking.NetworkManager;
-import me.shedaniel.architectury.networking.NetworkManager.Side;
-import me.shedaniel.architectury.registry.KeyBindings;
-import me.shedaniel.architectury.registry.MenuRegistry;
-#else
-import com.mojang.blaze3d.platform.InputConstants;
 import dev.architectury.event.events.client.ClientTickEvent;
-import dev.architectury.event.events.client.ClientLifecycleEvent;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.networking.NetworkManager.Side;
-import dev.architectury.registry.menu.MenuRegistry;
-#endif
 import io.netty.buffer.Unpooled;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
-import net.nicguzzo.wands.client.screens.MagicBagScreen;
-import net.nicguzzo.wands.client.screens.PaletteScreen;
-import net.nicguzzo.wands.client.screens.WandScreen;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.networking.Networking;
@@ -56,13 +32,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-#if MC >= "1200"
 import net.minecraft.client.gui.GuiGraphics;
-#endif
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 
 public class WandsModClient {
     static boolean shift =false;
@@ -70,7 +43,7 @@ public class WandsModClient {
     public static boolean has_optifine=false;
     public static boolean has_opac=false;
     public static KeyMapping wand_menu_km;
-    //public static KeyMapping palette_menu_km;
+
     public static final Logger LOGGER = LogManager.getLogger();
     static final public Map keys=new HashMap<KeyMapping, WandsMod.WandKeys>();
     static final public int wand_menu_key        = GLFW.GLFW_KEY_Y;// InputConstants.KEY_Y;
@@ -115,10 +88,6 @@ public class WandsModClient {
         keys.put(new KeyMapping(k+"area_diagonal_spread",area_diagonal_spread,tab),WandsMod.WandKeys.DIAGONAL_SPREAD);
         keys.put(new KeyMapping(k+"inc_sel_block",inc_sel_block,tab),WandsMod.WandKeys.INC_SEL_BLK);
         keys.put(new KeyMapping(k+"clear_wand",GLFW.GLFW_KEY_C,tab),WandsMod.WandKeys.CLEAR);
-        /*keys.put(new KeyMapping(k+"clear_wand",
-            InputConstants.Type.MOUSE,
-            InputConstants.MOUSE_BUTTON_LEFT,
-            tab),WandsMod.WandKeys.CLEAR);*/
 
         keys.forEach((km,v) -> Compat.register_key((KeyMapping)km));
 
@@ -153,27 +122,6 @@ public class WandsModClient {
 
         Compat.render_info();
 
-        if(WandsMod.is_forge) {
-            ClientLifecycleEvent.CLIENT_SETUP.register(e -> {
-                WandsMod.LOGGER.info("registering menues...");
-                try {
-                    MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-                    MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
-                    MenuRegistry.registerScreenFactory(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
-                } catch (Exception ex) {
-                    WandsMod.LOGGER.error(ex.getMessage());
-                }
-                WandsMod.LOGGER.info("registering menues.");
-            });
-        }else {
-
-            if(!WandsMod.is_neoforge){
-                MenuRegistry.registerScreenFactory(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-                MenuRegistry.registerScreenFactory(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
-                MenuRegistry.registerScreenFactory(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
-            }
-        }
-        #if MC<"1205"
         NetworkManager.registerReceiver(Side.S2C, Networking.SND_PACKET, (packet, context)->{
             BlockPos pos=packet.readBlockPos();
             boolean destroy=packet.readBoolean();
@@ -190,7 +138,8 @@ public class WandsModClient {
                 }else {
                     if (!item_stack.isEmpty()) {
                         Block block = Block.byItem(item_stack.getItem());
-                        SoundType sound_type = ((BlockBehaviourInvoker)block).invokeGetSoundType(block.defaultBlockState());
+                        BlockState bs=block.defaultBlockState();
+                        SoundType sound_type = bs.getSoundType();
                         SoundEvent sound = (destroy ? sound_type.getBreakSound() : sound_type.getPlaceSound());
                         Compat.player_level(context.getPlayer()).playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
                     }
@@ -233,121 +182,36 @@ public class WandsModClient {
                 WandsMod.config.allow_wand_to_break=packet.readBoolean();
                 WandsMod.config.allow_offhand_to_break=packet.readBoolean();
                 WandsMod.config.mend_tools=packet.readBoolean();
+                ClientRender.wand.player_data=packet.readNbt();
                 LOGGER.info("got config");
             }
         });
-        #else
-            NetworkManager.registerReceiver(Side.S2C, Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC, (data, context) -> {
-                LOGGER.info("got ConfPacket");
-                ServerData srv = Minecraft.getInstance().getCurrentServer();
-                if(srv!=null && WandsMod.config!=null){
-                    WandsMod.config.blocks_per_xp=data.blocks_per_xp();
-                    WandsMod.config.destroy_in_survival_drop=data.destroy_in_survival_drop();
-                    WandsMod.config.survival_unenchanted_drops=data.survival_unenchanted_drops();
-                    WandsMod.config.allow_wand_to_break=data.allow_wand_to_break();
-                    WandsMod.config.allow_offhand_to_break=data.allow_offhand_to_break();
-                    WandsMod.config.mend_tools= data.mend_tools();
-                    LOGGER.info("got config");
-                    //context.queue(()->{
-                    //});
-                }
-            });
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got SndPacket");
-            BlockPos pos = data.pos();
-            boolean destroy = data.destroy();
-            ItemStack item_stack = data.item_stack();
-            int i_sound = data.i_sound();
-
-            if (i_sound > -1 && i_sound < Wand.Sounds.values().length) {
-                Wand.Sounds snd = Wand.Sounds.values()[i_sound];
-                SoundEvent sound = snd.get_sound();
-                Compat.player_level(context.getPlayer()).playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
-            } else {
-                if (!item_stack.isEmpty()) {
-                    Block block = Block.byItem(item_stack.getItem());
-                    BlockState bs=block.defaultBlockState();
-                    SoundType sound_type = bs.getSoundType();
-                    //SoundType sound_type = ((BlockBehaviourInvoker)block).invokeGetSoundType(block.defaultBlockState());
-                    SoundEvent sound = (destroy ? sound_type.getBreakSound() : sound_type.getPlaceSound());
-                    Compat.player_level(context.getPlayer()).playSound(context.getPlayer(), pos, sound, SoundSource.BLOCKS, 1.0f, 1.0f);
-                }
-            }
-
-        });
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got ToastPacket");
-            boolean no_tool=data.no_tool();
-            boolean damaged_tool=data.damaged_tool();
-            if (no_tool) {
-                Compat.toast(new WandToast("no tool"));
-            }
-            if (damaged_tool) {
-                Compat.toast(new WandToast("invalid or damaged"));
-            }
-        });
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC, (data, context) -> {
-            LOGGER.info("got StatePacket");
-             ///long seed=data.seed();
-            int  mode=data.mode();
-            int  slot=data.slot();
-            boolean  xp= data.xp();
-            int  levels= data.levels();
-            float prog= data.prog();
-
-            if(ClientRender.wand!=null) {
-               ClientRender.wand.mode= WandProps.Mode.values()[mode];
-              if(ClientRender.wand.mode== WandProps.Mode.DIRECTION)
-                  ClientRender.wand.palette.slot = slot;
-              if(xp){
-                context.getPlayer().experienceLevel=levels;
-                context.getPlayer().experienceProgress=prog;
-             }
-            }
-        });
-        #endif
         
     }
     public static void send_key(int key,boolean shift, boolean alt){
         Minecraft client=Minecraft.getInstance();
         if(client.getConnection() != null) {
-            #if MC<"1205"
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeInt(key);
             packet.writeBoolean(shift);
             packet.writeBoolean(alt);
             NetworkManager.sendToServer(Networking.KB_PACKET, packet);
-            #else
-                NetworkManager.sendToServer(new Networking.KbPacket(key,shift,alt));
-            #endif
         }
     }
     public static void send_palette(boolean next_mode,boolean toggle_rotate){
-        #if MC<"1205"
             FriendlyByteBuf packet=new FriendlyByteBuf(Unpooled.buffer());
             packet.writeBoolean(next_mode);
             packet.writeBoolean(toggle_rotate);
             NetworkManager.sendToServer(Networking.PALETTE_PACKET, packet);
-        #else
-            NetworkManager.sendToServer(new Networking.PalettePacket(next_mode,toggle_rotate));
-        #endif
     }
 
     public static void send_wand(ItemStack item) {
-        #if MC<"1205"
             FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
             packet.writeItem(item);
             NetworkManager.sendToServer(Networking.WAND_PACKET, packet);
-        #else
-            NetworkManager.sendToServer(new Networking.WandPacket(item));
-        #endif
     }
 
-#if MC < "1200"
-    public static void render_wand_info(PoseStack poseStack){
-#else
     public static void render_wand_info(GuiGraphics gui) {
-#endif
         Minecraft client = Minecraft.getInstance();
         if(client!=null && client.player!=null){
             ItemStack stack=client.player.getMainHandItem();
@@ -470,81 +334,13 @@ public class WandsModClient {
                     int h = 3 * font.lineHeight;
                     float x = (int) (screenWidth * (((float) WandsMod.config.wand_mode_display_x_pos) / 100.0f));
                     float y = (int) ((screenHeight - h) * (((float) WandsMod.config.wand_mode_display_y_pos) / 100.0f));
-                    #if MC < "1200"
-                        font.draw(poseStack,ln1,x,y,0xffffff);
-                        font.draw(poseStack,ln2,x,y+font.lineHeight,0xffffff);
-                        font.draw(poseStack,ln3,x,y+font.lineHeight*2,0xffffff);
-                        font.draw(poseStack,p1,x,y-font.lineHeight*2,0xffffff);
-                        font.draw(poseStack,p2,x,y-font.lineHeight,0xffffff);
-                    #else
                         gui.drawString(font, ln1, (int) x, (int) y, 0xffffff);
                         gui.drawString(font, ln2, (int) x, (int) y + font.lineHeight, 0xffffff);
                         gui.drawString(font, ln3, (int) x, (int) y + font.lineHeight * 2, 0xffffff);
                         gui.drawString(font, p1, (int) x, (int) y - font.lineHeight * 2, 0xffffff);
                         gui.drawString(font, p2, (int) x, (int) y - font.lineHeight, 0xffffff);
-                    #endif
                 }
-#if false
-                if(WandsMod.config.show_tools_info) {
-                    Font font = client.font;
-                    ItemRenderer itemRenderer = client.getItemRenderer();
-                    if(!main){
-                        stack=offhand_stack;
-                    }
-                    CompoundTag ctag= Compat.getTags(stack);
 
-                    ListTag tag = ctag.getList("Tools", Compat.NbtType.COMPOUND);
-                    //int ix = 4;
-                    //int iy = screenHeight-20;
-                    int ix=(int)(screenWidth* (((float)WandsMod.config.wand_tools_display_x_pos)/100.0f));
-                    int iy=(int)((screenHeight-20)* (((float)WandsMod.config.wand_tools_display_y_pos)/100.0f));
-
-                    Level level=Minecraft.getInstance().level;
-                    if(level ==null) return;
-
-                    tag.forEach(element -> {
-                        CompoundTag stackTag = (CompoundTag) element;
-                        int slot = stackTag.getInt("Slot");
-                        #if MC>="1205"
-                        ItemStack item = ItemStack.parse(level.registryAccess(), stackTag.getCompound("Tool")).orElse(ItemStack.EMPTY);
-                        #else
-                        ItemStack item = ItemStack.of(stackTag.getCompound("Tool"));
-                        #endif
-                        int yoff=0;
-                        if(ClientRender.has_target && slot==ClientRender.wand.digger_item_slot){
-                            yoff=-5;
-                        }
-                        #if MC < "1200"
-                            #if MC <= "1193"
-                            itemRenderer.renderAndDecorateItem(item, ix + slot * 16, iy+yoff);
-                            itemRenderer.renderGuiItemDecorations(font, item, ix + slot * 16, iy, null);
-                            #else
-                            itemRenderer.renderAndDecorateItem(poseStack,item, ix + slot * 16, iy+yoff);
-                            itemRenderer.renderGuiItemDecorations(poseStack,font, item, ix + slot * 16, iy, null);
-                            #endif
-                        #else
-                            gui.renderFakeItem(item, ix + slot * 16, iy+yoff);
-                            gui.renderItemDecorations(font, item, ix + slot * 16, iy);
-                        #endif
-                        int fortune=Compat.get_fortune_level(item,level);
-                        boolean silk=Compat.has_silktouch(item,level);
-                        //int silk= EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item);
-                        if(fortune!=0) {
-                            #if MC < "1200"
-                                font.draw(poseStack, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
-                            #else
-                                gui.drawString(font, Compat.literal("F" + fortune), ix + slot * 16, iy + yoff - 5, 0xffffff);
-                            #endif
-                        } else if (silk) {
-                            #if MC < "1200"
-                                font.draw(poseStack, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
-                            #else
-                                gui.drawString(font, Compat.literal("S"), ix + slot * 16, iy + yoff - 5, 0xffffff);
-                            #endif
-                        }
-                    });
-                }
-#endif
             }
         }
     }
