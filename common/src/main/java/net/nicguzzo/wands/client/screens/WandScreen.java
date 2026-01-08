@@ -570,10 +570,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     for (int tool : ClientRender.wand.player_data.getIntArray("Tools").get()) {
                         Slot slot = (Slot)this.menu.slots.get(tool);
                         //renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
-                        gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
+                        int i=slot.x+this.leftPos;
+                        int j=slot.y+this.topPos;
+                        gui.fillGradient(i, j, i + 16, j + 16,0x8800AA00,0x1000AA00);
+                        //gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
                     }
                 }
-                gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
+                //gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
 
                 gui.drawString(font,"click on a player inventory slot",leftPos+3,topPos+50,0xffffffff);
                 gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);
