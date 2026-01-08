@@ -123,8 +123,20 @@ public class Wand {
     public Vec3 hit;
     public ItemStack wand_stack;
 
-    //ItemStack[] tools=new ItemStack[9];
-    ItemStack[] tools = new ItemStack[9 + 27];
+    enum ToolType{
+        PICKAXE,
+        AXE,
+        SHOVEL,
+        HOE,
+        SHEAR
+    }
+    static class WandTool{
+        boolean empty=true;
+        ItemStack tool=null;
+        ToolType tooltype=null;
+    }
+    //ItemStack[] tools = new ItemStack[9 + 27];
+    WandTool[] tools = new WandTool[9 + 27];
     int n_tools = 0;
 
     ItemStack offhand;
@@ -156,6 +168,7 @@ public class Wand {
     #endif
     int send_sound = -1;
     boolean has_offhand = false;
+    public boolean has_pickaxe = false;
     public boolean has_hoe = false;
     public boolean has_shovel = false;
     public boolean has_axe = false;
@@ -242,6 +255,9 @@ public class Wand {
         modes = new WandMode[WandProps.modes.length];
         for (int i = 0; i < modes.length; i++) {
             modes[i] = WandProps.modes[i].get_mode();
+        }
+        for (int i = 0; i < tools.length; i++) {
+            tools[i]= new WandTool();
         }
     }
     public WandMode get_mode(){
@@ -1006,9 +1022,9 @@ public class Wand {
     }
 
     void hurt_tool(ItemStack stack, int tool_slot) {
-        if (!this.unbreakable) {
+        //if (!this.unbreakable) {
             stack.hurtAndBreak(1, player, EquipmentSlot.OFFHAND);
-        }
+        //}
     }
 
     boolean place_block(BlockPos block_pos, BlockState state) {
@@ -1052,19 +1068,19 @@ public class Wand {
         boolean _tool_would_break=false;
         boolean _wand_would_break=wand_would_break();
         if (!creative) {
-            if (!_wand_would_break) {
+            if (_wand_would_break) {
                 damaged_tool = true;
                 return false;
             }
             if (destroy || replace || (use && !has_water_potion)) {
                 _can_destroy = can_destroy(st, true);
                 if (digger_item != null) {
-                    _tool_would_break = tool_would_break((WandItem)wand_stack.getItem(),digger_item);
+                    _tool_would_break = tool_would_break(digger_item);
                 } else {
                     no_tool = true;
                     return false;
                 }
-                if (!_tool_would_break) {
+                if (_tool_would_break) {
                     damaged_tool = true;
                     return false;
                 }
@@ -1223,10 +1239,10 @@ public class Wand {
                 }
 
                 if (placed) {
-                    if ((destroy || replace) && digger_item != null && _tool_would_break) {
+                    if ((destroy || replace) && digger_item != null && !_tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
-                    if (!this.unbreakable && _wand_would_break) {
+                    if (!this.unbreakable && !_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
                     consume_xp();
@@ -1492,35 +1508,63 @@ public class Wand {
         Optional<int[]> a =this.player_data.getIntArray("Tools");
         if(a.isEmpty()) return;
         int[] tools_slots = a.get();
+        has_pickaxe = false;
+        has_hoe = false;
+        has_shovel = false;
+        has_axe = false;
+        has_shear = false;
+        for (int t = 0; t < tools.length; t++) {
+             tools[t].empty=true;
+             tools[t].tool=null;
+        }
         for (int t = 0; t < tools_slots.length; t++) {
-            ItemStack tool_item = player.getInventory().getItem(tools_slots[t]);
+            int slot=tools_slots[t];
+            tools[slot].empty=true;
+            ItemStack tool_item = player.getInventory().getItem(slot);
+            tools[slot].tool = tool_item;
             if (tool_item.isEmpty()) continue;
-            tools[n_tools] = tool_item;
-            n_tools++;
+            tools[slot].empty=false;
             Item item = tool_item.getItem();
-            has_hoe = (has_hoe || item instanceof HoeItem);
-            has_shovel = has_shovel || item instanceof ShovelItem;
-            has_axe = has_axe || item instanceof AxeItem;
-            has_shear = has_shear || item instanceof ShearsItem;
+            if (tool_item.is(ItemTags.PICKAXES) || WandsConfig.extra_pickaxes_list.contains(item)) {
+                has_pickaxe =  true;
+                tools[slot].tooltype=ToolType.PICKAXE;
+            }
+            if(tool_item.is(ItemTags.HOES)  || WandsConfig.extra_hoes_list.contains(item)){
+                has_hoe = true;
+                tools[slot].tooltype=ToolType.HOE;
+            }
+            if (tool_item.is(ItemTags.SHOVELS)|| WandsConfig.extra_shovels_list.contains(item)) {
+                has_shovel = true;
+                tools[slot].tooltype=ToolType.SHOVEL;
+            }
+            if (tool_item.is(ItemTags.AXES) || WandsConfig.extra_axes_list.contains(item)) {
+                has_axe    = true;
+                tools[slot].tooltype=ToolType.AXE;
+            }
+            if (item instanceof ShearsItem || WandsConfig.extra_shears_list.contains(item)) {
+                has_shear = true;
+                tools[slot].tooltype=ToolType.SHEAR;
+            }
+            n_tools++;
         }
     }
 
     public boolean can_destroy(BlockState state, boolean check_speed) {
         digger_item = null;
         WandItem wand_item=(WandItem)this.wand_stack.getItem();
-        for (int i = 0; i < n_tools; i++) {
-            if (tools[i] != null) {
-                if (!tools[i].isEmpty() && tool_would_break(wand_item,tools[i])) {
-                    if (((destroy || replace) && can_dig(state, check_speed, tools[i])) ||
+        for (int i = 0; i < tools.length; i++) {
+            if (!tools[i].empty && tools[i] != null) {
+                if (!tool_would_break(tools[i].tool)) {
+                    if (((destroy || replace) && can_dig(state, check_speed, tools[i].tool)) ||
                             ((use) && (
-                                    (tools[i].getItem() instanceof HoeItem && WandUtils.is_tillable(state)) ||
-                                    (tools[i].getItem() instanceof AxeItem && WandUtils.is_strippable(state)) ||
-                                    (tools[i].getItem() instanceof ShovelItem && WandUtils.is_flattenable(state)) ||
-                                    (tools[i].getItem() instanceof ShearsItem && can_shear(state))
+                                    (tools[i].tooltype == ToolType.HOE    && WandUtils.is_tillable(state)) ||
+                                    (tools[i].tooltype == ToolType.AXE    && WandUtils.is_strippable(state)) ||
+                                    (tools[i].tooltype == ToolType.SHOVEL && WandUtils.is_flattenable(state)) ||
+                                    (tools[i].tooltype == ToolType.SHEAR  && can_shear(state))
                             ))
                     ) {
                         if (digger_item == null) {
-                            digger_item = tools[i];
+                            digger_item = tools[i].tool;
                             digger_item_slot = i;
                         }
                         return true;
@@ -1532,6 +1576,9 @@ public class Wand {
     }
 
     boolean can_dig(BlockState state, boolean check_speed, ItemStack digger) {
+        if(digger==null){
+            return false;
+        }
         boolean is_glass = state.getBlock() instanceof TransparentBlock;
         boolean is_snow_layer = false;
         boolean can_shear = false;
@@ -1546,19 +1593,19 @@ public class Wand {
             boolean minable = false;
             if (item_digger instanceof ShearsItem) {
                 can_shear = can_shear(state);
-                is_allowed = is_allowed || WandsConfig.shears_allowed.contains(blk);
+                is_allowed =  WandsConfig.shears_allowed.contains(blk);
             } else {
                 if (item_digger instanceof AxeItem) {
-                    is_allowed = is_allowed || WandsConfig.axe_allowed.contains(blk);
+                    is_allowed = WandsConfig.axe_allowed.contains(blk);
                 } else {
                     if (item_digger instanceof ShovelItem) {
-                        is_allowed = is_allowed || WandsConfig.shovel_allowed.contains(blk);
+                        is_allowed = WandsConfig.shovel_allowed.contains(blk);
                     } else {
                         if (item_digger instanceof HoeItem) {
-                            is_allowed = is_allowed || WandsConfig.hoe_allowed.contains(blk);
+                            is_allowed = WandsConfig.hoe_allowed.contains(blk);
                         }else{
                             //TODO: find a new way to check if it's a pickaxe
-                            is_allowed = is_allowed || WandsConfig.pickaxe_allowed.contains(blk);
+                            is_allowed = WandsConfig.pickaxe_allowed.contains(blk);
                         }
                     }
                 }
@@ -1843,44 +1890,63 @@ public class Wand {
         }
     }
 
-    private boolean tool_would_break(WandItem wand_item,ItemStack tool){
-
+    private boolean tool_would_break(ItemStack tool){
+        if(tool==null){
+            return true;
+        }
         int dmg = tool.getMaxDamage() - tool.getDamageValue();
+        boolean would_break = dmg <= TOOL_DAMAGE_STOP;
         Item tool_item=tool.getItem();
-        if(WandsMod.config.allow_stone_tools_to_break) {
+        if(WandsMod.config.allow_wooden_tools_to_break) {
+            if(Items.WOODEN_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.WOODEN_AXE.getDefaultInstance().is(tool_item) ||
+               Items.WOODEN_SHOVEL.getDefaultInstance().is(tool_item) ||
+               Items.WOODEN_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return false;
+            }
+        }else if(WandsMod.config.allow_stone_tools_to_break) {
             if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.STONE_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
                Items.STONE_HOE.getDefaultInstance().is(tool_item)
             ) {
-                return true;
+                return false;
+            }
+        }else if(WandsMod.config.allow_copper_tools_to_break) {
+            if(Items.COPPER_PICKAXE.getDefaultInstance().is(tool_item) ||
+               Items.COPPER_AXE.getDefaultInstance().is(tool_item) ||
+               Items.COPPER_SHOVEL.getDefaultInstance().is(tool_item) ||
+               Items.COPPER_HOE.getDefaultInstance().is(tool_item)
+            ) {
+                return false;
             }
         }else if(WandsMod.config.allow_iron_tools_to_break) {
             if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
-               Items.IRON_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
                Items.IRON_HOE.getDefaultInstance().is(tool_item)
             ) {
-                return true;
+                return false;
             }
         }else if(WandsMod.config.allow_diamond_tools_to_break) {
             if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
             ) {
-                return true;
+                return false;
             }
         } else if(WandsMod.config.allow_netherite_tools_to_break) {
             if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item)||
+               Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
             ) {
-                return true;
+                return false;
             }
         }
-        return dmg>= TOOL_DAMAGE_STOP;
+        return would_break;
     }
     private boolean wand_would_break(){
         if(this.wand_stack==null){
@@ -1892,14 +1958,18 @@ public class Wand {
             switch (wand_item.tier) {
                 case STONE_WAND:
                     return WandsMod.config.allow_stone_wand_to_break;
+                case COPPER_WAND:
+                    return WandsMod.config.allow_copper_wand_to_break;
                 case IRON_WAND:
                     return WandsMod.config.allow_iron_wand_to_break;
                 case DIAMOND_WAND:
                     return WandsMod.config.allow_diamond_wand_to_break;
                 case NETHERITE_WAND:
                     return WandsMod.config.allow_netherite_wand_to_break;
+                case CREATIVE_WAND:
+                    return false;
             }
         }
-        return dmg>=1;
+        return dmg<=1;
     }
 }

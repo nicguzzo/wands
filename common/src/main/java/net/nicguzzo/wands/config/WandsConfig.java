@@ -6,6 +6,7 @@ import com.google.gson.JsonSyntaxException;
 import me.shedaniel.math.Color;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.nicguzzo.wands.WandsExpectPlatform;
 
@@ -18,21 +19,23 @@ import java.util.List;
 
 public class WandsConfig {
 
+    public static class ExtraTool_def{
+        String item;
+        boolean can_break;
+    }
+    public static class ExtraTool{
+        Item item;
+        boolean can_break;
+    }
 
     private static WandsConfig INSTANCE = null;
     //Server options
     final public static String[] default_pickaxe_allowed = {"minecraft:sea_lantern", "minecraft:glowstone"};
     final public static String[] default_axe_allowed = {};
     final public static String[] default_shovel_allowed = {};
-    //final public static String[] default_hoe_allowed={"minecraft:moss_block","minecraft:vine"};
     final public static String[] default_hoe_allowed = {"minecraft:moss_block"};
     final public static String[] default_shears_allowed = {};
     final public static String[] default_denied = {};
-    final public static String[] default_modded_pickaxes = {};
-    final public static String[] default_modded_axes = {};
-    final public static String[] default_modded_shovels = {};
-    final public static String[] default_modded_hoes = {};
-    final public static String[] default_modded_shears = {};
     static public float def_blocks_per_xp = 0.0f;
     static public int def_stone_wand_limit = 16;
     static public int def_copper_wand_limit = 24;
@@ -45,6 +48,18 @@ public class WandsConfig {
     static public int def_iron_wand_durability = 640;
     static public int def_diamond_wand_durability = 2048;
     static public int def_netherite_wand_durability = 4096;
+    public ExtraTool_def[] extra_pickaxes = {};
+    public ExtraTool_def[] extra_axes = {};
+    public ExtraTool_def[] extra_shovels = {};
+    public ExtraTool_def[] extra_hoes = {};
+    public ExtraTool_def[] extra_shears = {};
+    //TODO: change to TAGS for extra tools?
+    //static public TagKey<Item> extra_pickaxes_tag;
+    static public List<ExtraTool> extra_pickaxes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_axes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_shovels_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_hoes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_shears_list = new ArrayList<ExtraTool>();
     static public int max_limit = 8192;
     public int max_limit___increment_this_if_your_machine_can_handle_it = max_limit;
     public float blocks_per_xp = def_blocks_per_xp;
@@ -67,6 +82,7 @@ public class WandsConfig {
     public boolean allow_iron_wand_to_break = false;
     public boolean allow_diamond_wand_to_break = false;
     public boolean allow_netherite_wand_to_break = false;
+    public boolean allow_wooden_tools_to_break = false;
     public boolean allow_stone_tools_to_break = false;
     public boolean allow_iron_tools_to_break = false;
     public boolean allow_copper_tools_to_break = false;
@@ -168,13 +184,26 @@ public class WandsConfig {
         for (String id : str) {
             Identifier res = Identifier.tryParse(id);
             if (res != null) {
-
                 //TODO: check this!!
                 BuiltInRegistries.ITEM.get(res).map(itemReference -> {
                     Block blk = Block.byItem(itemReference.value());
                     if (blk != null) {
                         out.add(blk);
                     }
+                    return null;
+                });
+            }
+        }
+    }
+    public void generate_extra_tool(List<ExtraTool> out, ExtraTool_def[] tools) {
+        for (ExtraTool_def tool : tools) {
+            Identifier res = Identifier.tryParse(tool.item);
+            if (res != null) {
+                BuiltInRegistries.ITEM.get(res).map(itemReference -> {
+                    ExtraTool extra_tool=new ExtraTool();
+                    extra_tool.item=itemReference.value();
+                    extra_tool.can_break=tool.can_break;
+                    out.add(extra_tool);
                     return null;
                 });
             }
@@ -194,6 +223,14 @@ public class WandsConfig {
     }
 
     public void generate_lists() {
+
+        System.out.println("generating Extra tools lists");
+        generate_extra_tool(extra_pickaxes_list,extra_pickaxes);
+        generate_extra_tool(extra_axes_list,extra_axes);
+        generate_extra_tool(extra_shovels_list,extra_shovels);
+        generate_extra_tool(extra_hoes_list,extra_hoes);
+        generate_extra_tool(extra_shears_list,extra_shears);
+
         System.out.println("generating allow/deny lists");
         generate_allow_list(pickaxe_allowed, str_pickaxe_allowed);
         generate_allow_list(axe_allowed, str_axe_allowed);
