@@ -835,85 +835,69 @@ public class Wand {
 
         return st;
     }
-/*
-    public BlockState get_state(int y, BlockState state_behind_block) {
-        BlockState st = block_state;
-        if (palette.has_palette) {
-            int min_y=!level.isOutsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
-            int max_y=!level.isOutsideBuildHeight(block_buffer.max_y)?block_buffer.max_y:0;
 
-            st = palette.get_state(this,min_y,max_y,y);
-        } else {
-            if (offhand_state != null && !offhand_state.isAir()) {
-                st= offhand_state;
-            } else {
-                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode==Mode.SPHERE) {
-                    if (p1_state != null)
-                        st=p1_state;
-                }
-            }
-            st= state_for_placement(st,null);
-        }
-
-        return st;
-    }*/
     public  Item get_item(BlockState state) {
         if (state != null) {
             return state.getBlock().asItem();
         }
         return null;
     }
-    BlockState state_for_placement(BlockState st,BlockPos bp){
+    BlockState state_for_placement(BlockState st, BlockPos bp) {
 
-        if(mode==Mode.PASTE)
+        if (mode == Mode.PASTE)
             return st;
-        Block blk=st.getBlock();
+        Block blk = st.getBlock();
         if (blk instanceof LeavesBlock) {
-           return blk.defaultBlockState().setValue(LeavesBlock.PERSISTENT,true);
+            return blk.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
         }
         if (blk instanceof WallBlock || blk instanceof CrossCollisionBlock) {
-           BlockHitResult hit_res = new BlockHitResult(hit, side, (bp!=null?bp:pos), true);
-           BlockPlaceContext pctx =new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
-           return st.getBlock().getStateForPlacement(pctx);
+            BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
+            BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
+            return st.getBlock().getStateForPlacement(pctx);
         }
-        if(state_mode== WandProps.StateMode.TARGET) {
-           BlockHitResult hit_res = new BlockHitResult(hit, side, (bp!=null?bp:pos), true);
-           BlockPlaceContext pctx =new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
-           return st.getBlock().getStateForPlacement(pctx);
-        }
-        if(state_mode== WandProps.StateMode.APPLY) {
-            if (blk instanceof SlabBlock) {
-                SlabType slab_type;
-                if(slab_stair_bottom) {
-                    slab_type = SlabType.BOTTOM;
-                }else {
-                    slab_type = SlabType.TOP;
-                }
-                return blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
-                
-            } else {
-                if (blk instanceof StairBlock) {
-                    Half h;
+        switch (state_mode){
+            case TARGET: {
+                BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
+                BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
+                return st.getBlock().getStateForPlacement(pctx);
+            }
+            case APPLY:
+                if (blk instanceof SlabBlock) {
+                    SlabType slab_type;
                     if (slab_stair_bottom) {
-                        h = Half.BOTTOM;
-                    }else {
-                        h = Half.TOP;
+                        slab_type = SlabType.BOTTOM;
+                    } else {
+                        slab_type = SlabType.TOP;
                     }
-                    return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
-                     
+                    return blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
+
                 } else {
-                    if (blk instanceof RotatedPillarBlock) {
-                        return blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
-                    }else {
-                        BlockHitResult hit_res = new BlockHitResult(hit, side, (bp!=null?bp:pos), true);
-                        BlockPlaceContext pctx =new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
-                        return st.getBlock().getStateForPlacement(pctx);
+                    if (blk instanceof StairBlock) {
+                        Half h;
+                        if (slab_stair_bottom) {
+                            h = Half.BOTTOM;
+                        } else {
+                            h = Half.TOP;
+                        }
+                        return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+
+                    } else {
+                        if (blk instanceof RotatedPillarBlock) {
+                            return blk.defaultBlockState().setValue(RotatedPillarBlock.AXIS, this.axis);
+                        } else {
+                            BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
+                            BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
+                            return st.getBlock().getStateForPlacement(pctx);
+                        }
                     }
                 }
+            case CLONE:{
+                //return st.getBlock().withPropertiesOf(st);
             }
         }
         return st;
     }
+
     public void undo(int n) {
         if (undo_buffer != null) {
             for (int i = 0; i < n && i < undo_buffer.size(); i++) {
@@ -1055,6 +1039,37 @@ public class Wand {
         int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
         int tool_durability = -1;
 
+        boolean _can_destroy = creative;
+        no_tool = false;
+        boolean _tool_would_break=false;
+        boolean _wand_would_break=wand_would_break();
+        if (!creative) {
+            if (_wand_would_break) {
+                damaged_tool = true;
+                return false;
+            }
+            if (destroy || replace || (use && !has_water_potion)) {
+                _can_destroy = can_destroy(st, true);
+                if (digger_item != null) {
+                    _tool_would_break = tool_would_break(digger_item);
+                } else {
+                    no_tool = true;
+                    return false;
+                }
+                if (_tool_would_break) {
+                    damaged_tool = true;
+                    return false;
+                }
+            }
+        } else {
+            if (creative && use) {
+                can_destroy(st, true);
+                if (digger_item == null && !has_water_potion) {
+                    no_tool = true;
+                    return false;
+                }
+            }
+        }
         if((use)&& has_shear &&  state.is(Blocks.PUMPKIN)){
             BlockState carved_pumpkin=Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING,player.getDirection().getOpposite());
             level.setBlockAndUpdate(block_pos, carved_pumpkin);
@@ -1062,7 +1077,9 @@ public class Wand {
                 ItemStack pumpkin_seeds=Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
                 drop(block_pos,state,null,pumpkin_seeds);
-                hurt_main_hand(wand_stack);
+                if(_wand_would_break) {
+                    hurt_main_hand(wand_stack);
+                }
                 consume_xp();
             }
             return true;
@@ -1072,38 +1089,12 @@ public class Wand {
             level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
             send_sound=Sounds.SPLASH.ordinal();
             if (!creative) {
-                hurt_main_hand(wand_stack);
+                if(_wand_would_break) {
+                    hurt_main_hand(wand_stack);
+                }
                 consume_xp();
             }
             return true;
-        }
-
-        boolean _can_destroy=creative;
-        no_tool = false;
-        if(!creative ){
-            if (destroy||replace ||use) {
-                _can_destroy = can_destroy(st, true);
-                if (digger_item != null) {
-                    tool_durability = digger_item.getMaxDamage() - digger_item.getDamageValue();
-                } else {
-                    no_tool = true;
-                    return false;
-                }
-            }
-            boolean will_break=(wand_durability == 1 ) || (tool_durability == 1 );
-            if(will_break) {
-                damaged_tool=true;
-                return false;
-            }
-        }else{
-            if(creative && use){
-                can_destroy(st, true);
-                if (digger_item == null) {
-                    no_tool = true;
-                    return false;
-
-                }
-            }
         }
 
         p1_state=state;
@@ -1140,8 +1131,12 @@ public class Wand {
             UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
             if( digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative) {
-                    hurt_main_hand(wand_stack);
-                    hurt_tool(digger_item,digger_item_slot);
+                    if(_wand_would_break) {
+                        hurt_main_hand(wand_stack);
+                    }
+                    if(_tool_would_break) {
+                        hurt_tool(digger_item, digger_item_slot);
+                    }
                     consume_xp();
                 }
             }else{
@@ -1218,10 +1213,10 @@ public class Wand {
                     }
                 }
                 if (placed) {
-                    if ((destroy||replace) && digger_item !=null) {
-                        hurt_tool(digger_item,digger_item_slot);
+                    if ((destroy || replace) && digger_item != null && !_tool_would_break) {
+                        hurt_tool(digger_item, digger_item_slot);
                     }
-                    if(!this.unbreakable) {
+                    if (!this.unbreakable && !_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
                     consume_xp();
@@ -1253,7 +1248,6 @@ public class Wand {
                 }else{
                     blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
                 }
-
             }
             player.awardStat(Stats.BLOCK_MINED.get(blockState.getBlock()));
             player.causeFoodExhaustion(0.005F);
@@ -1538,7 +1532,7 @@ public class Wand {
 
     public boolean can_destroy(BlockState state, boolean check_speed) {
         digger_item = null;
-        WandItem wand_item=(WandItem)this.wand_stack.getItem();
+        //WandItem wand_item=(WandItem)this.wand_stack.getItem();
         for (int i = 0; i < tools.length; i++) {
             if (!tools[i].empty && tools[i] != null) {
                 if (!tool_would_break(tools[i].tool)) {
@@ -1887,7 +1881,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_stone_tools_to_break) {
+        }
+        if(WandsMod.config.allow_stone_tools_to_break) {
             if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
                Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1895,7 +1890,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_iron_tools_to_break) {
+        }
+        if(WandsMod.config.allow_iron_tools_to_break) {
             if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
                Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1903,7 +1899,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_diamond_tools_to_break) {
+        }
+        if(WandsMod.config.allow_diamond_tools_to_break) {
             if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1911,7 +1908,8 @@ public class Wand {
             ) {
                 return false;
             }
-        } else if(WandsMod.config.allow_netherite_tools_to_break) {
+        }
+        if(WandsMod.config.allow_netherite_tools_to_break) {
             if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
