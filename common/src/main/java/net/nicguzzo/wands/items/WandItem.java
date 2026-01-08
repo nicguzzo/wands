@@ -10,12 +10,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -27,25 +29,70 @@ import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.level.ItemLike;
 import java.util.List;
 
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.world.item.Vanishable;
 
-public class WandItem extends TieredItem implements Vanishable {
+public class WandItem extends Item implements Vanishable, Tier {
+     public enum WandTier{
+        STONE_WAND,
+        COPPER_WAND,
+        IRON_WAND,
+        DIAMOND_WAND,
+        NETHERITE_WAND,
+        CREATIVE_WAND
+    }
+    public WandTier tier;
+    @Override
+    public int getUses() {return 0;}
+    @Override
+    public float getSpeed() {return 0;}
+    @Override
+    public float getAttackDamageBonus() {return 0;}
+    @Override
+    public int getLevel() {return 0;}
+    @Override
+    public @NotNull Ingredient getRepairIngredient() {
+        switch (tier){
+            case STONE_WAND -> {
+                return Ingredient.of(ItemTags.STONE_TOOL_MATERIALS);
+            }
+            case COPPER_WAND -> {
+            return Ingredient.of(new ItemLike[]{Items.COPPER_INGOT});
+            }
+            case IRON_WAND -> {
+                return Ingredient.of(new ItemLike[]{Items.IRON_INGOT});
+            }
+            case DIAMOND_WAND -> {
+                return Ingredient.of(new ItemLike[]{Items.DIAMOND});
+            }
+            case NETHERITE_WAND -> {
+                return Ingredient.of(new ItemLike[]{Items.NETHERITE_INGOT});
+            }
+            case CREATIVE_WAND -> {
+                return Ingredient.EMPTY;
+            }
+        }
+        return Ingredient.EMPTY;
+    }
+
+
     public int limit;
     public boolean can_blast;
     public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
     //TODO: check ecnchantments!
-    public WandItem(Tier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable,boolean can_blast, Properties properties) {
-        super(tier,properties);
-        this.limit=limit;
-        this.removes_lava=removes_lava;
-        this.removes_water=removes_water;
-        this.unbreakable=unbreakable;
-        this.can_blast=can_blast;
+    public WandItem(WandTier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, boolean can_blast, Properties properties) {
+        super(properties);
+        this.tier = tier;
+        this.limit = limit;
+        this.removes_lava = removes_lava;
+        this.removes_water = removes_water;
+        this.unbreakable = unbreakable;
+        this.can_blast = can_blast;
     }
 
     @Override

@@ -1116,7 +1116,7 @@ public class ClientRender {
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockState st =b.state;
                 if (wand.palette.has_palette) {
-                    st = wand.get_state(b.pos.getY());
+                    st = wand.get_state(b.pos.getY(),null);
                 }else{
                     st=wand.rotate_mirror(st,mirroraxis);
                     //Mirror

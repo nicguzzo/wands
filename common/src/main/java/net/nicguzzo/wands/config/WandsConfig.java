@@ -11,12 +11,7 @@ import com.google.gson.GsonBuilder;
 
 import com.google.gson.JsonSyntaxException;
 import me.shedaniel.math.Color;
-#if MC>="1193"
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-#else
-import net.minecraft.core.Registry;
-#endif
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -26,6 +21,14 @@ import net.nicguzzo.wands.WandsMod;
 
 public class WandsConfig {
 
+    public static class ExtraTool_def{
+        String item;
+        boolean can_break;
+    }
+    public static class ExtraTool{
+        Item item;
+        boolean can_break;
+    }
 
 	private static WandsConfig INSTANCE=null;
 	//Server options
@@ -36,36 +39,58 @@ public class WandsConfig {
 	final public static String[] default_hoe_allowed={"minecraft:moss_block"};
 	final public static String[] default_shears_allowed={};
 	final public static String[] default_denied={};
-	final public static String[] default_modded_pickaxes={};
-	final public static String[] default_modded_axes={};
-	final public static String[] default_modded_shovels={};
-	final public static String[] default_modded_hoes={};
-	final public static String[] default_modded_shears={};
 	static public float def_blocks_per_xp=0.0f;
 	static public int def_stone_wand_limit = 16;
+    static public int def_copper_wand_limit = 24;
 	static public int def_iron_wand_limit = 32;
 	static public int def_diamond_wand_limit = 64;
 	static public int def_netherite_wand_limit = 256;
 	static public int def_creative_wand_limit = 512;
 	static public int def_stone_wand_durability = 256;
-	static public int def_iron_wand_durability = 512;
+    static public int def_copper_wand_durability = 480;
+	static public int def_iron_wand_durability = 640;
 	static public int def_diamond_wand_durability = 2048;
 	static public int def_netherite_wand_durability = 4096;
+	public ExtraTool_def[] extra_pickaxes = {};
+    public ExtraTool_def[] extra_axes = {};
+    public ExtraTool_def[] extra_shovels = {};
+    public ExtraTool_def[] extra_hoes = {};
+    public ExtraTool_def[] extra_shears = {};
+    //TODO: change to TAGS for extra tools?
+    //static public TagKey<Item> extra_pickaxes_tag;
+    static public List<ExtraTool> extra_pickaxes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_axes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_shovels_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_hoes_list = new ArrayList<ExtraTool>();
+    static public List<ExtraTool> extra_shears_list = new ArrayList<ExtraTool>();
 	static public int max_limit=8192;
 	public int max_limit___increment_this_if_your_machine_can_handle_it=max_limit;
 	public float blocks_per_xp =def_blocks_per_xp;
 	public int stone_wand_limit = def_stone_wand_limit;
 	public int iron_wand_limit = def_iron_wand_limit;
+	public int copper_wand_limit = def_copper_wand_limit;
 	public int diamond_wand_limit = def_diamond_wand_limit;
 	public int netherite_wand_limit = def_netherite_wand_limit;
 	public int creative_wand_limit = def_creative_wand_limit;
 	public int stone_wand_durability = def_stone_wand_durability;
+	public int copper_wand_durability = def_copper_wand_durability;
 	public int iron_wand_durability = def_iron_wand_durability;
 	public int diamond_wand_durability = def_diamond_wand_durability;
 	public int netherite_wand_durability = def_netherite_wand_durability;
 	public boolean destroy_in_survival_drop=true;
 	public boolean survival_unenchanted_drops=true;
 	public boolean allow_wand_to_break=false;
+    public boolean allow_stone_wand_to_break = false;
+    public boolean allow_copper_wand_to_break = false;
+    public boolean allow_iron_wand_to_break = false;
+    public boolean allow_diamond_wand_to_break = false;
+    public boolean allow_netherite_wand_to_break = false;
+    public boolean allow_wooden_tools_to_break = false;
+    public boolean allow_stone_tools_to_break = false;
+    public boolean allow_iron_tools_to_break = false;
+    //public boolean allow_copper_tools_to_break = false;
+    public boolean allow_diamond_tools_to_break = false;
+    public boolean allow_netherite_tools_to_break = false;
 	public boolean allow_offhand_to_break=false;
 	public boolean mend_tools=true;
 	public boolean enable_vein_mode=true;
@@ -161,45 +186,48 @@ public class WandsConfig {
 		for (String id : str) {			
 			ResourceLocation res=ResourceLocation.tryParse(id);
 			if(res!=null){
-
-				//TODO: check this!!
-				#if MC>="1212"
-					BuiltInRegistries.ITEM.get(res).map(itemReference -> {
-						Block blk=Block.byItem(itemReference.value());
-						if(blk!=null){
-							out.add(blk);
-						}
-                        return null;
-                    });
-				#else
-
-					#if MC>="1193"
-						Item item=BuiltInRegistries.ITEM.get(res);
-					#else
-						Item item=Registry.ITEM.get(res);
-					#endif
-					if(item!=null && item!=Items.AIR){
-						Block blk=Block.byItem(item);
-						if(blk!=null){
-							out.add(blk);
-						}
+				Item item=BuiltInRegistries.ITEM.get(res);
+				if(item!=null && item!=Items.AIR){
+					Block blk=Block.byItem(item);
+					if(blk!=null){
+						out.add(blk);
 					}
-				#endif
+				}
 			}
 		}
 	}
+    public void generate_extra_tool(List<ExtraTool> out, ExtraTool_def[] tools) {
+        for (ExtraTool_def tool : tools) {
+            ResourceLocation res = ResourceLocation.tryParse(tool.item);
+            if (res != null) {
+				Item item=BuiltInRegistries.ITEM.get(res);
+				if(item != Items.AIR){
+					ExtraTool extra_tool=new ExtraTool();
+                    extra_tool.item=item;
+                    extra_tool.can_break=tool.can_break;
+                    out.add(extra_tool);
+				}
+            }
+        }
+    }
 	public void parse_colors(){
-		c_block_outline=parse_color(block_outline_color);
-		c_bounding_box=parse_color(bounding_box_color);
-		c_destroy=parse_color(destroy_color);
-		c_tool_use=parse_color(tool_use_color);
-		c_start=parse_color(start_color);
-		c_end=parse_color(end_color);
-		c_line=parse_color(line_color);
-		c_paste_bb=parse_color(paste_bb_color);
-		c_block=parse_color(block_color);
+		c_block_outline = parse_color(block_outline_color);
+		c_bounding_box = parse_color(bounding_box_color);
+		c_destroy = parse_color(destroy_color);
+		c_tool_use = parse_color(tool_use_color);
+		c_start = parse_color(start_color);
+		c_end = parse_color(end_color);
+		c_line = parse_color(line_color);
+		c_paste_bb = parse_color(paste_bb_color);
+		c_block = parse_color(block_color);
 	}
 	public void generate_lists(){
+		System.out.println("generating Extra tools lists");
+        generate_extra_tool(extra_pickaxes_list,extra_pickaxes);
+        generate_extra_tool(extra_axes_list,extra_axes);
+        generate_extra_tool(extra_shovels_list,extra_shovels);
+        generate_extra_tool(extra_hoes_list,extra_hoes);
+        generate_extra_tool(extra_shears_list,extra_shears);
 		System.out.println("generating allow/deny lists");
 		generate_allow_list(pickaxe_allowed,str_pickaxe_allowed);
 		generate_allow_list(axe_allowed,str_axe_allowed);
@@ -223,7 +251,7 @@ public class WandsConfig {
 				WandsConfig ins= gson.fromJson(reader, WandsConfig.class);
 				if(ins!=null) {
 					INSTANCE = ins;
-					WandsConfig.max_limit=INSTANCE.max_limit___increment_this_if_your_machine_can_handle_it;
+					WandsConfig.max_limit = INSTANCE.max_limit___increment_this_if_your_machine_can_handle_it;
 					//System.out.println("Config: " + INSTANCE);
 					INSTANCE.parse_colors();
 				}

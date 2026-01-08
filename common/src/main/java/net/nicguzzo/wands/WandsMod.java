@@ -68,24 +68,28 @@ public class WandsMod {
     public static final DeferredRegister<MenuType<?>> MENUES = DeferredRegister.create(MOD_ID, Registries.MENU);
 
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register("stone_wand", () ->{
-            return new WandItem(Tiers.STONE,config.stone_wand_limit,false,false,false,false,new Item.Properties().durability(config.stone_wand_durability)
+            return new WandItem(WandItem.WandTier.STONE_WAND,config.stone_wand_limit,false,false,false,false,new Item.Properties().durability(config.stone_wand_durability)
                     .arch$tab(WandsMod.WANDS_TAB));
     });
+        public static final RegistrySupplier<Item> COPPER_WAND_ITEM = ITEMS.register("copper_wand", () ->{
+        return new WandItem(WandItem.WandTier.COPPER_WAND ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.copper_wand_durability)
+                .arch$tab(WandsMod.WANDS_TAB));
+    });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register("iron_wand", () ->{
-        return new WandItem(Tiers.IRON ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.iron_wand_durability)
+        return new WandItem(WandItem.WandTier.IRON_WAND ,config.iron_wand_limit,false,false,false,false,new Item.Properties().durability(config.iron_wand_durability)
                 .arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> DIAMOND_WAND_ITEM = ITEMS.register("diamond_wand", () ->{
-        return new WandItem(Tiers.DIAMOND,config.diamond_wand_limit,true,false,false,false,new Item.Properties().durability(config.diamond_wand_durability)
+        return new WandItem(WandItem.WandTier.DIAMOND_WAND,config.diamond_wand_limit,true,false,false,false,new Item.Properties().durability(config.diamond_wand_durability)
                 .arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> NETHERITE_WAND_ITEM = ITEMS.register("netherite_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,config.netherite_wand_limit,true,true,false,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability)
+        return new WandItem(WandItem.WandTier.NETHERITE_WAND,config.netherite_wand_limit,true,true,false,true,new Item.Properties().fireResistant().durability(config.netherite_wand_durability)
                 .arch$tab(WandsMod.WANDS_TAB));
     });
 
     public static final RegistrySupplier<Item> CREATIVE_WAND_ITEM = ITEMS.register("creative_wand", () ->{
-        return new WandItem(Tiers.NETHERITE,config.creative_wand_limit,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1)
+        return new WandItem(WandItem.WandTier.CREATIVE_WAND,config.creative_wand_limit,true,true,true,true,new Item.Properties().fireResistant().stacksTo(1)
                 .arch$tab(WandsMod.WANDS_TAB));
     });
 

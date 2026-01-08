@@ -561,7 +561,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
                 }
             }
-            gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
+            //gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
             gui.drawString(font,"click on a player inventory slot",leftPos+3,topPos+50,0xffffffff);
             gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);
             show_inv_btn.render(gui,this.font,mouseX,mouseY);
