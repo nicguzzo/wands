@@ -17,6 +17,8 @@ public class Spinner extends Wdgt {
     Btn dec;
     public boolean label_side = false;
     public int shift_inc_val = 10;
+    public int ctrl_inc_val=100;
+    public int shift_ctrl_inc_val=1000;
     Component label = null;
     int col=  new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
     public int label_col=  new Colorf(0.0f, 0.0f, 0.0f, 1.0f).toInt();
@@ -33,18 +35,11 @@ public class Spinner extends Wdgt {
         this.label = label;
         inc = new Btn(x + w - 10, y, 10, h / 2, Compat.literal("+")) {
             public void onClick(int mx, int my) {
-                int iv = inc_val;
-                if (Minecraft.getInstance().hasControlDown()) {
-                    value = max;
+                 int iv=get_inc();
+                if (value + iv <= max) {
+                    value += iv;
                 } else {
-                    if (Minecraft.getInstance().hasShiftDown()) {
-                        iv = shift_inc_val;
-                    }
-                    if (value + iv <= max) {
-                        value += iv;
-                    } else {
-                        value = max;
-                    }
+                    value = max;
                 }
                 onInc(mx, my, value);
             }
@@ -53,18 +48,11 @@ public class Spinner extends Wdgt {
         inc.oy = 0;
         dec = new Btn(x + w - 10, y + h / 2, 10, h / 2, Compat.literal("-")) {
             public void onClick(int mx, int my) {
-                int iv = inc_val;
-                if (Minecraft.getInstance().hasControlDown()) {
-                    value = min;
+                int iv=get_inc();
+                if (value - iv >= min) {
+                    value -= iv;
                 } else {
-                    if (Minecraft.getInstance().hasShiftDown()) {
-                        iv = shift_inc_val;
-                    }
-                    if (value - iv >= min) {
-                        value -= iv;
-                    } else {
-                        value = min;
-                    }
+                    value = min;
                 }
                 onDec(mx, my, value);
             }
@@ -72,7 +60,19 @@ public class Spinner extends Wdgt {
         dec.ox = 0;
         dec.oy = 0;
     }
-
+    private int get_inc(){
+        if(Minecraft.getInstance().hasControlDown() && Minecraft.getInstance().hasShiftDown()){
+            return shift_ctrl_inc_val;
+        }else {
+            if (Minecraft.getInstance().hasControlDown()) {
+                return ctrl_inc_val;
+            }else if (Minecraft.getInstance().hasShiftDown()) {
+                return shift_inc_val;
+            }else{
+                return inc_val;
+            }
+        }
+    }
     public void onInc(int mx, int my, int v) {
     }
 

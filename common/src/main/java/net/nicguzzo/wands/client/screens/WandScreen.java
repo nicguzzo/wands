@@ -232,12 +232,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         wdgets.add(tunnel_oy);
 
         modes_grp=new Select(left+80,bottom-20,btn_w,btn_h,Compat.translatable("screen.wands.mode"));
-        int l=WandProps.modes.length-1;
-        if(wand_item.can_blast){
-            l+=1;
-        }
+        int l=WandProps.modes.length;
         for (int i=0;i<l;i++) {
             int finalI=i;
+            if (WandProps.modes[i]== WandProps.Mode.BLAST && !wand_item.can_blast){
+                continue;
+            }
             Btn b=new Btn(Compat.translatable(WandProps.modes[i].toString())){
                 public void onClick(int mx,int my){
                     WandProps.setMode(wand_stack, WandProps.modes[finalI]);
@@ -571,10 +571,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     for (int tool : ClientRender.wand.player_data.getIntArray("Tools").get()) {
                         Slot slot = (Slot)this.menu.slots.get(tool);
                         //renderSlotHighlight(gui, slot.x+this.leftPos, slot.y+this.topPos, 0);
-                        gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
+                        //gui.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE,  slot.x+this.leftPos - 4, slot.y+this.topPos - 4, 24, 24);
+                        int i=slot.x+this.leftPos;
+                        int j=slot.y+this.topPos;
+                        gui.fillGradient(i, j, i + 16, j + 16,0x8800AA00,0x1000AA00);
                     }
                 }
-                gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
+                //gui.drawString(font,"click on any slot to recover all stored items from previous version",leftPos+5,topPos+15,0xffffffff);
 
                 gui.drawString(font,"click on a player inventory slot",leftPos+3,topPos+50,0xffffffff);
                 gui.drawString(font,"to mark it to be used by the wand",leftPos+3,topPos+62,0xffffffff);

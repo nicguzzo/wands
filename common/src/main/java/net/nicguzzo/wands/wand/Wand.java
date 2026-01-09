@@ -20,6 +20,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -1905,7 +1906,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_stone_tools_to_break) {
+        }
+        if(WandsMod.config.allow_stone_tools_to_break) {
             if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
                Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1913,7 +1915,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_copper_tools_to_break) {
+        }
+        if(WandsMod.config.allow_copper_tools_to_break) {
             if(Items.COPPER_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.COPPER_AXE.getDefaultInstance().is(tool_item) ||
                Items.COPPER_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1921,7 +1924,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_iron_tools_to_break) {
+        }
+        if(WandsMod.config.allow_iron_tools_to_break) {
             if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
                Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1929,7 +1933,8 @@ public class Wand {
             ) {
                 return false;
             }
-        }else if(WandsMod.config.allow_diamond_tools_to_break) {
+        }
+        if(WandsMod.config.allow_diamond_tools_to_break) {
             if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
                Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
@@ -1937,7 +1942,8 @@ public class Wand {
             ) {
                 return false;
             }
-        } else if(WandsMod.config.allow_netherite_tools_to_break) {
+        }
+        if(WandsMod.config.allow_netherite_tools_to_break) {
             if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
                Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
