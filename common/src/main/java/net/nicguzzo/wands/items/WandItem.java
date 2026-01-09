@@ -134,7 +134,7 @@ public class WandItem extends Item implements Vanishable, Tier {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(),ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed= System.currentTimeMillis();
             ClientRender.wand.copy();
-            ClientRender.wand.clear();
+            ClientRender.wand.clear(false);
         }
         return InteractionResult.SUCCESS;
     }
@@ -177,7 +177,7 @@ public class WandItem extends Item implements Vanishable, Tier {
                 send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(),wand.hit,wand.palette.seed);
                 wand.palette.seed= System.currentTimeMillis();
                 ClientRender.wand.copy();
-                ClientRender.wand.clear();
+                ClientRender.wand.clear(false);
             }
         }else{
             //ClientRender.wand.clear();

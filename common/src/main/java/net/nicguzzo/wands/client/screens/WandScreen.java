@@ -89,6 +89,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner tunnel_oy;
     Spinner target_air_dist_spn;
     Select match_state_sel;
+    Select clear_p1_sel;
     Select drop_pos_sel;
     Btn show_inv_btn;
     boolean show_inv=false;
@@ -150,12 +151,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         rock_noise_spn.label_side=true;
         wdgets.add(rock_noise_spn);
 
-
-        mult_spn=valSpinner(Value.MULTIPLIER,left+200,bottom+25,25,14, Compat.translatable("screen.wands.multiplier"));
+        mult_spn=valSpinner(Value.MULTIPLIER,left+200,bottom,25,14, Compat.translatable("screen.wands.multiplier"));
         mult_spn.label_side=true;
         wdgets.add(mult_spn);
 
-        row_col_spn=valSpinner(Value.ROWCOLLIM,left+170,bottom+70,50,14,Compat.translatable("screen.wands.limit"));
+        row_col_spn=valSpinner(Value.ROWCOLLIM,left+170,bottom,50,14,Compat.translatable("screen.wands.limit"));
         row_col_spn.label_side=true;
         wdgets.add(row_col_spn);
 
@@ -209,43 +209,49 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         grid_noff_spn.label_side=true;
         wdgets.add(grid_noff_spn);
 
-        arealim_spn=valSpinner(Value.AREALIM, left+170,bottom+50,50,14,Compat.translatable("screen.wands.limit"));
+        arealim_spn=valSpinner(Value.AREALIM, left+170,bottom,50,14,Compat.translatable("screen.wands.limit"));
         arealim_spn.label_side=true;
         wdgets.add(arealim_spn);
 
-        tunnel_w=valSpinner(Value.TUNNEL_W,left+190,bottom+25,50,14,Compat.translatable("screen.wands.tunnel_w"));
+        tunnel_w=valSpinner(Value.TUNNEL_W,left+190,bottom,50,14,Compat.translatable("screen.wands.tunnel_w"));
         tunnel_w.label_side=true;
         wdgets.add(tunnel_w);
 
-        tunnel_h=valSpinner(Value.TUNNEL_H,left+190,bottom+40,50,14,Compat.translatable("screen.wands.tunnel_h"));
+        tunnel_h=valSpinner(Value.TUNNEL_H,left+190,bottom+15,50,14,Compat.translatable("screen.wands.tunnel_h"));
         tunnel_h.label_side=true;
         wdgets.add(tunnel_h);
 
-        tunnel_d=valSpinner(Value.TUNNEL_DEPTH,left+190,bottom+55,50,14,Compat.translatable("screen.wands.tunnel_depth"));
+        tunnel_d=valSpinner(Value.TUNNEL_DEPTH,left+190,bottom+30,50,14,Compat.translatable("screen.wands.tunnel_depth"));
         tunnel_d.label_side=true;
         wdgets.add(tunnel_d);
 
-        tunnel_ox=valSpinner(Value.TUNNEL_OX,left+190,bottom+70,50,14,Compat.translatable("screen.wands.tunnel_ox"));
+        tunnel_ox=valSpinner(Value.TUNNEL_OX,left+190,bottom+45,50,14,Compat.translatable("screen.wands.tunnel_ox"));
         tunnel_ox.label_side=true;
         wdgets.add(tunnel_ox);
 
-        tunnel_oy=valSpinner(Value.TUNNEL_OY,left+190,bottom+85,50,14,Compat.translatable("screen.wands.tunnel_oy"));
+        tunnel_oy=valSpinner(Value.TUNNEL_OY,left+190,bottom+60,50,14,Compat.translatable("screen.wands.tunnel_oy"));
         tunnel_oy.label_side=true;
         wdgets.add(tunnel_oy);
 
         modes_grp=new Select(left+80,bottom-20,btn_w,btn_h,Compat.translatable("screen.wands.mode"));
-        int l=WandProps.modes.length-1;
-        if(wand_item.can_blast){
-            l+=1;
-        }
+        //int l=WandProps.modes.length-1;
+        int l=WandProps.modes.length;
+        //if(wand_item.can_blast){
+        //    l+=1;
+        //}
         for (int i=0;i<l;i++) {
             int finalI=i;
+
             Btn b=new Btn(Compat.translatable(WandProps.modes[i].toString())){
                 public void onClick(int mx,int my){
                     WandProps.setMode(wand_stack, WandProps.modes[finalI]);
                     WandsModClient.send_wand(wand_stack);
                 }
             };
+            if (WandProps.modes[i]== WandProps.Mode.BLAST && !wand_item.can_blast){
+                //continue;
+                b.disabled=true;
+            }
             modes_grp.add(b);
         }
         wdgets.add(modes_grp);
@@ -280,7 +286,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         }
         wdgets.add(orientation_grp);
 
-        plane_grp=new Select(left+170,bottom+30,btn_w,btn_h,Compat.translatable("screen.wands.plane"));
+        plane_grp=new Select(left+170,bottom,btn_w,btn_h,Compat.translatable("screen.wands.plane"));
         for (int i=0;i<WandProps.planes.length;i++) {
             int finalp=i;
             Btn b=new Btn(Compat.literal(WandProps.planes[i].toString())){
@@ -390,13 +396,23 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         wdgets.add(rot_grp);
 
 
-        show_inv_btn=new Btn(right-80,bottom,30,12,Compat.translatable("screen.wands.tools")){
+        show_inv_btn=new Btn(right-80,bottom-22,30,12,Compat.translatable("screen.wands.tools")){
             public void onClick(int mx,int my) {
                 show_inv=!show_inv;
             }
         };
         wdgets.add(show_inv_btn);
 
+
+        clear_p1_sel=new Select(left+170,bottom+98,70,12,null);
+        Btn clear_p1_btn=new Btn(Compat.translatable("screen.wands.clear_p1")){
+            public void onClick(int mx,int my) {
+                WandProps.toggleFlag(wand_stack, WandProps.Flag.CLEAR_P1);
+                WandsModClient.send_wand(wand_stack);
+            }
+        };
+        clear_p1_sel.add(clear_p1_btn);
+        wdgets.add(clear_p1_sel);
 
         match_state_sel=new Select(left+170,bottom+110,70,12,null);
         Btn match_state_btn=new Btn(Compat.translatable("screen.wands.match_state")){
@@ -465,7 +481,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         diag_grp_btn.add(diag_btn);
         wdgets.add(diag_grp_btn);
 
-        cfill_grp_btn =new Select(left+170,bottom+80,60,12,null);
+        cfill_grp_btn =new Select(left+170,bottom+45,60,12,null);
         Btn fill_btn=new Btn(Compat.translatable("screen.wands.filled_circle")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.CFILLED);
@@ -485,7 +501,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         rfill_grp_btn.add(fill_btn2);
         wdgets.add(rfill_grp_btn);
 
-        even_grp_btn=new Select(left+170,bottom+95,60,12,null);
+        even_grp_btn=new Select(left+170,bottom+60,60,12,null);
         Btn even_btn=new Btn(Compat.translatable("screen.wands.even_circle")){
             public void onClick(int mx,int my) {
                 WandProps.toggleFlag(wand_stack, WandProps.Flag.EVEN);
@@ -545,6 +561,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             diag_grp_btn.visible=modes_grp.selected==WandProps.Mode.AREA.ordinal();
             diag_grp_btn.selected=(!WandProps.getFlag(wand_stack, WandProps.Flag.DIAGSPREAD)?0:-1);
             match_state_sel.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE)?0:-1);
+            clear_p1_sel.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.CLEAR_P1)?0:-1);
             target_air_grp_btn.selected=(WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR)?0:-1);
             drop_pos_sel.selected=(ClientRender.wand.drop_on_player ?0:1);
             tunnel_w.visible=modes_grp.selected==WandProps.Mode.TUNNEL.ordinal();

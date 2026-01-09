@@ -154,7 +154,8 @@ public class WandProps {
         INCSELBLOCK { public String toString() {return "inc_sel_block";} public boolean get_default(){return false;}; },
         STAIRSLAB   { public String toString() {return "stair_slab";}    public boolean get_default(){return false;}; },
         RFILLED     { public String toString() {return "rfill";}         public boolean get_default(){return  true;}; },
-        TARGET_AIR  { public String toString() {return "target_air";}    public boolean get_default(){return false;}; };
+        TARGET_AIR  { public String toString() {return "target_air";}    public boolean get_default(){return false;}; },
+        CLEAR_P1    { public String toString() {return "clear_p1";}      public boolean get_default(){return true;}; };
         public abstract boolean get_default();
     }
     public enum Value{
@@ -244,9 +245,6 @@ public class WandProps {
         if(WandUtils.is_wand(stack)) {
             CompoundTag tag= Compat.getTags(stack);
             tag.putBoolean(flag.toString(), f);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void toggleFlag(ItemStack stack,Flag flag) {
@@ -254,9 +252,6 @@ public class WandProps {
             CompoundTag tag= Compat.getTags(stack);
             boolean b=getFlag(stack,flag);
             tag.putBoolean(flag.toString(), !b);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
 
@@ -267,9 +262,6 @@ public class WandProps {
             //stack.getOrCreateTag().putInt(v.toString(), n);
             CompoundTag tag= Compat.getTags(stack);
             tag.putInt(v.toString(), n);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void incVal(ItemStack stack,Value v, int inc,int max) {
@@ -280,10 +272,6 @@ public class WandProps {
             if(n<v.min) n=v.min;
             if(n+inc<=max){
                 tag.putInt(v.toString(), n+inc);
-                //stack.getOrCreateTag().putInt(v.toString(), n+inc);
-                #if MC>="1205"
-                CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-                #endif
             }
         }
     }
@@ -298,9 +286,6 @@ public class WandProps {
             if(n<v.min) n=v.min;
             if(n-inc>=min) {
                 tag.putInt(v.toString(), n - inc);
-                #if MC>="1205"
-                CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-                #endif
             }
         }
     }
@@ -316,16 +301,10 @@ public class WandProps {
         if(i>v.max){
             i=v.max;
             tag.putInt(v.toString(),i);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
         if(i<v.min) {
             i = v.min;
             tag.putInt(v.toString(), i);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
         if(i<v.min){
             return v.min;
@@ -352,9 +331,6 @@ public class WandProps {
         }
         CompoundTag tag= Compat.getTags(stack);
         tag.putInt("mode", mode.ordinal());
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public void nextMode(ItemStack stack,boolean can_blast) {
         if(!WandUtils.is_wand(stack)){
@@ -372,9 +348,6 @@ public class WandProps {
             mode=Mode.DIRECTION.ordinal();
         }
         tag.putInt("mode", mode);
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public void prevMode(ItemStack stack,boolean can_blast) {
         if(!WandUtils.is_wand(stack)) {
@@ -394,9 +367,6 @@ public class WandProps {
             mode = Mode.VEIN.ordinal()-1;
         }
         tag.putInt("mode", mode);
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
 
     static public Orientation getOrientation(ItemStack stack) {
@@ -412,9 +382,6 @@ public class WandProps {
         }
         CompoundTag tag= Compat.getTags(stack);
         tag.putInt("orientation", o.ordinal());
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public void nextOrientation(ItemStack stack) {
         if(!WandUtils.is_wand(stack)) {
@@ -423,9 +390,6 @@ public class WandProps {
         CompoundTag tag= Compat.getTags(stack);
         int o=(tag.getInt("orientation")+1) %2;
         tag.putInt("orientation", o);
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public Plane getPlane(ItemStack stack) {
         Plane plane=Plane.XZ;
@@ -434,9 +398,6 @@ public class WandProps {
         }
         CompoundTag tag= Compat.getTags(stack);
         int p=tag.getInt("plane");
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
         if(p>=0 && p<planes.length)
             plane=planes[p];
         return plane;
@@ -447,9 +408,6 @@ public class WandProps {
         }
         CompoundTag tag= Compat.getTags(stack);
         tag.putInt("plane", p.ordinal());
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public void nextPlane(ItemStack stack) {
         if(!WandUtils.is_wand(stack)) {
@@ -458,9 +416,6 @@ public class WandProps {
         CompoundTag tag= Compat.getTags(stack);
         int plane=(tag.getInt("plane")+1) % 3;
         tag.putInt("plane", plane);
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
 
     static public Rotation getRotation(ItemStack stack) {
@@ -477,9 +432,6 @@ public class WandProps {
         CompoundTag tag= Compat.getTags(stack);
         int rot=(tag.getInt("rotation")+1) % rotations.length;
         tag.putInt("rotation", rot);
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public void setRotation(ItemStack stack,Rotation rot) {
         if(!WandUtils.is_wand(stack)) {
@@ -487,9 +439,6 @@ public class WandProps {
         }
         CompoundTag tag= Compat.getTags(stack);
         tag.putInt("rotation", rot.ordinal());
-        #if MC>="1205"
-        CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-        #endif
     }
     static public Action getAction(ItemStack stack) {
         if(WandUtils.is_wand(stack)) {
@@ -507,9 +456,6 @@ public class WandProps {
                 a=Action.PLACE;
             }
             tag.putInt("action", a.ordinal());
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void nextAction(ItemStack stack) {
@@ -520,9 +466,6 @@ public class WandProps {
                 a=Action.USE.ordinal();
             }
             tag.putInt("action", a);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void prevAction(ItemStack stack) {
@@ -536,9 +479,6 @@ public class WandProps {
                 a=Action.PLACE.ordinal();
             }
             tag.putInt("action", a);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
 
@@ -556,18 +496,12 @@ public class WandProps {
         if(WandUtils.is_wand(stack)){
             CompoundTag tag= Compat.getTags(stack);
             tag.putInt("axis", axis.ordinal());
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void setAxis(ItemStack stack,int a) {
         if (stack != null && WandUtils.is_wand(stack) && !stack.isEmpty()) {
             CompoundTag tag= Compat.getTags(stack);
             tag.putInt("axis", a);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void nextAxis(ItemStack stack) {
@@ -575,9 +509,6 @@ public class WandProps {
             CompoundTag tag= Compat.getTags(stack);
             int axis=(tag.getInt("axis")+1) % 3;
             tag.putInt("axis", axis);
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public StateMode getStateMode(ItemStack stack) {
@@ -593,9 +524,6 @@ public class WandProps {
         if(WandUtils.is_wand(stack)) {
             CompoundTag tag= Compat.getTags(stack);
             tag.putInt("state_mode", mode.ordinal());
-            #if MC>="1205"
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-            #endif
         }
     }
     static public void incGrid(ItemStack stack,Value v, int n,int limit) {
@@ -606,9 +534,6 @@ public class WandProps {
                 if( (c*n)<=limit) {
                     int nn=tag.getInt(v.toString());
                     tag.putInt(v.toString(), nn+n);
-                    #if MC>="1205"
-                    CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
-                    #endif
                 }
             }
         }

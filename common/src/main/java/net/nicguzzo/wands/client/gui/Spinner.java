@@ -17,6 +17,8 @@ public class Spinner  extends Wdgt{
     Btn dec;
     public boolean label_side=false;
     public int shift_inc_val=10;
+    public int ctrl_inc_val=100;
+    public int shift_ctrl_inc_val=1000;
     Component label=null;
     int col=  new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
     public int label_col=  new Colorf(0.0f, 0.0f, 0.0f, 1.0f).toInt();
@@ -33,18 +35,11 @@ public class Spinner  extends Wdgt{
         inc=new Btn(x+w-10,y,10,h/2, Compat.literal("+"))
         {
             public void onClick(int mx,int my){
-                int iv=inc_val;
-                if(Screen.hasControlDown()){
-                    value=max;
-                }else {
-                    if (Screen.hasShiftDown()) {
-                        iv = shift_inc_val;
-                    }
-                    if (value + iv <= max) {
-                        value += iv;
-                    } else {
-                        value = max;
-                    }
+                int iv=get_inc();
+                if (value + iv <= max) {
+                    value += iv;
+                } else {
+                    value = max;
                 }
                 onInc(mx,my,value);
             }
@@ -54,24 +49,30 @@ public class Spinner  extends Wdgt{
         dec=new Btn(x+w-10,y+h/2,10,h/2, Compat.literal("-"))
         {
             public void onClick(int mx,int my){
-                int iv=inc_val;
-                if(Screen.hasControlDown()){
-                    value=min;
-                }else {
-                    if (Screen.hasShiftDown()) {
-                        iv = shift_inc_val;
-                    }
-                    if (value - iv >= min) {
-                        value -= iv;
-                    } else {
-                        value = min;
-                    }
+                int iv=get_inc();
+                if (value - iv >= min) {
+                    value -= iv;
+                } else {
+                    value = min;
                 }
                 onDec(mx,my,value);
             }
         };
         dec.ox=0;
         dec.oy=0;
+    }
+    private int get_inc(){
+        if(Screen.hasControlDown() && Screen.hasShiftDown()){
+            return shift_ctrl_inc_val;
+        }else {
+            if (Screen.hasControlDown()) {
+                return ctrl_inc_val;
+            }else if (Screen.hasShiftDown()) {
+                return shift_inc_val;
+            }else{
+                return inc_val;
+            }
+        }
     }
     public void onInc(int mx,int my,int v){
     }

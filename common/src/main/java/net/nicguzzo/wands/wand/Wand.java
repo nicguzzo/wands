@@ -110,6 +110,8 @@ public class Wand {
     public int fill_nz = 0;
     private BlockPos p1 = null;
     private BlockPos p2 = null;
+    public boolean clear_p1=true;
+    public boolean clear_p2=true;
     //public boolean p2 = false;
     public BlockState p1_state = null;
     public HitResult lastHitResult = null;
@@ -269,9 +271,12 @@ public class Wand {
         }
     }
 
-    public void clear() {
-        setP1(null);
-        setP2(null);
+    public void clear(boolean force_clear_p1) {
+        this.clear_p1=WandProps.getFlag(wand_stack,WandProps.Flag.CLEAR_P1);
+        if(force_clear_p1 || clear_p1)
+            setP1(null);
+        if(clear_p2)
+            setP2(null);
         p1_state = null;
         valid = false;
         block_height = 1.0f;

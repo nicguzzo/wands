@@ -137,6 +137,7 @@
   "screen.wands.inc_sel": "Include in sel",
   "screen.wands.invert": "Invert",
   "screen.wands.limit": "Limit",
+  "screen.wands.clear_p1": "Clear P1",
   "screen.wands.match_state": "Match State",
   "screen.wands.mirror": "Mirror",
   "screen.wands.mode": "Mode",

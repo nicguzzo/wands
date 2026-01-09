@@ -346,7 +346,7 @@ public class WandsModClient {
     }
     public static void cancel_wand(){
         if(ClientRender.wand!=null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)){
-            ClientRender.wand.clear();
+            ClientRender.wand.clear(true);
             if(ClientRender.wand.player!=null) {
                 ClientRender.wand.player.displayClientMessage(Compat.literal("wand cleared"), false);
             }

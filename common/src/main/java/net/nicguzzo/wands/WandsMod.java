@@ -232,7 +232,7 @@ public class WandsMod {
                 //wand.lastPlayerDirection=player_dir;
                 //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
                 wand.do_or_preview(player,level, block_state, pos, side, hit, stack,(WandItem)stack.getItem(),true);
-                wand.clear();
+                wand.clear(false);
             });
         });
 
@@ -493,7 +493,7 @@ public class WandsMod {
                         break;
                     case CLEAR:
                         if (wand != null) {
-                            wand.clear();
+                            wand.clear(true);
                         }
                         if(player!=null)
                             player.displayClientMessage(Compat.literal("wand cleared"),false);

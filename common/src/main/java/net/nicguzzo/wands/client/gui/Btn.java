@@ -50,7 +50,9 @@ public class Btn extends Wdgt{
     }
     public void click(int mx,int my){
         if (inside(mx, my)) {
-            onClick(mx,my);
+            if(!disabled) {
+                onClick(mx, my);
+            }
             if(on_click!=null && !disabled) {
                 on_click.onClick(mx, my);
             }
@@ -75,6 +77,8 @@ public class Btn extends Wdgt{
         int text_color = 0xffffffff;
         if (selected)
             text_color = 0xff000000;
+        if (disabled)
+            text_color = 0xff7f7f7f;
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
         gui.drawString(client.font, text, x + ox, y + oy, text_color, false);
 
