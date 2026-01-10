@@ -35,8 +35,8 @@ subprojects {
     dependencies {
         minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
         mappings loom.officialMojangMappings()
-        annotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.47'
-        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2024.1.47'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
     }
 
     java {

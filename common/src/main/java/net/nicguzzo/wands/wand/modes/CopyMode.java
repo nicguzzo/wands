@@ -86,7 +86,7 @@ public class CopyMode extends WandMode {
                                 bp.set(xs+x*xsgn, ys+y*ysgn, zs+z*zsgn);
                                 BlockState bs = wand.level.getBlockState(bp);
                                 if(!WandsConfig.denied.contains(bs.getBlock())){
-                                    if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock)) {
+                                    if (bs != Blocks.AIR.defaultBlockState() && !(bs.getBlock() instanceof ShulkerBoxBlock) && !bs.hasBlockEntity()) {
                                         cp++;
                                         wand.copy_paste_buffer.add(new CopyBuffer(new BlockPos(x*xsgn , y*ysgn , z*zsgn ), bs));
                                     }

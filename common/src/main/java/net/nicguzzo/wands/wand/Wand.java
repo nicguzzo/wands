@@ -2,20 +2,15 @@ package net.nicguzzo.wands.wand;
 
 import java.util.*;
 import java.util.function.Consumer;
-
-
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
-
 import net.minecraft.advancements.Advancement;
-
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.MutableComponent;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
@@ -38,7 +33,6 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
-
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -60,11 +54,8 @@ import net.nicguzzo.wands.mixin.DropExperienceBlockAccessor;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.*;
 import net.nicguzzo.wands.wand.WandProps.Mode;
-
 import net.minecraft.world.item.alchemy.PotionUtils;
-
 import net.minecraft.world.level.block.DropExperienceBlock;
-
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.util.RandomSource;
 
@@ -169,9 +160,7 @@ public class Wand {
     public boolean has_water_bucket = false;
     public boolean has_lava_bucket  = false;
     public boolean has_empty_bucket = false;
-    #if MC>="1190"
     boolean has_water_potion = false;
-    #endif
     int send_sound = -1;
     boolean has_offhand = false;
     public boolean has_pickaxe = false;
@@ -262,6 +251,8 @@ public class Wand {
         for (int i = 0; i < tools.length; i++) {
             tools[i]= new WandTool();
         }
+        this.block_buffer.reset();
+        this.clear(true);
     }
     public WandMode get_mode(){
         if(modes!=null && mode!=null)
@@ -321,8 +312,7 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
-        if(this.player==null || this.level==null||this.pos==null
-                || this.side==null||this.hit==null||this.wand_stack==null){
+        if(this.player == null || this.level == null || this.pos == null || this.side == null || this.hit == null){
             return;
         }
         creative = Compat.is_creative(player);
@@ -350,7 +340,7 @@ public class Wand {
         random.setSeed(palette.seed);
         palette.random.setSeed(palette.seed);
 
-        if (block_state == null || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
+        if (block_state == null) {
             return;
         }
 
@@ -480,7 +470,7 @@ public class Wand {
         blocks_sent_to_inv=0;
         //process the current mode
         int m=mode.ordinal();
-        if(m>=0 && m<modes.length && modes[m]!=null){
+        if(m<modes.length && modes[m]!=null){
             modes[m].place_in_buffer(this);
         }
 
@@ -589,18 +579,21 @@ public class Wand {
                         }
                     } else {
                         //copy paste
-                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
-                            if (!replace && !destroy && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                        for (int a = 0; a < block_buffer.get_length() && a < WandsConfig.max_limit; a++) {
+                            boolean can_be_placed = can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a));
+                            if (!replace && !destroy && !can_be_placed) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                             } else {
-                                BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
-                                if (pa == null) {
-                                    pa = new BlockAccounting();
-                                    pa.needed++;
-                                    block_accounting.put(block_buffer.item[a], pa);
-                                } else {
-                                    pa.needed++;
+                                if(can_be_placed && !creative) {
+                                    BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
+                                    if (pa == null) {
+                                        pa = new BlockAccounting();
+                                        pa.needed++;
+                                        block_accounting.put(block_buffer.item[a], pa);
+                                    } else {
+                                        pa.needed++;
+                                    }
                                 }
                             }
                         }
@@ -616,7 +609,7 @@ public class Wand {
             {
                 AABB bb = player.getBoundingBox();
                 if(mode!=Mode.COPY) {
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
+                    for (int a = 0; a < block_buffer.get_length() && a < WandsConfig.max_limit; a++) {
                         tmp_pos.set(block_buffer.buffer_x[a], block_buffer.buffer_y[a], block_buffer.buffer_z[a]);
                         if (!destroy && !has_bucket && !use) {
                             if (bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {
@@ -645,6 +638,9 @@ public class Wand {
                                 if (pa != null)
                                     pa.placed++;
                                 placed++;
+                                if(placed>limit) {
+                                    break;
+                                }
                             }
                         }
                         if (stop) {
@@ -668,9 +664,7 @@ public class Wand {
                     if (p1_state != null) {
                         is=p1_state.getBlock().asItem().getDefaultInstance();
                     } else {
-                        if (block_state != null) {
-                            is=block_state.getBlock().asItem().getDefaultInstance();
-                        }
+                        is = block_state.getBlock().asItem().getDefaultInstance();
                     }
                 }
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
@@ -710,8 +704,7 @@ public class Wand {
                 if (stack_item.getItem().equals(Fluids.LAVA.getBucket())) {
                     pa.placed--;
                     //pa.consumed++;
-                    ItemStack ret = Items.BUCKET.getDefaultInstance();
-                    return ret;
+                    return Items.BUCKET.getDefaultInstance();
                 } else {
                     if (pa.placed <= stack_item.getCount()) {
                         //pa.consumed+=stack_item.getCount();
@@ -824,8 +817,7 @@ public class Wand {
                                 (blk instanceof SlabBlock  && hand_blk instanceof SlabBlock)
                         )*/
                 ){
-                    BlockState st2=offhand_state.getBlock().withPropertiesOf(state_behind_block);
-                    st=st2;
+                    st= offhand_state.getBlock().withPropertiesOf(state_behind_block);
                 }else {
                     st = offhand_state;
                 }
@@ -996,8 +988,9 @@ public class Wand {
                         continue;
                     }
                     if (ll < limit && ll < WandsMod.config.max_limit) {
-                        add_to_buffer(x, y, z);
-                        ll++;
+                        if(add_to_buffer(x, y, z)) {
+                            ll++;
+                        }
                     }
                 }
             }
@@ -1016,7 +1009,7 @@ public class Wand {
         }
     }
     boolean place_block(BlockPos block_pos,BlockState state) {
-        boolean placed = false;
+                                                                                                                                                                                                                                                                                                    boolean placed = false;
         if(!WandsExpectPlatform.claimCanInteract((ServerLevel) level,block_pos,player)){
             player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"),false);
             return false;
@@ -1437,7 +1430,7 @@ public class Wand {
         }
     }
 	public boolean add_to_buffer(int x, int y, int z) {
-            return add_to_buffer(x,y,z,null);
+        return add_to_buffer(x,y,z,null);
     }
     public boolean add_to_buffer(int x, int y, int z, BlockState with_state) {
         if (!level.isOutsideBuildHeight(y) && block_buffer.get_length() < limit){
@@ -1615,7 +1608,7 @@ public class Wand {
         }
         return false;
     }
-    public boolean can_place(BlockState state,BlockPos p) {
+    public boolean can_place(BlockState state, BlockPos p) {
         if(offhand_state!=null && WandUtils.is_plant(offhand_state)){
             return (state.isAir() || replace_fluid(state)) && offhand_state.canSurvive(level,p);
         }else{

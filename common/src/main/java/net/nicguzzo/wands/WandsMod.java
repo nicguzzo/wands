@@ -150,9 +150,7 @@ public class WandsMod {
     public static void init() {
         ITEMS.register();
         MENUES.register();
-        #if MC>="1200"
-            TABS.register();
-        #endif
+        TABS.register();
 
         NetworkManager.registerReceiver(Side.C2S, KB_PACKET, (packet,context)->{
             int key=packet.readInt();
@@ -232,7 +230,7 @@ public class WandsMod {
                 //wand.lastPlayerDirection=player_dir;
                 //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
                 wand.do_or_preview(player,level, block_state, pos, side, hit, stack,(WandItem)stack.getItem(),true);
-                wand.clear(false);
+                wand.clear(wand.mode== WandProps.Mode.PASTE || wand.mode== WandProps.Mode.COPY);
             });
         });
 
