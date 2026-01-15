@@ -109,17 +109,64 @@ public class WandConfigScreen {
                     .setSaveConsumer(newValue -> conf.survival_unenchanted_drops = newValue)
                     .build());
     //allow_wand_to_break
-            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_wand_to_break"), conf.allow_wand_to_break)
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_stone_wand_to_break"), conf.allow_stone_wand_to_break)
                     .setDefaultValue(true)
-                    .setTooltip(Compat.translatable("option.wands.allow_wand_to_break_tt"))
-                    .setSaveConsumer(newValue -> conf.allow_wand_to_break = newValue)
+                    .setTooltip(Compat.translatable("option.wands.allow_stone_wand_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_stone_wand_to_break = newValue)
                     .build());
-    //allow_offhand_to_break
-            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_offhand_to_break"), conf.allow_offhand_to_break)
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_copper_wand_to_break"), conf.allow_copper_wand_to_break)
                     .setDefaultValue(true)
-                    .setTooltip(Compat.translatable("option.wands.allow_offhand_to_break_tt"))
-                    .setSaveConsumer(newValue -> conf.allow_offhand_to_break = newValue)
+                    .setTooltip(Compat.translatable("option.wands.allow_copper_wand_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_copper_wand_to_break = newValue)
                     .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_iron_wand_to_break"), conf.allow_iron_wand_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_iron_wand_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_iron_wand_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_diamond_wand_to_break"), conf.allow_diamond_wand_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_diamond_wand_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_diamond_wand_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_netherite_wand_to_break"), conf.allow_netherite_wand_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_netherite_wand_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_netherite_wand_to_break = newValue)
+                    .build());
+
+
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_wooden_tools_to_break"), conf.allow_wooden_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_wooden_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_wooden_tools_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_stone_tools_to_break"), conf.allow_stone_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_stone_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_stone_tools_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_copper_tools_to_break"), conf.allow_copper_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_copper_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_copper_tools_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_iron_tools_to_break"), conf.allow_iron_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_iron_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_iron_tools_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_diamond_tools_to_break"), conf.allow_diamond_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_diamond_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_diamond_tools_to_break = newValue)
+                    .build());
+            general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_netherite_tools_to_break"), conf.allow_netherite_tools_to_break)
+                    .setDefaultValue(true)
+                    .setTooltip(Compat.translatable("option.wands.allow_netherite_tools_to_break"))
+                    .setSaveConsumer(newValue -> conf.allow_netherite_tools_to_break = newValue)
+                    .build());
+
     //check_advancements
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.check_advancements"), conf.check_advancements)
                     .setDefaultValue(true)
@@ -201,11 +248,6 @@ public class WandConfigScreen {
                 .setSaveConsumer(newValue -> conf.paste_outlines = newValue)
                 .build());
 
-        preview.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.render_last"), conf.render_last)
-                .setDefaultValue(true)
-                .setTooltip(Compat.translatable("option.wands.render_last_tt"))
-                .setSaveConsumer(newValue -> conf.render_last = newValue)
-                .build());
         preview.addEntry(entryBuilder.startFloatField(Compat.translatable("option.wands.wand_mode_display_x_pos"), conf.wand_mode_display_x_pos)
                 .setDefaultValue(75.0f)
                 .setTooltip(Compat.translatable("option.wands.wand_mode_display_x_pos_tt"))

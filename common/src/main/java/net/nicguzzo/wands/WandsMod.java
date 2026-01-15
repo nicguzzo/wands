@@ -253,7 +253,7 @@ public class WandsMod {
             //wand.lastPlayerDirection=player_dir;
             //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
             wand.do_or_preview(player, level, block_state, pos, side, hit, stack, (WandItem) stack.getItem(), true);
-            wand.clear();
+            wand.clear(wand.mode== WandProps.Mode.PASTE || wand.mode== WandProps.Mode.COPY);
         });
         NetworkManager.registerReceiver(Side.C2S, Networking.GlobalSettingsPacket.TYPE, Networking.GlobalSettingsPacket.STREAM_CODEC, (packet, context) -> {
             Player player = context.getPlayer();
@@ -501,7 +501,7 @@ public class WandsMod {
                         break;
                     case CLEAR:
 
-                        wand.clear();
+                        wand.clear(true);
 
                         if (player != null) player.displayClientMessage(Compat.literal("wand cleared"), false);
                         break;

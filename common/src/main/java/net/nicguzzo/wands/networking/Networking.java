@@ -217,8 +217,8 @@ public class Networking {
             float blocks_per_xp,
             boolean destroy_in_survival_drop,
             boolean survival_unenchanted_drops,
-            boolean allow_wand_to_break,
-            boolean allow_offhand_to_break,
+            //boolean allow_wand_to_break,
+            //boolean allow_offhand_to_break,
             boolean mend_tools
     ) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ConfPacket> TYPE = new CustomPacketPayload.Type<>(CONF_PACKET);
@@ -230,10 +230,10 @@ public class Networking {
                 ByteBufCodecs.BOOL,
                 ConfPacket::survival_unenchanted_drops,
                 ByteBufCodecs.BOOL,
-                ConfPacket::allow_wand_to_break,
-                ByteBufCodecs.BOOL,
-                ConfPacket::allow_offhand_to_break,
-                ByteBufCodecs.BOOL,
+//                ConfPacket::allow_wand_to_break,
+//                ByteBufCodecs.BOOL,
+//                ConfPacket::allow_offhand_to_break,
+//                ByteBufCodecs.BOOL,
                 ConfPacket::mend_tools,
                 ConfPacket::new
         );

@@ -92,7 +92,7 @@ public class WandItem extends Item {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
-            ClientRender.wand.clear();
+            ClientRender.wand.clear(ClientRender.wand.mode==Mode.PASTE || ClientRender.wand.mode== WandProps.Mode.COPY);
         }
         return InteractionResult.SUCCESS;
     }
@@ -124,7 +124,7 @@ public class WandItem extends Item {
                 send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(), wand.hit, wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 ClientRender.wand.copy();
-                ClientRender.wand.clear();
+                ClientRender.wand.clear(mode==Mode.PASTE || wand.mode== WandProps.Mode.COPY);
             }
         } else {
             //ClientRender.wand.clear();

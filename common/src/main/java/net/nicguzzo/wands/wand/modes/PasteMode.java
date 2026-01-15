@@ -51,13 +51,18 @@ public class PasteMode extends WandMode {
                 int py=b_pos.getY() + p.getY();
                 int pz=b_pos.getZ() + p.getZ()*mz;
                 st=wand.rotate_mirror(st,mirroraxis);
-                if(wand.palette.has_palette) {
-                    wand.block_buffer.add(px,py,pz,wand,null);
-                }else {
-                    wand.block_buffer.add(px,py,pz,st, st.getBlock().asItem());
+                if (wand.palette.has_palette) {
+                    wand.block_buffer.add(px, py, pz, wand, null);
+                } else {
+                    wand.block_buffer.add(px, py, pz, st, st.getBlock().asItem());
                 }
             }
-            wand.validate_buffer();
+            //WandsMod.log("paste: "+wand.block_buffer.get_length(),true);
+            if(wand.block_buffer.get_length()>0) {
+                wand.valid = true;
+                wand.limit_reached=false;
+            }
+            //wand.validate_buffer();
         }
     }
 }

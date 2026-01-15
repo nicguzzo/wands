@@ -29,7 +29,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, ROW_COL {
+        },
+        ROW_COL {
             public String toString() {
                 return "wands.modes.row_col";
             }
@@ -45,7 +46,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, FILL {
+        },
+        FILL {
             public String toString() {
                 return "wands.modes.fill";
             }
@@ -61,7 +63,8 @@ public class WandProps {
             public int n_clicks() {
                 return 2;
             }
-        }, AREA {
+        },
+        AREA {
             public String toString() {
                 return "wands.modes.area";
             }
@@ -77,7 +80,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, GRID {
+        },
+        GRID {
             public String toString() {
                 return "wands.modes.grid";
             }
@@ -93,7 +97,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, LINE {
+        },
+        LINE {
             public String toString() {
                 return "wands.modes.line";
             }
@@ -109,7 +114,8 @@ public class WandProps {
             public int n_clicks() {
                 return 2;
             }
-        }, CIRCLE {
+        },
+        CIRCLE {
             public String toString() {
                 return "wands.modes.circle";
             }
@@ -125,7 +131,8 @@ public class WandProps {
             public int n_clicks() {
                 return 2;
             }
-        }, COPY {
+        },
+        COPY {
             public String toString() {
                 return "wands.modes.copy";
             }
@@ -141,7 +148,8 @@ public class WandProps {
             public int n_clicks() {
                 return 2;
             }
-        }, PASTE {
+        },
+        PASTE {
             public String toString() {
                 return "wands.modes.paste";
             }
@@ -157,7 +165,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, TUNNEL {
+        },
+        TUNNEL {
             public String toString() {
                 return "wands.modes.tunnel";
             }
@@ -173,7 +182,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, VEIN {
+        },
+        VEIN {
             public String toString() {
                 return "wands.modes.vein";
             }
@@ -189,7 +199,8 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, BLAST {
+        },
+        BLAST {
             public String toString() {
                 return "wands.modes.blast";
             }
@@ -251,7 +262,8 @@ public class WandProps {
             public String toString() {
                 return "wands.orientation.row";
             }
-        }, COL {
+        },
+        COL {
             public String toString() {
                 return "wands.orientation.col";
             }
@@ -271,11 +283,13 @@ public class WandProps {
             public String toString() {
                 return "wands.state_mode.clone";
             }
-        }, APPLY {
+        },
+        APPLY {
             public String toString() {
                 return "wands.state_mode.apply";
             }
-        }, TARGET {
+        },
+        TARGET {
             public String toString() {
                 return "wands.state_mode.target";
             }
@@ -287,15 +301,18 @@ public class WandProps {
             public String toString() {
                 return "wands.action.place";
             }
-        }, REPLACE {
+        },
+        REPLACE {
             public String toString() {
                 return "wands.action.replace";
             }
-        }, DESTROY {
+        },
+        DESTROY {
             public String toString() {
                 return "wands.action.destroy";
             }
-        }, USE {
+        },
+        USE {
             public String toString() {
                 return "wands.action.use";
             }
@@ -312,7 +329,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, CFILLED {
+            ;},
+        CFILLED {
             public String toString() {
                 return "cfill";
             }
@@ -321,7 +339,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, EVEN {
+            ;},
+        EVEN {
             public String toString() {
                 return "circle_even";
             }
@@ -330,7 +349,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, DIAGSPREAD {
+            ;},
+        DIAGSPREAD {
             public String toString() {
                 return "diag_spread";
             }
@@ -339,7 +359,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, MATCHSTATE {
+            ;},
+        MATCHSTATE {
             public String toString() {
                 return "match_state";
             }
@@ -348,7 +369,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, INCSELBLOCK {
+            ;},
+        INCSELBLOCK {
             public String toString() {
                 return "inc_sel_block";
             }
@@ -357,7 +379,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, STAIRSLAB {
+            ;},
+        STAIRSLAB {
             public String toString() {
                 return "stair_slab";
             }
@@ -366,7 +389,8 @@ public class WandProps {
                 return false;
             }
 
-            ;}, RFILLED {
+            ;},
+        RFILLED {
             public String toString() {
                 return "rfill";
             }
@@ -375,13 +399,24 @@ public class WandProps {
                 return true;
             }
 
-            ;}, TARGET_AIR {
+            ;},
+        TARGET_AIR {
             public String toString() {
                 return "target_air";
             }
 
             public boolean get_default() {
                 return false;
+            }
+
+            ;},
+        CLEAR_P1 {
+            public String toString() {
+                return "clear_p1";
+            }
+
+            public boolean get_default() {
+                return true;
             }
 
             ;};
@@ -394,71 +429,88 @@ public class WandProps {
             public String toString() {
                 return "multiplier";
             }
-        }, ROWCOLLIM {
+        },
+        ROWCOLLIM {
             public String toString() {
                 return "row_col_limit";
             }
-        }, AREALIM {
+        },
+        AREALIM {
             public String toString() {
                 return "area_limit";
             }
-        }, BLASTRAD {
+        },
+        BLASTRAD {
             public String toString() {
                 return "blast_radius";
             }
-        }, GRIDM {
+        },
+        GRIDM {
             public String toString() {
                 return "grid_m";
             }
-        }, GRIDN {
+        },
+        GRIDN {
             public String toString() {
                 return "grid_n";
             }
-        }, GRIDMS {
+        },
+        GRIDMS {
             public String toString() {
                 return "grid_msp";
             }
-        }, GRIDNS {
+        },
+        GRIDNS {
             public String toString() {
                 return "grid_nsp";
             }
-        }, GRIDMOFF {
+        },
+        GRIDMOFF {
             public String toString() {
                 return "grid_moff";
             }
-        }, GRIDNOFF {
+        },
+        GRIDNOFF {
             public String toString() {
                 return "grid_noff";
             }
-        }, MIRRORAXIS {
+        },
+        MIRRORAXIS {
             public String toString() {
                 return "mirror_axis";
             }
-        }, SKIPBLOCK {
+        },
+        SKIPBLOCK {
             public String toString() {
                 return "skip_block";
             }
-        }, TUNNEL_W {
+        },
+        TUNNEL_W {
             public String toString() {
                 return "tunnel_w";
             }
-        }, TUNNEL_H {
+        },
+        TUNNEL_H {
             public String toString() {
                 return "tunnel_h";
             }
-        }, TUNNEL_OX {
+        },
+        TUNNEL_OX {
             public String toString() {
                 return "tunnel_ox";
             }
-        }, TUNNEL_OY {
+        },
+        TUNNEL_OY {
             public String toString() {
                 return "tunnel_oy";
             }
-        }, TUNNEL_DEPTH {
+        },
+        TUNNEL_DEPTH {
             public String toString() {
                 return "tunnel_d";
             }
-        }, ROCK_RADIUS {
+        },
+        ROCK_RADIUS {
             public String toString() {
                 return "rock_radius";
             }
@@ -497,14 +549,14 @@ public class WandProps {
             TUNNEL_H.def = 2;
             TUNNEL_DEPTH.def = 3;
             TUNNEL_DEPTH.min = 1;
-            ROCK_RADIUS.min=0;
-            ROCK_RADIUS.def=2;
-            ROCK_NOISE.min=0;
-            ROCK_NOISE.max=16;
-            ROCK_NOISE.def=3;
-            AIR_TARGET_DISTANCE.def=0;
-            AIR_TARGET_DISTANCE.min=0;
-            AIR_TARGET_DISTANCE.max=10;
+            ROCK_RADIUS.min = 0;
+            ROCK_RADIUS.def = 2;
+            ROCK_NOISE.min = 0;
+            ROCK_NOISE.max = 16;
+            ROCK_NOISE.def = 3;
+            AIR_TARGET_DISTANCE.def = 0;
+            AIR_TARGET_DISTANCE.min = 0;
+            AIR_TARGET_DISTANCE.max = 10;
         }
     }
 
@@ -598,9 +650,9 @@ public class WandProps {
         }
         CompoundTag tag = Compat.getTags(stack);
         int i;
-        if(!tag.contains(v.toString())){
-            i=v.def;
-        }else {
+        if (!tag.contains(v.toString())) {
+            i = v.def;
+        } else {
             i = tag.getInt(v.toString()).orElse(v.def);
         }
         if (i > v.max) {

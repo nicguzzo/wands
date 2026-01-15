@@ -5,8 +5,7 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "client": [
     "ItemRendererMixin",
-    "LevelRendererMixin",
-    "RenderWorldMixin"
+    "LevelRendererMixin"
   ],
   "mixins": [
     "AxeItemAccessor",

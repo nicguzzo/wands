@@ -76,7 +76,7 @@ public class WandsConfig {
     public int netherite_wand_durability = def_netherite_wand_durability;
     public boolean destroy_in_survival_drop = true;
     public boolean survival_unenchanted_drops = true;
-    public boolean allow_wand_to_break = false;
+    //public boolean allow_wand_to_break = false;
     public boolean allow_stone_wand_to_break = false;
     public boolean allow_copper_wand_to_break = false;
     public boolean allow_iron_wand_to_break = false;
@@ -88,7 +88,7 @@ public class WandsConfig {
     public boolean allow_copper_tools_to_break = false;
     public boolean allow_diamond_tools_to_break = false;
     public boolean allow_netherite_tools_to_break = false;
-    public boolean allow_offhand_to_break = false;
+    //public boolean allow_offhand_to_break = false;
     public boolean mend_tools = true;
     public boolean enable_vein_mode = true;
     public boolean enable_blast_mode = true;

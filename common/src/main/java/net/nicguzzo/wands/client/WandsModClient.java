@@ -42,7 +42,7 @@ public class WandsModClient {
     public static boolean has_optifine = false;
     public static boolean has_opac = false;
     public static KeyMapping wand_menu_km;
-    //public static KeyMapping palette_menu_km;
+
     public static final Logger LOGGER = LogManager.getLogger();
     static final public Map keys = new HashMap<KeyMapping, WandsMod.WandKeys>();
     static final public int wand_menu_key = GLFW.GLFW_KEY_Y;// InputConstants.KEY_Y;
@@ -63,7 +63,6 @@ public class WandsModClient {
     static final public int toggle_stair_slab_key = GLFW.GLFW_KEY_PERIOD;//InputConstants.KEY_PERIOD;
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
-    //static final String tab = "key.categories.wands";
     public static final KeyMapping.Category tab = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(WandsMod.MOD_ID, "key.categories.wands"));
     static final String k = "key.wands.";
 
@@ -88,17 +87,13 @@ public class WandsModClient {
         keys.put(new KeyMapping(k + "area_diagonal_spread", area_diagonal_spread, tab), WandsMod.WandKeys.DIAGONAL_SPREAD);
         keys.put(new KeyMapping(k + "inc_sel_block", inc_sel_block, tab), WandsMod.WandKeys.INC_SEL_BLK);
         keys.put(new KeyMapping(k + "clear_wand", GLFW.GLFW_KEY_C, tab), WandsMod.WandKeys.CLEAR);
-        /*keys.put(new KeyMapping(k+"clear_wand",
-            InputConstants.Type.MOUSE,
-            InputConstants.MOUSE_BUTTON_LEFT,
-            tab),WandsMod.WandKeys.CLEAR);*/
 
         keys.forEach((km, v) -> Compat.register_key((KeyMapping) km));
 
         ClientTickEvent.CLIENT_PRE.register(e -> {
             boolean any = false;
             Iterator<Map.Entry<KeyMapping, WandsMod.WandKeys>> itr = keys.entrySet().iterator();
-            Minecraft client=e;
+            Minecraft client = e;
             while (itr.hasNext()) {
                 Map.Entry<KeyMapping, WandsMod.WandKeys> me = itr.next();
                 KeyMapping km = me.getKey();
@@ -110,10 +105,10 @@ public class WandsModClient {
                     } else {
                         send_key(key.ordinal(), client.hasShiftDown(), client.hasAltDown());
                     }
-                    if(key==WandsMod.WandKeys.ROTATE){
+                    if (key == WandsMod.WandKeys.ROTATE) {
 
                         //TODO:move this to another key?
-                        if( ClientRender.wand!=null && ClientRender.wand.mode == WandProps.Mode.ROCK){
+                        if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
                             ClientRender.wand.get_mode().randomize();
                         }
                     }
@@ -132,12 +127,14 @@ public class WandsModClient {
         });
 
         //Compat.render_info();
-        ClientGuiEvent.RENDER_HUD.register((e, d)->{ WandsModClient.render_wand_info(e);});
+        ClientGuiEvent.RENDER_HUD.register((e, d) -> {
+            WandsModClient.render_wand_info(e);
+        });
 
         NetworkManager.registerReceiver(Side.S2C, Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC, (data, context) -> {
             //LOGGER.info("got PlayerDataPacket");
-            if(ClientRender.wand!=null){
-                ClientRender.wand.player_data=data.tag();
+            if (ClientRender.wand != null) {
+                ClientRender.wand.player_data = data.tag();
             }
         });
 
@@ -147,8 +144,8 @@ public class WandsModClient {
                 WandsMod.config.blocks_per_xp = data.blocks_per_xp();
                 WandsMod.config.destroy_in_survival_drop = data.destroy_in_survival_drop();
                 WandsMod.config.survival_unenchanted_drops = data.survival_unenchanted_drops();
-                WandsMod.config.allow_wand_to_break = data.allow_wand_to_break();
-                WandsMod.config.allow_offhand_to_break = data.allow_offhand_to_break();
+                //WandsMod.config.allow_wand_to_break = data.allow_wand_to_break();
+                //WandsMod.config.allow_offhand_to_break = data.allow_offhand_to_break();
                 WandsMod.config.mend_tools = data.mend_tools();
                 //LOGGER.info("got config");
             }
@@ -215,8 +212,8 @@ public class WandsModClient {
         }
     }
 
-    public static void send_palette(boolean next_mode, boolean toggle_rotate,int grad_h) {
-        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate,grad_h));
+    public static void send_palette(boolean next_mode, boolean toggle_rotate, int grad_h) {
+        NetworkManager.sendToServer(new Networking.PalettePacket(next_mode, toggle_rotate, grad_h));
     }
 
     public static void send_wand(ItemStack item) {
@@ -236,32 +233,21 @@ public class WandsModClient {
 
             if (main_bag || off_bag || main) {
                 if (main_bag || off_bag) {
-                    //MagicBagItem bag=(MagicBagItem)stack.getItem();
-                    //RenderSystem.enableBlend();
-                    //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
-                    //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                    //Compat.set_pos_tex_shader();
                     int h = 3 * font.lineHeight;
                     float x = (int) (screenWidth * ((WandsMod.config.wand_mode_display_x_pos) / 100.0f));
                     float y = (int) ((screenHeight - h) * ((WandsMod.config.wand_mode_display_y_pos) / 100.0f));
                     ItemStack s = main_bag ? stack : offhand_stack;
-                    ItemStack bgi = MagicBagItem.getItem(s,client.level.registryAccess());
+                    ItemStack bgi = MagicBagItem.getItem(s, client.level.registryAccess());
                     int y_off = 0;
                     if (main) {
                         y_off = -font.lineHeight * 3;
                     }
-                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId() ).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffffff);
+                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId()).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffffff);
                     gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffffff);
                 }
                 if (main) {
-                    //RenderSystem.enableBlend();
-                    //RenderSystem.defaultBlendFunc();
                     Font font = client.font;
-
-                    //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                    //Compat.set_pos_tex_shader();
-
                     Wand wand = ClientRender.wand;
                     WandProps.Mode mode = WandProps.getMode(stack);
                     WandProps.Action action = WandProps.getAction(stack);
@@ -359,7 +345,7 @@ public class WandsModClient {
 
     public static void cancel_wand() {
         if (ClientRender.wand != null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)) {
-            ClientRender.wand.clear();
+            ClientRender.wand.clear(true);
             if (ClientRender.wand.player != null) {
                 ClientRender.wand.player.displayClientMessage(Compat.literal("wand cleared"), false);
             }

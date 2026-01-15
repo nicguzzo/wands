@@ -48,7 +48,6 @@ public class MagicBagMenu extends AbstractContainerMenu {
             }
         }
         this.addSlot(new BagSlot(bagcontainer, 0, 80,32,bag,playerInventory.player.level().registryAccess()));
-
     }
 
     @Override
