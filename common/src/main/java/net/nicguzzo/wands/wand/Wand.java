@@ -194,7 +194,7 @@ public class Wand {
     public boolean removes_water = false;
     public boolean removes_lava = false;
     public boolean can_blast = false;
-
+    private boolean allow_wand_to_break=false;
 
     public BlockPos getP1() {
         return p1;
@@ -1233,7 +1233,7 @@ public class Wand {
                     }
                     if (wand_durability == 1) {
                         player.displayClientMessage(Compat.literal("wand damaged"), false);
-                        if (WandsMod.config.allow_wand_to_break &&
+                        if (this.allow_wand_to_break &&
                                 digger_item != null && digger_item.getItem() == Items.AIR
                         ) {
 
@@ -1959,22 +1959,26 @@ public class Wand {
         if (this.wand_stack == null) {
             return true;
         }
+        this.allow_wand_to_break=false;
         int dmg = this.wand_stack.getMaxDamage() - this.wand_stack.getDamageValue();
         WandItem wand_item = (WandItem) this.wand_stack.getItem();
         if (dmg <= 1) {
             switch (wand_item.tier) {
                 case STONE_WAND:
-                    return WandsMod.config.allow_stone_wand_to_break;
+                    this.allow_wand_to_break=WandsMod.config.allow_stone_wand_to_break;
+                    return !this.allow_wand_to_break;
                 case COPPER_WAND:
-                    return WandsMod.config.allow_copper_wand_to_break;
+                    this.allow_wand_to_break=WandsMod.config.allow_copper_wand_to_break;
+                    return !this.allow_wand_to_break;
                 case IRON_WAND:
-                    return WandsMod.config.allow_iron_wand_to_break;
+                    this.allow_wand_to_break=WandsMod.config.allow_iron_wand_to_break;
+                    return !this.allow_wand_to_break;
                 case DIAMOND_WAND:
-                    return WandsMod.config.allow_diamond_wand_to_break;
+                    this.allow_wand_to_break=WandsMod.config.allow_diamond_wand_to_break;
+                    return !this.allow_wand_to_break;
                 case NETHERITE_WAND:
-                    return WandsMod.config.allow_netherite_wand_to_break;
-                case CREATIVE_WAND:
-                    return false;
+                    this.allow_wand_to_break=WandsMod.config.allow_netherite_wand_to_break;
+                    return !this.allow_wand_to_break;
             }
         }
         if(wand_item.unbreakable){

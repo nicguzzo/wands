@@ -277,7 +277,7 @@ public class WandsMod {
             }
             if (!Compat.player_level(player).isClientSide()) {
                 if (WandsMod.config != null) {
-                    NetworkManager.sendToPlayer(player, new Networking.ConfPacket(WandsMod.config.blocks_per_xp, WandsMod.config.destroy_in_survival_drop, WandsMod.config.survival_unenchanted_drops, WandsMod.config.allow_wand_to_break, WandsMod.config.allow_offhand_to_break, WandsMod.config.mend_tools));
+                    NetworkManager.sendToPlayer(player, new Networking.ConfPacket(WandsMod.config.blocks_per_xp, WandsMod.config.destroy_in_survival_drop, WandsMod.config.survival_unenchanted_drops, WandsMod.config.mend_tools));
                     //LOGGER.info("config sent");
                 }
                 NetworkManager.sendToPlayer(player,new Networking.PlayerDataPacket(wand.player_data));
