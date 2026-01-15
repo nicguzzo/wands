@@ -22,10 +22,10 @@ public class WandToast implements Toast {
         Minecraft client=Minecraft.getInstance();
         Compat.set_pos_tex_shader();
         Compat.set_color(1.0F, 1.0F, 1.0F, 1.0F);
-          guiGraphics.blit(TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
+        guiGraphics.blit(TEXTURE, 0, 0, 0, 96, 0, 0,this.width(), this.height());
         if(client.player!=null) {
             ItemStack s = client.player.getMainHandItem();
-                guiGraphics.renderFakeItem(s,10,6);
+            guiGraphics.renderFakeItem(s,10,6);
         }
         guiGraphics.drawString(client.font,text ,30, 12, 0xffffffff,false);
         return l >= 1000L ? Visibility.HIDE : Visibility.SHOW;

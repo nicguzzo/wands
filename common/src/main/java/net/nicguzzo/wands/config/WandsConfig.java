@@ -69,6 +69,7 @@ public class WandsConfig {
     public boolean allow_iron_wand_to_break = false;
     public boolean allow_diamond_wand_to_break = false;
     public boolean allow_netherite_wand_to_break = false;
+    public boolean allow_wooden_tools_to_break = false;
     public boolean allow_stone_tools_to_break = false;
     public boolean allow_iron_tools_to_break = false;
     public boolean allow_copper_tools_to_break = false;

@@ -1048,7 +1048,7 @@ public class Wand {
         boolean _tool_would_break=false;
         boolean _wand_would_break=wand_would_break();
         if (!creative) {
-            if (!_wand_would_break) {
+            if (_wand_would_break) {
                 damaged_tool = true;
                 return false;
             }
@@ -1060,7 +1060,7 @@ public class Wand {
                     no_tool = true;
                     return false;
                 }
-                if (!_tool_would_break) {
+                if (_tool_would_break) {
                     damaged_tool = true;
                     return false;
                 }
@@ -1082,7 +1082,7 @@ public class Wand {
                 ItemStack pumpkin_seeds = Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
                 drop(block_pos, state, null, pumpkin_seeds);
-                if(_wand_would_break) {
+                if(!_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
                 consume_xp();
@@ -1094,7 +1094,7 @@ public class Wand {
             level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
             send_sound = Sounds.SPLASH.ordinal();
             if (!creative) {
-                if(_wand_would_break) {
+                if(!_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
                 consume_xp();
@@ -1136,10 +1136,10 @@ public class Wand {
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
             if (digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative ) {
-                    if(_wand_would_break) {
+                    if(!_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
-                    if(_tool_would_break) {
+                    if(!_tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
                     consume_xp();
@@ -1218,10 +1218,10 @@ public class Wand {
                     }
                 }
                 if (placed) {
-                    if ((destroy || replace) && digger_item != null && _tool_would_break) {
+                    if ((destroy || replace) && digger_item != null && !_tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
-                    if (!this.unbreakable && _wand_would_break) {
+                    if (!this.unbreakable && !_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
                     consume_xp();
@@ -1503,7 +1503,7 @@ public class Wand {
         WandItem wand_item=(WandItem)this.wand_stack.getItem();
         for (int i = 0; i < n_tools; i++) {
             if (tools[i] != null) {
-                if (!tools[i].isEmpty() && tool_would_break(wand_item,tools[i])) {
+                if (!tools[i].isEmpty() && !tool_would_break(wand_item,tools[i])) {
                     if (((destroy || replace) && can_dig(state, check_speed, tools[i])) ||
                             ((use) && (
                                     (tools[i].getItem() instanceof HoeItem && WandUtils.is_tillable(state)) ||
@@ -1836,50 +1836,66 @@ public class Wand {
     private boolean tool_would_break(WandItem wand_item,ItemStack tool){
 
         int dmg = tool.getMaxDamage() - tool.getDamageValue();
+        boolean would_break=dmg<= TOOL_DAMAGE_STOP;
+
         Item tool_item=tool.getItem();
-        if(WandsMod.config.allow_stone_tools_to_break) {
-            if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.STONE_SHOVEL.getDefaultInstance().is(tool_item)||
-               Items.STONE_HOE.getDefaultInstance().is(tool_item)
-            ) {
-                return true;
+        if(would_break) {
+
+            if (WandsMod.config.allow_wooden_tools_to_break) {
+                if (Items.WOODEN_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_HOE.getDefaultInstance().is(tool_item)
+                ) {
+                    return false;
+                }
+            }
+            if (WandsMod.config.allow_stone_tools_to_break) {
+                if (Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_HOE.getDefaultInstance().is(tool_item)
+                ) {
+                    return false;
+                }
+            }
+            if (WandsMod.config.allow_iron_tools_to_break) {
+                if (Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_HOE.getDefaultInstance().is(tool_item)
+                ) {
+                    return false;
+                }
+            }
+            if (WandsMod.config.allow_diamond_tools_to_break) {
+                if (Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
+                ) {
+                    return false;
+                }
+            }
+            if (WandsMod.config.allow_netherite_tools_to_break) {
+                if (Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
+                ) {
+                    return false;
+                }
             }
         }
-        else if(WandsMod.config.allow_iron_tools_to_break) {
-            if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
-               Items.IRON_SHOVEL.getDefaultInstance().is(tool_item)||
-               Items.IRON_HOE.getDefaultInstance().is(tool_item)
-            ) {
-                return true;
-            }
-        }else if(WandsMod.config.allow_diamond_tools_to_break) {
-            if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item)||
-               Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
-            ) {
-                return true;
-            }
-        } else if(WandsMod.config.allow_netherite_tools_to_break) {
-            if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item)||
-               Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
-            ) {
-                return true;
-            }
-        }
-        return dmg>= TOOL_DAMAGE_STOP;
+        return would_break;
     }
     private boolean wand_would_break(){
         if(this.wand_stack==null){
             return true;
         }
         int dmg = this.wand_stack.getMaxDamage() - this.wand_stack.getDamageValue();
+        WandItem wand_item = (WandItem) this.wand_stack.getItem();
         if(dmg<=1) {
-            WandItem wand_item = (WandItem) this.wand_stack.getItem();
             switch (wand_item.tier) {
                 case STONE_WAND:
                     return WandsMod.config.allow_stone_wand_to_break;
@@ -1891,6 +1907,9 @@ public class Wand {
                     return WandsMod.config.allow_netherite_wand_to_break;
             }
         }
-        return dmg>=1;
+        if(wand_item.unbreakable){
+            return false;
+        }
+        return dmg<=1;
     }
 }
