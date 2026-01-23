@@ -1,9 +1,5 @@
 package net.nicguzzo.wands.items;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -17,18 +13,10 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.TagValueOutput;
-import net.minecraft.world.level.storage.ValueInput;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
-import net.nicguzzo.wands.wand.PlayerWand;
-import net.nicguzzo.wands.wand.Wand;
-
-import java.util.List;
 import java.util.Optional;
 
 public class PaletteItem extends Item {
@@ -43,7 +31,7 @@ public class PaletteItem extends Item {
     public PaletteItem(Properties properties) {
         super(properties);
     }
-
+/*
     @Environment(EnvType.CLIENT)
     //@Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
@@ -84,7 +72,7 @@ public class PaletteItem extends Item {
             list.add(mode_val);
         list.add(Compat.literal("rotate: " + (tag.getBoolean("rotate").orElse(false) ? "on" : "off")));
     }
-
+*/
     static public PaletteMode getMode(ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
             CompoundTag tag = Compat.getTags(stack);
