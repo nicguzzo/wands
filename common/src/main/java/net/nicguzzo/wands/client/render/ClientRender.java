@@ -1371,26 +1371,20 @@ public class ClientRender {
                     bufferSource.endLastBatch();
                }
            }
-       } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderType.lines());
-            consumer.addVertex(p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F)
-                .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
-            consumer.addVertex(wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)
-                .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
-            preview_block(matrix,consumer,
-                    p1_x,p1_y,p1_z,
-                    p1_x + 1, p1_y + 1, p1_z + 1,
-                    start_col);
-            preview_block(matrix,consumer,
-                    p2_x - off2,
-                    p2_y - off2,
-                    p2_z - off2,
-                    p2_x + 1 + off2,
-                    p2_y + 1 + off2,
-                    p2_z + 1 + off2,
-                    end_col);
+        } else {
+            VertexConsumer consumer = bufferSource.getBuffer(RenderType.lines());
+            consumer.addVertex(matrix, p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F)
+                    .setColor(line_col.r, line_col.g, line_col.b, line_col.a)
+                    .setNormal(1.0f, 1.0f, 1.0f);
+            consumer.addVertex(matrix, wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)
+                    .setColor(line_col.r, line_col.g, line_col.b, line_col.a)
+                    .setNormal(1.0f, 1.0f, 1.0f);
+
+            preview_block(matrix, consumer, p1_x, p1_y, p1_z, p1_x + 1, p1_y + 1, p1_z + 1, start_col);
+            preview_block(matrix, consumer, p2_x - off2, p2_y - off2, p2_z - off2, p2_x + 1 + off2, p2_y + 1 + off2, p2_z + 1 + off2, end_col);
+
             bufferSource.endLastBatch();
-       }
+        }
     }
 }
 
