@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
@@ -177,11 +178,21 @@ public class WandsModClient {
             //LOGGER.info("got ToastPacket");
             boolean no_tool = data.no_tool();
             boolean damaged_tool = data.damaged_tool();
-            if (no_tool) {
-                Compat.toast(new WandToast("no tool"));
-            }
-            if (damaged_tool) {
-                Compat.toast(new WandToast("invalid or damaged"));
+            if (WandsMod.config.toast_in_action_bar) {
+                Player player = context.getPlayer();
+                if (no_tool) {
+                    player.displayClientMessage(Compat.literal("no tool"), true);
+                }
+                if (damaged_tool) {
+                    player.displayClientMessage(Compat.literal("invalid or damaged"), true);
+                }
+            } else {
+                if (no_tool) {
+                    Compat.toast(new WandToast("no tool"));
+                }
+                if (damaged_tool) {
+                    Compat.toast(new WandToast("invalid or damaged"));
+                }
             }
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC, (data, context) -> {

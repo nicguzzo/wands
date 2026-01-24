@@ -67,6 +67,8 @@
   "option.wands.bounding_box_tt": "",
   "option.wands.check_advancements": "Enable Advancements",
   "option.wands.check_advancements_tt": "",
+  "option.wands.toast_in_action_bar": "Toast in action bar",
+  "option.wands.toast_in_action_bar_tt": "Show toast messages (no tool, damaged tool) in the action bar instead of as popups",
   "option.wands.copy_outlines": "Copy mode outlines",
   "option.wands.copy_outlines_tt": "",
   "option.wands.destroy_color": "Destroy",
