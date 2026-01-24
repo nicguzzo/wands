@@ -264,7 +264,7 @@ public class ClientRender {
                             block_state=offhand_block.defaultBlockState();
                         }
                         boolean palette=wand.palette.has_palette && !wand.palette.palette_slots.isEmpty();
-                        if (block_state != null|| (palette) || mode==Mode.PASTE){
+                        if (block_state != null|| (palette) || mode==Mode.PASTE || mode==Mode.COPY){
                             if(palette){
                                 block_state=Blocks.STONE.defaultBlockState();
                             }
@@ -285,6 +285,11 @@ public class ClientRender {
                             wand.do_or_preview(player, Compat.player_level(player), block_state, pos, side,
                                     hit, stack, (WandItem) stack.getItem(), prnt);
                             preview_mode(wand.mode, matrixStack,bufferSource);
+
+                            // Render outline for target air block in Copy mode (only before first click)
+                            if (mode == Mode.COPY && wand.getP1() == null && drawlines && copy_outlines) {
+                                render_air_target_outline(pos, matrixStack, bufferSource);
+                            }
                         }
                     }else{
                         if(mode!=Mode.ROCK) {
@@ -352,7 +357,9 @@ public class ClientRender {
                     preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
                     if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
                         //bbox
-                        if (drawlines && fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.COPY|| mode == Mode.TUNNEL)) {
+                        boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
+                            (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
+                        if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
                         }
                         //actual block preview
@@ -416,6 +423,36 @@ public class ClientRender {
             bufferSource.endLastBatch();
         }
     }
+
+    /** Render an outline for the target air block position (used in Copy mode with target_air) */
+    public static void render_air_target_outline(BlockPos pos, PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
+        Camera camera = client.gameRenderer.getMainCamera();
+        Vec3 camPos = camera.position();
+
+        matrixStack.pushPose();
+        matrixStack.translate(-camPos.x, -camPos.y, -camPos.z);
+
+        VertexConsumer consumer;
+        if (fat_lines) {
+            consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
+        } else {
+            consumer = bufferSource.getBuffer(RenderTypes.lines());
+        }
+
+        float x = pos.getX();
+        float y = pos.getY();
+        float z = pos.getZ();
+
+        if (fat_lines) {
+            preview_block_fat(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col, false);
+        } else {
+            preview_block(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col);
+        }
+
+        bufferSource.endLastBatch();
+        matrixStack.popPose();
+    }
+
     static void preview_block(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
         fx1 += p_o;
         fy1 += p_o;

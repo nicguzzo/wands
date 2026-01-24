@@ -388,7 +388,7 @@ public class WandsMod {
                         break;
                     case N_DEC:
                         if (mode == WandProps.Mode.GRID) {
-                            WandProps.decVal(main_stack, WandProps.Value.GRIDN, inc);
+                            WandProps.decGrid(main_stack, WandProps.Value.GRIDN, inc, wand_item.limit);
                         }
                         break;
                     case M_INC:
@@ -417,7 +417,7 @@ public class WandsMod {
                                 WandProps.decVal(main_stack, WandProps.Value.ROWCOLLIM, inc);
                                 break;
                             case GRID:
-                                WandProps.decVal(main_stack, WandProps.Value.GRIDM, inc);
+                                WandProps.decGrid(main_stack, WandProps.Value.GRIDM, inc, wand_item.limit);
                                 break;
                             case AREA:
                                 WandProps.decVal(main_stack, WandProps.Value.AREALIM, inc);

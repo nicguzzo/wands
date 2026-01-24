@@ -13,6 +13,9 @@ public class LineMode extends WandMode {
             int x2 = wand.pos.getX();
             int y2 = wand.pos.getY();
             int z2 = wand.pos.getZ();
+            // Pre-set min/max Y for gradient palette mode
+            wand.block_buffer.min_y = Math.min(y1, y2);
+            wand.block_buffer.max_y = Math.max(y1, y2);
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);

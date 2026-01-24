@@ -132,6 +132,15 @@ public class PaletteItem extends Item {
         }
     }
 
+    // Used by CycleToggle in PaletteScreen (needs direct set for bidirectional cycling and filtering)
+    static public void setMode(ItemStack stack, PaletteMode mode) {
+        if (stack != null && !stack.isEmpty()) {
+            CompoundTag tag = Compat.getTags(stack);
+            tag.putInt("mode", mode.ordinal());
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+        }
+    }
+
     @Override
     public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
         ItemStack paletteItemStack = player.getItemInHand(interactionHand);

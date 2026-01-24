@@ -4,8 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -16,630 +14,1170 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.nicguzzo.wands.client.render.ClientRender;
+import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
-import net.nicguzzo.wands.client.gui.Select;
+import net.nicguzzo.wands.client.gui.CycleToggle;
+import net.nicguzzo.wands.client.gui.CycleSpinner;
+import net.nicguzzo.wands.client.gui.Section;
 import net.nicguzzo.wands.client.gui.Spinner;
+import net.nicguzzo.wands.client.gui.Tabs;
 import net.nicguzzo.wands.client.gui.Wdgt;
-import net.nicguzzo.wands.client.render.ClientRender;
-import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.networking.Networking;
-import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Value;
+import net.nicguzzo.wands.utils.Compat;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.client.gui.GuiGraphics;
+import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 public class WandScreen extends AbstractContainerScreen<WandMenu> {
-    ItemStack wand_stack = null;
-    WandItem wand_item = null;
-    GpuTextureView wand_bg_Texture;
-    GpuTextureView wand_inv_Texture;
-    static final int img_w = 256;
-    static final int img_h = 256;
-    Component rock_msg = Compat.literal("rotate for new rock");
-    private static final Identifier BG_TEX = Compat.create_resource("textures/gui/wand.png");
+    ItemStack wandStack=null;
+    WandItem wandItem =null;
+    GpuTextureView wandInventoryTexture;
+    static final int IMG_WIDTH = 256;
+    static final int IMG_HEIGHT = 256;
+
+    // ===== Color Constants =====
+    // Panel/Layout colors
+    public static final int COLOR_PANEL_BACKGROUND = 0xE61A1A1A;  // Semi-transparent black
+
+    // Button state colors
+    public static final int COLOR_BTN_HOVER = 0xE6666666;     // Medium gray
+    public static final int COLOR_BTN_SELECTED = 0xE6666666;  // Same as hover for consistency
+    public static final int COLOR_BTN_DISABLED = 0xB3B3B3B3;  // Light gray (Colorf 0.7, 0.7, 0.7, 0.7)
+
+    // Text colors
+    public static final int COLOR_TEXT_PRIMARY = 0xFFFFFFFF;   // White
+    public static final int COLOR_TEXT_SECTION = COLOR_TEXT_PRIMARY;   // For section headers
+    public static final int COLOR_WDGT_LABEL = 0xFFAAAAAA;     // Light gray for widget labels
+
+    // Tooltip colors
+    public static final int COLOR_TOOLTIP_TITLE = 0xFFFFFFFF;       // White for title line
+    public static final int COLOR_TOOLTIP_DESC = 0xFFAAAAAA;        // Gray for description lines
+    public static final int COLOR_TOOLTIP_BG = 0xF0100010;          // Dark background
+    public static final int COLOR_TOOLTIP_BORDER = 0x505000FF;      // Purple border
+
+    // ===== Layout Constants =====
+    /** Distance from screen edges to the panel */
+    public static final int SCREEN_MARGIN = 4;
+    /** Vertical spacing between sections within the panel */
+    public static final int SECTION_SPACING = 14;
+    /** Width of the main content area (excluding tabs) */
+    public static final int CONTENT_WIDTH = 100;
+    /** Horizontal padding inside the panel (around tabs and section) */
+    public static final int INNER_PADDING = 4;
+
+    // Toggle for vertical divider line between tabs and mode options
+    private static final boolean SHOW_TAB_DIVIDER = true;
+    private static final int COLOR_TAB_DIVIDER = 0xFF444444;  // Dark gray line
+    private static final int DIVIDER_LINE_WIDTH = 1;          // Divider line thickness in pixels
+
+
+
+    Component rockMessage  = Compat.literal("rotate for new rock");
     private static final Identifier INV_TEX = Compat.create_resource("textures/gui/inventory.png");
+    // Mode textures
+    private static final Identifier DIRECTION_TEX = Compat.create_resource("textures/gui/direction.png");
+    private static final Identifier ROW_TEX = Compat.create_resource("textures/gui/row.png");
+    private static final Identifier LINE_TEX = Compat.create_resource("textures/gui/line.png");
+    private static final Identifier GRID_TEX = Compat.create_resource("textures/gui/grid.png");
+    private static final Identifier CIRCLE_TEX = Compat.create_resource("textures/gui/circle.png");
+    private static final Identifier SPHERE_TEX = Compat.create_resource("textures/gui/sphere.png");
+    private static final Identifier FILL_TEX = Compat.create_resource("textures/gui/fill.png");
+    private static final Identifier AREA_TEX = Compat.create_resource("textures/gui/area.png");
+    private static final Identifier ROCK_TEX = Compat.create_resource("textures/gui/rock.png");
+    private static final Identifier TUNNEL_TEX = Compat.create_resource("textures/gui/tunnel.png");
+    private static final Identifier RECTANGLE_TEX = Compat.create_resource("textures/gui/rectangle.png");
+    private static final Identifier COPY_TEX = Compat.create_resource("textures/gui/copy.png");
+    private static final Identifier PASTE_TEX = Compat.create_resource("textures/gui/paste.png");
+    private static final Identifier VEIN_TEX = Compat.create_resource("textures/gui/vein.png");
+    private static final Identifier BLAST_TEX = Compat.create_resource("textures/gui/blast.png");
+    private static final Identifier TOOLS_TEX = Compat.create_resource("textures/gui/tools.png");
+    private static final Identifier CONFIG_TEX = Compat.create_resource("textures/gui/config.png");
+    private static final Identifier SHAPES_TEX = Compat.create_resource("textures/gui/shapes.png");
+    private static final Identifier SHAPES_3D_TEX = Compat.create_resource("textures/gui/3d_shapes.png");
+    private static final int SPINNER_HEIGHT = 14;
 
     Vector<Wdgt> wdgets = new Vector<>();
-    Select modes_grp;
-    Select action_grp;
-    Select orientation_grp;
-    Select plane_grp;
-    Select axis_grp;
-    Select inv_grp_btn;
-    Select cfill_grp_btn;
-    Select rfill_grp_btn;
-    Select even_grp_btn;
-    Select rot_grp;
-    Select state_grp;
-    Select slab_grp_btn;
-    Select diag_grp_btn;
-    Select inc_sel_grp_btn;
-    Select target_air_grp_btn;
-    Select mirror_axis;
-    Btn conf_btn;
-    Spinner mult_spn;
-    Spinner rock_rad_spn;
-    Spinner rock_noise_spn;
-    Spinner grid_m_spn;
-    Spinner grid_n_spn;
-    Spinner grid_mskp_spn;
-    Spinner grid_nskp_spn;
-    Spinner grid_moff_spn;
-    Spinner grid_noff_spn;
-    Spinner blast_radius_spn;
-    Spinner row_col_spn;
-    Spinner arealim_spn;
-    Spinner skip_spn;
-    Spinner tunnel_w;
-    Spinner tunnel_h;
-    Spinner tunnel_d;
-    Spinner tunnel_ox;
-    Spinner tunnel_oy;
-    Spinner target_air_dist_spn;
-    Select match_state_sel;
-    Select clear_p1_sel;
-    Select drop_pos_sel;
-    Btn show_inv_btn;
-    boolean show_inv = false;
-    int left;
-    int right;
-    int bottom;
-    int top;
-    int xoff;
-    int yoff;
+
+    // Layout
+    Section modeOptionsSection;
+    Section toolsSection;
+
+    // Mode Tabs
+    Tabs modeTabs;
+    boolean isToolsTabSelected = false;  // Track if Tools tab is selected
+    int shapes2dTabIndex = -1;  // Index of the 2D Shapes parent tab
+    int shapes3dTabIndex = -1;  // Index of the 3D Shapes parent tab
+    WandProps.Mode[] shapes2dModesArray;  // Modes in 2D Shapes group
+    WandProps.Mode[] shapes3dModesArray;  // Modes in 3D Shapes group (filtered by config)
+
+    // Block State Section - combined state + axis
+    CycleToggle<Integer> blockStateCycle;
+
+    // Tools Section
+    CycleToggle<Boolean> dropPositionToggle;
+    Btn showInventoryButton;
+    boolean showInventory = false;
+    Btn configButton;
+
+    // Mode Options Section
+    CycleToggle<WandProps.Action> actionCycle;
+    CycleSpinner targetAirSpinner;
+    CycleToggle<Boolean> mirrorLRToggle;
+    CycleToggle<Boolean> mirrorFBToggle;
+    CycleToggle<Rotation> rotationCycle;
+    Spinner rockRadiusSpinner;
+    Spinner rockNoiseSpinner;
+    Spinner multiplierSpinner;
+    CycleToggle<Boolean> invertToggle;
+    Spinner rowColumnLimitSpinner;
+    CycleToggle<WandProps.Orientation> orientationCycle;
+    Spinner areaLimitSpinner;
+    CycleToggle<Boolean> diagonalSpreadToggle;
+    Spinner skipBlockSpinner;
+    CycleToggle<Boolean> matchStateToggle;
+    CycleToggle<WandProps.Plane> planeCycle;
+    CycleToggle<Boolean> circleFillToggle;
+    CycleToggle<Boolean> evenSizeToggle;
+    CycleToggle<Boolean> rectangleFillToggle;
+    Spinner gridMSpinner;
+    Spinner gridNSpinner;
+    Spinner gridMSkipSpinner;
+    Spinner gridNSkipSpinner;
+    Spinner gridMOffsetSpinner;
+    Spinner gridNOffsetSpinner;
+    Spinner blastRadiusSpinner;
+    Spinner tunnelWidthSpinner;
+    Spinner tunnelHeightSpinner;
+    Spinner tunnelDepthSpinner;
+    Spinner tunnelOffsetXSpinner;
+    Spinner tunnelOffsetYSpinner;
+    CycleToggle<Boolean> includeBlockToggle;
+
+    // Map widget to the modes it should be visible for
+    Map<Wdgt, EnumSet<WandProps.Mode>> modeWidgets = new HashMap<>();
+
+    // Screen position offsets (from config)
+    int screenXOffset;
+    int screenYOffset;
+
+    // Cursor handling
+    private static long handCursor = 0;
+    private boolean isHandCursor = false;
+
+    private void updateCursor(int mouseX, int mouseY) {
+        boolean shouldBeHand = isOverClickable(mouseX, mouseY);
+        if (shouldBeHand != isHandCursor) {
+            isHandCursor = shouldBeHand;
+            long window = Minecraft.getInstance().getWindow().handle();
+            if (shouldBeHand) {
+                if (handCursor == 0) {
+                    handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+                }
+                GLFW.glfwSetCursor(window, handCursor);
+            } else {
+                GLFW.glfwSetCursor(window, 0);
+            }
+        }
+    }
+
+    private boolean isOverClickable(int mx, int my) {
+        for (Wdgt wdget : wdgets) {
+            if (wdget.visible && isWidgetClickable(wdget, mx, my)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isWidgetClickable(Wdgt widget, int mx, int my) {
+        if (widget instanceof Section section) {
+            for (Wdgt child : section.getChildren()) {
+                if (child.visible && isWidgetClickable(child, mx, my)) {
+                    return true;
+                }
+            }
+            return false;
+        } else if (widget instanceof Tabs tabs) {
+            for (Btn btn : tabs.getAllVisibleButtons()) {
+                if (btn.inside(mx, my) && btn.isClickable()) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return widget.inside(mx, my) && widget.isClickable();
+        }
+    }
+
+    /**
+     * Find the widget that should show its tooltip at the given mouse position.
+     * Checks sections for hovered children, tabs for hovered buttons, and direct widgets.
+     */
+    private Wdgt findHoveredWidget(int mouseX, int mouseY) {
+        for (Wdgt wdget : wdgets) {
+            if (wdget instanceof Section section && section.visible) {
+                Wdgt hovered = section.getHoveredChild(mouseX, mouseY);
+                if (hovered != null && (hovered.tooltip != null || hovered.tooltipTitle != null)) {
+                    return hovered;
+                }
+            } else if (wdget instanceof Tabs tabs) {
+                Btn hovered = tabs.getHoveredButton(mouseX, mouseY);
+                if (hovered != null && (hovered.tooltip != null || hovered.tooltipTitle != null)) {
+                    return hovered;
+                }
+            } else if (wdget.shouldShowTooltip(mouseX, mouseY)) {
+                return wdget;
+            }
+        }
+        return null;
+    }
 
     public WandScreen(WandMenu handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        wand_bg_Texture = textureManager.getTexture(BG_TEX).getTextureView();
-        wand_inv_Texture = textureManager.getTexture(INV_TEX).getTextureView();
+        wandInventoryTexture=textureManager.getTexture(INV_TEX).getTextureView();
+    }
+    // Reset action to first valid action for the given mode
+    private void resetActionForMode(WandProps.Mode mode) {
+        ItemStack actualWand = getPlayerHeldWand();
+        for (WandProps.Action action : WandProps.actions) {
+            if (WandProps.actionAppliesTo(action, mode)) {
+                if (WandsMod.config.disable_destroy_replace &&
+                    (action == WandProps.Action.DESTROY || action == WandProps.Action.REPLACE)) {
+                    continue;
+                }
+                WandProps.setAction(actualWand, action);
+                return;
+            }
+        }
     }
 
-    private Spinner valSpinner(WandProps.Value val, int x, int y, int w, int h, Component label) {
-        int v = WandProps.getVal(wand_stack, val);
-        return new Spinner(v, val.def, val.max, x, y, w, h, label) {
-            public void onInc(int mx, int my, int value) {
-                WandProps.setVal(wand_stack, val, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-
-            public void onDec(int mx, int my, int value) {
-                WandProps.setVal(wand_stack, val, value);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
+    // Helper for creating a spinner bound to a WandProps.Value
+    private Spinner valSpinner(Value val, int w, int h, Component label) {
+        return new Spinner(WandProps.getVal(wandStack, val), val.min, val.max, w, h, label)
+            .withOnChange(value -> syncWandValue(val, value));
     }
 
-    @Override
-    public void init() {
-        super.init();
-        wand_stack = this.menu.wand;
-        if (wand_stack == null) {
-            return;
+    /** Get the player's actual held wand item (not the menu's copy) */
+    private ItemStack getPlayerHeldWand() {
+        if (Minecraft.getInstance().player != null) {
+            ItemStack mainHand = Minecraft.getInstance().player.getMainHandItem();
+            if (mainHand.getItem() instanceof WandItem) {
+                return mainHand;
+            }
+            ItemStack offHand = Minecraft.getInstance().player.getOffhandItem();
+            if (offHand.getItem() instanceof WandItem) {
+                return offHand;
+            }
         }
-        if (wand_stack != null && wand_stack.getItem() instanceof WandItem) {
-            wand_item = (WandItem) wand_stack.getItem();
-        } else {
-            return;
+        return wandStack;  // Fallback to menu's copy
+    }
+
+    /** Force client render to recalculate preview when values change */
+    private void forceClientRedraw() {
+        if (ClientRender.wand != null) {
+            WandMode mode = ClientRender.wand.get_mode();
+            if (mode != null) {
+                mode.redraw(ClientRender.wand);
+            }
         }
-        if (wand_item == null) {
-            return;
+    }
+
+    /** Update a wand value and sync to server with client redraw */
+    private void syncWandValue(Value val, int value) {
+        ItemStack actualWand = getPlayerHeldWand();
+        WandProps.setVal(actualWand, val, value);
+        syncWand(actualWand);
+    }
+
+    /** Sync wand to server and force client redraw */
+    private void syncWand(ItemStack wand) {
+        WandsModClient.send_wand(wand);
+        forceClientRedraw();
+    }
+
+    /** Build dynamic tooltip for block state options based on context */
+    private Component buildBlockStateTooltip(int idx, boolean isPillarBlock, boolean isHollowFill) {
+        // Base tooltip keys for each option
+        String baseKey = switch (idx) {
+            case WandProps.BLOCK_STATE_CLONE -> "tooltip.wands.clone_state";
+            case WandProps.BLOCK_STATE_APPLY_X -> "tooltip.wands.apply_x";
+            case WandProps.BLOCK_STATE_APPLY_Y -> "tooltip.wands.apply_y";
+            case WandProps.BLOCK_STATE_APPLY_Z -> "tooltip.wands.apply_z";
+            case WandProps.BLOCK_STATE_FLIP_X -> "tooltip.wands.flip_x";
+            case WandProps.BLOCK_STATE_FLIP_Y -> "tooltip.wands.flip_y";
+            case WandProps.BLOCK_STATE_FLIP_Z -> "tooltip.wands.flip_z";
+            case WandProps.BLOCK_STATE_NORMAL -> "tooltip.wands.normal_place";
+            default -> "tooltip.wands.normal_place";
+        };
+
+        // For Clone and Normal, just return the base tooltip
+        if (idx == WandProps.BLOCK_STATE_CLONE || idx == WandProps.BLOCK_STATE_NORMAL) {
+            return Compat.translatable(baseKey);
         }
-        int btn_h = 10;
-        int btn_w = 60;
-        int btn_margin = 2;
-        int h2 = btn_h + btn_margin;
-        int h = WandProps.modes.length * h2;
-        xoff = WandsMod.config.wand_screen_x_offset;
-        yoff = WandsMod.config.wand_screen_x_offset;
-        left = (width / 2) - (img_w / 2) - xoff;
-        right = (width / 2) + (img_w / 2) - xoff;
-        bottom = (height / 2) - (h / 2) - 12 - yoff;
-        top = (height / 2) + (h / 2) - yoff;
 
-        rock_rad_spn = valSpinner(Value.ROCK_RADIUS, left + 200, bottom + 25, 30, 14, Compat.translatable("screen.wands.rock_rad"));
-        rock_rad_spn.label_side = true;
-        wdgets.add(rock_rad_spn);
+        // Build tooltip with context-specific additions
+        StringBuilder tooltip = new StringBuilder();
+        tooltip.append(Compat.translatable(baseKey).getString());
 
-        rock_noise_spn = valSpinner(Value.ROCK_RADIUS, left + 200, bottom + 40, 30, 14, Compat.translatable("screen.wands.rock_noise"));
-        rock_noise_spn.label_side = true;
-        wdgets.add(rock_noise_spn);
-
-        mult_spn = valSpinner(Value.MULTIPLIER, left + 200, bottom, 25, 14, Compat.translatable("screen.wands.multiplier"));
-        mult_spn.label_side = true;
-        wdgets.add(mult_spn);
-
-        row_col_spn = valSpinner(Value.ROWCOLLIM, left + 170, bottom, 50, 14, Compat.translatable("screen.wands.limit"));
-        row_col_spn.label_side = true;
-        wdgets.add(row_col_spn);
-
-        blast_radius_spn = valSpinner(Value.BLASTRAD, left + 210, bottom + 25, 25, 14, Compat.translatable("screen.wands.blast_radius"));
-        blast_radius_spn.label_side = true;
-        blast_radius_spn.inc_val = 2;
-        blast_radius_spn.shift_inc_val = 4;
-        wdgets.add(blast_radius_spn);
-
-        grid_m_spn = new Spinner(WandProps.getVal(wand_stack, Value.GRIDM), 1, wand_item.limit, left + 180, bottom + 25, 25, 14, Compat.translatable("screen.wands.grid_mxn")) {
-            public void onInc(int mx, int my, int value) {
-                WandProps.incGrid(wand_stack, Value.GRIDM, 1, wand_item.limit);
-                WandsModClient.send_wand(wand_stack);
-            }
-
-            public void onDec(int mx, int my, int value) {
-                WandProps.decVal(wand_stack, Value.GRIDM, 1);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        grid_m_spn.label_side = true;
-        wdgets.add(grid_m_spn);
-
-        grid_n_spn = new Spinner(WandProps.getVal(wand_stack, Value.GRIDN), 1, wand_item.limit, left + 215, bottom + 25, 25, 14, Compat.literal("x")) {
-            public void onInc(int mx, int my, int value) {
-                WandProps.incGrid(wand_stack, Value.GRIDN, 1, wand_item.limit);
-                WandsModClient.send_wand(wand_stack);
-            }
-
-            public void onDec(int mx, int my, int value) {
-                WandProps.decVal(wand_stack, Value.GRIDN, 1);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        grid_n_spn.label_side = true;
-        wdgets.add(grid_n_spn);
-
-        grid_mskp_spn = valSpinner(Value.GRIDMS, left + 180, bottom + 40, 25, 14, Compat.translatable("screen.wands.grid_mxn_skip"));
-        grid_mskp_spn.label_side = true;
-        wdgets.add(grid_mskp_spn);
-
-        grid_nskp_spn = valSpinner(Value.GRIDNS, left + 215, bottom + 40, 25, 14, Compat.literal(","));
-        grid_nskp_spn.label_side = true;
-        wdgets.add(grid_nskp_spn);
-
-        grid_moff_spn = valSpinner(Value.GRIDMOFF, left + 180, bottom + 55, 25, 14, Compat.translatable("screen.wands.grid_offset"));
-        grid_moff_spn.label_side = true;
-        wdgets.add(grid_moff_spn);
-
-        grid_noff_spn = valSpinner(Value.GRIDNOFF, left + 215, bottom + 55, 25, 14, Compat.literal(","));
-        grid_noff_spn.label_side = true;
-        wdgets.add(grid_noff_spn);
-
-        arealim_spn = valSpinner(Value.AREALIM, left + 170, bottom, 50, 14, Compat.translatable("screen.wands.limit"));
-        arealim_spn.label_side = true;
-        wdgets.add(arealim_spn);
-
-        tunnel_w = valSpinner(Value.TUNNEL_W, left + 190, bottom, 50, 14, Compat.translatable("screen.wands.tunnel_w"));
-        tunnel_w.label_side = true;
-        wdgets.add(tunnel_w);
-
-        tunnel_h = valSpinner(Value.TUNNEL_H, left + 190, bottom + 15, 50, 14, Compat.translatable("screen.wands.tunnel_h"));
-        tunnel_h.label_side = true;
-        wdgets.add(tunnel_h);
-
-        tunnel_d = valSpinner(Value.TUNNEL_DEPTH, left + 190, bottom + 30, 50, 14, Compat.translatable("screen.wands.tunnel_depth"));
-        tunnel_d.label_side = true;
-        wdgets.add(tunnel_d);
-
-        tunnel_ox = valSpinner(Value.TUNNEL_OX, left + 190, bottom + 45, 50, 14, Compat.translatable("screen.wands.tunnel_ox"));
-        tunnel_ox.label_side = true;
-        wdgets.add(tunnel_ox);
-
-        tunnel_oy = valSpinner(Value.TUNNEL_OY, left + 190, bottom + 60, 50, 14, Compat.translatable("screen.wands.tunnel_oy"));
-        tunnel_oy.label_side = true;
-        wdgets.add(tunnel_oy);
-
-        modes_grp = new Select(left + 80, bottom - 20, btn_w, btn_h, Compat.translatable("screen.wands.mode"));
-        int l = WandProps.modes.length;
-        for (int i = 0; i < l; i++) {
-            int finalI = i;
-            Btn b = new Btn(Compat.translatable(WandProps.modes[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setMode(wand_stack, WandProps.modes[finalI]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            if (WandProps.modes[i] == WandProps.Mode.BLAST && !wand_item.can_blast) {
-                b.disabled = true;
-            }
-            modes_grp.add(b);
+        // Add pillar block info if applicable
+        if (isPillarBlock) {
+            String pillarKey = baseKey + ".pillar";
+            tooltip.append(" ").append(Compat.translatable(pillarKey).getString());
         }
-        wdgets.add(modes_grp);
 
-        action_grp = new Select(left + 10, bottom - 20, btn_w, btn_h, Compat.translatable("screen.wands.action"));
-        for (int i = 0; i < WandProps.actions.length; i++) {
-            int finalp = i;
-            Btn b = new Btn(Compat.translatable(WandProps.actions[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setAction(wand_stack, WandProps.actions[finalp]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            if ((WandProps.actions[i] == WandProps.Action.DESTROY || WandProps.actions[i] == WandProps.Action.REPLACE) &&
-                    WandsMod.config.disable_destroy_replace) {
-                b.disabled = true;
-            }
-            action_grp.add(b);
+        // Add hollow fill info if applicable
+        if (isHollowFill) {
+            String hollowKey = baseKey + ".hollow";
+            tooltip.append(" ").append(Compat.translatable(hollowKey).getString());
         }
-        wdgets.add(action_grp);
 
-        orientation_grp = new Select(left + 170, bottom + 30, btn_w, btn_h, Compat.translatable("screen.wands.orientation"));
-        for (int i = 0; i < WandProps.orientations.length; i++) {
-            int finalo = i;
-            Btn b = new Btn(Compat.translatable(WandProps.orientations[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setOrientation(wand_stack, WandProps.orientations[finalo]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            orientation_grp.add(b);
+        return Compat.literal(tooltip.toString());
+    }
+
+    // Helper for creating a boolean toggle bound to a WandProps.Flag
+    private CycleToggle<Boolean> flagToggle(WandProps.Flag flag, int w, Component label) {
+        CycleToggle<Boolean> toggle = CycleToggle.ofBoolean(label,
+            () -> WandProps.getFlag(getPlayerHeldWand(), flag),
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setFlag(actualWand, flag, value);
+                syncWand(actualWand);
+            });
+        toggle.width = w;
+        return toggle;
+    }
+
+    /** Create boolean toggle with auto-computed translations and add to section */
+    private CycleToggle<Boolean> addFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
+        Component label = Compat.translatable("screen.wands." + key);
+        Component tooltip = Compat.translatable("tooltip.wands." + key);
+        CycleToggle<Boolean> toggle = flagToggle(flag, w, label);
+        toggle.withTooltip(label, tooltip);
+        section.add(toggle);
+        return toggle;
+    }
+
+    /** Create Spinner with auto-computed translations and add to section */
+    private Spinner addValSpinner(Section section, Value val, int w, int h, String key) {
+        Component label = Compat.translatable("screen.wands." + key);
+        Component tooltip = Compat.translatable("tooltip.wands." + key);
+        Spinner spinner = valSpinner(val, w, h, label);
+        spinner.withTooltip(label, tooltip);
+        section.add(spinner);
+        return spinner;
+    }
+
+    // Helper for mode tab buttons (parent tabs - larger size)
+    private Btn modeBtn(Identifier tex, WandProps.Mode mode, String titleKey, String descKey) {
+        Btn btn = new Btn(tex, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+            isToolsTabSelected = false;  // Deselect tools tab
+            ItemStack actualWand = getPlayerHeldWand();
+            WandProps.setMode(actualWand, mode);
+            resetActionForMode(mode);
+            WandsModClient.send_wand(actualWand);
+        });
+        btn.withTooltip(Compat.translatable(titleKey), Compat.translatable(descKey));
+        return btn;
+    }
+
+    // Helper for subtab buttons
+    private Btn subModeBtn(Identifier tex, WandProps.Mode mode, String titleKey, String descKey) {
+        Btn btn = new Btn(tex, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+            isToolsTabSelected = false;  // Deselect tools tab
+            ItemStack actualWand = getPlayerHeldWand();
+            WandProps.setMode(actualWand, mode);
+            resetActionForMode(mode);
+            WandsModClient.send_wand(actualWand);
+        });
+        btn.withTooltip(Compat.translatable(titleKey), Compat.translatable(descKey));
+        return btn;
+    }
+
+    private Tabs createModeTabs() {
+        Tabs tabs = new Tabs();
+
+        // Tab layout:
+        // 0: Direction (top-level)
+        // 1: 2D Shapes (parent) -> Line, Circle, Row/Column, Area
+        // 2: 3D Shapes (parent) -> Fill, Rectangle, Sphere, Grid, Rock, Blast, Vein
+        // 3: Copy (top-level)
+        // 4: Paste (top-level)
+        // 5: Tools (top-level)
+
+        // Direction at top
+        tabs.add(modeBtn(DIRECTION_TEX, WandProps.Mode.DIRECTION, "wands.modes.direction", "tooltip.wands.mode.direction"));
+
+        // === 2D Shapes group: Line, Circle, Row/Column, Area ===
+        shapes2dModesArray = new WandProps.Mode[] {
+            WandProps.Mode.LINE, WandProps.Mode.CIRCLE,
+            WandProps.Mode.ROW_COL, WandProps.Mode.AREA
+        };
+        Btn shapes2dParent = new Btn(SHAPES_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+            isToolsTabSelected = false;
+            Tabs.TabEntry entry = tabs.getEntry(shapes2dTabIndex);
+            if (entry != null) {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.Mode modeToActivate = shapes2dModesArray[entry.selectedSubTab];
+                WandProps.setMode(actualWand, modeToActivate);
+                resetActionForMode(modeToActivate);
+                WandsModClient.send_wand(actualWand);
+            }
+        });
+        shapes2dParent.withTooltip(Compat.translatable("wands.modes.2d_shapes"), Compat.translatable("tooltip.wands.mode.2d_shapes"));
+
+        Btn[] shape2dSubTabs = {
+            subModeBtn(LINE_TEX, WandProps.Mode.LINE, "wands.modes.line", "tooltip.wands.mode.line"),
+            subModeBtn(CIRCLE_TEX, WandProps.Mode.CIRCLE, "wands.modes.circle", "tooltip.wands.mode.circle"),
+            subModeBtn(ROW_TEX, WandProps.Mode.ROW_COL, "wands.modes.row_col", "tooltip.wands.mode.row_col"),
+            subModeBtn(AREA_TEX, WandProps.Mode.AREA, "wands.modes.area", "tooltip.wands.mode.area"),
+        };
+        shapes2dTabIndex = tabs.addWithSubTabs(shapes2dParent, shape2dSubTabs);
+
+        // === 3D Shapes group: Fill, Rectangle (Tunnel), Sphere, Grid, Rock, Blast, Vein ===
+        // Note: Blast and Vein may be excluded based on wand capability and config settings
+        boolean canBlast = wandItem.can_blast && WandsMod.config.enable_blast_mode;
+        boolean canVein = WandsMod.config.enable_vein_mode;
+
+        List<WandProps.Mode> shapes3dModesList = new ArrayList<>();
+        List<Btn> shapes3dSubTabsList = new ArrayList<>();
+
+        shapes3dModesList.add(WandProps.Mode.FILL);
+        shapes3dSubTabsList.add(subModeBtn(FILL_TEX, WandProps.Mode.FILL, "wands.modes.fill", "tooltip.wands.mode.fill"));
+
+        shapes3dModesList.add(WandProps.Mode.TUNNEL);
+        shapes3dSubTabsList.add(subModeBtn(RECTANGLE_TEX, WandProps.Mode.TUNNEL, "wands.modes.rectangle", "tooltip.wands.mode.rectangle"));
+
+        shapes3dModesList.add(WandProps.Mode.SPHERE);
+        shapes3dSubTabsList.add(subModeBtn(SPHERE_TEX, WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere"));
+
+        shapes3dModesList.add(WandProps.Mode.GRID);
+        shapes3dSubTabsList.add(subModeBtn(GRID_TEX, WandProps.Mode.GRID, "wands.modes.grid", "tooltip.wands.mode.grid"));
+
+        shapes3dModesList.add(WandProps.Mode.ROCK);
+        shapes3dSubTabsList.add(subModeBtn(ROCK_TEX, WandProps.Mode.ROCK, "wands.modes.rock", "tooltip.wands.mode.rock"));
+
+        if (canBlast) {
+            shapes3dModesList.add(WandProps.Mode.BLAST);
+            shapes3dSubTabsList.add(subModeBtn(BLAST_TEX, WandProps.Mode.BLAST, "wands.modes.blast", "tooltip.wands.mode.blast"));
         }
-        wdgets.add(orientation_grp);
 
-        plane_grp = new Select(left + 170, bottom, btn_w, btn_h, Compat.translatable("screen.wands.plane"));
-        for (int i = 0; i < WandProps.planes.length; i++) {
-            int finalp = i;
-            Btn b = new Btn(Compat.literal(WandProps.planes[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setPlane(wand_stack, WandProps.planes[finalp]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            plane_grp.add(b);
+        if (canVein) {
+            shapes3dModesList.add(WandProps.Mode.VEIN);
+            shapes3dSubTabsList.add(subModeBtn(VEIN_TEX, WandProps.Mode.VEIN, "wands.modes.vein", "tooltip.wands.mode.vein"));
         }
-        wdgets.add(plane_grp);
 
-        axis_grp = new Select(left + 10, bottom + 114, btn_w, btn_h, Compat.translatable("screen.wands.axis"));
-        for (int i = 0; i < WandProps.axes.length; i++) {
-            int finala = i;
-            Btn b = new Btn(Compat.literal(WandProps.axes[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setAxis(wand_stack, WandProps.axes[finala]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            axis_grp.add(b);
-        }
-        wdgets.add(axis_grp);
+        shapes3dModesArray = shapes3dModesList.toArray(new WandProps.Mode[0]);
+        Btn[] shapes3dSubTabs = shapes3dSubTabsList.toArray(new Btn[0]);
 
-        drop_pos_sel = new Select(left + 80, bottom + 175, btn_w + 20, btn_h, null);
-
-        drop_pos_sel.add(new Btn(Compat.translatable("screen.wands.drop_pos.player"), (int mx, int my) -> {
-
-            ClientRender.wand.drop_on_player = true;
-            NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(true));
-        }));
-        drop_pos_sel.add(new Btn(Compat.translatable("screen.wands.drop_pos.block"), (int mx, int my) -> {
-            ClientRender.wand.drop_on_player = false;
-            NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(false));
-        }));
-        wdgets.add(drop_pos_sel);
-
-        mirror_axis = new Select(left + 170, bottom + 30, btn_w, btn_h, Compat.translatable("screen.wands.mirror"));
-        for (int i = 0; i < WandProps.mirrorAxes.length; i++) {
-            int mo = i;
-            Btn b = new Btn(Compat.literal(WandProps.mirrorAxes[i].toString())) {
-                public void onClick(int mx, int my) {
-                    WandProps.setVal(wand_stack, Value.MIRRORAXIS, mo);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            mirror_axis.add(b);
-        }
-        wdgets.add(mirror_axis);
-
-        state_grp = new Select(left + 80, bottom + 140, btn_w + 20, btn_h, null);
-        Btn b1 = new Btn(Compat.translatable("screen.wands.use_same_state")) {
-            public void onClick(int mx, int my) {
-                WandProps.setStateMode(wand_stack, WandProps.StateMode.CLONE);
-                WandsModClient.send_wand(wand_stack);
+        Btn shapes3dParent = new Btn(SHAPES_3D_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+            isToolsTabSelected = false;
+            Tabs.TabEntry entry = tabs.getEntry(shapes3dTabIndex);
+            if (entry != null) {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.Mode modeToActivate = shapes3dModesArray[entry.selectedSubTab];
+                WandProps.setMode(actualWand, modeToActivate);
+                resetActionForMode(modeToActivate);
+                WandsModClient.send_wand(actualWand);
             }
-        };
-        state_grp.add(b1);
-        Btn b2 = new Btn(Compat.translatable("screen.wands.apply_rot")) {
-            public void onClick(int mx, int my) {
-                WandProps.setStateMode(wand_stack, WandProps.StateMode.APPLY);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        state_grp.add(b2);
-        Btn b3 = new Btn(Compat.translatable("screen.wands.target")) {
-            public void onClick(int mx, int my) {
-                WandProps.setStateMode(wand_stack, WandProps.StateMode.TARGET);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        state_grp.add(b3);
-        wdgets.add(state_grp);
+        });
+        shapes3dParent.withTooltip(Compat.translatable("wands.modes.3d_shapes"), Compat.translatable("tooltip.wands.mode.3d_shapes"));
 
-        rot_grp = new Select(left + 10, bottom + 60, btn_w, btn_h, Compat.translatable("screen.wands.rotation"));
-        for (int i = 0; i < WandProps.rotations.length; i++) {
-            int finalr = i;
-            String rot = "";
-            switch (WandProps.rotations[i]) {
-                case NONE:
-                    rot = "0°";
-                    break;
-                case CLOCKWISE_90:
-                    rot = "90°";
-                    break;
-                case CLOCKWISE_180:
-                    rot = "180°";
-                    break;
-                case COUNTERCLOCKWISE_90:
-                    rot = "270°";
-                    break;
-            }
-            Btn b = new Btn(Compat.literal(rot)) {
-                public void onClick(int mx, int my) {
-                    WandProps.setRotation(wand_stack, WandProps.rotations[finalr]);
-                    WandsModClient.send_wand(wand_stack);
-                }
-            };
-            rot_grp.add(b);
-        }
-        wdgets.add(rot_grp);
+        shapes3dTabIndex = tabs.addWithSubTabs(shapes3dParent, shapes3dSubTabs);
 
+        // Copy and Paste
+        tabs.add(modeBtn(COPY_TEX, WandProps.Mode.COPY, "wands.modes.copy", "tooltip.wands.mode.copy"));
+        tabs.add(modeBtn(PASTE_TEX, WandProps.Mode.PASTE, "wands.modes.paste", "tooltip.wands.mode.paste"));
 
-        show_inv_btn = new Btn(right - 80, bottom - 22, 30, 12, Compat.translatable("screen.wands.tools")) {
-            public void onClick(int mx, int my) {
-                show_inv = !show_inv;
-            }
-        };
-        wdgets.add(show_inv_btn);
+        // Tools tab at the end
+        Btn toolsTabBtn = new Btn(TOOLS_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+            isToolsTabSelected = !isToolsTabSelected;
+        });
+        toolsTabBtn.withTooltip(Compat.translatable("screen.wands.tools"), Compat.translatable("tooltip.wands.tools_tab"));
+        tabs.add(toolsTabBtn);
 
+        return tabs;
+    }
 
-        clear_p1_sel = new Select(left + 170, bottom + 98, 70, 12, null);
-        Btn clear_p1_btn = new Btn(Compat.translatable("screen.wands.clear_p1")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.CLEAR_P1);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        clear_p1_sel.add(clear_p1_btn);
-        wdgets.add(clear_p1_sel);
+    private Section createToolsSection() {
+        Section section = new Section(Compat.translatable("screen.wands.tools"));
 
-        match_state_sel = new Select(left + 170, bottom + 110, 70, 12, null);
-        Btn match_state_btn = new Btn(Compat.translatable("screen.wands.match_state")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.MATCHSTATE);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        match_state_sel.add(match_state_btn);
-        wdgets.add(match_state_sel);
-
-        inc_sel_grp_btn = new Select(left + 170, bottom + 122, 70, 12, null);
-        Btn inc_sel_btn = new Btn(Compat.translatable("screen.wands.inc_sel")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.INCSELBLOCK);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        inc_sel_grp_btn.add(inc_sel_btn);
-        wdgets.add(inc_sel_grp_btn);
-        slab_grp_btn = new Select(left + 170, bottom + 134, 70, 12, null);
-        Btn slab_btn = new Btn(Compat.translatable("screen.wands.slab")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.STAIRSLAB);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        slab_grp_btn.add(slab_btn);
-        wdgets.add(slab_grp_btn);
-
-        inv_grp_btn = new Select(left + 170, bottom + 146, 70, 12, null);
-        Btn inv_btn = new Btn(Compat.translatable("screen.wands.invert")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.INVERTED);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        inv_grp_btn.add(inv_btn);
-        wdgets.add(inv_grp_btn);
-
-        target_air_grp_btn = new Select(left + 170, bottom + 158, 70, 12, null);
-        Btn target_air_btn = new Btn(Compat.translatable("screen.wands.target_air")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.TARGET_AIR);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        target_air_grp_btn.add(target_air_btn);
-        wdgets.add(target_air_grp_btn);
-
-        target_air_dist_spn = valSpinner(Value.AIR_TARGET_DISTANCE, left + 170, bottom + 200, 70, 12, Compat.translatable("screen.wands.target_air_distance"));
-        target_air_dist_spn.label_side = true;
-        wdgets.add(target_air_dist_spn);
-
-        skip_spn = valSpinner(Value.SKIPBLOCK, left + 215, bottom + 180, 25, 14, Compat.translatable("screen.wands.skip_block"));
-        skip_spn.label_side = true;
-        wdgets.add(skip_spn);
-
-        diag_grp_btn = new Select(left + 150, bottom + 30, 100, 12, null);
-        Btn diag_btn = new Btn(Compat.translatable("screen.wands.diagonal_spread")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.DIAGSPREAD);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        diag_grp_btn.add(diag_btn);
-        wdgets.add(diag_grp_btn);
-
-        cfill_grp_btn = new Select(left + 170, bottom + 45, 60, 12, null);
-        Btn fill_btn = new Btn(Compat.translatable("screen.wands.filled_circle")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.CFILLED);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        cfill_grp_btn.add(fill_btn);
-        wdgets.add(cfill_grp_btn);
-
-        rfill_grp_btn = new Select(left + 170, bottom + 30, 60, 12, null);
-        Btn fill_btn2 = new Btn(Compat.literal("fill rect")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.RFILLED);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        rfill_grp_btn.add(fill_btn2);
-        wdgets.add(rfill_grp_btn);
-
-        even_grp_btn = new Select(left + 170, bottom + 60, 60, 12, null);
-        Btn even_btn = new Btn(Compat.translatable("screen.wands.even_circle")) {
-            public void onClick(int mx, int my) {
-                WandProps.toggleFlag(wand_stack, WandProps.Flag.EVEN);
-                WandsModClient.send_wand(wand_stack);
-            }
-        };
-        even_grp_btn.add(even_btn);
-        wdgets.add(even_grp_btn);
+        // Tools button (show inventory) - text button with "..."
+        showInventoryButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.pick_tools").copy().append("..."), (mouseX, mouseY) -> {
+            showInventory = !showInventory;
+        });
+        showInventoryButton.withTooltip(Compat.translatable("screen.wands.pick_tools"), Compat.translatable("tooltip.wands.pick_tools"));
+        section.add(showInventoryButton);
 
 #if USE_CLOTHCONFIG
+        // Config button - text button with "..."
         if (WandsMod.platform != 2) {
             Screen parent = this;
-            conf_btn = new Btn(left + 10, bottom + 180, 27, 12, Compat.translatable("screen.wands.conf")) {
-                public void onClick(int mx, int my) {
-                    Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
-                }
-            };
-            wdgets.add(conf_btn);
+            configButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.conf").copy().append("..."), (mouseX, mouseY) -> {
+                Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
+            });
+            configButton.withTooltip(Compat.translatable("screen.wands.conf"), Compat.translatable("tooltip.wands.conf"));
+            section.add(configButton);
         }
 #endif
 
+        // Drop position toggle - on = drop on player, off = drop on block
+        dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
+            () -> ClientRender.wand.drop_on_player,
+            value -> {
+                ClientRender.wand.drop_on_player = value;
+                NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(value));
+            },
+            "player", "block");
+        dropPositionToggle.width = CONTENT_WIDTH;
+        dropPositionToggle.withTooltip(Compat.translatable("screen.wands.drop_on"), Compat.translatable("tooltip.wands.drop_on_player"));
+        section.add(dropPositionToggle);
+
+        return section;
     }
 
-    void update_selections() {
-        if (wand_item != null && wand_stack != null) {
-            mirror_axis.selected = WandProps.getVal(wand_stack, Value.MIRRORAXIS);
-            mirror_axis.visible = modes_grp.selected == WandProps.Mode.PASTE.ordinal();
-            modes_grp.selected = WandProps.getMode(wand_stack).ordinal();
-            rock_rad_spn.visible = modes_grp.selected == WandProps.Mode.ROCK.ordinal();
-            rock_noise_spn.visible = modes_grp.selected == WandProps.Mode.ROCK.ordinal();
-            mult_spn.visible = modes_grp.selected == WandProps.Mode.DIRECTION.ordinal();
-            action_grp.selected = WandProps.getAction(wand_stack).ordinal();
-            orientation_grp.selected = WandProps.getOrientation(wand_stack).ordinal();
-            orientation_grp.visible = modes_grp.selected == WandProps.Mode.ROW_COL.ordinal();
-            row_col_spn.visible = modes_grp.selected == WandProps.Mode.ROW_COL.ordinal();
-            arealim_spn.visible = (modes_grp.selected == WandProps.Mode.AREA.ordinal() || modes_grp.selected == WandProps.Mode.VEIN.ordinal());
-            plane_grp.selected = WandProps.getPlane(wand_stack).ordinal();
-            plane_grp.visible = modes_grp.selected == WandProps.Mode.CIRCLE.ordinal();
-            axis_grp.selected = WandProps.getAxis(wand_stack).ordinal();
-            state_grp.selected = WandProps.getStateMode(wand_stack).ordinal();
-            rot_grp.selected = WandProps.getRotation(wand_stack).ordinal();
-            inv_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.INVERTED) ? 0 : -1);
-            inc_sel_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.INCSELBLOCK) ? 0 : -1);
-            cfill_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.CFILLED) ? 0 : -1);
-            cfill_grp_btn.visible = modes_grp.selected == WandProps.Mode.CIRCLE.ordinal();
-            rfill_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.RFILLED) ? 0 : -1);
-            rfill_grp_btn.visible = modes_grp.selected == WandProps.Mode.FILL.ordinal();
-            even_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.EVEN) ? 0 : -1);
-            even_grp_btn.visible = modes_grp.selected == WandProps.Mode.CIRCLE.ordinal();
-            grid_n_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            grid_m_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            grid_moff_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            grid_noff_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            grid_mskp_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            grid_nskp_spn.visible = modes_grp.selected == WandProps.Mode.GRID.ordinal();
-            blast_radius_spn.visible = modes_grp.selected == WandProps.Mode.BLAST.ordinal();
-            slab_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.STAIRSLAB) ? 0 : -1);
-            diag_grp_btn.visible = modes_grp.selected == WandProps.Mode.AREA.ordinal();
-            diag_grp_btn.selected = (!WandProps.getFlag(wand_stack, WandProps.Flag.DIAGSPREAD) ? 0 : -1);
-            match_state_sel.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE) ? 0 : -1);
-            clear_p1_sel.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.CLEAR_P1) ? 0 : -1);
-            target_air_grp_btn.selected = (WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR) ? 0 : -1);
-            drop_pos_sel.selected = (ClientRender.wand.drop_on_player ? 0 : 1);
-            tunnel_w.visible = modes_grp.selected == WandProps.Mode.TUNNEL.ordinal();
-            tunnel_h.visible = modes_grp.selected == WandProps.Mode.TUNNEL.ordinal();
-            tunnel_d.visible = modes_grp.selected == WandProps.Mode.TUNNEL.ordinal();
-            tunnel_ox.visible = modes_grp.selected == WandProps.Mode.TUNNEL.ordinal();
-            tunnel_oy.visible = modes_grp.selected == WandProps.Mode.TUNNEL.ordinal();
-        }
+    private Section createModeOptionsSection(int layoutColWidth, int spinnerHeight) {
+        Section section = new Section(Compat.translatable("screen.wands.mode_options"));
+
+        // Action select (mode-conditional - hidden for COPY and BLAST, filtered for VEIN)
+        Component[] actionLabels = {
+            Compat.translatable("wands.action.place"),
+            Compat.translatable("wands.action.replace"),
+            Compat.translatable("wands.action.destroy"),
+            Compat.translatable("wands.action.use")
+        };
+        actionCycle = new CycleToggle<>(Compat.translatable("screen.wands.action_prefix"),
+            WandProps.actions, actionLabels,
+            () -> WandProps.getAction(getPlayerHeldWand()),
+            (a) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setAction(actualWand, a);
+                syncWand(actualWand);
+            })
+            .withFilter(a -> !WandsMod.config.disable_destroy_replace ||
+                (a != WandProps.Action.DESTROY && a != WandProps.Action.REPLACE))
+            .withTooltips("tooltip.wands.action.place", "tooltip.wands.action.replace", "tooltip.wands.action.destroy", "tooltip.wands.action.use");
+        actionCycle.width = layoutColWidth;
+        section.add(actionCycle);
+
+        // Target Air - combined toggle + spinner
+        targetAirSpinner = new CycleSpinner(
+            this::getPlayerHeldWand,  // Supplier: always get current wand
+            this::syncWand,           // Consumer: sync wand to server
+            WandProps.Flag.TARGET_AIR, Value.AIR_TARGET_DISTANCE,
+            layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.target_air"));
+        targetAirSpinner.withTooltip(Compat.translatable("screen.wands.target_air"), Compat.translatable("tooltip.wands.target_air"));
+        targetAirSpinner.withOnChange(this::forceClientRedraw);
+        section.add(targetAirSpinner);
+
+        // Mirror (PASTE mode) - boolean toggles
+        mirrorLRToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_lr"),
+            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 1,
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 1 : 0);
+                syncWand(actualWand);
+            });
+        mirrorLRToggle.width = layoutColWidth;
+        mirrorLRToggle.withTooltip(Compat.translatable("screen.wands.mirror_lr"), Compat.translatable("tooltip.wands.mirror_lr"));
+        section.add(mirrorLRToggle);
+
+        mirrorFBToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_fb"),
+            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 2,
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 2 : 0);
+                syncWand(actualWand);
+            });
+        mirrorFBToggle.width = layoutColWidth;
+        mirrorFBToggle.withTooltip(Compat.translatable("screen.wands.mirror_fb"), Compat.translatable("tooltip.wands.mirror_fb"));
+        section.add(mirrorFBToggle);
+
+        // Rotation select (GRID and PASTE modes)
+        Component[] rotationLabels = {
+            Compat.translatable("screen.wands.rot_0"),
+            Compat.translatable("screen.wands.rot_90"),
+            Compat.translatable("screen.wands.rot_180"),
+            Compat.translatable("screen.wands.rot_270")
+        };
+        rotationCycle = new CycleToggle<>(Compat.translatable("screen.wands.rotation_prefix"),
+            WandProps.rotations, rotationLabels,
+            () -> WandProps.getRotation(getPlayerHeldWand()),
+            (r) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setRotation(actualWand, r);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.rot_0", "tooltip.wands.rot_90", "tooltip.wands.rot_180", "tooltip.wands.rot_270");
+        rotationCycle.width = layoutColWidth;
+        section.add(rotationCycle);
+
+        // Rock mode spinners
+        rockRadiusSpinner = addValSpinner(section, Value.ROCK_RADIUS, layoutColWidth, spinnerHeight, "rock_radius");
+        rockNoiseSpinner = addValSpinner(section, Value.ROCK_NOISE, layoutColWidth, spinnerHeight, "rock_noise");
+
+        // Direction mode
+        multiplierSpinner = addValSpinner(section, Value.MULTIPLIER, layoutColWidth, spinnerHeight, "multiplier");
+        invertToggle = addFlagToggle(section, WandProps.Flag.INVERTED, layoutColWidth, "invert");
+
+        // Row/Col mode limit spinner
+        rowColumnLimitSpinner = addValSpinner(section, Value.ROWCOLLIM, layoutColWidth, spinnerHeight, "limit");
+
+        // Row/Col mode orientation select
+        Component[] orientationLabels = {
+            Compat.translatable("wands.orientation.row"),
+            Compat.translatable("wands.orientation.col")
+        };
+        WandProps.Orientation[] orientations = { WandProps.Orientation.ROW, WandProps.Orientation.COL };
+        orientationCycle = new CycleToggle<>(Compat.translatable("screen.wands.orientation"),
+            orientations, orientationLabels,
+            () -> WandProps.getOrientation(getPlayerHeldWand()),
+            (o) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setOrientation(actualWand, o);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.orientation.row", "tooltip.wands.orientation.col");
+        orientationCycle.width = layoutColWidth;
+        section.add(orientationCycle);
+
+        // Area/Vein mode
+        areaLimitSpinner = addValSpinner(section, Value.AREALIM, layoutColWidth, spinnerHeight, "limit");
+        diagonalSpreadToggle = addFlagToggle(section, WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only");
+        skipBlockSpinner = addValSpinner(section, Value.SKIPBLOCK, layoutColWidth, spinnerHeight, "skip_block");
+        matchStateToggle = addFlagToggle(section, WandProps.Flag.MATCHSTATE, layoutColWidth, "match_state");
+
+        // Circle mode - plane selection
+        Component[] planeLabels = {
+            Compat.literal("XZ"),
+            Compat.literal("XY"),
+            Compat.literal("YZ")
+        };
+        planeCycle = new CycleToggle<>(Compat.translatable("screen.wands.plane"),
+            WandProps.planes, planeLabels,
+            () -> WandProps.getPlane(getPlayerHeldWand()),
+            (p) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setPlane(actualWand, p);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.plane_xz", "tooltip.wands.plane_xy", "tooltip.wands.plane_yz");
+        planeCycle.width = layoutColWidth;
+        section.add(planeCycle);
+
+        circleFillToggle = addFlagToggle(section, WandProps.Flag.CFILLED, layoutColWidth, "filled");
+        evenSizeToggle = addFlagToggle(section, WandProps.Flag.EVEN, layoutColWidth, "even_size");
+
+        // Fill mode - use custom labels for rectangle
+        rectangleFillToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.filled"),
+            () -> WandProps.getFlag(getPlayerHeldWand(), WandProps.Flag.RFILLED),
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setFlag(actualWand, WandProps.Flag.RFILLED, value);
+                syncWand(actualWand);
+            },
+            "Solid", "Hollow");
+        rectangleFillToggle.width = layoutColWidth;
+        rectangleFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
+        section.add(rectangleFillToggle);
+
+        // Grid mode spinners - M is rows/horizontal, N is columns/vertical
+        gridMSpinner = new Spinner(WandProps.getVal(wandStack, Value.GRIDM), 1, wandItem.limit, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.grid_m"))
+            .withOnChange(value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setGridVal(actualWand, Value.GRIDM, value, wandItem.limit);
+                syncWand(actualWand);
+            });
+        gridMSpinner.withTooltip(Compat.translatable("screen.wands.grid_m"), Compat.translatable("tooltip.wands.grid_m"));
+        section.add(gridMSpinner);
+
+        gridNSpinner = new Spinner(WandProps.getVal(wandStack, Value.GRIDN), 1, wandItem.limit, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.grid_n"))
+            .withOnChange(value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setGridVal(actualWand, Value.GRIDN, value, wandItem.limit);
+                syncWand(actualWand);
+            });
+        gridNSpinner.withTooltip(Compat.translatable("screen.wands.grid_n"), Compat.translatable("tooltip.wands.grid_n"));
+        section.add(gridNSpinner);
+
+        gridMSkipSpinner = addValSpinner(section, Value.GRIDMS, layoutColWidth, spinnerHeight, "grid_m_skip");
+        gridNSkipSpinner = addValSpinner(section, Value.GRIDNS, layoutColWidth, spinnerHeight, "grid_n_skip");
+        gridMOffsetSpinner = addValSpinner(section, Value.GRIDMOFF, layoutColWidth, spinnerHeight, "grid_m_offset");
+        gridNOffsetSpinner = addValSpinner(section, Value.GRIDNOFF, layoutColWidth, spinnerHeight, "grid_n_offset");
+
+        // Blast mode
+        blastRadiusSpinner = addValSpinner(section, Value.BLASTRAD, layoutColWidth, spinnerHeight, "blast_radius");
+        blastRadiusSpinner.incrementValue = 2;
+        blastRadiusSpinner.shiftIncrementValue = 4;
+
+        // Tunnel mode spinners
+        tunnelWidthSpinner = addValSpinner(section, Value.TUNNEL_W, layoutColWidth, spinnerHeight, "tunnel_width");
+        tunnelHeightSpinner = addValSpinner(section, Value.TUNNEL_H, layoutColWidth, spinnerHeight, "tunnel_height");
+        tunnelDepthSpinner = addValSpinner(section, Value.TUNNEL_DEPTH, layoutColWidth, spinnerHeight, "tunnel_depth");
+        tunnelOffsetXSpinner = addValSpinner(section, Value.TUNNEL_OX, layoutColWidth, spinnerHeight, "tunnel_offset_x");
+        tunnelOffsetYSpinner = addValSpinner(section, Value.TUNNEL_OY, layoutColWidth, spinnerHeight, "tunnel_offset_y");
+
+        // Include in selection (PASTE and TUNNEL modes)
+        includeBlockToggle = addFlagToggle(section, WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
+
+        // Block State select - at the bottom, only visible with Place action
+        Component[] stateLabels = {
+            Compat.translatable("screen.wands.clone_state"),
+            Compat.translatable("screen.wands.apply_x"),
+            Compat.translatable("screen.wands.apply_y"),
+            Compat.translatable("screen.wands.apply_z"),
+            Compat.translatable("screen.wands.flip_x"),
+            Compat.translatable("screen.wands.flip_y"),
+            Compat.translatable("screen.wands.flip_z"),
+            Compat.translatable("screen.wands.normal_place")
+        };
+        // Simplified labels when only Y-axis options are available (non-pillar blocks)
+        Component[] alternateStateLabels = {
+            Compat.translatable("screen.wands.clone_state"),
+            Compat.translatable("screen.wands.apply_x"),      // Not shown when filtered
+            Compat.translatable("screen.wands.rotate"),       // "Rotate" instead of "Apply Y rotation"
+            Compat.translatable("screen.wands.apply_z"),      // Not shown when filtered
+            Compat.translatable("screen.wands.flip_x"),       // Not shown when filtered
+            Compat.translatable("screen.wands.flip"),         // "Flip" instead of "Flip Y rotation"
+            Compat.translatable("screen.wands.flip_z"),       // Not shown when filtered
+            Compat.translatable("screen.wands.normal_place")
+        };
+        blockStateCycle = new CycleToggle<>(Compat.translatable("screen.wands.block_prefix"),
+            WandProps.BLOCK_STATE_OPTIONS, stateLabels,
+            () -> WandProps.getBlockStateIndex(getPlayerHeldWand()),
+            (idx) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setBlockStateIndex(actualWand, idx);
+                syncWand(actualWand);
+            })
+            .withAlternateLabels(alternateStateLabels)
+            .withTooltips(
+                "tooltip.wands.clone_state",
+                "tooltip.wands.apply_x", "tooltip.wands.apply_y", "tooltip.wands.apply_z",
+                "tooltip.wands.flip_x", "tooltip.wands.flip_y", "tooltip.wands.flip_z",
+                "tooltip.wands.normal_place");
+        blockStateCycle.width = layoutColWidth;
+        section.add(blockStateCycle);
+
+        return section;
+    }
+
+    private void registerModeSpecificWidgets() {
+        // Direction mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.DIRECTION), multiplierSpinner, invertToggle);
+
+        // Row/Col mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), rowColumnLimitSpinner, orientationCycle);
+
+        // Area mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.AREA), diagonalSpreadToggle, skipBlockSpinner);
+
+        // Area and Vein modes
+        registerModeWidgets(EnumSet.of(WandProps.Mode.AREA, WandProps.Mode.VEIN), areaLimitSpinner, matchStateToggle);
+
+        // Circle mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle, circleFillToggle, evenSizeToggle);
+
+        // Fill mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.FILL), rectangleFillToggle);
+
+        // Grid mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.GRID), gridMSpinner, gridNSpinner,
+            gridMSkipSpinner, gridNSkipSpinner, gridMOffsetSpinner, gridNOffsetSpinner);
+
+        // Paste mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE), mirrorLRToggle, mirrorFBToggle);
+
+        // Grid and Paste modes
+        registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
+
+        // Paste and Tunnel modes
+        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE, WandProps.Mode.TUNNEL), includeBlockToggle);
+
+        // Tunnel mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.TUNNEL), tunnelWidthSpinner, tunnelHeightSpinner,
+            tunnelDepthSpinner, tunnelOffsetXSpinner, tunnelOffsetYSpinner);
+
+        // Blast mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.BLAST), blastRadiusSpinner);
+
+        // Rock mode
+        registerModeWidgets(EnumSet.of(WandProps.Mode.ROCK), rockRadiusSpinner, rockNoiseSpinner);
+
+        // Target air modes (ROW_COL, GRID, COPY, PASTE, TUNNEL, ROCK)
+        registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL, WandProps.Mode.GRID, WandProps.Mode.COPY,
+            WandProps.Mode.PASTE, WandProps.Mode.TUNNEL, WandProps.Mode.ROCK), targetAirSpinner);
     }
 
     @Override
-    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
-        RenderSystem.outputColorTextureOverride = wand_bg_Texture;
-        int x = ((width - img_w) / 2) - xoff;
-        int y = ((height - img_h) / 2) - yoff;
+    public void init(){
+        super.init();
+        wdgets.clear();  // Clear widgets on resize/reinit
 
-        if (show_inv) {
-            RenderSystem.outputColorTextureOverride = wand_inv_Texture;
-            x = ((width - imageWidth) / 2);
-            y = ((height - imageHeight) / 2);
-            gui.blit(RenderPipelines.GUI_TEXTURED, INV_TEX, x, y, 0, 0, imageWidth, imageHeight, 256, 256);
-            super.render(gui, mouseX, mouseY, delta);
-            if (ClientRender.wand != null && ClientRender.wand.player_data != null && ClientRender.wand.player_data.getIntArray("Tools").isPresent()) {
-                for (int tool : ClientRender.wand.player_data.getIntArray("Tools").get()) {
-                    Slot slot = (Slot) this.menu.slots.get(tool);
-                    int i = slot.x + this.leftPos;
-                    int j = slot.y + this.topPos;
-                    gui.fillGradient(i, j, i + 16, j + 16, 0x8800AA00, 0x1000AA00);
+        // Prefer the player's actual held wand over the menu's copy
+        // This ensures we read the current values, not stale ones
+        wandStack = null;
+        if (Minecraft.getInstance().player != null) {
+            ItemStack mainHand = Minecraft.getInstance().player.getMainHandItem();
+            if (mainHand.getItem() instanceof WandItem) {
+                wandStack = mainHand;
+            } else {
+                ItemStack offHand = Minecraft.getInstance().player.getOffhandItem();
+                if (offHand.getItem() instanceof WandItem) {
+                    wandStack = offHand;
                 }
             }
-            gui.drawString(font, "click on a player inventory slot", leftPos + 3, topPos + 50, 0xffffffff);
-            gui.drawString(font, "to mark it to be used by the wand", leftPos + 3, topPos + 62, 0xffffffff);
-            show_inv_btn.render(gui, this.font, mouseX, mouseY);
+        }
+        // Fallback to menu's copy if player's wand not found
+        if (wandStack == null) {
+            wandStack = this.menu.wand;
+        }
 
-        } else {
-            gui.blit(RenderPipelines.GUI_TEXTURED, BG_TEX, x, y, 0, 0, img_w, img_h, 256, 256);
+        if(wandStack==null){
+            return;
+        }
+        if(wandStack.getItem() instanceof WandItem){
+            wandItem =(WandItem)wandStack.getItem();
+        }else{
+            return;
+        }
+        if(wandItem ==null){
+            return;
+        }
+        screenXOffset = WandsMod.config.wand_screen_x_offset;
+        screenYOffset = WandsMod.config.wand_screen_y_offset;
+
+        // Create vertical tabs for mode selection
+        // Layout: [panel] + INNER_PADDING + [tabs] + INNER_PADDING + [line] + INNER_PADDING + [section] + INNER_PADDING + [panel]
+        modeTabs = createModeTabs();
+        int panelX = SCREEN_MARGIN;
+        modeTabs.x = panelX + INNER_PADDING;
+        modeTabs.y = SCREEN_MARGIN + INNER_PADDING;
+
+        // Content area position (to the right of tabs + divider line)
+        // tabs + INNER_PADDING + line + INNER_PADDING
+        int contentX = modeTabs.x + Tabs.TAB_SIZE + INNER_PADDING + DIVIDER_LINE_WIDTH + INNER_PADDING;
+        int contentY = modeTabs.y;
+        int contentWidth = CONTENT_WIDTH;
+
+        // Mode options section (shown when mode tab selected)
+        modeOptionsSection = createModeOptionsSection(contentWidth, SPINNER_HEIGHT);
+        modeOptionsSection.x = contentX;
+        modeOptionsSection.y = contentY;
+        modeOptionsSection.width = contentWidth;
+        modeOptionsSection.layout();
+        modeOptionsSection.recalculateBounds();
+        wdgets.add(modeOptionsSection);
+
+        // Tools section (shown when tools tab selected)
+        toolsSection = createToolsSection();
+        toolsSection.x = contentX;
+        toolsSection.y = contentY;
+        toolsSection.width = contentWidth;
+        toolsSection.layout();
+        toolsSection.recalculateBounds();
+        wdgets.add(toolsSection);
+
+        // Add tabs LAST so section widgets get click priority over tabs
+        wdgets.add(modeTabs);
+
+        // Register mode-specific widget visibility
+        registerModeSpecificWidgets();
+    }
+
+    // Helper to register widgets with their applicable modes
+    private void registerModeWidgets(EnumSet<WandProps.Mode> modes, Wdgt... widgets) {
+        for (Wdgt w : widgets) {
+            modeWidgets.put(w, modes);
+        }
+    }
+
+    void update_selections(){
+        if(wandItem !=null && wandStack!=null) {
+            ItemStack actualWand = getPlayerHeldWand();
+            WandProps.Mode currentMode = WandProps.getMode(actualWand);
+
+            // Calculate the mode selection index and handle sub-tabs
+            // Tab indices: 0=Direction, 1=2D Shapes(parent), 2=3D Shapes(parent),
+            //              3=Copy, 4=Paste, 5=Tools
+            int modeIndex = -1;
+
+            // Check if mode is in 2D Shapes group
+            int shapes2dSubTabIndex = -1;
+            if (shapes2dModesArray != null) {
+                for (int i = 0; i < shapes2dModesArray.length; i++) {
+                    if (shapes2dModesArray[i] == currentMode) {
+                        shapes2dSubTabIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // Check if mode is in 3D Shapes group
+            int shapes3dSubTabIndex = -1;
+            if (shapes3dModesArray != null) {
+                for (int i = 0; i < shapes3dModesArray.length; i++) {
+                    if (shapes3dModesArray[i] == currentMode) {
+                        shapes3dSubTabIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (shapes2dSubTabIndex >= 0) {
+                // Current mode is in 2D Shapes group
+                modeIndex = shapes2dTabIndex;
+
+                Tabs.TabEntry entry = modeTabs.getEntry(shapes2dTabIndex);
+                if (entry != null) {
+                    entry.selectedSubTab = shapes2dSubTabIndex;
+                }
+            } else if (shapes3dSubTabIndex >= 0) {
+                // Current mode is in 3D Shapes group
+                modeIndex = shapes3dTabIndex;
+
+                Tabs.TabEntry entry = modeTabs.getEntry(shapes3dTabIndex);
+                if (entry != null) {
+                    entry.selectedSubTab = shapes3dSubTabIndex;
+                }
+            } else {
+                // Top-level mode
+                switch (currentMode) {
+                    case DIRECTION: modeIndex = 0; break;
+                    case COPY: modeIndex = 3; break;
+                    case PASTE: modeIndex = 4; break;
+                    default: break;
+                }
+            }
+
+            // Update tab selection and section visibility
+            int toolsTabIndex = modeTabs.size() - 1;  // Tools tab is last
+
+            if (isToolsTabSelected) {
+                // Tools tab is selected - highlight it, show tools section
+                modeTabs.selected = toolsTabIndex;
+                modeOptionsSection.visible = false;
+                toolsSection.visible = true;
+            } else {
+                // Mode tab is selected - highlight it, show mode options
+                modeTabs.selected = modeIndex;
+                modeOptionsSection.visible = true;
+                toolsSection.visible = false;
+            }
+
+            // Update mode-specific widget visibility using the map
+            modeWidgets.forEach((widget, modes) -> widget.visible = modes.contains(currentMode));
+
+            // Update mode options section title to show current mode name
+            modeOptionsSection.setTitle(Compat.translatable(currentMode.toString()));
+
+            // Update action select visibility and filter based on mode
+            boolean configDisabledDestroyReplace = WandsMod.config.disable_destroy_replace;
+            final WandProps.Mode mode = currentMode;  // For lambda capture
+            actionCycle.withFilter(action -> {
+                // Check if action applies to current mode
+                if (!WandProps.actionAppliesTo(action, mode)) return false;
+                // Check if config disables destroy/replace
+                if (configDisabledDestroyReplace &&
+                    (action == WandProps.Action.DESTROY || action == WandProps.Action.REPLACE)) {
+                    return false;
+                }
+                return true;
+            });
+            actionCycle.visible = actionCycle.hasAvailableOptions();
+            if (actionCycle.visible) {
+                actionCycle.validateSelection();
+            }
+
+            // Block state only relevant for Place action and modes that use state_mode
+            WandProps.Action currentAction = WandProps.getAction(actualWand);
+            blockStateCycle.visible = (currentAction == WandProps.Action.PLACE) && WandProps.stateModeAppliesTo(currentMode);
+
+            if (blockStateCycle.visible) {
+                // Filter block state options - show axis variants only when relevant
+                boolean isHollowFill = (currentMode == WandProps.Mode.FILL && !WandProps.getFlag(actualWand, WandProps.Flag.RFILLED));
+                boolean isPillarBlock = ClientRender.wand != null && ClientRender.wand.hasPillarBlock();
+                boolean showAllAxisOptions = isPillarBlock || isHollowFill;
+                blockStateCycle.withFilter(idx -> {
+                    // Clone and Normal always available
+                    if (idx == WandProps.BLOCK_STATE_CLONE || idx == WandProps.BLOCK_STATE_NORMAL) return true;
+                    // Apply-Y and Flip-Y always available (default axis for slabs/stairs)
+                    if (idx == WandProps.BLOCK_STATE_APPLY_Y || idx == WandProps.BLOCK_STATE_FLIP_Y) return true;
+                    // X/Z axis variants only when pillar block or hollow fill
+                    return showAllAxisOptions;
+                });
+                // Use simplified labels ("Rotate", "Flip") when only Y-axis options available
+                blockStateCycle.setUseAlternateLabels(!showAllAxisOptions);
+
+                // Dynamic tooltips based on context
+                blockStateCycle.setTooltipProvider(idx -> {
+                    return buildBlockStateTooltip(idx, isPillarBlock, isHollowFill);
+                });
+
+                blockStateCycle.validateSelection();
+            }
+        }
+    }
+    @Override
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+        if(showInventory) {
+            RenderSystem.outputColorTextureOverride=wandInventoryTexture;
+            int inventoryX = (width - imageWidth) / 2;
+            int inventoryY = (height - imageHeight) / 2;
+            gui.blit(RenderPipelines.GUI_TEXTURED, INV_TEX, inventoryX, inventoryY, 0, 0, imageWidth, imageHeight, 256, 256);
+            super.render(gui, mouseX, mouseY, delta);
+            if(ClientRender.wand != null && ClientRender.wand.player_data != null && ClientRender.wand.player_data.getIntArray("Tools").isPresent()){
+                for (int toolSlotIndex : ClientRender.wand.player_data.getIntArray("Tools").get()) {
+                    Slot slot = this.menu.slots.get(toolSlotIndex);
+                    int slotScreenX = slot.x + this.leftPos;
+                    int slotScreenY = slot.y + this.topPos;
+                    gui.fillGradient(slotScreenX, slotScreenY, slotScreenX + 16, slotScreenY + 16, 0x8800AA00, 0x1000AA00);
+                }
+            }
+            gui.drawString(font, "click on a player inventory slot", leftPos + 3, topPos + 50, 0xffffffff, true);
+            gui.drawString(font, "to mark it to be used by the wand", leftPos + 3, topPos + 62, 0xffffffff, true);
+
+        }else{
+            // Update tab expansion animation
+            modeTabs.updateAnimation(delta);
+
+            // Draw semi-transparent background panel (extends to bottom with same margin as top/sides)
+            // Tabs have no left/right inner padding, section has INNER_PADDING
+            Section visibleContent = isToolsTabSelected ? toolsSection : modeOptionsSection;
+            int panelX = modeTabs.x - INNER_PADDING;
+            int panelY = modeTabs.y - INNER_PADDING;
+            int panelRight = visibleContent.x + visibleContent.width + INNER_PADDING;
+            int panelBottom = this.height - SCREEN_MARGIN;
+            gui.fill(panelX, panelY, panelRight, panelBottom, COLOR_PANEL_BACKGROUND);
+
+            // Draw divider line between tabs and content
+            if (SHOW_TAB_DIVIDER) {
+                int lineX = modeTabs.x + Tabs.TAB_SIZE + INNER_PADDING;
+                gui.fill(lineX, modeTabs.y, lineX + DIVIDER_LINE_WIDTH, modeTabs.y + modeTabs.height, COLOR_TAB_DIVIDER);
+            }
+
             update_selections();
             for (Wdgt wdget : wdgets) {
                 if (wdget.visible) {
-                    wdget.render(gui, this.font, mouseX, mouseY);
+                        wdget.render(gui, this.font, mouseX, mouseY);
                 }
             }
-            x = ((width - img_w) / 2 + 48) - xoff;
-            y = (((height - img_h) / 2) + 22) - yoff;
-            for (int i = 0; i < 9; i++) {
-                Slot s = this.menu.slots.get(36 + i);
-                int xx = x + i * 18;
-                gui.renderFakeItem(s.getItem(), xx, y);
-                gui.renderItemDecorations(font, s.getItem(), xx, y);
-                if (mouseX > xx && mouseX < xx + 16 && mouseY > y && mouseY < y + 16) {
-                    this.hoveredSlot = s;
+
+            // Render hotbar slots
+            int hotbarBaseX = ((width - IMG_WIDTH)/2 + 48) - screenXOffset;
+            int hotbarY = (((height - IMG_HEIGHT) / 2) + 22) - screenYOffset;
+            for (int slotIndex = 0; slotIndex < 9; slotIndex++) {
+                Slot hotbarSlot = this.menu.slots.get(36 + slotIndex);
+                int slotX = hotbarBaseX + slotIndex * 18;
+                gui.renderFakeItem(hotbarSlot.getItem(), slotX, hotbarY);
+                gui.renderItemDecorations(font, hotbarSlot.getItem(), slotX, hotbarY);
+                if (mouseX > slotX && mouseX < slotX + 16 && mouseY > hotbarY && mouseY < hotbarY + 16) {
+                    this.hoveredSlot = hotbarSlot;
                 }
             }
-            if (modes_grp.selected == WandProps.Mode.ROCK.ordinal()) {
-                gui.drawString(font, rock_msg, leftPos + 103, topPos + 62, 0x00ff0000);
+            if(WandProps.getMode(getPlayerHeldWand()) == WandProps.Mode.ROCK) {
+                gui.drawString(font, rockMessage, leftPos + 103, topPos + 62, 0x00ff0000, true);
+            }
+
+            // Render widget tooltips
+            Wdgt hoveredWidget = findHoveredWidget(mouseX, mouseY);
+            if (hoveredWidget != null) {
+                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width);
             }
         }
+        // Update cursor based on hover
+        if (!showInventory) {
+            updateCursor(mouseX, mouseY);
+        }
+
         this.renderTooltip(gui, mouseX, mouseY);
     }
 
     @Override
-    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-
+    public void onClose() {
+        // Reset cursor and free native cursor handle
+        if (isHandCursor) {
+            GLFW.glfwSetCursor(Minecraft.getInstance().getWindow().handle(), 0);
+            isHandCursor = false;
+        }
+        if (handCursor != 0) {
+            GLFW.glfwDestroyCursor(handCursor);
+            handCursor = 0;
+        }
+        super.onClose();
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl) {
-        if (!show_inv) {
+    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+        // Only render darkened background when showing inventory, not for main wand screen
+        if (showInventory) {
+            super.renderBackground(gui, mouseX, mouseY, delta);
+        }
+    }
+    @Override
+    public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl)
+    {
+        if(!showInventory) {
+            int mx = (int) mouseButtonEvent.x();
+            int my = (int) mouseButtonEvent.y();
+
+            // Stop propagation after first widget handles the click
             for (Wdgt wdget : wdgets) {
-                wdget.click((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
+                if (wdget.visible && wdget.click(mx, my)) {
+                    return true;
+                }
             }
-        } else {
-            super.mouseClicked(mouseButtonEvent, bl);
-            show_inv_btn.click((int) mouseButtonEvent.x(), (int) mouseButtonEvent.y());
+        }else{
+            super.mouseClicked( mouseButtonEvent,bl);
         }
 
         return true;
     }
 
     @Override
-    public boolean keyPressed(KeyEvent keyEvent) {
-        int i = keyEvent.scancode();
-        if ((WandsModClient.wand_menu_km.matches(keyEvent) || i == 256)) {
-            if (show_inv) {
-                show_inv = false;
-            } else {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (!showInventory) {
+            for (Wdgt wdget : wdgets) {
+                if (wdget.visible && wdget.scroll((int) mouseX, (int) mouseY, scrollY)) {
+                    return true;
+                }
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
+    //public boolean keyPressed(int i, int j, int k)
+    public boolean keyPressed(KeyEvent keyEvent)
+    {
+        int i=keyEvent.scancode();
+        if ((WandsModClient.wand_menu_km.matches(keyEvent) || i==256) ) {
+            if(showInventory) {
+                showInventory = false;
+            }else{
                 onClose();
             }
             return true;
-        } else {
+        }else {
             return super.keyPressed(keyEvent);
         }
     }
