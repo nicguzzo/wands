@@ -198,6 +198,11 @@ public class WandConfigScreen {
                     .setSaveConsumer(newValue -> conf.advancement_allow_netherite_wand = newValue)
                     .build());
         }
+        general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.disable_info_messages"), conf.disable_info_messages)
+                .setDefaultValue(false)
+                .setTooltip(Compat.translatable("option.wands.disable_info_messages_tt"))
+                .setSaveConsumer(newValue -> conf.disable_info_messages = newValue)
+                .build());
         preview.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.thick_lines"), conf.fat_lines)
                 .setDefaultValue(true)
                 .setTooltip(Compat.translatable("option.wands.thick_lines_tt"))

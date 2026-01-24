@@ -676,7 +676,7 @@ public class Wand {
             //System.out.println("placed " + placed);
             if ((placed > 0) || (no_tool || damaged_tool)) {
 
-                if (blocks_sent_to_inv > 0) {
+                if (blocks_sent_to_inv > 0 && !WandsMod.config.disable_info_messages) {
                     MutableComponent mc = Compat.literal(blocks_sent_to_inv + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
                     player.displayClientMessage(mc, false);
                 }

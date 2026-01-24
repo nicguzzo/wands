@@ -67,6 +67,8 @@
   "option.wands.bounding_box_tt": "",
   "option.wands.check_advancements": "Enable Advancements",
   "option.wands.check_advancements_tt": "",
+  "option.wands.disable_info_messages": "Disable info messages",
+  "option.wands.disable_info_messages_tt": "Hide informational chat messages (mode changes, wand cleared, etc.)",
   "option.wands.copy_outlines": "Copy mode outlines",
   "option.wands.copy_outlines_tt": "",
   "option.wands.destroy_color": "Destroy",
