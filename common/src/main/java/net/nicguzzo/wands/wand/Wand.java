@@ -870,12 +870,7 @@ public class Wand {
         } else {
             if (offhand_state != null && !offhand_state.isAir()) {
 
-                if (state_mode == WandProps.StateMode.CLONE && state_behind_block != null
-                    /*&&(
-                                (blk instanceof StairBlock && hand_blk instanceof StairBlock)||
-                                (blk instanceof SlabBlock  && hand_blk instanceof SlabBlock)
-                        )*/
-                ) {
+                if (state_mode == WandProps.StateMode.CLONE && state_behind_block != null) {
                     BlockState st2 = offhand_state.getBlock().withPropertiesOf(state_behind_block);
                     st = st2;
                 } else {
@@ -885,6 +880,10 @@ public class Wand {
                 if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE) {
                     if (p1_state != null)
                         st = p1_state;
+                }else{
+                    if( state_mode== WandProps.StateMode.CLONE && state_behind_block!=null){
+                        return state_behind_block;
+                    }
                 }
             }
             st = state_for_placement(st, null);
