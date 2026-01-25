@@ -215,6 +215,17 @@ public class Wand {
         //WandsMod.LOGGER.info("set p2 "+p2);
     }
 
+    /**
+     * Returns the effective end position for 2-click modes, applying INCSELBLOCK offset if needed.
+     * Use this instead of wand.pos directly in mode implementations to get consistent preview/placement behavior.
+     */
+    public BlockPos getEffectiveEndPos() {
+        if (preview && WandProps.getFlag(wand_stack, WandProps.Flag.INCSELBLOCK) && !level.getBlockState(pos).isAir()) {
+            return pos.relative(side, 1);
+        }
+        return pos;
+    }
+
     public enum Sounds {
         SPLASH {
             @Override

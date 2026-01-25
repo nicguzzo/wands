@@ -619,10 +619,10 @@ public class WandProps {
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),
         Map.entry(Flag.MATCHSTATE, EnumSet.of(Mode.AREA, Mode.VEIN)),
-        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.PASTE, Mode.TUNNEL)),
+        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.PASTE, Mode.TUNNEL, Mode.LINE, Mode.CIRCLE, Mode.FILL)),
         Map.entry(Flag.STAIRSLAB, EnumSet.allOf(Mode.class)),  // All modes
         Map.entry(Flag.RFILLED, EnumSet.of(Mode.FILL)),
-        Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.ROCK)),
+        Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE)),
         Map.entry(Flag.CLEAR_P1, EnumSet.allOf(Mode.class))  // All modes
     );
 
@@ -647,14 +647,14 @@ public class WandProps {
         Map.entry(Value.TUNNEL_DEPTH, EnumSet.of(Mode.TUNNEL)),
         Map.entry(Value.ROCK_RADIUS, EnumSet.of(Mode.ROCK)),
         Map.entry(Value.ROCK_NOISE, EnumSet.of(Mode.ROCK)),
-        Map.entry(Value.AIR_TARGET_DISTANCE, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.PASTE, Mode.TUNNEL, Mode.ROCK))
+        Map.entry(Value.AIR_TARGET_DISTANCE, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.PASTE, Mode.TUNNEL, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE))
     );
 
     // Modes where state_mode (block state) applies
     // PASTE returns early in state_for_placement(), COPY/BLAST don't place blocks
     public static final EnumSet<Mode> STATE_MODE_MODES = EnumSet.of(
         Mode.DIRECTION, Mode.ROW_COL, Mode.LINE, Mode.CIRCLE, Mode.SPHERE,
-        Mode.FILL, Mode.AREA, Mode.TUNNEL, Mode.GRID, Mode.VEIN, Mode.ROCK
+        Mode.FILL, Mode.AREA, Mode.TUNNEL, Mode.GRID, Mode.VEIN
     );
 
     // Modes where rotation setting is relevant (for HUD display)

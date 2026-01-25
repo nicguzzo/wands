@@ -167,6 +167,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner tunnelOffsetXSpinner;
     Spinner tunnelOffsetYSpinner;
     CycleToggle<Boolean> includeBlockToggle;
+    CycleToggle<Boolean> keepStartToggle;
 
     // Map widget to the modes it should be visible for
     Map<Wdgt, EnumSet<WandProps.Mode>> modeWidgets = new HashMap<>();
@@ -368,6 +369,23 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         CycleToggle<Boolean> toggle = flagToggle(flag, w, label);
+        toggle.withTooltip(label, tooltip);
+        section.add(toggle);
+        return toggle;
+    }
+
+    /** Create inverted boolean toggle (ON = flag false, OFF = flag true) with auto-computed translations */
+    private CycleToggle<Boolean> addInvertedFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
+        Component label = Compat.translatable("screen.wands." + key);
+        Component tooltip = Compat.translatable("tooltip.wands." + key);
+        CycleToggle<Boolean> toggle = CycleToggle.ofBoolean(label,
+            () -> !WandProps.getFlag(getPlayerHeldWand(), flag),  // Inverted: show ON when flag is false
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setFlag(actualWand, flag, !value);  // Inverted: set flag to opposite of toggle
+                syncWand(actualWand);
+            });
+        toggle.width = w;
         toggle.withTooltip(label, tooltip);
         section.add(toggle);
         return toggle;
@@ -735,6 +753,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         // Include in selection (PASTE and TUNNEL modes)
         includeBlockToggle = addFlagToggle(section, WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
 
+        // Keep start point (inverted: ON = don't clear P1, OFF = clear P1)
+        keepStartToggle = addInvertedFlagToggle(section, WandProps.Flag.CLEAR_P1, layoutColWidth, "keep_start");
+
         // Block State select - at the bottom, only visible with Place action
         Component[] stateLabels = {
             Compat.translatable("screen.wands.clone_state"),
@@ -806,8 +827,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         // Grid and Paste modes
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
 
-        // Paste and Tunnel modes
-        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE, WandProps.Mode.TUNNEL), includeBlockToggle);
+        // Modes with include block option
+        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE, WandProps.Mode.TUNNEL,
+            WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL), includeBlockToggle);
 
         // Tunnel mode
         registerModeWidgets(EnumSet.of(WandProps.Mode.TUNNEL), tunnelWidthSpinner, tunnelHeightSpinner,
@@ -819,9 +841,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         // Rock mode
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROCK), rockRadiusSpinner, rockNoiseSpinner);
 
-        // Target air modes (ROW_COL, GRID, COPY, PASTE, TUNNEL, ROCK)
+        // Target air modes
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL, WandProps.Mode.GRID, WandProps.Mode.COPY,
-            WandProps.Mode.PASTE, WandProps.Mode.TUNNEL, WandProps.Mode.ROCK), targetAirSpinner);
+            WandProps.Mode.PASTE, WandProps.Mode.TUNNEL, WandProps.Mode.ROCK,
+            WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL, WandProps.Mode.SPHERE), targetAirSpinner);
+
+        // Keep start point - 2-click modes where P1 reuse makes sense
+        registerModeWidgets(EnumSet.of(WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL,
+            WandProps.Mode.SPHERE, WandProps.Mode.COPY, WandProps.Mode.PASTE), keepStartToggle);
     }
 
     @Override
