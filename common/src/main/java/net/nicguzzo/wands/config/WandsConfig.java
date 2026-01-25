@@ -115,6 +115,7 @@ public class WandsConfig {
     public boolean fat_lines = true;
     public boolean render_last = false;
     public boolean show_tools_info = true;
+    public boolean disable_info_messages = false;
     public boolean check_advancements = false;
     public String advancement_allow_stone_wand = "";
     public String advancement_allow_iron_wand = "";

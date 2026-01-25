@@ -367,7 +367,9 @@ public class WandsMod {
                     case PALETTE_MODE: {
                         if (!offhand_stack.isEmpty() && offhand_stack.getItem() instanceof PaletteItem) {
                             PaletteItem.nextMode(offhand_stack);
-                            player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
+                            if (!WandsMod.config.disable_info_messages) {
+                                player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(offhand_stack)), false);
+                            }
                         }
                     }
                     break;
@@ -442,7 +444,9 @@ public class WandsMod {
                         } else {
                             WandProps.nextAction(main_stack);
                         }
-                        player.displayClientMessage(Compat.literal("Wand Action: ").append(Compat.translatable(WandProps.getAction(main_stack).toString())), false);
+                        if (!WandsMod.config.disable_info_messages) {
+                            player.displayClientMessage(Compat.literal("Wand Action: ").append(Compat.translatable(WandProps.getAction(main_stack).toString())), false);
+                        }
                         break;
                     case MENU:
                         Compat.open_menu((ServerPlayer) player, main_stack, 0);
@@ -459,7 +463,9 @@ public class WandsMod {
                             case CIRCLE:
                             case FILL:
                                 WandProps.nextPlane(main_stack);
-                                player.displayClientMessage(Compat.literal("Wand Plane: " + WandProps.getPlane(main_stack)), false);
+                                if (!WandsMod.config.disable_info_messages) {
+                                    player.displayClientMessage(Compat.literal("Wand Plane: " + WandProps.getPlane(main_stack)), false);
+                                }
                                 send_state((ServerPlayer) player, wand);
                                 break;
                             case DIRECTION:
@@ -468,24 +474,32 @@ public class WandsMod {
                                 break;
                             default:
                                 WandProps.nextOrientation(main_stack);
-                                player.displayClientMessage(Compat.literal("Wand Orientation: ").append(Compat.translatable(WandProps.getOrientation(main_stack).toString())), false);
+                                if (!WandsMod.config.disable_info_messages) {
+                                    player.displayClientMessage(Compat.literal("Wand Orientation: ").append(Compat.translatable(WandProps.getOrientation(main_stack).toString())), false);
+                                }
                                 break;
                         }
                         break;
                     case INVERT:
                         WandProps.toggleFlag(main_stack, WandProps.Flag.INVERTED);
-                        player.displayClientMessage(Compat.literal("Wand inverted: " + WandProps.getFlag(main_stack, WandProps.Flag.INVERTED)), false);
+                        if (!WandsMod.config.disable_info_messages) {
+                            player.displayClientMessage(Compat.literal("Wand inverted: " + WandProps.getFlag(main_stack, WandProps.Flag.INVERTED)), false);
+                        }
                         break;
                     case FILL:
                         switch (wand.mode) {
                             case FILL: {
                                 WandProps.toggleFlag(main_stack, WandProps.Flag.RFILLED);
-                                player.displayClientMessage(Compat.literal("Wand fill rect: " + WandProps.getFlag(main_stack, WandProps.Flag.RFILLED)), false);
+                                if (!WandsMod.config.disable_info_messages) {
+                                    player.displayClientMessage(Compat.literal("Wand fill rect: " + WandProps.getFlag(main_stack, WandProps.Flag.RFILLED)), false);
+                                }
                             }
                             break;
                             case CIRCLE: {
                                 WandProps.toggleFlag(main_stack, WandProps.Flag.CFILLED);
-                                player.displayClientMessage(Compat.literal("Wand circle fill: " + WandProps.getFlag(main_stack, WandProps.Flag.CFILLED)), false);
+                                if (!WandsMod.config.disable_info_messages) {
+                                    player.displayClientMessage(Compat.literal("Wand circle fill: " + WandProps.getFlag(main_stack, WandProps.Flag.CFILLED)), false);
+                                }
                             }
                             break;
                         }
@@ -515,7 +529,9 @@ public class WandsMod {
 
                         wand.clear(true);
 
-                        if (player != null) player.displayClientMessage(Compat.literal("wand cleared"), false);
+                        if (player != null && !WandsMod.config.disable_info_messages) {
+                            player.displayClientMessage(Compat.literal("wand cleared"), false);
+                        }
                         break;
                 }
 
@@ -525,7 +541,9 @@ public class WandsMod {
             if (key >= 0 && key < WandKeys.values().length) {
                 if (Objects.requireNonNull(WandKeys.values()[key]) == WandKeys.PALETTE_MODE) {
                     PaletteItem.nextMode(main_stack);
-                    player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(main_stack)), false);
+                    if (!WandsMod.config.disable_info_messages) {
+                        player.displayClientMessage(Compat.literal("Palette mode: " + PaletteItem.getMode(main_stack)), false);
+                    }
                 }
             }
         }

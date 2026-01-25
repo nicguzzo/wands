@@ -64,6 +64,8 @@
   "option.wands.bounding_box_color": "Bounding Box",
   "option.wands.check_advancements": "Enable Advancements",
   "option.wands.check_advancements_tt": "",
+  "option.wands.disable_info_messages": "Disable info messages",
+  "option.wands.disable_info_messages_tt": "Hide informational chat messages (mode changes, wand cleared, etc.)",
   "toast.wands.no_tool": "No tool",
   "toast.wands.no_tool_desc": "Add tools to wand",
   "toast.wands.wrong_tool": "Wrong tool for blocks",

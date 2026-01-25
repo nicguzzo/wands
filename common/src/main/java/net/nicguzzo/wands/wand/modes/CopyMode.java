@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.utils.Compat;
 import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
@@ -95,7 +96,7 @@ public class CopyMode extends WandMode {
                         }
                     }
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
-                    if (!wand.preview)
+                    if (!wand.preview && !WandsMod.config.disable_info_messages)
                         wand.player.displayClientMessage(Compat.literal("Copied: " + cp + " blocks"), false);
                 } else {
                     wand.player.displayClientMessage(Compat.literal("Copy limit reached"), false);

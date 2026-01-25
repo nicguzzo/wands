@@ -527,7 +527,7 @@ public class WandsModClient {
     public static void cancel_wand() {
         if (ClientRender.wand != null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)) {
             ClientRender.wand.clear(true);
-            if (ClientRender.wand.player != null) {
+            if (ClientRender.wand.player != null && !WandsMod.config.disable_info_messages) {
                 ClientRender.wand.player.displayClientMessage(Compat.literal("wand cleared"), false);
             }
         }
