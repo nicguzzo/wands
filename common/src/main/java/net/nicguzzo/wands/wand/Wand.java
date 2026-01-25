@@ -250,7 +250,7 @@ public class Wand {
     public boolean preview;
     public boolean creative = true;
     public WandProps.Mode mode = null;
-    private WandProps.Mode prevMode = null;  // Track previous mode to detect changes
+    public WandProps.Mode prevMode = null;  // Track previous mode to detect changes
     public boolean prnt = false;
     public int limit = WandsConfig.max_limit;
     Inventory player_inv;
@@ -1550,6 +1550,7 @@ public class Wand {
     public void update_tools() {
         digger_item_slot = -1;
         n_tools = 0;
+        if (this.player_data == null) return;
         Optional<int[]> a = this.player_data.getIntArray("Tools");
         if (a.isEmpty()) return;
         int[] tools_slots = a.get();
