@@ -389,12 +389,8 @@ public class ClientRender {
         }
         if(drawlines &&block_outlines)
         {
-            VertexConsumer consumer;
-            if (fat_lines) {
-                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
-            } else {
-                consumer= bufferSource.getBuffer(RenderTypes.lines());
-            }
+            // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+            VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
 
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                 float x = wand.block_buffer.buffer_x[idx];
@@ -431,12 +427,8 @@ public class ClientRender {
         matrixStack.pushPose();
         matrixStack.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        VertexConsumer consumer;
-        if (fat_lines) {
-            consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
-        } else {
-            consumer = bufferSource.getBuffer(RenderTypes.lines());
-        }
+        // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
 
         float x = pos.getX();
         float y = pos.getY();
@@ -452,37 +444,48 @@ public class ClientRender {
         matrixStack.popPose();
     }
 
-    static void preview_block(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
-        fx1 += p_o;
-        fy1 += p_o;
-        fz1 += p_o;
-        fx2 -= p_o;
-        fy2 -= p_o;
-        fz2 -= p_o;
-        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz1).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx1, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy1, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
-        consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
+    // Draws box outline using quads (works with debugQuads render type)
+    static void preview_block(Matrix4f matrix, VertexConsumer consumer, float fx1, float fy1, float fz1, float fx2, float fy2, float fz2, Colorf c) {
+        // Use thin quad lines when fat_lines is disabled
+        float w = fat_lines ? fat_lines_width : 0.01f;
+        float off = 0.005f;
+        fx1 -= off;
+        fy1 -= off;
+        fz1 -= off;
+        fx2 += off;
+        fy2 += off;
+        fz2 += off;
+        // Draw box edges as thin quads
+        //north -z
+        quad_line(matrix,consumer,  0, w,0, fx1,   fy1, fz1, fx2,   fy1, fz1,c);
+        quad_line(matrix,consumer,  0,-w,0, fx2,   fy2, fz1, fx1,   fy2, fz1,c);
+        quad_line(matrix,consumer,  w, 0,0, fx1, fy2-w, fz1, fx1, fy1+w, fz1,c);
+        quad_line(matrix,consumer, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1,c);
+        //south +z
+        quad_line(matrix,consumer,  0, w,0, fx2,   fy1, fz2, fx1,   fy1, fz2,c);
+        quad_line(matrix,consumer,  0,-w,0, fx1,   fy2, fz2, fx2,   fy2, fz2,c);
+        quad_line(matrix,consumer,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2,c);
+        quad_line(matrix,consumer, -w, 0,0, fx2, fy2-w, fz2, fx2, fy1+w, fz2,c);
+        //up +y
+        quad_line(matrix,consumer,  w,0, 0, fx1  , fy2, fz2, fx1 , fy2, fz1,c);
+        quad_line(matrix,consumer, -w,0, 0, fx2  , fy2, fz1, fx2 , fy2, fz2,c);
+        quad_line(matrix,consumer,  0,0, w, fx1+w, fy2, fz1, fx2-w, fy2, fz1,c);
+        quad_line(matrix,consumer,  0,0,-w, fx2-w, fy2, fz2, fx1+w, fy2, fz2,c);
+        //down -y
+        quad_line(matrix,consumer,  w,0, 0, fx1, fy1, fz1, fx1  , fy1, fz2,c);
+        quad_line(matrix,consumer, -w,0, 0, fx2  , fy1, fz2,fx2, fy1, fz1,c);
+        quad_line(matrix,consumer,  0,0, w, fx2-w, fy1, fz1,fx1+w, fy1, fz1,c);
+        quad_line(matrix,consumer,  0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2,c);
+        //east +x
+        quad_line(matrix,consumer, 0, w, 0, fx2,   fy1, fz1, fx2,   fy1, fz2,c);
+        quad_line(matrix,consumer, 0,-w, 0, fx2,   fy2, fz2, fx2,   fy2, fz1,c);
+        quad_line(matrix,consumer, 0, 0, w, fx2, fy2-w, fz1, fx2, fy1+w, fz1,c);
+        quad_line(matrix,consumer, 0, 0,-w, fx2, fy1+w, fz2, fx2, fy2-w, fz2,c);
+        //west -x
+        quad_line(matrix,consumer, 0, w,0,   fx1,   fy1, fz2,fx1,   fy1, fz1,c);
+        quad_line(matrix,consumer, 0,-w, 0, fx1,   fy2, fz1, fx1,   fy2, fz2,c);
+        quad_line(matrix,consumer, 0, 0,-w, fx1, fy2-w, fz1, fx1, fy1+w, fz1,c);
+        quad_line(matrix,consumer, 0, 0, w, fx1, fy1+w, fz2, fx1, fy2-w, fz2,c);
     }
 
     static void preview_block_fat(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
@@ -607,16 +610,29 @@ public class ClientRender {
         set_grid_v(grid_i,x2, y2,z2);
         grid_i++;
     }
-    private static void draw_lines(VertexConsumer consumer,int from,int to,float r,float g,float b,float a){
-        for(int i=from;i<to && i< grid_n;i++) {
-            consumer.addVertex(grid_vx[i],grid_vy[i],grid_vz[i]).setColor(r, g, b, a)
-                    .setNormal(//TODO: needs normal matrix?
-                            (float)player_normal.x,
-                            (float)player_normal.y,
-                            (float)player_normal.z);
+    // Draws lines as quads (for use with debugQuads render type)
+    private static void draw_lines(Matrix4f matrix, VertexConsumer consumer, int from, int to, float r, float g, float b, float a) {
+        float w = fat_lines ? fat_lines_width * 0.5f : 0.005f;
+        Colorf c = new Colorf(r, g, b, a);
+        // Draw lines as pairs of vertices (from is start, every 2 vertices is a line)
+        for (int i = from; i < to - 1 && i < grid_n - 1; i += 2) {
+            float x1 = grid_vx[i], y1 = grid_vy[i], z1 = grid_vz[i];
+            float x2 = grid_vx[i+1], y2 = grid_vy[i+1], z2 = grid_vz[i+1];
+            // Determine line direction and offset for quad width
+            float dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > Math.abs(dz)) {
+                // Horizontal X line - offset in Y and Z
+                quad_line(matrix, consumer, 0, w, 0, x1, y1, z1, x2, y2, z2, c);
+            } else if (Math.abs(dy) > Math.abs(dz)) {
+                // Vertical Y line - offset in X and Z
+                quad_line(matrix, consumer, w, 0, 0, x1, y1, z1, x2, y2, z2, c);
+            } else {
+                // Horizontal Z line - offset in X and Y
+                quad_line(matrix, consumer, w, 0, 0, x1, y1, z1, x2, y2, z2, c);
+            }
         }
     }
-    private static void grid(VertexConsumer consumer,Direction side, float x, float y, float z,AABB aabb) {
+    private static void grid(Matrix4f matrix, VertexConsumer consumer, Direction side, float x, float y, float z, AABB aabb) {
         float w=1;
         float h=1;
         float w2=w*0.33333333f;
@@ -652,7 +668,7 @@ public class ClientRender {
                 add_grid_line(x + w2,y, z      ,x + w2,y, z +  h );
                 add_grid_line(x + w3,y, z      ,x + w3,y, z +  h );
 
-                draw_lines(consumer,0,16,1.0f,1.0f,1.0f,1.0f);
+                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
 
                 grid_i=0;
 
@@ -664,14 +680,14 @@ public class ClientRender {
                 add_grid_line(x + w*0.20f, y, z + h*0.60f, x + w*0.05f, y, z + h*0.50f);
                 add_grid_line(x + w*0.80f, y, z + h*0.40f, x + w*0.95f, y, z + h*0.50f);
                 add_grid_line(x + w*0.80f, y, z + h*0.60f, x + w*0.95f, y, z + h*0.50f);
-                draw_lines(consumer,0,16,0.7f,0,0,1.0f);
+                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x + w*0.40f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.40f);
                 add_grid_line(x + w*0.40f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.60f);
                 add_grid_line(x + w*0.60f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.60f);
                 add_grid_line(x + w*0.50f, y, z + h*0.40f,x + w*0.60f, y, z + h*0.50f);
-                draw_lines(consumer,0,8,0,0.7f,0,1.0f);
+                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x + w*0.10f, y, z + h*0.10f,x + w*0.20f, y, z + h*0.14f);
@@ -682,7 +698,7 @@ public class ClientRender {
                 add_grid_line(x + w*0.90f, y, z + h*0.10f,x + w*0.86f, y, z + h*0.20f);
                 add_grid_line(x + w*0.10f, y, z + h*0.90f,x + w*0.20f, y, z + h*0.86f);
                 add_grid_line(x + w*0.10f, y, z + h*0.90f,x + w*0.14f, y, z + h*0.80f);
-                draw_lines(consumer,0,16,0,0,0.7f,1.0f);
+                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
 
             }
             break;
@@ -712,7 +728,7 @@ public class ClientRender {
                 add_grid_line(x + w2, y      , z,x + w2, y +  h , z);
                 add_grid_line(x + w3, y      , z,x + w3, y +  h , z);
 
-                draw_lines(consumer,0,16,1.0f,1.0f,1.0f,1.0f);
+                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
 
                 grid_i=0;
 
@@ -724,14 +740,14 @@ public class ClientRender {
                 add_grid_line(x + w*0.20f, y + h*0.60f, z, x + w*0.05f, y + h*0.50f,z);
                 add_grid_line(x + w*0.80f, y + h*0.40f, z, x + w*0.95f, y + h*0.50f,z);
                 add_grid_line(x + w*0.80f, y + h*0.60f, z, x + w*0.95f, y + h*0.50f,z);
-                draw_lines(consumer,0,16,0.7f,0,0,1.0f);
+                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x + w*0.40f, y + h*0.50f,z, x + w*0.50f, y + h*0.40f, z);
                 add_grid_line(x + w*0.40f, y + h*0.50f,z, x + w*0.50f, y + h*0.60f, z);
                 add_grid_line(x + w*0.60f, y + h*0.50f,z, x + w*0.50f, y + h*0.60f, z);
                 add_grid_line(x + w*0.50f, y + h*0.40f,z, x + w*0.60f, y + h*0.50f, z);
-                draw_lines(consumer,0,8,0,0.7f,0,1.0f);
+                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x + w*0.10f, y + h*0.10f,z, x + w*0.20f, y + h*0.14f , z);
@@ -742,7 +758,7 @@ public class ClientRender {
                 add_grid_line(x + w*0.90f, y + h*0.10f,z, x + w*0.86f, y + h*0.20f , z);
                 add_grid_line(x + w*0.10f, y + h*0.90f,z, x + w*0.20f, y + h*0.86f , z);
                 add_grid_line(x + w*0.10f, y + h*0.90f,z, x + w*0.14f, y + h*0.80f , z);
-                draw_lines(consumer,0,16,0,0,0.7f,1.0f);
+                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
             }
             break;
             case EAST:
@@ -771,7 +787,7 @@ public class ClientRender {
                 add_grid_line(x, y + w2, z      ,x, y + w2, z +  h );
                 add_grid_line(x, y + w3, z      ,x, y + w3, z +  h );
 
-                draw_lines(consumer,0,16,1.0f,1.0f,1.0f,1.0f);
+                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
 
                 grid_i=0;
 
@@ -783,14 +799,14 @@ public class ClientRender {
                 add_grid_line(x, y + w*0.20f, z + h*0.60f, x, y + w*0.05f, z + h*0.50f);
                 add_grid_line(x, y + w*0.80f, z + h*0.40f, x, y + w*0.95f, z + h*0.50f);
                 add_grid_line(x, y + w*0.80f, z + h*0.60f, x, y + w*0.95f, z + h*0.50f);
-                draw_lines(consumer,0,16,0.7f,0,0,1.0f);
+                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x,y + w*0.40f, z + h*0.50f,x, y + w*0.50f, z + h*0.40f);
                 add_grid_line(x,y + w*0.40f, z + h*0.50f,x, y + w*0.50f, z + h*0.60f);
                 add_grid_line(x,y + w*0.60f, z + h*0.50f,x, y + w*0.50f, z + h*0.60f);
                 add_grid_line(x,y + w*0.50f, z + h*0.40f,x, y + w*0.60f, z + h*0.50f);
-                draw_lines(consumer,0,8,0,0.7f,0,1.0f);
+                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
 
                 grid_i=0;
                 add_grid_line(x, y + w*0.10f, z + h*0.10f,x, y + w*0.20f, z + h*0.14f);
@@ -801,7 +817,7 @@ public class ClientRender {
                 add_grid_line(x, y + w*0.90f, z + h*0.10f,x, y + w*0.86f, z + h*0.20f);
                 add_grid_line(x, y + w*0.10f, z + h*0.90f,x, y + w*0.20f, z + h*0.86f);
                 add_grid_line(x, y + w*0.10f, z + h*0.90f,x, y + w*0.14f, z + h*0.80f);
-                draw_lines(consumer,0,16,0,0,0.7f,1.0f);
+                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
 
             }
             break;
@@ -1015,11 +1031,12 @@ public class ClientRender {
                     bufferSource.endLastBatch();
                 }
                 if (!fancy || !fat_lines) {
-                    VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
+                    // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+                    VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
                     int vi = 0;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
-                            grid(consumer, wand.side, pos_x, pos_y, pos_z, aabb);
+                            grid(matrix, consumer, wand.side, pos_x, pos_y, pos_z, aabb);
                         }
                         vi++;
                     }
@@ -1162,8 +1179,9 @@ public class ClientRender {
         float bb2_x=wand.bb2_x;
         float bb2_y=wand.bb2_y;
         float bb2_z=wand.bb2_z;
+        // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+        VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
         if (fat_lines) {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             preview_block_fat(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -1172,9 +1190,7 @@ public class ClientRender {
                     bb2_y + off2,
                     bb2_z + off2,
                     bbox_col,false);
-
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
             preview_block(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -1183,7 +1199,6 @@ public class ClientRender {
                     bb2_y + off2,
                     bb2_z + off2,
                     bbox_col);
-
         }
         bufferSource.endLastBatch();
     }
@@ -1268,12 +1283,8 @@ public class ClientRender {
             x2 = Integer.MIN_VALUE;
             y2 = Integer.MIN_VALUE;
             z2 = Integer.MIN_VALUE;
-            VertexConsumer consumer;
-            if (fat_lines) {
-                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
-            } else {
-                consumer= bufferSource.getBuffer(RenderTypes.lines());
-            }
+            // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+            VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
             for (CopyBuffer b : wand.copy_paste_buffer) {
                 BlockPos p = b.pos.rotate(last_rot);
                 float x = b_pos.getX() + p.getX()*mx;
@@ -1331,8 +1342,9 @@ public class ClientRender {
                                     pos_x,pos_y,pos_z);
             bufferSource.endLastBatch();
         }
+        // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+        VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
         if (fat_lines) {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
             preview_block_fat(matrix,consumer,
                     (pos_x  - off),
                     (pos_y  - off),
@@ -1341,15 +1353,13 @@ public class ClientRender {
                     (pos_y+1+ off),
                     (pos_z+1+ off),
                     start_col,false);
-            bufferSource.endLastBatch();
         } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
             preview_block(matrix,consumer,
                     pos_x  - off, pos_y  - off, pos_z  - off,
                     pos_x+1+ off, pos_y+1+ off, pos_z+1+ off,
                     start_col);
-            bufferSource.endLastBatch();
         }
+        bufferSource.endLastBatch();
     }
     }
     static void preview_line_circle(Matrix4f matrix, Mode mode,MultiBufferSource.BufferSource bufferSource,
@@ -1407,11 +1417,14 @@ public class ClientRender {
                }
            }
        } else {
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.lines());
-            consumer.addVertex(p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F)
-                .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
-            consumer.addVertex(wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F)
-                .setColor(line_col.r, line_col.g, line_col.b, line_col.a);
+            // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
+            // Draw line between points as a thin quad
+            float w = 0.01f;
+            quad_line(matrix, consumer, w, 0, 0,
+                    p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F,
+                    wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F,
+                    line_col);
             preview_block(matrix,consumer,
                     p1_x,p1_y,p1_z,
                     p1_x + 1, p1_y + 1, p1_z + 1,
