@@ -262,6 +262,9 @@ public class WandsMod {
             Vec3 hit = new Vec3(data.hit().x, data.hit().y, data.hit().z);
             //WandsMod.log(" received_placement palette seed: " + seed,true);
             wand.palette.seed = data.seed();
+            // Sync prevMode before do_or_preview to prevent false mode-change detection
+            // (client may have changed modes between placements without server knowing)
+            wand.prevMode = mode;
             //wand.lastPlayerDirection=player_dir;
             //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
             wand.do_or_preview(player, level, block_state, pos, side, hit, stack, (WandItem) stack.getItem(), true);

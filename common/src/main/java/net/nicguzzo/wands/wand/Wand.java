@@ -251,7 +251,7 @@ public class Wand {
     public boolean preview;
     public boolean creative = true;
     public WandProps.Mode mode = null;
-    private WandProps.Mode prevMode = null;  // Track previous mode to detect changes
+    public WandProps.Mode prevMode = null;  // Track previous mode to detect changes
     public boolean prnt = false;
     public int limit = WandsConfig.max_limit;
     Inventory player_inv;
