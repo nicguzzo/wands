@@ -18,3 +18,4 @@ classes/
 .settings
 *.launch
 versions/mc*
+local.properties

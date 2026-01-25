@@ -76,14 +76,20 @@ public class WandItem extends Item {
         Direction side = context.getClickedFace();
         //WandsMod.LOGGER.info("UseOn p1 "+ClientRender.wand.getP1());
         //WandsMod.LOGGER.info("UseOn pps "+pos);
+        // Only apply INCSELBLOCK offset for modes that show the toggle
         boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
+        boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
+        boolean shouldOffset = modeSupportsIncSel && !inc_sel && !block_state.isAir();
         if (ClientRender.wand.getP1() == null) {
-            ClientRender.wand.setP1(pos);
+            if (shouldOffset) {
+                ClientRender.wand.setP1(pos.relative(side, 1));
+            } else {
+                ClientRender.wand.setP1(pos);
+            }
         } else {
             if (ClientRender.wand.getP2() == null && mode.n_clicks() == 2) {
                 ClientRender.wand.setP2(pos);
-                //boolean target_air=WandProps.getFlag(stack, WandProps.Flag.TARGET_AIR);
-                if (inc_sel && !block_state.isAir()) {
+                if (shouldOffset) {
                     ClientRender.wand.setP2(ClientRender.wand.getP2().relative(side, 1));
                 }
             }

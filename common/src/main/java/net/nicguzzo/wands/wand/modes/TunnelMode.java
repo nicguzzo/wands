@@ -23,8 +23,8 @@ public class TunnelMode extends WandMode {
         Direction pdir=wand.player.getDirection();
 
         BlockPos b_pos = wand.pos;
-        boolean sel= WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
-        if(sel){
+        boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
+        if(!sel){
            b_pos = wand.pos.relative(wand.side, 1);
         }
 
