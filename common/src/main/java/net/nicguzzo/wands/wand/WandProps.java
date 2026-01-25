@@ -619,8 +619,8 @@ public class WandProps {
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),
         Map.entry(Flag.MATCHSTATE, EnumSet.of(Mode.AREA, Mode.VEIN)),
-        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID,
-            Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.SPHERE, Mode.ROCK)),
+        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.FILL, Mode.GRID, Mode.LINE, Mode.CIRCLE,
+            Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.SPHERE)),
         Map.entry(Flag.STAIRSLAB, EnumSet.allOf(Mode.class)),  // All modes
         Map.entry(Flag.RFILLED, EnumSet.of(Mode.FILL)),
         Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE)),
