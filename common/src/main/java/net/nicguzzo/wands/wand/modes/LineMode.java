@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.wand.modes;
 
+import net.minecraft.core.BlockPos;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 
@@ -10,9 +11,14 @@ public class LineMode extends WandMode {
             int x1 = wand.getP1().getX();
             int y1 = wand.getP1().getY();
             int z1 = wand.getP1().getZ();
-            int x2 = wand.pos.getX();
-            int y2 = wand.pos.getY();
-            int z2 = wand.pos.getZ();
+            // Use P2 if set (placement - already offset), otherwise use effective pos (preview)
+            BlockPos endPos = (wand.getP2() != null) ? wand.getP2() : wand.getEffectiveEndPos();
+            int x2 = endPos.getX();
+            int y2 = endPos.getY();
+            int z2 = endPos.getZ();
+            // Pre-set min/max Y for gradient palette mode
+            wand.block_buffer.min_y = Math.min(y1, y2);
+            wand.block_buffer.max_y = Math.max(y1, y2);
             int dx, dy, dz, xs, ys, zs, lp1, lp2;
             dx = Math.abs(x2 - x1);
             dy = Math.abs(y2 - y1);

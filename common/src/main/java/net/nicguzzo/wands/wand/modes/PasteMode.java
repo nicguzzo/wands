@@ -31,8 +31,8 @@ public class PasteMode extends WandMode {
             //log("mode6 paste "+copy_paste_buffer.size());
             //BlockPos b_pos = wand.pos;
             BlockPos b_pos = wand.getP1();
-            boolean sel= WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
-            if(sel){
+            boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
+            if(!sel){
                 b_pos = wand.pos.relative(wand.side, 1);
             }
             /*BlockState s=wand.level.getBlockState(wand.pos);
