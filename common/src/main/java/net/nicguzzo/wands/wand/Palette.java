@@ -138,7 +138,8 @@ public class Palette {
                     int bound = palette_slots.size();
                     Palette.PaletteSlot ps = palette_slots.get(slot);
                     st = ps.state;
-                    if (!(wand.mode == WandProps.Mode.DIRECTION && wand.level.isClientSide())) {
+                    // Only advance slot during actual placement, not preview
+                    if (!wand.preview) {
                         slot = (slot + 1) % bound;
                     }
                 }
@@ -158,22 +159,25 @@ public class Palette {
             }break;
             case GRADIENT: {
                 if (!palette_grid.isEmpty()) {
-                    //Palette.PaletteSlot ps = palette_slots.get(slot);
-                    //st = ps.state;
-                    //slot = random.nextInt(bound);
-                    //WandsMod.log("GRADIENT min " + min + " max " + max + " y " + y, true);
-                    //int bottom_y=y-wand.pos.getY();
-                    int bottom_y=wand.pos.getY();
-                    int mapped_y=WandUtils.mapRange(bottom_y,bottom_y+gradient_height-1,5,0,y);
-                    //WandsMod.log("GRADIENT bottom_y " + bottom_y + " ottom_y+gradient_height " + bottom_y+gradient_height + " y " + y, true);
-                    //WandsMod.log("GRADIENT mapped_y " + mapped_y, true);
-                    if(mapped_y<0)mapped_y=0;
-                    if(mapped_y>5)mapped_y=5;
+                    // Use actual min/max Y of the build, not clicked position
+                    // Map Y position to palette row (0=top row, 5=bottom row)
+                    // min Y -> row 5 (bottom), max Y -> row 0 (top)
+                    int mapped_y;
+                    if (max == min) {
+                        // All blocks at same Y level - use gradient_height from click position
+                        int bottom_y = wand.pos.getY();
+                        mapped_y = WandUtils.mapRange(bottom_y, bottom_y + gradient_height - 1, 5, 0, y);
+                    } else {
+                        // Use actual Y range of the build
+                        mapped_y = WandUtils.mapRange(min, max, 5, 0, y);
+                    }
+                    if (mapped_y < 0) mapped_y = 0;
+                    if (mapped_y > 5) mapped_y = 5;
 
-                    if(mapped_y<palette_grid.size()){
-                         Vector<PaletteSlot> row=palette_grid.get(mapped_y);
+                    if (mapped_y < palette_grid.size()) {
+                         Vector<PaletteSlot> row = palette_grid.get(mapped_y);
                          int bound = row.size();
-                         if(bound>0) {
+                         if (bound > 0) {
                              slot = random.nextInt(bound);
                              Palette.PaletteSlot ps = row.get(slot);
                              st = ps.state;
@@ -184,7 +188,7 @@ public class Palette {
         }
         st = wand.state_for_placement(st,null);
 
-        if (PaletteItem.getRotate(item)) {
+        if (st != null && PaletteItem.getRotate(item)) {
             //TODO: fix rotation
             //st = ps.state.getBlock().defaultBlockState().rotate(Rotation.getRandom(random));
             st = st.getBlock().defaultBlockState().rotate(Rotation.getRandom(random));

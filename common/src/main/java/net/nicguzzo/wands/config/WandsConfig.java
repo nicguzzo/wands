@@ -99,7 +99,7 @@ public class WandsConfig {
     public int magic_bag_2_limit = def_magic_bag_2_limit;
 
     //Client options
-    public float wand_mode_display_x_pos = 75.0f;
+    public float wand_mode_display_x_pos = 100.0f;
     public float wand_mode_display_y_pos = 100.0f;
     public float wand_tools_display_x_pos = 0.0f;
     public float wand_tools_display_y_pos = 100.0f;

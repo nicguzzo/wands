@@ -39,6 +39,9 @@ public class SphereMode extends WandMode {
             int x2=xc+r;
             int y2=yc+r;
             int z2=zc+r;
+            // Pre-set min/max Y for gradient palette mode
+            wand.block_buffer.min_y = y1;
+            wand.block_buffer.max_y = y2;
             int x=-r;
             int y=-r;
             int z=-r;
