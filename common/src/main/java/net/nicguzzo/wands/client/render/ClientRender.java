@@ -214,10 +214,9 @@ public class ClientRender {
                 //WandsMod.log("state "+block_state,prnt);
                 if (force) {
                     wand.force_render = false;
-                    if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY|| mode == Mode.PASTE) {
-                        if (!WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
-                            pos = pos.relative(side, 1);
-                        }
+                    // Only apply INCSELBLOCK offset for modes that support it
+                    if (WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode) && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+                        pos = pos.relative(side, 1);
                     }
                     last_pos = pos;
                     last_side = side;

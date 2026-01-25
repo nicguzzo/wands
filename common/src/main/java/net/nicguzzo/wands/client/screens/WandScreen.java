@@ -383,17 +383,22 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return toggle;
     }
 
-    /** Create boolean toggle with auto-computed translations and add to section */
+    /** Create boolean toggle with auto-computed translations, add to section, and auto-register mode visibility */
     private CycleToggle<Boolean> addFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         CycleToggle<Boolean> toggle = flagToggle(flag, w, label);
         toggle.withTooltip(label, tooltip);
         section.add(toggle);
+        // Auto-register mode visibility from FLAG_MODES
+        EnumSet<WandProps.Mode> modes = WandProps.FLAG_MODES.get(flag);
+        if (modes != null) {
+            modeWidgets.put(toggle, modes);
+        }
         return toggle;
     }
 
-    /** Create inverted boolean toggle (ON = flag false, OFF = flag true) with auto-computed translations */
+    /** Create inverted boolean toggle (ON = flag false, OFF = flag true) with auto-computed translations and auto-register */
     private CycleToggle<Boolean> addInvertedFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
@@ -407,16 +412,26 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         toggle.width = w;
         toggle.withTooltip(label, tooltip);
         section.add(toggle);
+        // Auto-register mode visibility from FLAG_MODES
+        EnumSet<WandProps.Mode> modes = WandProps.FLAG_MODES.get(flag);
+        if (modes != null) {
+            modeWidgets.put(toggle, modes);
+        }
         return toggle;
     }
 
-    /** Create Spinner with auto-computed translations and add to section */
+    /** Create Spinner with auto-computed translations, add to section, and auto-register mode visibility */
     private Spinner addValSpinner(Section section, Value val, int w, int h, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         Spinner spinner = valSpinner(val, w, h, label);
         spinner.withTooltip(label, tooltip);
         section.add(spinner);
+        // Auto-register mode visibility from VALUE_MODES
+        EnumSet<WandProps.Mode> modes = WandProps.VALUE_MODES.get(val);
+        if (modes != null) {
+            modeWidgets.put(spinner, modes);
+        }
         return spinner;
     }
 
@@ -791,56 +806,26 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
 
     private void registerModeSpecificWidgets() {
-        // Direction mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.DIRECTION), multiplierSpinner, invertToggle);
+        // Most widgets are auto-registered by addFlagToggle/addValSpinner helpers.
+        // Only manually register widgets created without those helpers:
 
-        // Row/Col mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), rowColumnLimitSpinner, orientationCycle);
-
-        // Area mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.AREA), diagonalSpreadToggle, skipBlockSpinner);
-
-        // Area and Vein modes
-        registerModeWidgets(EnumSet.of(WandProps.Mode.AREA, WandProps.Mode.VEIN), areaLimitSpinner, matchStateToggle);
-
-        // Circle mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle, circleFillToggle, evenSizeToggle);
-
-        // Fill mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.FILL), rectangleFillToggle);
-
-        // Grid mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.GRID), gridMSpinner, gridNSpinner,
-            gridMSkipSpinner, gridNSkipSpinner, gridMOffsetSpinner, gridNOffsetSpinner);
-
-        // Paste mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE), mirrorLRToggle, mirrorFBToggle);
-
-        // Grid and Paste modes
+        // Cycle toggles not in FLAG_MODES/VALUE_MODES
+        registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), orientationCycle);
+        registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
 
-        // Modes with include block option
-        registerModeWidgets(EnumSet.of(WandProps.Mode.PASTE, WandProps.Mode.TUNNEL,
-            WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL), includeBlockToggle);
+        // CycleSpinner (combined flag+value widget)
+        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.TARGET_AIR), targetAirSpinner);
 
-        // Tunnel mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.TUNNEL), tunnelWidthSpinner, tunnelHeightSpinner,
-            tunnelDepthSpinner, tunnelOffsetXSpinner, tunnelOffsetYSpinner);
+        // Mirror toggles (manual, map to single Value with different values)
+        registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.MIRRORAXIS), mirrorLRToggle, mirrorFBToggle);
 
-        // Blast mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.BLAST), blastRadiusSpinner);
+        // Grid M/N spinners (manual due to custom limit logic)
+        registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.GRIDM), gridMSpinner);
+        registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.GRIDN), gridNSpinner);
 
-        // Rock mode
-        registerModeWidgets(EnumSet.of(WandProps.Mode.ROCK), rockRadiusSpinner, rockNoiseSpinner);
-
-        // Target air modes
-        registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL, WandProps.Mode.GRID, WandProps.Mode.COPY,
-            WandProps.Mode.PASTE, WandProps.Mode.TUNNEL, WandProps.Mode.ROCK,
-            WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL, WandProps.Mode.SPHERE), targetAirSpinner);
-
-        // Keep start point - 2-click modes where P1 reuse makes sense
-        registerModeWidgets(EnumSet.of(WandProps.Mode.LINE, WandProps.Mode.CIRCLE, WandProps.Mode.FILL,
-            WandProps.Mode.SPHERE, WandProps.Mode.COPY, WandProps.Mode.PASTE), keepStartToggle);
+        // Rectangle fill toggle (manual, not using addFlagToggle)
+        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.RFILLED), rectangleFillToggle);
     }
 
     @Override

@@ -245,8 +245,10 @@ public class WandsMod {
             if (block_state.isAir()) {
                 block_state = level.getBlockState(p1);
             }
-            // When include_block is disabled, P1/P2 are offset into air - find adjacent solid block
-            if (block_state.isAir() && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+            // When include_block is disabled and mode supports it, P1/P2 are offset into air - find adjacent solid block
+            WandProps.Mode mode = WandProps.getMode(stack);
+            boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
+            if (block_state.isAir() && modeSupportsIncSel && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                 for (Direction dir : Direction.values()) {
                     BlockState adjacent = level.getBlockState(p1.relative(dir));
                     if (!adjacent.isAir()) {
