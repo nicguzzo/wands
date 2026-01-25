@@ -215,7 +215,7 @@ public class ClientRender {
                 if (force) {
                     wand.force_render = false;
                     if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY|| mode == Mode.PASTE) {
-                        if (WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+                        if (!WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                             pos = pos.relative(side, 1);
                         }
                     }

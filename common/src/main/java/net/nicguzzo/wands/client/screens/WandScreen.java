@@ -750,7 +750,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         tunnelOffsetXSpinner = addValSpinner(section, Value.TUNNEL_OX, layoutColWidth, spinnerHeight, "tunnel_offset_x");
         tunnelOffsetYSpinner = addValSpinner(section, Value.TUNNEL_OY, layoutColWidth, spinnerHeight, "tunnel_offset_y");
 
-        // Include in selection (PASTE and TUNNEL modes)
+        // Include selected block in selection
         includeBlockToggle = addFlagToggle(section, WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
 
         // Keep start point (inverted: ON = don't clear P1, OFF = clear P1)

@@ -78,7 +78,7 @@ public class WandItem extends Item {
         //WandsMod.LOGGER.info("UseOn pps "+pos);
         boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
         if (ClientRender.wand.getP1() == null) {
-            if (inc_sel && !block_state.isAir()) {
+            if (!inc_sel && !block_state.isAir()) {
                 ClientRender.wand.setP1(pos.relative(side, 1));
             } else {
                 ClientRender.wand.setP1(pos);
@@ -87,7 +87,7 @@ public class WandItem extends Item {
             if (ClientRender.wand.getP2() == null && mode.n_clicks() == 2) {
                 ClientRender.wand.setP2(pos);
                 //boolean target_air=WandProps.getFlag(stack, WandProps.Flag.TARGET_AIR);
-                if (inc_sel && !block_state.isAir()) {
+                if (!inc_sel && !block_state.isAir()) {
                     ClientRender.wand.setP2(ClientRender.wand.getP2().relative(side, 1));
                 }
             }

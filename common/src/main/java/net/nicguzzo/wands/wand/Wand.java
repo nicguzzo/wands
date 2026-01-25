@@ -216,13 +216,11 @@ public class Wand {
     }
 
     /**
-     * Returns the effective end position for 2-click modes, applying INCSELBLOCK offset if needed.
-     * Use this instead of wand.pos directly in mode implementations to get consistent preview/placement behavior.
+     * Returns the effective end position for 2-click modes.
+     * ClientRender already applies INCSELBLOCK offset before calling do_or_preview,
+     * so this method just returns pos directly.
      */
     public BlockPos getEffectiveEndPos() {
-        if (preview && WandProps.getFlag(wand_stack, WandProps.Flag.INCSELBLOCK) && !level.getBlockState(pos).isAir()) {
-            return pos.relative(side, 1);
-        }
         return pos;
     }
 
