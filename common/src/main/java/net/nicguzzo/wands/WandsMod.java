@@ -245,6 +245,18 @@ public class WandsMod {
             if (block_state.isAir()) {
                 block_state = level.getBlockState(p1);
             }
+            // When include_block is disabled and mode supports it, P1/P2 are offset into air - find adjacent solid block
+            WandProps.Mode mode = WandProps.getMode(stack);
+            boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
+            if (block_state.isAir() && modeSupportsIncSel && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+                for (Direction dir : Direction.values()) {
+                    BlockState adjacent = level.getBlockState(p1.relative(dir));
+                    if (!adjacent.isAir()) {
+                        block_state = adjacent;
+                        break;
+                    }
+                }
+            }
             wand.setP1(p1);
             wand.setP2(p2);
             Vec3 hit = new Vec3(data.hit().x, data.hit().y, data.hit().z);
@@ -388,7 +400,7 @@ public class WandsMod {
                         break;
                     case N_DEC:
                         if (mode == WandProps.Mode.GRID) {
-                            WandProps.decVal(main_stack, WandProps.Value.GRIDN, inc);
+                            WandProps.decGrid(main_stack, WandProps.Value.GRIDN, inc, wand_item.limit);
                         }
                         break;
                     case M_INC:
@@ -417,7 +429,7 @@ public class WandsMod {
                                 WandProps.decVal(main_stack, WandProps.Value.ROWCOLLIM, inc);
                                 break;
                             case GRID:
-                                WandProps.decVal(main_stack, WandProps.Value.GRIDM, inc);
+                                WandProps.decGrid(main_stack, WandProps.Value.GRIDM, inc, wand_item.limit);
                                 break;
                             case AREA:
                                 WandProps.decVal(main_stack, WandProps.Value.AREALIM, inc);

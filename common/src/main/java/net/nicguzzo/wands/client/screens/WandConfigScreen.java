@@ -249,7 +249,7 @@ public class WandConfigScreen {
                 .build());
 
         preview.addEntry(entryBuilder.startFloatField(Compat.translatable("option.wands.wand_mode_display_x_pos"), conf.wand_mode_display_x_pos)
-                .setDefaultValue(75.0f)
+                .setDefaultValue(100.0f)
                 .setTooltip(Compat.translatable("option.wands.wand_mode_display_x_pos_tt"))
                 .setSaveConsumer(newValue -> conf.wand_mode_display_x_pos = newValue)
                 .build());
@@ -258,7 +258,6 @@ public class WandConfigScreen {
                 .setTooltip(Compat.translatable("option.wands.wand_mode_display_y_pos_tt"))
                 .setSaveConsumer(newValue -> conf.wand_mode_display_y_pos = newValue)
                 .build());
-
         preview.addEntry(entryBuilder.startFloatField(Compat.translatable("option.wands.wand_tools_display_x_pos"), conf.wand_tools_display_x_pos)
                 .setDefaultValue(0.0f)
                 .setTooltip(Compat.translatable("option.wands.wand_tools_display_x_pos_tt"))
