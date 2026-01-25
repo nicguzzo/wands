@@ -178,11 +178,22 @@ public class WandsModClient {
             //LOGGER.info("got ToastPacket");
             boolean no_tool = data.no_tool();
             boolean damaged_tool = data.damaged_tool();
+            String needed_tool = data.needed_tool();
             if (no_tool) {
-                Compat.toast(new WandToast("no tool"));
+                if (needed_tool != null && !needed_tool.isEmpty()) {
+                    WandToast.show(new WandToast(
+                        Component.translatable("toast.wands.wrong_tool"),
+                        Component.translatable("toast.wands.wrong_tool_desc", needed_tool)
+                    ));
+                } else {
+                    WandToast.show(new WandToast(
+                        Component.translatable("toast.wands.no_tool"),
+                        Component.translatable("toast.wands.no_tool_desc")
+                    ));
+                }
             }
             if (damaged_tool) {
-                Compat.toast(new WandToast("invalid or damaged"));
+                WandToast.show(new WandToast("invalid or damaged"));
             }
         });
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC, (data, context) -> {
