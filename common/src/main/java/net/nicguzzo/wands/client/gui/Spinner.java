@@ -1,108 +1,191 @@
 package net.nicguzzo.wands.client.gui;
 
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.utils.Compat;
 
-public class Spinner extends Wdgt {
-    int value;
-    public int inc_val = 1;
-    int min;
-    int max;
-    Btn inc;
-    Btn dec;
-    public boolean label_side = false;
-    public int shift_inc_val = 10;
-    public int ctrl_inc_val=100;
-    public int shift_ctrl_inc_val=1000;
-    Component label = null;
-    int col=  new Colorf(0.4f, 0.4f, 0.40f, 0.9f).toInt();
-    public int label_col=  new Colorf(0.0f, 0.0f, 0.0f, 1.0f).toInt();
-    public int label_bg =  new Colorf(0.5f, 0.5f, 0.50f, 0.1f).toInt();
+import java.util.function.Consumer;
 
-    public Spinner(int _value, int min, int max, int x, int y, int w, int h, Component label) {
-        this.value = _value;
+/**
+ * A numeric spinner widget with +/- buttons and scroll wheel support.
+ * Displays "Label: value" with increment/decrement buttons on the right.
+ *
+ * Interactions:
+ * - Click +/- buttons to change value
+ * - Click body area to increment
+ * - Scroll wheel to increment/decrement
+ * - Hold Shift for 10x, Ctrl for 100x, Shift+Ctrl for 1000x increment
+ */
+public class Spinner extends Wdgt {
+    public static final int DEFAULT_WIDTH = 80;
+
+    // Value and range
+    protected int value;
+    protected int min;
+    protected int max;
+
+    // Increment amounts (can be customized per instance)
+    public int incrementValue = 1;           // Normal click/scroll
+    public int shiftIncrementValue = 10;     // Shift held
+    public int ctrlIncrementValue = 100;     // Ctrl held
+    public int shiftCtrlIncrementValue = 1000; // Shift+Ctrl held
+
+    // Display
+    protected Component label;
+
+    // Callback for value changes
+    private Consumer<Integer> onChangeCallback;
+
+    // Sub-widgets for +/- buttons
+    private Btn incrementButton;
+    private Btn decrementButton;
+
+    /** Create spinner with default dimensions */
+    public Spinner(int value, int min, int max, Component label) {
+        this(value, min, max, DEFAULT_WIDTH, DEFAULT_HEIGHT, label);
+    }
+
+    /** Create spinner with custom dimensions (position set by layout) */
+    public Spinner(int value, int min, int max, int width, int height, Component label) {
+        this(value, min, max, 0, 0, width, height, label);
+    }
+
+    /** Create spinner with explicit position and dimensions */
+    public Spinner(int value, int min, int max, int x, int y, int width, int height, Component label) {
+        this.value = value;
         this.min = min;
         this.max = max;
         this.x = x;
         this.y = y;
-        this.w = w;
-        this.h = h;
+        this.width = width;
+        this.height = height;
         this.label = label;
-        inc = new Btn(x + w - 10, y, 10, h / 2, Compat.literal("+")) {
-            public void onClick(int mx, int my) {
-                 int iv=get_inc();
-                if (value + iv <= max) {
-                    value += iv;
-                } else {
-                    value = max;
-                }
-                onInc(mx, my, value);
-            }
-        };
-        inc.ox = 0;
-        inc.oy = 0;
-        dec = new Btn(x + w - 10, y + h / 2, 10, h / 2, Compat.literal("-")) {
-            public void onClick(int mx, int my) {
-                int iv=get_inc();
-                if (value - iv >= min) {
-                    value -= iv;
-                } else {
-                    value = min;
-                }
-                onDec(mx, my, value);
-            }
-        };
-        dec.ox = 0;
-        dec.oy = 0;
+
+        // Create +/- buttons (positioned during render)
+        // showBackground = false so they only highlight on hover (like CycleToggle)
+        incrementButton = new Btn(SPINNER_BUTTON_WIDTH, height / 2, Compat.literal("+"), (mouseX, mouseY) -> {
+            increment();
+            notifyChange();
+        });
+        incrementButton.centerText = true;
+        incrementButton.showBackground = false;
+        decrementButton = new Btn(SPINNER_BUTTON_WIDTH, height / 2, Compat.literal("-"), (mouseX, mouseY) -> {
+            decrement();
+            notifyChange();
+        });
+        decrementButton.centerText = true;
+        decrementButton.showBackground = false;
     }
-    private int get_inc(){
-        if(Minecraft.getInstance().hasControlDown() && Minecraft.getInstance().hasShiftDown()){
-            return shift_ctrl_inc_val;
-        }else {
-            if (Minecraft.getInstance().hasControlDown()) {
-                return ctrl_inc_val;
-            }else if (Minecraft.getInstance().hasShiftDown()) {
-                return shift_inc_val;
-            }else{
-                return inc_val;
-            }
+
+    /**
+     * Set a callback to run after any value change.
+     * @param callback Consumer that receives the new value after change
+     * @return this for chaining
+     */
+    public Spinner withOnChange(Consumer<Integer> callback) {
+        this.onChangeCallback = callback;
+        return this;
+    }
+
+    @Override
+    public Spinner withTooltip(Component title, Component description) {
+        super.withTooltip(title, description);
+        return this;
+    }
+
+    /** Notify the onChange callback if set */
+    private void notifyChange() {
+        if (onChangeCallback != null) {
+            onChangeCallback.accept(value);
         }
     }
-    public void onInc(int mx, int my, int v) {
+
+    /**
+     * Get the increment amount based on modifier keys held.
+     */
+    private int getIncrement() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.hasControlDown() && mc.hasShiftDown()) {
+            return shiftCtrlIncrementValue;
+        } else if (mc.hasControlDown()) {
+            return ctrlIncrementValue;
+        } else if (mc.hasShiftDown()) {
+            return shiftIncrementValue;
+        } else {
+            return incrementValue;
+        }
     }
 
-    public void onDec(int mx, int my, int v) {
+    /** Increment value by current increment amount, clamped to max */
+    private void increment() {
+        int inc = getIncrement();
+        value = Math.min(value + inc, max);
     }
 
-    public void render(GuiGraphics gui, Font font, int mx, int my) {
-        super.render(gui,font,mx,my);
-        int fh = 0;
+    /** Decrement value by current increment amount, clamped to min */
+    private void decrement() {
+        int inc = getIncrement();
+        value = Math.max(value - inc, min);
+    }
+
+    @Override
+    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
+        if (!visible) return;
+        drawBackground(gui, mouseX, mouseY);
+
+        // Draw label and value in different colors, vertically centered
+        int textY = getTextY(font);
+        int textX = x + TEXT_PADDING;
         if (label != null) {
-            int lw = font.width(label);
-            if (!label_side) {
-                fh = font.lineHeight;
-            }
-            gui.fill(x-lw-2,y+ fh,x-2,y+ fh +h,label_bg);
-            gui.drawString(font, label, x - lw - 1, y + 3, label_col, false);
+            String labelText = label.getString() + " ";
+            gui.drawString(font, labelText, textX, textY, labelColor, drawShadow);
+            textX += font.width(labelText);
         }
-        int sw = font.width(String.valueOf(value));
+        gui.drawString(font, String.valueOf(value), textX, textY, valueColor, drawShadow);
 
-        gui.fill(x,y+ fh,x+w,y+ fh +h,col);
-        inc.y = y + fh;
-
-        dec.y = y + h / 2 + fh;
-        inc.render(gui, font, mx, my);
-        gui.drawString(font, String.valueOf(value), x + w - 12 - sw, y + fh + 3, 0xff000000, false);
-        dec.render(gui, font, mx, my);
+        // Position and render +/- buttons at right edge
+        // [+] on top, [-] on bottom
+        incrementButton.x = x + width - SPINNER_BUTTON_WIDTH;
+        incrementButton.y = y;
+        decrementButton.x = x + width - SPINNER_BUTTON_WIDTH;
+        decrementButton.y = y + height / 2;
+        incrementButton.render(gui, font, mouseX, mouseY);
+        decrementButton.render(gui, font, mouseX, mouseY);
     }
 
-    public void click(int mx, int my) {
-        dec.click(mx, my);
-        inc.click(mx, my);
+    @Override
+    protected boolean handleClick(int mouseX, int mouseY) {
+        if (!inside(mouseX, mouseY)) return false;
+
+        // Check if clicking +/- buttons
+        if (incrementButton.inside(mouseX, mouseY)) {
+            incrementButton.click(mouseX, mouseY);
+            return true;
+        }
+        if (decrementButton.inside(mouseX, mouseY)) {
+            decrementButton.click(mouseX, mouseY);
+            return true;
+        }
+
+        // Click on body area = increment
+        increment();
+        notifyChange();
+        playClickSound();
+        return true;
+    }
+
+    @Override
+    protected boolean handleScroll(int mouseX, int mouseY, double scrollDelta) {
+        if (!inside(mouseX, mouseY)) return false;
+
+        if (scrollDelta > 0) {
+            increment();
+        } else if (scrollDelta < 0) {
+            decrement();
+        }
+        notifyChange();
+        return true;
     }
 }

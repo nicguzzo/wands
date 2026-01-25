@@ -55,3 +55,28 @@ subprojects {
         it.options.compilerArgs += ['-Xplugin:Manifold']
     }
 }
+
+// Load local dev settings if present (local.properties is gitignored)
+def localPropsFile = file('local.properties')
+if (localPropsFile.exists()) {
+    def localProps = new Properties()
+    localProps.load(localPropsFile.newDataInputStream())
+    def world = localProps.getProperty('quickPlayWorld')
+    def width = localProps.getProperty('windowWidth')
+    def height = localProps.getProperty('windowHeight')
+
+    gradle.projectsEvaluated {
+        subprojects { proj ->
+            if (proj.name == 'fabric' || proj.name == 'neoforge') {
+                proj.loom.runs.named('client') {
+                    if (world) {
+                        programArgs "--quickPlaySingleplayer", world
+                    }
+                    if (width && height) {
+                        programArgs "--width", width, "--height", height
+                    }
+                }
+            }
+        }
+    }
+}
