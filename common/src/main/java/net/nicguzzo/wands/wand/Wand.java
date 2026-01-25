@@ -1559,11 +1559,7 @@ public class Wand {
         has_shovel = false;
         has_axe = false;
         has_shear = false;  
-        Optional<int[]> a = this.player_data.getIntArray("Tools");
-        if (a.isEmpty()) return;
-        
-        int[] tools_slots = a.get();
-        
+
         if (this.player_data == null) {
             return;
         }
@@ -2056,6 +2052,7 @@ public class Wand {
             return "hoe";
         }
         return "";
+    }
     /**
      * Check if any active block source (offhand or palette) contains a RotatedPillarBlock.
      * Used for determining whether to show axis-specific rotation options.

@@ -201,6 +201,7 @@ public class WandConfigScreen {
                 .setDefaultValue(false)
                 .setTooltip(Compat.translatable("option.wands.toast_in_action_bar_tt"))
                 .setSaveConsumer(newValue -> conf.toast_in_action_bar = newValue)
+                .build());
         general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.disable_info_messages"), conf.disable_info_messages)
                 .setDefaultValue(false)
                 .setTooltip(Compat.translatable("option.wands.disable_info_messages_tt"))
