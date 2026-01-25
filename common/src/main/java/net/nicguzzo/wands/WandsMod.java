@@ -96,7 +96,7 @@ public class WandsMod {
     public static final RegistrySupplier<Item> STONE_WAND_ITEM = ITEMS.register(stone_wand, () -> {
         return new WandItem(WandItem.WandTier.STONE_WAND, config.stone_wand_limit, false, false, false, false, new Item.Properties().durability(config.stone_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
-    public static final RegistrySupplier<Item> COPPER_WAND_ITEM = ITEMS.register(iron_wand, () -> {
+    public static final RegistrySupplier<Item> COPPER_WAND_ITEM = ITEMS.register(copper_wand, () -> {
         return new WandItem(WandItem.WandTier.COPPER_WAND, config.copper_wand_limit, false, false, false, false, new Item.Properties().durability(config.copper_wand_durability).arch$tab(WandsMod.WANDS_TAB));
     });
     public static final RegistrySupplier<Item> IRON_WAND_ITEM = ITEMS.register(iron_wand, () -> {
