@@ -528,6 +528,9 @@ public class Wand {
             modes[m].place_in_buffer(this);
         }
 
+        // Copy and Paste modes use global limit instead of wand limit
+        int effectiveLimit = (mode == Mode.COPY || mode == Mode.PASTE) ? WandsConfig.max_limit : limit;
+
         //server stuff
         //WandsMod.log(" using palette seed: " + palette.seed,prnt);
         if (!preview) {
@@ -537,7 +540,7 @@ public class Wand {
             }
             if (mode != Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
+                    for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
                         if (!replace && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
@@ -612,7 +615,7 @@ public class Wand {
                         }
 
                         BlockAccounting pa = new BlockAccounting();
-                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
+                        for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
                             if (has_empty_bucket || has_water_bucket || has_lava_bucket) {
                                 block_buffer.state[a] = block_state;
                                 if (has_lava_bucket) {
@@ -633,7 +636,7 @@ public class Wand {
                         }
                     } else {
                         //copy paste
-                        for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
+                        for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
                             if (!replace && !destroy && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
@@ -660,7 +663,7 @@ public class Wand {
             {
                 AABB bb = player.getBoundingBox();
                 if (mode != Mode.COPY) {
-                    for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
+                    for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
                         tmp_pos.set(block_buffer.buffer_x[a], block_buffer.buffer_y[a], block_buffer.buffer_z[a]);
                         if (!destroy && !has_bucket && !use) {
                             if (bb.intersects(tmp_pos.getX(), tmp_pos.getY(), tmp_pos.getZ(), tmp_pos.getX() + 1, tmp_pos.getY() + 1, tmp_pos.getZ() + 1)) {

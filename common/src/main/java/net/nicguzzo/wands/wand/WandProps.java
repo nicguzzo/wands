@@ -670,7 +670,7 @@ public class WandProps {
         Action.DESTROY, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
             Mode.CIRCLE, Mode.PASTE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
         Action.USE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.PASTE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK)
+            Mode.CIRCLE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK)
     );
 
     // Helper to check if an action applies to a mode

@@ -142,7 +142,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 hoveredWidget = modeToggle;
             }
             if (hoveredWidget != null) {
-                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width);
+                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width, this.height);
             }
         }
         this.renderTooltip(gui, mouseX, mouseY);

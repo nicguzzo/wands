@@ -3,36 +3,24 @@ package net.nicguzzo.wands.client.gui;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.nicguzzo.wands.client.screens.WandScreen;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A container widget that groups child widgets vertically with a title.
- * Used to organize related controls into labeled sections.
- *
- * Layout:
- *   [Title]
- *   [Child 1]
- *   [Child 2]
- *   ...
+ * A container widget that groups child widgets vertically.
+ * Used to organize related controls into sections.
  *
  * Children are laid out vertically with VERTICAL_SPACING between them.
  * Only visible children are rendered and included in layout calculations.
  */
 public class Section extends Wdgt {
     // Layout constants
-    public static final int VERTICAL_SPACING = 4;   // Space between child widgets
-    public static final int TITLE_HEIGHT = 10;      // Height reserved for title text
-    public static final int TITLE_MARGIN = 2;       // Space between title and first child
+    public static final int VERTICAL_SPACING = 1;   // Space between child widgets (matches tab spacing)
 
-    private Component title;
     private final List<Wdgt> children = new ArrayList<>();
-    private int titleColor = WandScreen.COLOR_TEXT_SECTION;
 
-    public Section(Component title) {
-        this.title = title;
+    public Section() {
     }
 
     @Override
@@ -54,7 +42,7 @@ public class Section extends Wdgt {
      */
     public void recalculateBounds() {
         int maxWidth = 0;
-        int totalHeight = TITLE_HEIGHT + TITLE_MARGIN;
+        int totalHeight = 0;
         boolean first = true;
 
         for (Wdgt child : children) {
@@ -72,11 +60,11 @@ public class Section extends Wdgt {
     }
 
     /**
-     * Position visible children vertically below the title.
+     * Position visible children vertically.
      * Called automatically during render.
      */
     public void layout() {
-        int currentY = this.y + TITLE_HEIGHT + TITLE_MARGIN;
+        int currentY = this.y;
         for (Wdgt child : children) {
             if (!child.visible) continue;
             child.x = this.x;
@@ -89,9 +77,6 @@ public class Section extends Wdgt {
     public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         layout();
-
-        // Draw title
-        gui.drawString(font, title, x, y, titleColor, true);
 
         // Render children
         for (Wdgt child : children) {
@@ -137,10 +122,6 @@ public class Section extends Wdgt {
 
     public List<Wdgt> getChildren() {
         return children;
-    }
-
-    public void setTitle(Component title) {
-        this.title = title;
     }
 
     @Override

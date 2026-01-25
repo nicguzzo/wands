@@ -34,6 +34,7 @@ import net.nicguzzo.wands.wand.WandProps.Value;
 import net.nicguzzo.wands.utils.Compat;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.CommonColors;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -55,14 +56,16 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     public static final int COLOR_PANEL_BACKGROUND = 0xE61A1A1A;  // Semi-transparent black
 
     // Button state colors
-    public static final int COLOR_BTN_HOVER = 0xE6666666;     // Medium gray
-    public static final int COLOR_BTN_SELECTED = 0xE6666666;  // Same as hover for consistency
+    public static final int COLOR_BTN_HOVER = 0xE6888888;     // Light-medium gray for button hover
+    public static final int COLOR_BTN_SELECTED = 0xE6666666;  // Medium gray for selected
     public static final int COLOR_BTN_DISABLED = 0xB3B3B3B3;  // Light gray (Colorf 0.7, 0.7, 0.7, 0.7)
+    public static final int COLOR_WDGT_HOVER = 0xE6666666;    // Medium gray for widget hover (spinners, toggles)
 
     // Text colors
     public static final int COLOR_TEXT_PRIMARY = 0xFFFFFFFF;   // White
-    public static final int COLOR_TEXT_SECTION = COLOR_TEXT_PRIMARY;   // For section headers
     public static final int COLOR_WDGT_LABEL = 0xFFAAAAAA;     // Light gray for widget labels
+    // Shared with PaletteScreen - use for non-shadowed instructional text
+    public static final int COLOR_TEXT_DARK = CommonColors.DARK_GRAY;
 
     // Tooltip colors
     public static final int COLOR_TOOLTIP_TITLE = 0xFFFFFFFF;       // White for title line
@@ -85,30 +88,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     private static final int COLOR_TAB_DIVIDER = 0xFF444444;  // Dark gray line
     private static final int DIVIDER_LINE_WIDTH = 1;          // Divider line thickness in pixels
 
-
+    // EXPERIMENTAL: Extended divider that fills from tabs to right edge with widget background color
+    private static final boolean USE_EXTENDED_DIVIDER = true;
 
     Component rockMessage  = Compat.literal("rotate for new rock");
     private static final Identifier INV_TEX = Compat.create_resource("textures/gui/inventory.png");
-    // Mode textures
-    private static final Identifier DIRECTION_TEX = Compat.create_resource("textures/gui/direction.png");
-    private static final Identifier ROW_TEX = Compat.create_resource("textures/gui/row.png");
-    private static final Identifier LINE_TEX = Compat.create_resource("textures/gui/line.png");
-    private static final Identifier GRID_TEX = Compat.create_resource("textures/gui/grid.png");
-    private static final Identifier CIRCLE_TEX = Compat.create_resource("textures/gui/circle.png");
-    private static final Identifier SPHERE_TEX = Compat.create_resource("textures/gui/sphere.png");
-    private static final Identifier FILL_TEX = Compat.create_resource("textures/gui/fill.png");
-    private static final Identifier AREA_TEX = Compat.create_resource("textures/gui/area.png");
-    private static final Identifier ROCK_TEX = Compat.create_resource("textures/gui/rock.png");
-    private static final Identifier TUNNEL_TEX = Compat.create_resource("textures/gui/tunnel.png");
-    private static final Identifier RECTANGLE_TEX = Compat.create_resource("textures/gui/rectangle.png");
-    private static final Identifier COPY_TEX = Compat.create_resource("textures/gui/copy.png");
-    private static final Identifier PASTE_TEX = Compat.create_resource("textures/gui/paste.png");
-    private static final Identifier VEIN_TEX = Compat.create_resource("textures/gui/vein.png");
-    private static final Identifier BLAST_TEX = Compat.create_resource("textures/gui/blast.png");
-    private static final Identifier TOOLS_TEX = Compat.create_resource("textures/gui/tools.png");
-    private static final Identifier CONFIG_TEX = Compat.create_resource("textures/gui/config.png");
-    private static final Identifier SHAPES_TEX = Compat.create_resource("textures/gui/shapes.png");
-    private static final Identifier SHAPES_3D_TEX = Compat.create_resource("textures/gui/3d_shapes.png");
     private static final int SPINNER_HEIGHT = 14;
 
     Vector<Wdgt> wdgets = new Vector<>();
@@ -120,10 +104,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     // Mode Tabs
     Tabs modeTabs;
     boolean isToolsTabSelected = false;  // Track if Tools tab is selected
-    int shapes2dTabIndex = -1;  // Index of the 2D Shapes parent tab
-    int shapes3dTabIndex = -1;  // Index of the 3D Shapes parent tab
-    WandProps.Mode[] shapes2dModesArray;  // Modes in 2D Shapes group
-    WandProps.Mode[] shapes3dModesArray;  // Modes in 3D Shapes group (filtered by config)
 
     // Block State Section - combined state + axis
     CycleToggle<Integer> blockStateCycle;
@@ -205,6 +185,18 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return false;
     }
 
+    private boolean isOverInventorySlot(int mx, int my) {
+        for (int i = 0; i < 36; i++) {
+            Slot slot = this.menu.slots.get(i);
+            int slotX = slot.x + this.leftPos;
+            int slotY = slot.y + this.topPos;
+            if (mx >= slotX && mx < slotX + 16 && my >= slotY && my < slotY + 16) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean isWidgetClickable(Wdgt widget, int mx, int my) {
         if (widget instanceof Section section) {
             for (Wdgt child : section.getChildren()) {
@@ -253,19 +245,46 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         wandInventoryTexture=textureManager.getTexture(INV_TEX).getTextureView();
     }
-    // Reset action to first valid action for the given mode
+    // Remember last action for modes that don't support actions (like COPY, BLAST)
+    private WandProps.Action lastRememberedAction = WandProps.Action.PLACE;
+
+    // Preserve action when switching modes if applicable, otherwise remember and restore
     private void resetActionForMode(WandProps.Mode mode) {
         ItemStack actualWand = getPlayerHeldWand();
+        WandProps.Action currentAction = WandProps.getAction(actualWand);
+
+        // Check if current action is valid for the new mode
+        if (isActionValidForMode(currentAction, mode)) {
+            // Keep current action, but remember it for later
+            lastRememberedAction = currentAction;
+            return;
+        }
+
+        // Current action not valid - try to restore last remembered action
+        if (isActionValidForMode(lastRememberedAction, mode)) {
+            WandProps.setAction(actualWand, lastRememberedAction);
+            return;
+        }
+
+        // Neither current nor remembered action works - find first valid action
         for (WandProps.Action action : WandProps.actions) {
-            if (WandProps.actionAppliesTo(action, mode)) {
-                if (WandsMod.config.disable_destroy_replace &&
-                    (action == WandProps.Action.DESTROY || action == WandProps.Action.REPLACE)) {
-                    continue;
-                }
+            if (isActionValidForMode(action, mode)) {
                 WandProps.setAction(actualWand, action);
                 return;
             }
         }
+    }
+
+    // Helper to check if an action is valid for a mode (considering config)
+    private boolean isActionValidForMode(WandProps.Action action, WandProps.Mode mode) {
+        if (!WandProps.actionAppliesTo(action, mode)) {
+            return false;
+        }
+        if (WandsMod.config.disable_destroy_replace &&
+            (action == WandProps.Action.DESTROY || action == WandProps.Action.REPLACE)) {
+            return false;
+        }
+        return true;
     }
 
     // Helper for creating a spinner bound to a WandProps.Value
@@ -401,23 +420,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return spinner;
     }
 
-    // Helper for mode tab buttons (parent tabs - larger size)
-    private Btn modeBtn(Identifier tex, WandProps.Mode mode, String titleKey, String descKey) {
-        Btn btn = new Btn(tex, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
-            isToolsTabSelected = false;  // Deselect tools tab
-            ItemStack actualWand = getPlayerHeldWand();
-            WandProps.setMode(actualWand, mode);
-            resetActionForMode(mode);
-            WandsModClient.send_wand(actualWand);
-        });
-        btn.withTooltip(Compat.translatable(titleKey), Compat.translatable(descKey));
-        return btn;
-    }
+    // Mode array - populated by createModeTabs
+    WandProps.Mode[] modesArray;
 
-    // Helper for subtab buttons
-    private Btn subModeBtn(Identifier tex, WandProps.Mode mode, String titleKey, String descKey) {
-        Btn btn = new Btn(tex, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
-            isToolsTabSelected = false;  // Deselect tools tab
+    // Helper for text-based mode buttons
+    private Btn modeTextBtn(WandProps.Mode mode, String titleKey, String descKey) {
+        Component label = Compat.translatable(titleKey);
+        Btn btn = new Btn(0, 0, Tabs.TAB_SIZE, Tabs.TAB_SIZE, label, (mouseX, mouseY) -> {
+            isToolsTabSelected = false;
             ItemStack actualWand = getPlayerHeldWand();
             WandProps.setMode(actualWand, mode);
             resetActionForMode(mode);
@@ -428,112 +438,94 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
 
     private Tabs createModeTabs() {
-        Tabs tabs = new Tabs();
+        Tabs tabs = new Tabs(1);  // Minimal spacing between tabs
 
-        // Tab layout:
-        // 0: Direction (top-level)
-        // 1: 2D Shapes (parent) -> Line, Circle, Row/Column, Area
-        // 2: 3D Shapes (parent) -> Fill, Rectangle, Sphere, Grid, Rock, Blast, Vein
-        // 3: Copy (top-level)
-        // 4: Paste (top-level)
-        // 5: Tools (top-level)
-
-        // Direction at top
-        tabs.add(modeBtn(DIRECTION_TEX, WandProps.Mode.DIRECTION, "wands.modes.direction", "tooltip.wands.mode.direction"));
-
-        // === 2D Shapes group: Line, Circle, Row/Column, Area ===
-        shapes2dModesArray = new WandProps.Mode[] {
-            WandProps.Mode.LINE, WandProps.Mode.CIRCLE,
-            WandProps.Mode.ROW_COL, WandProps.Mode.AREA
-        };
-        Btn shapes2dParent = new Btn(SHAPES_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
-            isToolsTabSelected = false;
-            Tabs.TabEntry entry = tabs.getEntry(shapes2dTabIndex);
-            if (entry != null) {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.Mode modeToActivate = shapes2dModesArray[entry.selectedSubTab];
-                WandProps.setMode(actualWand, modeToActivate);
-                resetActionForMode(modeToActivate);
-                WandsModClient.send_wand(actualWand);
-            }
-        });
-        shapes2dParent.withTooltip(Compat.translatable("wands.modes.2d_shapes"), Compat.translatable("tooltip.wands.mode.2d_shapes"));
-
-        Btn[] shape2dSubTabs = {
-            subModeBtn(LINE_TEX, WandProps.Mode.LINE, "wands.modes.line", "tooltip.wands.mode.line"),
-            subModeBtn(CIRCLE_TEX, WandProps.Mode.CIRCLE, "wands.modes.circle", "tooltip.wands.mode.circle"),
-            subModeBtn(ROW_TEX, WandProps.Mode.ROW_COL, "wands.modes.row_col", "tooltip.wands.mode.row_col"),
-            subModeBtn(AREA_TEX, WandProps.Mode.AREA, "wands.modes.area", "tooltip.wands.mode.area"),
-        };
-        shapes2dTabIndex = tabs.addWithSubTabs(shapes2dParent, shape2dSubTabs);
-
-        // === 3D Shapes group: Fill, Rectangle (Tunnel), Sphere, Grid, Rock, Blast, Vein ===
-        // Note: Blast and Vein may be excluded based on wand capability and config settings
         boolean canBlast = wandItem.can_blast && WandsMod.config.enable_blast_mode;
         boolean canVein = WandsMod.config.enable_vein_mode;
 
-        List<WandProps.Mode> shapes3dModesList = new ArrayList<>();
-        List<Btn> shapes3dSubTabsList = new ArrayList<>();
+        List<WandProps.Mode> modesList = new ArrayList<>();
+        List<Btn> textButtons = new ArrayList<>();
 
-        shapes3dModesList.add(WandProps.Mode.FILL);
-        shapes3dSubTabsList.add(subModeBtn(FILL_TEX, WandProps.Mode.FILL, "wands.modes.fill", "tooltip.wands.mode.fill"));
+        // Add all modes as flat text buttons in order
+        Btn btn;
 
-        shapes3dModesList.add(WandProps.Mode.TUNNEL);
-        shapes3dSubTabsList.add(subModeBtn(RECTANGLE_TEX, WandProps.Mode.TUNNEL, "wands.modes.rectangle", "tooltip.wands.mode.rectangle"));
+        btn = modeTextBtn(WandProps.Mode.DIRECTION, "wands.modes.direction", "tooltip.wands.mode.direction");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.DIRECTION);
 
-        shapes3dModesList.add(WandProps.Mode.SPHERE);
-        shapes3dSubTabsList.add(subModeBtn(SPHERE_TEX, WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere"));
+        btn = modeTextBtn(WandProps.Mode.LINE, "wands.modes.line", "tooltip.wands.mode.line");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.LINE);
 
-        shapes3dModesList.add(WandProps.Mode.GRID);
-        shapes3dSubTabsList.add(subModeBtn(GRID_TEX, WandProps.Mode.GRID, "wands.modes.grid", "tooltip.wands.mode.grid"));
+        btn = modeTextBtn(WandProps.Mode.CIRCLE, "wands.modes.circle", "tooltip.wands.mode.circle");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.CIRCLE);
 
-        shapes3dModesList.add(WandProps.Mode.ROCK);
-        shapes3dSubTabsList.add(subModeBtn(ROCK_TEX, WandProps.Mode.ROCK, "wands.modes.rock", "tooltip.wands.mode.rock"));
+        btn = modeTextBtn(WandProps.Mode.ROW_COL, "wands.modes.row_col", "tooltip.wands.mode.row_col");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.ROW_COL);
+
+        btn = modeTextBtn(WandProps.Mode.AREA, "wands.modes.area", "tooltip.wands.mode.area");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.AREA);
+
+        btn = modeTextBtn(WandProps.Mode.FILL, "wands.modes.fill", "tooltip.wands.mode.fill");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.FILL);
+
+        btn = modeTextBtn(WandProps.Mode.TUNNEL, "wands.modes.rectangle", "tooltip.wands.mode.rectangle");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.TUNNEL);
+
+        btn = modeTextBtn(WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.SPHERE);
+
+        btn = modeTextBtn(WandProps.Mode.GRID, "wands.modes.grid", "tooltip.wands.mode.grid");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.GRID);
+
+        btn = modeTextBtn(WandProps.Mode.ROCK, "wands.modes.rock", "tooltip.wands.mode.rock");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.ROCK);
 
         if (canBlast) {
-            shapes3dModesList.add(WandProps.Mode.BLAST);
-            shapes3dSubTabsList.add(subModeBtn(BLAST_TEX, WandProps.Mode.BLAST, "wands.modes.blast", "tooltip.wands.mode.blast"));
+            btn = modeTextBtn(WandProps.Mode.BLAST, "wands.modes.blast", "tooltip.wands.mode.blast");
+            tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BLAST);
         }
 
         if (canVein) {
-            shapes3dModesList.add(WandProps.Mode.VEIN);
-            shapes3dSubTabsList.add(subModeBtn(VEIN_TEX, WandProps.Mode.VEIN, "wands.modes.vein", "tooltip.wands.mode.vein"));
+            btn = modeTextBtn(WandProps.Mode.VEIN, "wands.modes.vein", "tooltip.wands.mode.vein");
+            tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.VEIN);
         }
 
-        shapes3dModesArray = shapes3dModesList.toArray(new WandProps.Mode[0]);
-        Btn[] shapes3dSubTabs = shapes3dSubTabsList.toArray(new Btn[0]);
+        btn = modeTextBtn(WandProps.Mode.COPY, "wands.modes.copy", "tooltip.wands.mode.copy");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.COPY);
 
-        Btn shapes3dParent = new Btn(SHAPES_3D_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
-            isToolsTabSelected = false;
-            Tabs.TabEntry entry = tabs.getEntry(shapes3dTabIndex);
-            if (entry != null) {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.Mode modeToActivate = shapes3dModesArray[entry.selectedSubTab];
-                WandProps.setMode(actualWand, modeToActivate);
-                resetActionForMode(modeToActivate);
-                WandsModClient.send_wand(actualWand);
-            }
-        });
-        shapes3dParent.withTooltip(Compat.translatable("wands.modes.3d_shapes"), Compat.translatable("tooltip.wands.mode.3d_shapes"));
+        btn = modeTextBtn(WandProps.Mode.PASTE, "wands.modes.paste", "tooltip.wands.mode.paste");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.PASTE);
 
-        shapes3dTabIndex = tabs.addWithSubTabs(shapes3dParent, shapes3dSubTabs);
-
-        // Copy and Paste
-        tabs.add(modeBtn(COPY_TEX, WandProps.Mode.COPY, "wands.modes.copy", "tooltip.wands.mode.copy"));
-        tabs.add(modeBtn(PASTE_TEX, WandProps.Mode.PASTE, "wands.modes.paste", "tooltip.wands.mode.paste"));
-
-        // Tools tab at the end
-        Btn toolsTabBtn = new Btn(TOOLS_TEX, Tabs.TAB_SIZE, Tabs.TAB_ICON_SIZE, (mouseX, mouseY) -> {
+        // Tools tab at the end (text button for consistency with flat_text layout)
+        Btn toolsTabBtn = modeTextBtn(null, "screen.wands.tools", "tooltip.wands.tools_tab");
+        // Override the click handler for tools tab
+        toolsTabBtn = new Btn(0, 0, Tabs.TAB_SIZE, Tabs.TAB_SIZE, Compat.translatable("screen.wands.tools"), (mouseX, mouseY) -> {
             isToolsTabSelected = !isToolsTabSelected;
         });
         toolsTabBtn.withTooltip(Compat.translatable("screen.wands.tools"), Compat.translatable("tooltip.wands.tools_tab"));
         tabs.add(toolsTabBtn);
+        textButtons.add(toolsTabBtn);
 
+        // Calculate max text width and set all buttons to that width
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        int maxWidth = 0;
+        for (Btn textBtn : textButtons) {
+            if (textBtn.labelText != null) {
+                int textWidth = font.width(textBtn.labelText) + Wdgt.TEXT_PADDING * 2;
+                maxWidth = Math.max(maxWidth, textWidth);
+            }
+        }
+        // Set all text buttons to the max width
+        for (Btn textBtn : textButtons) {
+            textBtn.width = maxWidth;
+        }
+
+        modesArray = modesList.toArray(new WandProps.Mode[0]);
+        tabs.recalculateBounds();
         return tabs;
     }
 
     private Section createToolsSection() {
-        Section section = new Section(Compat.translatable("screen.wands.tools"));
+        Section section = new Section();
 
         // Tools button (show inventory) - text button with "..."
         showInventoryButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.pick_tools").copy().append("..."), (mouseX, mouseY) -> {
@@ -554,23 +546,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         }
 #endif
 
-        // Drop position toggle - on = drop on player, off = drop on block
-        dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
-            () -> ClientRender.wand.drop_on_player,
-            value -> {
-                ClientRender.wand.drop_on_player = value;
-                NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(value));
-            },
-            "player", "block");
-        dropPositionToggle.width = CONTENT_WIDTH;
-        dropPositionToggle.withTooltip(Compat.translatable("screen.wands.drop_on"), Compat.translatable("tooltip.wands.drop_on_player"));
-        section.add(dropPositionToggle);
-
         return section;
     }
 
     private Section createModeOptionsSection(int layoutColWidth, int spinnerHeight) {
-        Section section = new Section(Compat.translatable("screen.wands.mode_options"));
+        Section section = new Section();
 
         // Action select (mode-conditional - hidden for COPY and BLAST, filtered for VEIN)
         Component[] actionLabels = {
@@ -795,6 +775,18 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         blockStateCycle.width = layoutColWidth;
         section.add(blockStateCycle);
 
+        // Drop position toggle - only shown for DESTROY/REPLACE actions (at bottom)
+        dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
+            () -> ClientRender.wand.drop_on_player,
+            value -> {
+                ClientRender.wand.drop_on_player = value;
+                NetworkManager.sendToServer(new Networking.GlobalSettingsPacket(value));
+            },
+            "player", "block");
+        dropPositionToggle.width = layoutColWidth;
+        dropPositionToggle.withTooltip(Compat.translatable("screen.wands.drop_on"), Compat.translatable("tooltip.wands.drop_on_player"));
+        section.add(dropPositionToggle);
+
         return section;
     }
 
@@ -897,8 +889,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         modeTabs.y = SCREEN_MARGIN + INNER_PADDING;
 
         // Content area position (to the right of tabs + divider line)
-        // tabs + INNER_PADDING + line + INNER_PADDING
-        int contentX = modeTabs.x + Tabs.TAB_SIZE + INNER_PADDING + DIVIDER_LINE_WIDTH + INNER_PADDING;
+        // Use modeTabs.width to handle variable-width tabs (e.g., flat_text layout)
+        int contentX = modeTabs.x + modeTabs.width + INNER_PADDING + DIVIDER_LINE_WIDTH + INNER_PADDING;
         int contentY = modeTabs.y;
         int contentWidth = CONTENT_WIDTH;
 
@@ -939,56 +931,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             ItemStack actualWand = getPlayerHeldWand();
             WandProps.Mode currentMode = WandProps.getMode(actualWand);
 
-            // Calculate the mode selection index and handle sub-tabs
-            // Tab indices: 0=Direction, 1=2D Shapes(parent), 2=3D Shapes(parent),
-            //              3=Copy, 4=Paste, 5=Tools
+            // Find mode index in the flat modes array
             int modeIndex = -1;
-
-            // Check if mode is in 2D Shapes group
-            int shapes2dSubTabIndex = -1;
-            if (shapes2dModesArray != null) {
-                for (int i = 0; i < shapes2dModesArray.length; i++) {
-                    if (shapes2dModesArray[i] == currentMode) {
-                        shapes2dSubTabIndex = i;
+            if (modesArray != null) {
+                for (int i = 0; i < modesArray.length; i++) {
+                    if (modesArray[i] == currentMode) {
+                        modeIndex = i;
                         break;
                     }
-                }
-            }
-
-            // Check if mode is in 3D Shapes group
-            int shapes3dSubTabIndex = -1;
-            if (shapes3dModesArray != null) {
-                for (int i = 0; i < shapes3dModesArray.length; i++) {
-                    if (shapes3dModesArray[i] == currentMode) {
-                        shapes3dSubTabIndex = i;
-                        break;
-                    }
-                }
-            }
-
-            if (shapes2dSubTabIndex >= 0) {
-                // Current mode is in 2D Shapes group
-                modeIndex = shapes2dTabIndex;
-
-                Tabs.TabEntry entry = modeTabs.getEntry(shapes2dTabIndex);
-                if (entry != null) {
-                    entry.selectedSubTab = shapes2dSubTabIndex;
-                }
-            } else if (shapes3dSubTabIndex >= 0) {
-                // Current mode is in 3D Shapes group
-                modeIndex = shapes3dTabIndex;
-
-                Tabs.TabEntry entry = modeTabs.getEntry(shapes3dTabIndex);
-                if (entry != null) {
-                    entry.selectedSubTab = shapes3dSubTabIndex;
-                }
-            } else {
-                // Top-level mode
-                switch (currentMode) {
-                    case DIRECTION: modeIndex = 0; break;
-                    case COPY: modeIndex = 3; break;
-                    case PASTE: modeIndex = 4; break;
-                    default: break;
                 }
             }
 
@@ -1009,9 +959,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
             // Update mode-specific widget visibility using the map
             modeWidgets.forEach((widget, modes) -> widget.visible = modes.contains(currentMode));
-
-            // Update mode options section title to show current mode name
-            modeOptionsSection.setTitle(Compat.translatable(currentMode.toString()));
 
             // Update action select visibility and filter based on mode
             boolean configDisabledDestroyReplace = WandsMod.config.disable_destroy_replace;
@@ -1034,6 +981,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             // Block state only relevant for Place action and modes that use state_mode
             WandProps.Action currentAction = WandProps.getAction(actualWand);
             blockStateCycle.visible = (currentAction == WandProps.Action.PLACE) && WandProps.stateModeAppliesTo(currentMode);
+
+            // Drop position only relevant for Destroy/Replace actions
+            dropPositionToggle.visible = (currentAction == WandProps.Action.DESTROY || currentAction == WandProps.Action.REPLACE);
 
             if (blockStateCycle.visible) {
                 // Filter block state options - show axis variants only when relevant
@@ -1076,13 +1026,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     gui.fillGradient(slotScreenX, slotScreenY, slotScreenX + 16, slotScreenY + 16, 0x8800AA00, 0x1000AA00);
                 }
             }
-            gui.drawString(font, "click on a player inventory slot", leftPos + 3, topPos + 50, 0xffffffff, true);
-            gui.drawString(font, "to mark it to be used by the wand", leftPos + 3, topPos + 62, 0xffffffff, true);
+            // Position 4px below title (titleLabelY=6, font height ~9, so y = 6 + 9 + 4 = 19)
+            int instructionY = topPos + titleLabelY + font.lineHeight + 16;
+            gui.drawString(font, "Click an inventory slot to have ", leftPos + titleLabelX, instructionY, COLOR_TEXT_DARK, false);
+            gui.drawString(font, "the wand use a tool in that slot", leftPos + titleLabelX, instructionY + font.lineHeight, COLOR_TEXT_DARK, false);
 
         }else{
-            // Update tab expansion animation
-            modeTabs.updateAnimation(delta);
-
             // Draw semi-transparent background panel (extends to bottom with same margin as top/sides)
             // Tabs have no left/right inner padding, section has INNER_PADDING
             Section visibleContent = isToolsTabSelected ? toolsSection : modeOptionsSection;
@@ -1094,8 +1043,14 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
             // Draw divider line between tabs and content
             if (SHOW_TAB_DIVIDER) {
-                int lineX = modeTabs.x + Tabs.TAB_SIZE + INNER_PADDING;
-                gui.fill(lineX, modeTabs.y, lineX + DIVIDER_LINE_WIDTH, modeTabs.y + modeTabs.height, COLOR_TAB_DIVIDER);
+                int lineX = modeTabs.x + modeTabs.width + INNER_PADDING;
+                if (USE_EXTENDED_DIVIDER) {
+                    // Extended divider: fills from lineX to right edge, full panel height
+                    // Slightly lighter gray (0x484848) with 30% opacity (0x4D)
+                    gui.fill(lineX, panelY, panelRight, panelBottom, 0x4D484848);
+                } else {
+                    gui.fill(lineX, modeTabs.y, lineX + DIVIDER_LINE_WIDTH, modeTabs.y + modeTabs.height, COLOR_TAB_DIVIDER);
+                }
             }
 
             update_selections();
@@ -1105,18 +1060,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 }
             }
 
-            // Render hotbar slots
-            int hotbarBaseX = ((width - IMG_WIDTH)/2 + 48) - screenXOffset;
-            int hotbarY = (((height - IMG_HEIGHT) / 2) + 22) - screenYOffset;
-            for (int slotIndex = 0; slotIndex < 9; slotIndex++) {
-                Slot hotbarSlot = this.menu.slots.get(36 + slotIndex);
-                int slotX = hotbarBaseX + slotIndex * 18;
-                gui.renderFakeItem(hotbarSlot.getItem(), slotX, hotbarY);
-                gui.renderItemDecorations(font, hotbarSlot.getItem(), slotX, hotbarY);
-                if (mouseX > slotX && mouseX < slotX + 16 && mouseY > hotbarY && mouseY < hotbarY + 16) {
-                    this.hoveredSlot = hotbarSlot;
-                }
-            }
             if(WandProps.getMode(getPlayerHeldWand()) == WandProps.Mode.ROCK) {
                 gui.drawString(font, rockMessage, leftPos + 103, topPos + 62, 0x00ff0000, true);
             }
@@ -1124,11 +1067,26 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             // Render widget tooltips
             Wdgt hoveredWidget = findHoveredWidget(mouseX, mouseY);
             if (hoveredWidget != null) {
-                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width);
+                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width, this.height);
             }
         }
         // Update cursor based on hover
-        if (!showInventory) {
+        if (showInventory) {
+            // In tool selection menu, show hand cursor only over inventory slots
+            boolean shouldBeHand = isOverInventorySlot(mouseX, mouseY);
+            if (shouldBeHand != isHandCursor) {
+                isHandCursor = shouldBeHand;
+                long window = Minecraft.getInstance().getWindow().handle();
+                if (shouldBeHand) {
+                    if (handCursor == 0) {
+                        handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+                    }
+                    GLFW.glfwSetCursor(window, handCursor);
+                } else {
+                    GLFW.glfwSetCursor(window, 0);
+                }
+            }
+        } else {
             updateCursor(mouseX, mouseY);
         }
 

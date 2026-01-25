@@ -12,7 +12,7 @@ import net.nicguzzo.wands.client.screens.WandScreen;
  */
 public class Btn extends Wdgt {
     // Background colors for different button states
-    public static final int COLOR_NORMAL = 0xFF383838;
+    public static final int COLOR_NORMAL = 0x00000000;  // Fully transparent
     public static final int COLOR_HOVER = WandScreen.COLOR_BTN_HOVER;
     public static final int COLOR_SELECTED = WandScreen.COLOR_BTN_SELECTED;
     public static final int COLOR_DISABLED = WandScreen.COLOR_BTN_DISABLED;
@@ -139,7 +139,9 @@ public class Btn extends Wdgt {
                 int backgroundColor;
                 if (disabled) {
                     backgroundColor = COLOR_DISABLED;
-                } else if (selected || isHovered) {
+                } else if (selected) {
+                    backgroundColor = COLOR_SELECTED;
+                } else if (isHovered) {
                     backgroundColor = COLOR_HOVER;
                 } else {
                     backgroundColor = COLOR_NORMAL;
@@ -147,9 +149,6 @@ public class Btn extends Wdgt {
 
                 // Draw background
                 gui.fill(x, y, x + width, y + height, backgroundColor);
-                if (selected) {
-                    gui.fill(x, y, x + width, y + height, COLOR_SELECTED);
-                }
             }
         }
 

@@ -27,11 +27,7 @@ public abstract class Wdgt {
     public static final int TOOLTIP_Y_OFFSET = 2;       // Vertical offset above cursor
     public static final int TOOLTIP_MIN_WIDTH = 100;    // Minimum tooltip width
     public static final int TOOLTIP_MARGIN = 8;         // Margin from screen edge
-    public static final int TOOLTIP_WIDTH_PADDING = 6;  // Internal horizontal padding
-    public static final int TOOLTIP_HEIGHT_PADDING = 4; // Internal vertical padding
-    public static final int TOOLTIP_BORDER_OUTER = 3;   // Outer border offset
-    public static final int TOOLTIP_BORDER_INNER = 2;   // Inner border offset
-    public static final int TOOLTIP_BORDER_EXTRA = 1;   // Extra offset for outer edge
+    public static final int TOOLTIP_PADDING = 4;        // Internal padding (all edges)
 
     // Default colors for label:value style widgets
     public int labelColor = WandScreen.COLOR_WDGT_LABEL;
@@ -164,7 +160,7 @@ public abstract class Wdgt {
      */
     protected void drawBackground(GuiGraphics gui, int mouseX, int mouseY) {
         if (!showBackground) return;
-        int backgroundColor = inside(mouseX, mouseY) ? Btn.COLOR_HOVER : Btn.COLOR_NORMAL;
+        int backgroundColor = inside(mouseX, mouseY) ? WandScreen.COLOR_WDGT_HOVER : Btn.COLOR_NORMAL;
         gui.fill(x, y, x + width, y + height, backgroundColor);
     }
 
@@ -193,8 +189,9 @@ public abstract class Wdgt {
      * @param mouseX Current mouse X position
      * @param mouseY Current mouse Y position
      * @param screenWidth Total screen width for wrapping calculations
+     * @param screenHeight Total screen height for vertical bounds checking
      */
-    public static void renderWidgetTooltip(GuiGraphics gui, Font font, Wdgt widget, int mouseX, int mouseY, int screenWidth) {
+    public static void renderWidgetTooltip(GuiGraphics gui, Font font, Wdgt widget, int mouseX, int mouseY, int screenWidth, int screenHeight) {
         List<Component> tooltipLines = widget.getTooltipLines();
         if (tooltipLines.isEmpty()) return;
 
@@ -216,30 +213,37 @@ public abstract class Wdgt {
             isFirstLine = false;
         }
 
-        int tooltipWidth = 0;
+        int textWidth = 0;
         for (FormattedCharSequence line : wrappedLines) {
-            tooltipWidth = Math.max(tooltipWidth, font.width(line));
+            textWidth = Math.max(textWidth, font.width(line));
         }
-        tooltipWidth += TOOLTIP_WIDTH_PADDING;
-        int tooltipHeight = wrappedLines.size() * font.lineHeight + TOOLTIP_HEIGHT_PADDING;
-        int tooltipY = mouseY - tooltipHeight - TOOLTIP_Y_OFFSET;
+        int textHeight = wrappedLines.size() * font.lineHeight;
 
-        // Dark background with purple border
-        gui.fill(tooltipX - TOOLTIP_BORDER_OUTER, tooltipY - TOOLTIP_HEIGHT_PADDING,
-                 tooltipX + tooltipWidth + TOOLTIP_BORDER_EXTRA, tooltipY + tooltipHeight + TOOLTIP_BORDER_EXTRA,
-                 WandScreen.COLOR_TOOLTIP_BG);
-        gui.fill(tooltipX - TOOLTIP_BORDER_INNER, tooltipY - TOOLTIP_BORDER_OUTER,
-                 tooltipX + tooltipWidth, tooltipY + tooltipHeight,
-                 WandScreen.COLOR_TOOLTIP_BORDER);
-        gui.fill(tooltipX - TOOLTIP_BORDER_INNER, tooltipY - TOOLTIP_BORDER_OUTER,
-                 tooltipX + tooltipWidth, tooltipY + tooltipHeight,
-                 WandScreen.COLOR_TOOLTIP_BG);
+        // Box dimensions with consistent padding on all sides
+        int boxWidth = textWidth + TOOLTIP_PADDING * 2;
+        int boxHeight = textHeight + TOOLTIP_PADDING * 2;
+        int boxX = tooltipX;
+        int boxY = mouseY - boxHeight - TOOLTIP_Y_OFFSET;
 
-        int tooltipLineY = tooltipY;
+        // Clamp to screen bounds - if clipped at top, show below cursor instead
+        if (boxY < TOOLTIP_MARGIN) {
+            boxY = mouseY + TOOLTIP_Y_OFFSET + font.lineHeight;
+        }
+        // If still clipped at bottom, clamp to bottom edge
+        if (boxY + boxHeight > screenHeight - TOOLTIP_MARGIN) {
+            boxY = screenHeight - TOOLTIP_MARGIN - boxHeight;
+        }
+
+        // Draw background
+        gui.fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, WandScreen.COLOR_TOOLTIP_BG);
+
+        // Draw text with padding offset
+        int textX = boxX + TOOLTIP_PADDING;
+        int textY = boxY + TOOLTIP_PADDING;
         for (int i = 0; i < wrappedLines.size(); i++) {
             int color = isTitleLine.get(i) ? WandScreen.COLOR_TOOLTIP_TITLE : WandScreen.COLOR_TOOLTIP_DESC;
-            gui.drawString(font, wrappedLines.get(i), tooltipX, tooltipLineY, color, true);
-            tooltipLineY += font.lineHeight;
+            gui.drawString(font, wrappedLines.get(i), textX, textY, color, true);
+            textY += font.lineHeight;
         }
     }
 }
