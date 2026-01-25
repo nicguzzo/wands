@@ -98,13 +98,15 @@ public class Networking {
         }
     }
 
-    public record ToastPacket(boolean no_tool, boolean damaged_tool) implements CustomPacketPayload {
+    public record ToastPacket(boolean no_tool, boolean damaged_tool, String needed_tool) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ToastPacket> TYPE = new CustomPacketPayload.Type<>(TOAST_PACKET);
         public static final StreamCodec<RegistryFriendlyByteBuf, ToastPacket> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.BOOL,
                 ToastPacket::no_tool,
                 ByteBufCodecs.BOOL,
                 ToastPacket::damaged_tool,
+                ByteBufCodecs.STRING_UTF8,
+                ToastPacket::needed_tool,
                 ToastPacket::new
         );
 

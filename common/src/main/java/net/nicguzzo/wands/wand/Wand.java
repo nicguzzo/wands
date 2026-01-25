@@ -185,6 +185,7 @@ public class Wand {
     public WandProps.StateMode state_mode = WandProps.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
+    private String needed_tool = "";
     public boolean match_state = false;
     //public boolean even_circle=false;
     public boolean mine_to_inventory = true;
@@ -659,7 +660,7 @@ public class Wand {
 
             int placed = 0;
 
-            // DO ACTIONS
+            // DO ACTIONS - process blocks that have matching tools, skip others
             {
                 AABB bb = player.getBoundingBox();
                 if (mode != Mode.COPY) {
@@ -706,7 +707,7 @@ public class Wand {
             //System.out.println("placed " + placed);
             if ((placed > 0) || (no_tool || damaged_tool)) {
 
-                if (blocks_sent_to_inv > 0) {
+                if (blocks_sent_to_inv > 0 && !WandsMod.config.disable_info_messages) {
                     MutableComponent mc = Compat.literal(blocks_sent_to_inv + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
                     player.displayClientMessage(mc, false);
                 }
@@ -727,11 +728,12 @@ public class Wand {
                 }
                 if (no_tool || damaged_tool) {
                     NetworkManager.sendToPlayer((ServerPlayer) player,
-                            new Networking.ToastPacket(no_tool, damaged_tool)
+                            new Networking.ToastPacket(no_tool, damaged_tool, needed_tool)
                     );
                 }
                 no_tool = false;
                 damaged_tool = false;
+                needed_tool = "";
             }
         }
         if (getP2() != null) {
@@ -1122,6 +1124,7 @@ public class Wand {
                     _tool_would_break = tool_would_break(digger_item);
                 } else {
                     no_tool = true;
+                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
                 }
                 if (_tool_would_break) {
@@ -1134,6 +1137,7 @@ public class Wand {
                 can_destroy(st, true);
                 if (digger_item == null && !has_water_potion) {
                     no_tool = true;
+                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
 
                 }
@@ -1550,15 +1554,24 @@ public class Wand {
     public void update_tools() {
         digger_item_slot = -1;
         n_tools = 0;
-        if (this.player_data == null) return;
-        Optional<int[]> a = this.player_data.getIntArray("Tools");
-        if (a.isEmpty()) return;
-        int[] tools_slots = a.get();
         has_pickaxe = false;
         has_hoe = false;
         has_shovel = false;
         has_axe = false;
-        has_shear = false;
+        has_shear = false;  
+        Optional<int[]> a = this.player_data.getIntArray("Tools");
+        if (a.isEmpty()) return;
+        
+        int[] tools_slots = a.get();
+        
+        if (this.player_data == null) {
+            return;
+        }
+        Optional<int[]> a = this.player_data.getIntArray("Tools");
+        if (a.isEmpty()) {
+            return;
+        }
+        int[] tools_slots = a.get();
         for (int t = 0; t < tools.length; t++) {
             tools[t].empty = true;
             tools[t].tool = null;
@@ -2032,6 +2045,17 @@ public class Wand {
         return dmg <= 1;
     }
 
+    private String getNeededToolType(BlockState state) {
+        if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
+            return "pickaxe";
+        } else if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) {
+            return "shovel";
+        } else if (state.is(BlockTags.MINEABLE_WITH_AXE)) {
+            return "axe";
+        } else if (state.is(BlockTags.MINEABLE_WITH_HOE)) {
+            return "hoe";
+        }
+        return "";
     /**
      * Check if any active block source (offhand or palette) contains a RotatedPillarBlock.
      * Used for determining whether to show axis-specific rotation options.
