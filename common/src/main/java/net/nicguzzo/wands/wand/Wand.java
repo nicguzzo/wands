@@ -871,8 +871,7 @@ public class Wand {
             if (offhand_state != null && !offhand_state.isAir()) {
 
                 if (state_mode == WandProps.StateMode.CLONE && state_behind_block != null) {
-                    BlockState st2 = offhand_state.getBlock().withPropertiesOf(state_behind_block);
-                    st = st2;
+                    return offhand_state.getBlock().withPropertiesOf(state_behind_block);
                 } else {
                     st = offhand_state;
                 }
