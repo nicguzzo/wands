@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.neoforge.claims;
 #if HAS_FTB_CHUNKS
+import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
 import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos;
@@ -17,7 +18,9 @@ public class FTBChunks {
         ClaimedChunk chunk =FTBChunksAPI.api().getManager().getChunk(new ChunkDimPos(level,pos));
 
         if(chunk != null) {
-            r = chunk.getTeamData().isTeamMember(player.getUUID());
+            ChunkTeamData teamData = chunk.getTeamData();
+            r = teamData.isTeamMember(player.getUUID()) || teamData.isAlly(player.getUUID());
+            //r = chunk.getTeamData().isTeamMember(player.getUUID()) ;
         }
         //WandsMod.LOGGER.info(" FTBChunks canInteract "+r);
 #endif

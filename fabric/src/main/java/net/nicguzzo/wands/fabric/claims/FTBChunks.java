@@ -6,6 +6,7 @@ package net.nicguzzo.wands.fabric.claims;
     import dev.ftb.mods.ftbchunks.data.ClaimedChunk;
     import dev.ftb.mods.ftbchunks.data.FTBChunksTeamData;
     #else
+    import dev.ftb.mods.ftbchunks.api.ChunkTeamData;
     import dev.ftb.mods.ftbchunks.api.ClaimedChunk;
     import dev.ftb.mods.ftbchunks.api.FTBChunksAPI;
     #endif
@@ -21,21 +22,12 @@ public class FTBChunks {
 
     static public boolean canInteract(ServerLevel level, Player player, BlockPos pos){
         boolean r=true;
-#if HAS_FTBCHUNKS
-    #if MC!="1171"
-        #if MC=="1165"
-            ClaimedChunk chunk = FTBChunksAPI.getManager().getChunk(new ChunkDimPos(level,pos));
-            FTBChunksTeamData data=chunk.getTeamData();
-            if(data!=null) {
-                r = chunk.getTeamData().isTeamMember(player.getUUID());
-            }
-        #else
-            ClaimedChunk chunk =FTBChunksAPI.api().getManager().getChunk(new ChunkDimPos(level,pos));
-            if(chunk != null) {
-                r = chunk.getTeamData().isTeamMember(player.getUUID());
-            }
-        #endif
-    #endif
+#if HAS_FTB_CHUNKS
+        ClaimedChunk chunk =FTBChunksAPI.api().getManager().getChunk(new ChunkDimPos(level,pos));
+        if(chunk != null) {
+            ChunkTeamData teamData = chunk.getTeamData();
+            r = teamData.isTeamMember(player.getUUID()) || teamData.isAlly(player.getUUID());
+        }
 #endif
         //WandsMod.LOGGER.info(" FTBChunks canInteract "+r);
         return r;
