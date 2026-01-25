@@ -64,6 +64,8 @@
   "option.wands.bounding_box_color": "Bounding Box",
   "option.wands.check_advancements": "Enable Advancements",
   "option.wands.check_advancements_tt": "",
+  "option.wands.toast_in_action_bar": "Toast in action bar",
+  "option.wands.toast_in_action_bar_tt": "Show toast messages (no tool, damaged tool) in the action bar instead of as popups",
   "option.wands.disable_info_messages": "Disable info messages",
   "option.wands.disable_info_messages_tt": "Hide informational chat messages (mode changes, wand cleared, etc.)",
   "toast.wands.no_tool": "No tool",
