@@ -360,6 +360,9 @@ public class ClientRender {
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
+                            if (!block_outlines) {
+                                preview_bbox_faces(bufferSource, matrixStack);
+                            }
                         }
                         //actual block preview
                         preview_block_buffer(bufferSource,matrixStack);
@@ -1202,6 +1205,68 @@ public class ClientRender {
         }
         bufferSource.endLastBatch();
     }
+    /** Renders animated translucent faces for bounding box when block_outlines is disabled */
+    static void preview_bbox_faces(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack) {
+        // Calculate animation: sine wave over 3 seconds (3000ms)
+        long currentTime = System.currentTimeMillis();
+        double phase = ((currentTime % 3000) / 3000.0) * 2 * Math.PI;
+        float alpha = 0.3f * (float)((Math.sin(phase) + 1.0) / 2.0);
+
+        // Get bbox coordinates with same offset as outline
+        float off2 = 0.05f;
+        float x1 = wand.bb1_x - off2;
+        float y1 = wand.bb1_y - off2;
+        float z1 = wand.bb1_z - off2;
+        float x2 = wand.bb2_x + off2;
+        float y2 = wand.bb2_y + off2;
+        float z2 = wand.bb2_z + off2;
+
+        Matrix4f matrix = matrixStack.last().pose();
+        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
+
+        float r = bbox_col.r;
+        float g = bbox_col.g;
+        float b = bbox_col.b;
+
+        // Top face (y = y2)
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+
+        // Bottom face (y = y1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+
+        // North face (z = z1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+
+        // South face (z = z2)
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+
+        // West face (x = x1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+
+        // East face (x = x2)
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+
+        bufferSource.endLastBatch();
+    }
+
     static void preview_paste(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         int mx=1;
         //int my=1;
@@ -1317,6 +1382,8 @@ public class ClientRender {
             bufferSource.endLastBatch();
         }
     }
+
+    /** Renders highlight at cursor position showing selected/target block */
     static void preview_selected(Mode mode,
                                  MultiBufferSource.BufferSource bufferSource,
                                  PoseStack matrixStack,
