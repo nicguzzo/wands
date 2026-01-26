@@ -362,6 +362,9 @@ public class ClientRender {
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
+                            if (!block_outlines) {
+                                preview_bbox_faces(bufferSource, matrixStack);
+                            }
                         }
                         //actual block preview
                         preview_block_buffer(bufferSource,matrixStack);
@@ -1192,6 +1195,188 @@ public class ClientRender {
         }
         bufferSource.endLastBatch();
     }
+    /** Renders animated translucent faces for bounding box when block_outlines is disabled */
+    static void preview_bbox_faces(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack) {
+        // Calculate animation: sine wave over 3 seconds (3000ms)
+        long currentTime = System.currentTimeMillis();
+        double phase = ((currentTime % 3000) / 3000.0) * 2 * Math.PI;
+        float alpha = 0.3f * (float)((Math.sin(phase) + 1.0) / 2.0);
+
+        // Get bbox coordinates with same offset as outline
+        float off2 = 0.05f;
+        float x1 = wand.bb1_x - off2;
+        float y1 = wand.bb1_y - off2;
+        float z1 = wand.bb1_z - off2;
+        float x2 = wand.bb2_x + off2;
+        float y2 = wand.bb2_y + off2;
+        float z2 = wand.bb2_z + off2;
+
+        Matrix4f matrix = matrixStack.last().pose();
+        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.debugQuads());
+
+        float r = bbox_col.r;
+        float g = bbox_col.g;
+        float b = bbox_col.b;
+
+        // Top face (y = y2)
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+
+        // Bottom face (y = y1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+
+        // North face (z = z1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+
+        // South face (z = z2)
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+
+        // West face (x = x1)
+        consumer.addVertex(matrix, x1, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y1, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x1, y2, z1).setColor(r, g, b, alpha);
+
+        // East face (x = x2)
+        consumer.addVertex(matrix, x2, y1, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z1).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y2, z2).setColor(r, g, b, alpha);
+        consumer.addVertex(matrix, x2, y1, z2).setColor(r, g, b, alpha);
+
+        bufferSource.endLastBatch();
+    }
+
+    static void preview_paste(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
+        int mx=1;
+        //int my=1;
+        int mz=1;
+        Matrix4f matrix=matrixStack.last().pose();
+        switch(mirroraxis){
+            case 1://X
+                mx=-1;
+                break;
+            case 2://Y
+                mz=-1;
+                break;
+        }
+        BlockPos b_pos = wand.pos;
+        if (!wand.destroy &&fancy) {
+            random.setSeed(0);
+            //wand.random.setSeed(wand.palette.seed);
+            //BlockPos po=wand.copy_paste_buffer.getFirst().pos;
+            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
+            for (CopyBuffer b : wand.copy_paste_buffer) {
+                BlockState st =b.state;
+                if (wand.palette.has_palette) {
+                    st = wand.get_state(b.pos.getY(),null);
+                }else{
+                    st=wand.rotate_mirror(st,mirroraxis);
+                    //Mirror
+                    /*Block blk=st.getBlock();
+                    if(blk instanceof  StairBlock && mirroraxis >0) {
+                        st = wand.paste_rot(st);
+
+                        Direction facing=st.getValue(StairBlock.FACING);
+                        StairsShape shape=st.getValue(StairBlock.SHAPE);
+                        if(my==-1){
+                            st=st.setValue(StairBlock.HALF,st.getValue(StairBlock.HALF));
+                        }else {
+                            if (
+                                (mx == -1 && (facing == Direction.EAST  || facing == Direction.WEST  )) ||
+                                (mz == -1 && (facing == Direction.NORTH || facing == Direction.SOUTH ))
+                            ) {
+                                st = st.setValue(StairBlock.FACING, facing.getOpposite());
+                            }
+                            if ( shape!= StairsShape.STRAIGHT){
+                                if(shape==StairsShape.INNER_LEFT) {
+                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
+                                }else{
+                                    if(shape==StairsShape.OUTER_LEFT) {
+                                        st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
+                                    }else{
+                                        if(shape==StairsShape.OUTER_RIGHT) {
+                                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                                        }else {
+                                            if (shape == StairsShape.INNER_RIGHT) {
+                                                st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }else{
+                        st = wand.paste_rot(st);
+                    }*/
+                }
+                BlockPos p = b.pos.rotate(last_rot);
+                int px=b_pos.getX() + p.getX()*mx;
+                int py=b_pos.getY() + p.getY();
+                int pz=b_pos.getZ() + p.getZ()*mz;
+                render_shape(matrixStack,consumer, st, px ,py,pz);
+            }
+            bufferSource.endLastBatch();
+
+        }
+        if (drawlines && paste_outlines) {
+            Colorf col=(wand.destroy? destroy_col: paste_bb_col);
+            x1 = Integer.MAX_VALUE;
+            y1 = Integer.MAX_VALUE;
+            z1 = Integer.MAX_VALUE;
+            x2 = Integer.MIN_VALUE;
+            y2 = Integer.MIN_VALUE;
+            z2 = Integer.MIN_VALUE;
+            VertexConsumer consumer;
+            if (fat_lines) {
+                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
+            } else {
+                consumer= bufferSource.getBuffer(RenderTypes.lines());
+            }
+            for (CopyBuffer b : wand.copy_paste_buffer) {
+                BlockPos p = b.pos.rotate(last_rot);
+                float x = b_pos.getX() + p.getX()*mx;
+                float y = b_pos.getY() + p.getY();
+                float z = b_pos.getZ() + p.getZ()*mz;
+                if (fat_lines) {
+                    preview_block_fat(matrix,consumer,
+                            x, y, z,
+                            x + 1, y + 1, z + 1, col,
+                    true);
+                } else {
+                    preview_block(matrix,consumer,
+                            x, y, z,
+                            x + 1, y + 1, z + 1, col
+                    );
+                }
+                if (x < x1) x1 = x;
+                if (y < y1) y1 = y;
+                if (z < z1) z1 = z;
+                if (x + 1 > x2) x2 = x + 1;
+                if (y + 1 > y2) y2 = y + 1;
+                if (z + 1 > z2) z2 = z + 1;
+            }
+
+            if (fat_lines) {
+                preview_block_fat(matrix,consumer,x1,y1,z1,x2,y2,z2,col,false);
+            } else {
+                preview_block(matrix,consumer,x1,y1,z1,x2,y2,z2,col);
+            }
+            bufferSource.endLastBatch();
+        }
+    }
+
     /** Renders highlight at cursor position showing selected/target block */
     static void preview_selected(Mode mode,
                                  MultiBufferSource.BufferSource bufferSource,
