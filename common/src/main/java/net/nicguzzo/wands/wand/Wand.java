@@ -217,6 +217,49 @@ public class Wand {
     }
 
     /**
+     * Extends the bounding box to include the clicked block.
+     * Moves whichever point (P1 or P2) defines the boundary on each axis.
+     */
+    public void extendBbox(BlockPos clickedPos) {
+        if (p1 == null || p2 == null) return;
+
+        int newP1x = p1.getX(), newP1y = p1.getY(), newP1z = p1.getZ();
+        int newP2x = p2.getX(), newP2y = p2.getY(), newP2z = p2.getZ();
+        int cx = clickedPos.getX(), cy = clickedPos.getY(), cz = clickedPos.getZ();
+
+        // X axis
+        int minX = Math.min(p1.getX(), p2.getX());
+        int maxX = Math.max(p1.getX(), p2.getX());
+        if (cx < minX) {
+            if (p1.getX() <= p2.getX()) newP1x = cx; else newP2x = cx;
+        } else if (cx > maxX) {
+            if (p1.getX() >= p2.getX()) newP1x = cx; else newP2x = cx;
+        }
+
+        // Y axis
+        int minY = Math.min(p1.getY(), p2.getY());
+        int maxY = Math.max(p1.getY(), p2.getY());
+        if (cy < minY) {
+            if (p1.getY() <= p2.getY()) newP1y = cy; else newP2y = cy;
+        } else if (cy > maxY) {
+            if (p1.getY() >= p2.getY()) newP1y = cy; else newP2y = cy;
+        }
+
+        // Z axis
+        int minZ = Math.min(p1.getZ(), p2.getZ());
+        int maxZ = Math.max(p1.getZ(), p2.getZ());
+        if (cz < minZ) {
+            if (p1.getZ() <= p2.getZ()) newP1z = cz; else newP2z = cz;
+        } else if (cz > maxZ) {
+            if (p1.getZ() >= p2.getZ()) newP1z = cz; else newP2z = cz;
+        }
+
+        setP1(new BlockPos(newP1x, newP1y, newP1z));
+        setP2(new BlockPos(newP2x, newP2y, newP2z));
+        calc_pv_bbox(p1, p2);
+    }
+
+    /**
      * Returns the effective end position for 2-click modes.
      * ClientRender already applies INCSELBLOCK offset before calling do_or_preview,
      * so this method just returns pos directly.
@@ -737,7 +780,8 @@ public class Wand {
                 needed_tool = "";
             }
         }
-        if (getP2() != null) {
+        // Clear P1/P2 after placement, but Copy mode keeps them for bbox extension
+        if (getP2() != null && !(mode == WandProps.Mode.COPY && preview)) {
             setP1(null);
             setP2(null);
             valid = false;
