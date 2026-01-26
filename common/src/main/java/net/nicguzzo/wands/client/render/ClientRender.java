@@ -303,6 +303,7 @@ public class ClientRender {
         }
     }
 
+    /** Main preview entry point - routes to appropriate preview methods based on mode */
     private static void preview_mode(Mode mode, PoseStack matrixStack,MultiBufferSource.BufferSource bufferSource) {
 
         Camera camera = client.gameRenderer.getMainCamera();
@@ -354,9 +355,10 @@ public class ClientRender {
                 case COPY:
                 case PASTE:
                     preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
-                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
+                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.PASTE || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
+                            (mode == Mode.PASTE && paste_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
@@ -369,14 +371,12 @@ public class ClientRender {
                     }
                 break;
             }
-            if (mode==Mode.PASTE && !wand.copy_paste_buffer.isEmpty()) {
-                preview_paste(bufferSource,matrixStack);
-            }
         }
 
         //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
         matrixStack.popPose();
     }
+    /** Shared outline renderer: draws wireframe outlines from block_buffer */
     public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource){
         Colorf mode_outline_color = bo_col;
         if(wand.destroy ||wand.has_empty_bucket)
@@ -452,6 +452,7 @@ public class ClientRender {
         matrixStack.popPose();
     }
 
+    /** Low-level: draws a single wireframe box outline */
     static void preview_block(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
         fx1 += p_o;
         fy1 += p_o;
@@ -485,6 +486,7 @@ public class ClientRender {
         consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
     }
 
+    /** Low-level: draws a single wireframe box as thick quads, with optional X cross */
     static void preview_block_fat(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
         float off=0.01f;
         fx1 -= off;
@@ -930,6 +932,7 @@ public class ClientRender {
         line_col.fromColor(WandsConfig.c_line);
     }
 
+    /** Renders the 3x3 grid overlay on block faces for DIRECTION mode */
     static void preview_direction_mode(MultiBufferSource.BufferSource bufferSource,Matrix4f matrix, float pos_x,float pos_y,float pos_z){
         if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
             List<AABB> list = preview_shape.toAabbs();
@@ -1029,6 +1032,7 @@ public class ClientRender {
         }
     }
 
+    /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
     static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         if (wand.has_empty_bucket || (wand.valid && (has_target || wand.is_alt_pressed) && wand.block_buffer != null)) {
             random.setSeed(0);
@@ -1153,6 +1157,7 @@ public class ClientRender {
         }
     }
 
+    /** Renders bounding box outline for COPY, FILL, TUNNEL, PASTE modes */
     static void preview_bbox(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         float off2 = 0.05f;
         Matrix4f matrix=matrixStack.last().pose();
@@ -1187,125 +1192,7 @@ public class ClientRender {
         }
         bufferSource.endLastBatch();
     }
-    static void preview_paste(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
-        int mx=1;
-        //int my=1;
-        int mz=1;
-        Matrix4f matrix=matrixStack.last().pose();
-        switch(mirroraxis){
-            case 1://X
-                mx=-1;
-                break;
-            case 2://Y
-                mz=-1;
-                break;
-        }
-        BlockPos b_pos = wand.pos;
-        if (!wand.destroy &&fancy) {
-            random.setSeed(0);
-            //wand.random.setSeed(wand.palette.seed);
-            //BlockPos po=wand.copy_paste_buffer.getFirst().pos;
-            VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
-            for (CopyBuffer b : wand.copy_paste_buffer) {
-                BlockState st =b.state;
-                if (wand.palette.has_palette) {
-                    st = wand.get_state(b.pos.getY(),null);
-                }else{
-                    st=wand.rotate_mirror(st,mirroraxis);
-                    //Mirror
-                    /*Block blk=st.getBlock();
-                    if(blk instanceof  StairBlock && mirroraxis >0) {
-                        st = wand.paste_rot(st);
-
-                        Direction facing=st.getValue(StairBlock.FACING);
-                        StairsShape shape=st.getValue(StairBlock.SHAPE);
-                        if(my==-1){
-                            st=st.setValue(StairBlock.HALF,st.getValue(StairBlock.HALF));
-                        }else {
-                            if (
-                                (mx == -1 && (facing == Direction.EAST  || facing == Direction.WEST  )) ||
-                                (mz == -1 && (facing == Direction.NORTH || facing == Direction.SOUTH ))
-                            ) {
-                                st = st.setValue(StairBlock.FACING, facing.getOpposite());
-                            }
-                            if ( shape!= StairsShape.STRAIGHT){
-                                if(shape==StairsShape.INNER_LEFT) {
-                                    st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_RIGHT);
-                                }else{
-                                    if(shape==StairsShape.OUTER_LEFT) {
-                                        st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
-                                    }else{
-                                        if(shape==StairsShape.OUTER_RIGHT) {
-                                            st = st.setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
-                                        }else {
-                                            if (shape == StairsShape.INNER_RIGHT) {
-                                                st = st.setValue(StairBlock.SHAPE, StairsShape.INNER_LEFT);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                    }else{
-                        st = wand.paste_rot(st);
-                    }*/
-                }
-                BlockPos p = b.pos.rotate(last_rot);
-                int px=b_pos.getX() + p.getX()*mx;
-                int py=b_pos.getY() + p.getY();
-                int pz=b_pos.getZ() + p.getZ()*mz;
-                render_shape(matrixStack,consumer, st, px ,py,pz);
-            }
-            bufferSource.endLastBatch();
-
-        }
-        if (drawlines && paste_outlines) {
-            Colorf col=(wand.destroy? destroy_col: paste_bb_col);
-            x1 = Integer.MAX_VALUE;
-            y1 = Integer.MAX_VALUE;
-            z1 = Integer.MAX_VALUE;
-            x2 = Integer.MIN_VALUE;
-            y2 = Integer.MIN_VALUE;
-            z2 = Integer.MIN_VALUE;
-            VertexConsumer consumer;
-            if (fat_lines) {
-                consumer= bufferSource.getBuffer(RenderTypes.debugQuads());
-            } else {
-                consumer= bufferSource.getBuffer(RenderTypes.lines());
-            }
-            for (CopyBuffer b : wand.copy_paste_buffer) {
-                BlockPos p = b.pos.rotate(last_rot);
-                float x = b_pos.getX() + p.getX()*mx;
-                float y = b_pos.getY() + p.getY();
-                float z = b_pos.getZ() + p.getZ()*mz;
-                if (fat_lines) {
-                    preview_block_fat(matrix,consumer,
-                            x, y, z,
-                            x + 1, y + 1, z + 1, col,
-                    true);
-                } else {
-                    preview_block(matrix,consumer,
-                            x, y, z,
-                            x + 1, y + 1, z + 1, col
-                    );
-                }
-                if (x < x1) x1 = x;
-                if (y < y1) y1 = y;
-                if (z < z1) z1 = z;
-                if (x + 1 > x2) x2 = x + 1;
-                if (y + 1 > y2) y2 = y + 1;
-                if (z + 1 > z2) z2 = z + 1;
-            }
-
-            if (fat_lines) {
-                preview_block_fat(matrix,consumer,x1,y1,z1,x2,y2,z2,col,false);
-            } else {
-                preview_block(matrix,consumer,x1,y1,z1,x2,y2,z2,col);
-            }
-            bufferSource.endLastBatch();
-        }
-    }
+    /** Renders highlight at cursor position showing selected/target block */
     static void preview_selected(Mode mode,
                                  MultiBufferSource.BufferSource bufferSource,
                                  PoseStack matrixStack,
@@ -1352,6 +1239,7 @@ public class ClientRender {
         }
     }
     }
+    /** Renders P1/P2 markers and connecting line for LINE, CIRCLE, SPHERE, FILL modes */
     static void preview_line_circle(Matrix4f matrix, Mode mode,MultiBufferSource.BufferSource bufferSource,
                                  float p1_x,
                                  float p1_y,

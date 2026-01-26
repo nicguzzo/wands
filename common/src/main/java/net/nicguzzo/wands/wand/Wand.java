@@ -373,8 +373,9 @@ public class Wand {
         palette.random.setSeed(palette.seed);
         target_air_distance = WandProps.getVal(wand_stack, WandProps.Value.AIR_TARGET_DISTANCE);
 
-        // Copy mode doesn't need block_state - it only calculates bbox from positions
-        boolean needsBlockState = mode != Mode.COPY;
+        // Copy and Paste modes don't need block_state - Copy calculates bbox from positions,
+        // Paste uses copy_paste_buffer for block states
+        boolean needsBlockState = mode != Mode.COPY && mode != Mode.PASTE;
         if ((needsBlockState && block_state == null) || pos == null || side == null || level == null || player == null || hit == null || wand_stack == null) {
             return;
         }
