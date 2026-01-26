@@ -303,6 +303,7 @@ public class ClientRender {
         }
     }
 
+    /** Main preview entry point - routes to appropriate preview methods based on mode */
     private static void preview_mode(Mode mode, PoseStack matrixStack,MultiBufferSource.BufferSource bufferSource) {
 
         Camera camera = client.gameRenderer.getMainCamera();
@@ -354,9 +355,10 @@ public class ClientRender {
                 case COPY:
                 case PASTE:
                     preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
-                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
+                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.PASTE || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
+                            (mode == Mode.PASTE && paste_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
@@ -372,14 +374,12 @@ public class ClientRender {
                     }
                 break;
             }
-            if (mode==Mode.PASTE && !wand.copy_paste_buffer.isEmpty()) {
-                preview_paste(bufferSource,matrixStack);
-            }
         }
 
         //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
         matrixStack.popPose();
     }
+    /** Shared outline renderer: draws wireframe outlines from block_buffer */
     public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource){
         Colorf mode_outline_color = bo_col;
         if(wand.destroy ||wand.has_empty_bucket)
@@ -455,6 +455,7 @@ public class ClientRender {
         matrixStack.popPose();
     }
 
+    /** Low-level: draws a single wireframe box outline */
     static void preview_block(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c) {
         fx1 += p_o;
         fy1 += p_o;
@@ -488,6 +489,7 @@ public class ClientRender {
         consumer.addVertex(matrix,fx2, fy2, fz2).setColor(c.r,c.g,c.b,c.a).setNormal(0.0f,0.0f,0.0f);
     }
 
+    /** Low-level: draws a single wireframe box as thick quads, with optional X cross */
     static void preview_block_fat(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
         float off=0.01f;
         fx1 -= off;
@@ -933,6 +935,7 @@ public class ClientRender {
         line_col.fromColor(WandsConfig.c_line);
     }
 
+    /** Renders the 3x3 grid overlay on block faces for DIRECTION mode */
     static void preview_direction_mode(MultiBufferSource.BufferSource bufferSource,Matrix4f matrix, float pos_x,float pos_y,float pos_z){
         if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
             List<AABB> list = preview_shape.toAabbs();
@@ -1032,6 +1035,7 @@ public class ClientRender {
         }
     }
 
+    /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
     static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         if (wand.has_empty_bucket || (wand.valid && (has_target || wand.is_alt_pressed) && wand.block_buffer != null)) {
             random.setSeed(0);
@@ -1156,6 +1160,7 @@ public class ClientRender {
         }
     }
 
+    /** Renders bounding box outline for COPY, FILL, TUNNEL, PASTE modes */
     static void preview_bbox(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         float off2 = 0.05f;
         Matrix4f matrix=matrixStack.last().pose();
@@ -1419,6 +1424,7 @@ public class ClientRender {
         }
     }
     }
+    /** Renders P1/P2 markers and connecting line for LINE, CIRCLE, SPHERE, FILL modes */
     static void preview_line_circle(Matrix4f matrix, Mode mode,MultiBufferSource.BufferSource bufferSource,
                                  float p1_x,
                                  float p1_y,

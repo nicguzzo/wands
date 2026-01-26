@@ -12,57 +12,46 @@ public class PasteMode extends WandMode {
     public void place_in_buffer(Wand wand) {
         if(wand.copy_paste_buffer==null || wand.copy_paste_buffer.size()==0)
             return;
-        if (!wand.preview) {
-            int mx=1;
-            int my=1;
-            int mz=1;
-            int mirroraxis= WandProps.getVal(wand.wand_stack, WandProps.Value.MIRRORAXIS);
-            switch(mirroraxis){
-                case 1://X
-                    mx=-1;
-                    break;
-                case 2://Y
-                    mz=-1;
-                    break;
-                /*case 3://Z
-                    mz=-1;
-                    break;*/
-            }
-            //log("mode6 paste "+copy_paste_buffer.size());
-            //BlockPos b_pos = wand.pos;
-            BlockPos b_pos = wand.getP1();
-            boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
-            if(!sel){
-                b_pos = wand.pos.relative(wand.side, 1);
-            }
-            /*BlockState s=wand.level.getBlockState(wand.pos);
-            boolean targeting_air=s.isAir();
-            if(!targeting_air && !(wand.replace || wand.destroy)) {
-                b_pos = wand.pos.relative(wand.side, 1);
-            }*/
-            //BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
-            wand.block_buffer.reset();
-            //wand.random.setSeed(wand.palette.seed);
+        // Always populate buffer (for both preview and placement) so rendering matches placement
+        int mx=1;
+        int my=1;
+        int mz=1;
+        int mirroraxis= WandProps.getVal(wand.wand_stack, WandProps.Value.MIRRORAXIS);
+        switch(mirroraxis){
+            case 1://X
+                mx=-1;
+                break;
+            case 2://Y
+                mz=-1;
+                break;
+        }
+        BlockPos b_pos;
+        boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
+        // When targeting air, wand.pos is already the target position - don't offset
+        // When clicking a block with INCSELBLOCK off, offset by 1 to place next to the block
+        if(!sel && !wand.target_air){
+            b_pos = wand.pos.relative(wand.side, 1);
+        } else {
+            b_pos = wand.pos;
+        }
+        wand.block_buffer.reset();
 
-            for (CopyBuffer b : wand.copy_paste_buffer) {
-                BlockPos p = b.pos.rotate(wand.rotation);
-                BlockState st=b.state;
-                int px=b_pos.getX() + p.getX()*mx;
-                int py=b_pos.getY() + p.getY();
-                int pz=b_pos.getZ() + p.getZ()*mz;
-                st=wand.rotate_mirror(st,mirroraxis);
-                if (wand.palette.has_palette) {
-                    wand.block_buffer.add(px, py, pz, wand, null);
-                } else {
-                    wand.block_buffer.add(px, py, pz, st, st.getBlock().asItem());
-                }
+        for (CopyBuffer b : wand.copy_paste_buffer) {
+            BlockPos p = b.pos.rotate(wand.rotation);
+            BlockState st=b.state;
+            int px=b_pos.getX() + p.getX()*mx;
+            int py=b_pos.getY() + p.getY();
+            int pz=b_pos.getZ() + p.getZ()*mz;
+            st=wand.rotate_mirror(st,mirroraxis);
+            if (wand.palette.has_palette) {
+                wand.block_buffer.add(px, py, pz, wand, null);
+            } else {
+                wand.block_buffer.add(px, py, pz, st, st.getBlock().asItem());
             }
-            //WandsMod.log("paste: "+wand.block_buffer.get_length(),true);
-            if(wand.block_buffer.get_length()>0) {
-                wand.valid = true;
-                wand.limit_reached=false;
-            }
-            //wand.validate_buffer();
+        }
+        if(wand.block_buffer.get_length()>0) {
+            wand.valid = true;
+            wand.limit_reached=false;
         }
     }
 }
