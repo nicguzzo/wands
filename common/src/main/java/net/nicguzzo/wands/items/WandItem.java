@@ -6,7 +6,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -92,13 +91,18 @@ public class WandItem extends Item {
                 if (shouldOffset) {
                     ClientRender.wand.setP2(ClientRender.wand.getP2().relative(side, 1));
                 }
+            } else if (mode == Mode.COPY) {
+                BlockPos clickedPos = shouldOffset ? pos.relative(side, 1) : pos;
+                ClientRender.wand.extendBbox(clickedPos);
             }
         }
         if ((ClientRender.wand.getP1() != null && mode.n_clicks() == 1) || ((ClientRender.wand.getP1() != null && ClientRender.wand.getP2() != null && mode.n_clicks() == 2))) {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
-            ClientRender.wand.clear(ClientRender.wand.mode==Mode.PASTE || ClientRender.wand.mode== WandProps.Mode.COPY);
+            if (mode != Mode.COPY) {
+                ClientRender.wand.clear(mode == Mode.PASTE);
+            }
         }
         return InteractionResult.SUCCESS;
     }

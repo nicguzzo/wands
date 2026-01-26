@@ -21,7 +21,9 @@ public class CopyMode extends WandMode {
         int copy_y2 = 0;
         int copy_z2 = 0;
         if (wand.getP1() != null && wand.preview) {
-            wand.calc_pv_bbox(wand.getP1(), wand.pos);
+            // Use P2 if set, otherwise use current look position
+            BlockPos endPos = (wand.getP2() != null) ? wand.getP2() : wand.pos;
+            wand.calc_pv_bbox(wand.getP1(), endPos);
             wand.valid = true;
             copy_x1 = wand.getP1().getX();
             copy_y1 = wand.getP1().getY();
