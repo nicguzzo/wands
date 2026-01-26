@@ -354,7 +354,7 @@ public class ClientRender {
                 case COPY:
                 case PASTE:
                     preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
-                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
+                    if (wand.valid || (mode.n_clicks() == 2 && wand.getP1() != null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
