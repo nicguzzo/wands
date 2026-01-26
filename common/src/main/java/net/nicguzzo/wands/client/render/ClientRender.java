@@ -355,7 +355,7 @@ public class ClientRender {
                 case COPY:
                 case PASTE:
                     preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
-                    if (wand.valid || ( (mode == Mode.ROCK || mode == Mode.FILL|| mode == Mode.COPY || mode == Mode.PASTE || mode == Mode.TUNNEL)&& wand.getP1() !=null)){
+                    if (wand.valid || (mode.n_clicks() == 2 && wand.getP1() != null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
                             (mode == Mode.PASTE && paste_outlines) ||
@@ -368,7 +368,7 @@ public class ClientRender {
                         }
                         //actual block preview
                         preview_block_buffer(bufferSource,matrixStack);
-                        if (drawlines && p1 != null  && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE ||mode == Mode.SPHERE )) {
+                        if (drawlines && p1 != null  && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY)) {
                            preview_line_circle(matrixStack.last().pose(),mode,bufferSource,p1_x,p1_y,p1_z,last_pos_x,last_pos_y,last_pos_z,off3,off2);
                         }
                     }
