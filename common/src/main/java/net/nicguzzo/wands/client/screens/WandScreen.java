@@ -133,7 +133,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     CycleToggle<WandProps.Plane> planeCycle;
     CycleToggle<Boolean> circleFillToggle;
     CycleToggle<Boolean> evenSizeToggle;
-    CycleToggle<Boolean> rectangleFillToggle;
+    CycleToggle<Boolean> boxFillToggle;
     Spinner gridMSpinner;
     Spinner gridNSpinner;
     Spinner gridMSkipSpinner;
@@ -141,11 +141,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner gridMOffsetSpinner;
     Spinner gridNOffsetSpinner;
     Spinner blastRadiusSpinner;
-    Spinner tunnelWidthSpinner;
-    Spinner tunnelHeightSpinner;
-    Spinner tunnelDepthSpinner;
-    Spinner tunnelOffsetXSpinner;
-    Spinner tunnelOffsetYSpinner;
+    Spinner boxWidthSpinner;
+    Spinner boxHeightSpinner;
+    Spinner boxDepthSpinner;
+    Spinner boxOffsetXSpinner;
+    Spinner boxOffsetYSpinner;
     CycleToggle<Boolean> includeBlockToggle;
     CycleToggle<Boolean> keepStartToggle;
 
@@ -482,8 +482,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         btn = modeTextBtn(WandProps.Mode.FILL, "wands.modes.fill", "tooltip.wands.mode.fill");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.FILL);
 
-        btn = modeTextBtn(WandProps.Mode.TUNNEL, "wands.modes.rectangle", "tooltip.wands.mode.rectangle");
-        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.TUNNEL);
+        btn = modeTextBtn(WandProps.Mode.BOX, "wands.modes.box", "tooltip.wands.mode.box");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BOX);
 
         btn = modeTextBtn(WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.SPHERE);
@@ -696,8 +696,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         circleFillToggle = addFlagToggle(section, WandProps.Flag.CFILLED, layoutColWidth, "filled");
         evenSizeToggle = addFlagToggle(section, WandProps.Flag.EVEN, layoutColWidth, "even_size");
 
-        // Fill mode - use custom labels for rectangle
-        rectangleFillToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.filled"),
+        // Fill mode - use custom labels for box
+        boxFillToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.filled"),
             () -> WandProps.getFlag(getPlayerHeldWand(), WandProps.Flag.RFILLED),
             value -> {
                 ItemStack actualWand = getPlayerHeldWand();
@@ -705,9 +705,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 syncWand(actualWand);
             },
             "Solid", "Hollow");
-        rectangleFillToggle.width = layoutColWidth;
-        rectangleFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
-        section.add(rectangleFillToggle);
+        boxFillToggle.width = layoutColWidth;
+        boxFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
+        section.add(boxFillToggle);
 
         // Grid mode spinners - M is rows/horizontal, N is columns/vertical
         gridMSpinner = new Spinner(WandProps.getVal(wandStack, Value.GRIDM), 1, wandItem.limit, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.grid_m"))
@@ -738,12 +738,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         blastRadiusSpinner.incrementValue = 2;
         blastRadiusSpinner.shiftIncrementValue = 4;
 
-        // Tunnel mode spinners
-        tunnelWidthSpinner = addValSpinner(section, Value.TUNNEL_W, layoutColWidth, spinnerHeight, "tunnel_width");
-        tunnelHeightSpinner = addValSpinner(section, Value.TUNNEL_H, layoutColWidth, spinnerHeight, "tunnel_height");
-        tunnelDepthSpinner = addValSpinner(section, Value.TUNNEL_DEPTH, layoutColWidth, spinnerHeight, "tunnel_depth");
-        tunnelOffsetXSpinner = addValSpinner(section, Value.TUNNEL_OX, layoutColWidth, spinnerHeight, "tunnel_offset_x");
-        tunnelOffsetYSpinner = addValSpinner(section, Value.TUNNEL_OY, layoutColWidth, spinnerHeight, "tunnel_offset_y");
+        // Box mode spinners
+        boxWidthSpinner = addValSpinner(section, Value.BOX_W, layoutColWidth, spinnerHeight, "box_width");
+        boxHeightSpinner = addValSpinner(section, Value.BOX_H, layoutColWidth, spinnerHeight, "box_height");
+        boxDepthSpinner = addValSpinner(section, Value.BOX_DEPTH, layoutColWidth, spinnerHeight, "box_depth");
+        boxOffsetXSpinner = addValSpinner(section, Value.BOX_OX, layoutColWidth, spinnerHeight, "box_offset_x");
+        boxOffsetYSpinner = addValSpinner(section, Value.BOX_OY, layoutColWidth, spinnerHeight, "box_offset_y");
 
         // Include selected block in selection
         includeBlockToggle = addFlagToggle(section, WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
@@ -824,8 +824,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.GRIDM), gridMSpinner);
         registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.GRIDN), gridNSpinner);
 
-        // Rectangle fill toggle (manual, not using addFlagToggle)
-        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.RFILLED), rectangleFillToggle);
+        // Box fill toggle (manual, not using addFlagToggle)
+        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.RFILLED), boxFillToggle);
     }
 
     @Override

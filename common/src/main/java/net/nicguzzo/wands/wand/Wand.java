@@ -73,7 +73,7 @@ import java.util.*;
 //TODO infinite (creative) wand recipe, optional
 //TODO drop items on wand merge craft
 //TODO fix plants place, force samestate, needs air bug
-//TODO fix tunnel mode only on netherite, should be iron+
+//TODO fix box mode only on netherite, should be iron+
 //TODO stone wand no blast
 //TODO support tags in allow/deny list
 //TODO palette pattern mode
@@ -453,7 +453,7 @@ public class Wand {
             // Warn if gradient mode won't have an effect with current wand mode
             if (!level.isClientSide() && PaletteItem.getMode(offhand) == PaletteItem.PaletteMode.GRADIENT) {
                 boolean gradientWorks = mode == Mode.FILL || mode == Mode.SPHERE ||
-                    mode == Mode.TUNNEL || mode == Mode.ROCK || mode == Mode.LINE;
+                    mode == Mode.BOX || mode == Mode.ROCK || mode == Mode.LINE;
                 if (!gradientWorks) {
                     player.displayClientMessage(Compat.translatable("wands.message.gradient_no_effect"), true);
                 }

@@ -160,13 +160,13 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
-        }, TUNNEL {
+        }, BOX {
             public String toString() {
-                return "wands.modes.tunnel";
+                return "wands.modes.box";
             }
 
             public WandMode get_mode() {
-                return new TunnelMode();
+                return new BoxMode();
             }
 
             public boolean can_target_air() {
@@ -455,25 +455,25 @@ public class WandProps {
             public String toString() {
                 return "skip_block";
             }
-        }, TUNNEL_W {
+        }, BOX_W {
             public String toString() {
-                return "tunnel_w";
+                return "box_w";
             }
-        }, TUNNEL_H {
+        }, BOX_H {
             public String toString() {
-                return "tunnel_h";
+                return "box_h";
             }
-        }, TUNNEL_OX {
+        }, BOX_OX {
             public String toString() {
-                return "tunnel_ox";
+                return "box_ox";
             }
-        }, TUNNEL_OY {
+        }, BOX_OY {
             public String toString() {
-                return "tunnel_oy";
+                return "box_oy";
             }
-        }, TUNNEL_DEPTH {
+        }, BOX_DEPTH {
             public String toString() {
-                return "tunnel_d";
+                return "box_d";
             }
         }, ROCK_RADIUS {
             public String toString() {
@@ -509,12 +509,12 @@ public class WandProps {
             MIRRORAXIS.min = 0;
             MIRRORAXIS.max = 2;
             SKIPBLOCK.max = 100;
-            TUNNEL_W.min = 1;
-            TUNNEL_W.def = 3;
-            TUNNEL_H.min = 1;
-            TUNNEL_H.def = 3;
-            TUNNEL_DEPTH.def = 3;
-            TUNNEL_DEPTH.min = 1;
+            BOX_W.min = 1;
+            BOX_W.def = 3;
+            BOX_H.min = 1;
+            BOX_H.def = 3;
+            BOX_DEPTH.def = 3;
+            BOX_DEPTH.min = 1;
             ROCK_RADIUS.min=0;
             ROCK_RADIUS.def=2;
             ROCK_NOISE.min=0;
@@ -619,10 +619,10 @@ public class WandProps {
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),
         Map.entry(Flag.MATCHSTATE, EnumSet.of(Mode.AREA, Mode.VEIN)),
-        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.FILL, Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.SPHERE, Mode.PASTE, Mode.TUNNEL)),  // Two-click modes + paste/tunnel
+        Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.FILL, Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.SPHERE, Mode.PASTE, Mode.BOX)),  // Two-click modes + paste/box
         Map.entry(Flag.STAIRSLAB, EnumSet.allOf(Mode.class)),  // All modes
         Map.entry(Flag.RFILLED, EnumSet.of(Mode.FILL)),
-        Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.TUNNEL, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE)),
+        Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.BOX, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE)),
         Map.entry(Flag.CLEAR_P1, EnumSet.of(Mode.FILL, Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.SPHERE))  // Two-click modes only
     );
 
@@ -640,21 +640,21 @@ public class WandProps {
         Map.entry(Value.GRIDNOFF, EnumSet.of(Mode.GRID)),
         Map.entry(Value.MIRRORAXIS, EnumSet.of(Mode.PASTE)),
         Map.entry(Value.SKIPBLOCK, EnumSet.of(Mode.AREA)),
-        Map.entry(Value.TUNNEL_W, EnumSet.of(Mode.TUNNEL)),
-        Map.entry(Value.TUNNEL_H, EnumSet.of(Mode.TUNNEL)),
-        Map.entry(Value.TUNNEL_OX, EnumSet.of(Mode.TUNNEL)),
-        Map.entry(Value.TUNNEL_OY, EnumSet.of(Mode.TUNNEL)),
-        Map.entry(Value.TUNNEL_DEPTH, EnumSet.of(Mode.TUNNEL)),
+        Map.entry(Value.BOX_W, EnumSet.of(Mode.BOX)),
+        Map.entry(Value.BOX_H, EnumSet.of(Mode.BOX)),
+        Map.entry(Value.BOX_OX, EnumSet.of(Mode.BOX)),
+        Map.entry(Value.BOX_OY, EnumSet.of(Mode.BOX)),
+        Map.entry(Value.BOX_DEPTH, EnumSet.of(Mode.BOX)),
         Map.entry(Value.ROCK_RADIUS, EnumSet.of(Mode.ROCK)),
         Map.entry(Value.ROCK_NOISE, EnumSet.of(Mode.ROCK)),
-        Map.entry(Value.AIR_TARGET_DISTANCE, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.PASTE, Mode.TUNNEL, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE))
+        Map.entry(Value.AIR_TARGET_DISTANCE, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.PASTE, Mode.BOX, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE))
     );
 
     // Modes where state_mode (block state) applies
     // PASTE returns early in state_for_placement(), COPY/BLAST don't place blocks
     public static final EnumSet<Mode> STATE_MODE_MODES = EnumSet.of(
         Mode.DIRECTION, Mode.ROW_COL, Mode.LINE, Mode.CIRCLE, Mode.SPHERE,
-        Mode.FILL, Mode.AREA, Mode.TUNNEL, Mode.GRID, Mode.VEIN
+        Mode.FILL, Mode.AREA, Mode.BOX, Mode.GRID, Mode.VEIN
     );
 
     // Modes where rotation setting is relevant (for HUD display)
@@ -664,13 +664,13 @@ public class WandProps {
     // COPY and BLAST ignore actions entirely, VEIN doesn't support PLACE
     public static final Map<Action, EnumSet<Mode>> ACTION_MODES = Map.of(
         Action.PLACE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.PASTE, Mode.TUNNEL, Mode.SPHERE, Mode.ROCK),
+            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.SPHERE, Mode.ROCK),
         Action.REPLACE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.PASTE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
+            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
         Action.DESTROY, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.PASTE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
+            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
         Action.USE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.TUNNEL, Mode.VEIN, Mode.SPHERE, Mode.ROCK)
+            Mode.CIRCLE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK)
     );
 
     // Helper to check if an action applies to a mode
