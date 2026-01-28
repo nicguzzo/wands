@@ -6,7 +6,7 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
-public class TunnelMode extends WandMode {
+public class BoxMode extends WandMode {
     BlockPos.MutableBlockPos tp1=new BlockPos.MutableBlockPos(0,0,0);
     BlockPos.MutableBlockPos tp2=new BlockPos.MutableBlockPos(0,0,0);
     public void place_in_buffer(Wand wand) {
@@ -14,11 +14,11 @@ public class TunnelMode extends WandMode {
             wand.valid=false;
             return;
         }*/
-        int tw=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_W);
-        int th=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_H);
-        int td=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_DEPTH);
-        int tox=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_OX);
-        int toy=  WandProps.getVal(wand.wand_stack, WandProps.Value.TUNNEL_OY);
+        int tw=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_W);
+        int th=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_H);
+        int td=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_DEPTH);
+        int tox=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OX);
+        int toy=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OY);
 
         Direction pdir=wand.player.getDirection();
 

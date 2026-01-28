@@ -267,7 +267,7 @@ public class ClientRender {
                             if(palette){
                                 block_state=Blocks.STONE.defaultBlockState();
                             }
-                            if(mode==Mode.TUNNEL||mode==Mode.ROW_COL||mode==Mode.ROCK||mode==Mode.GRID||mode==Mode.PASTE){
+                            if(mode==Mode.BOX||mode==Mode.ROW_COL||mode==Mode.ROCK||mode==Mode.GRID||mode==Mode.PASTE){
                                 wand.setP1(pos);
                             }
                             if (wand.getP1() != null) {
@@ -350,7 +350,7 @@ public class ClientRender {
                 case CIRCLE:
                 case SPHERE:
                 case VEIN:
-                case TUNNEL:
+                case BOX:
                 case ROCK:
                 case COPY:
                 case PASTE:
@@ -359,7 +359,7 @@ public class ClientRender {
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
                             (mode == Mode.PASTE && paste_outlines) ||
-                            (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.TUNNEL));
+                            (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.BOX));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
                             if (!block_outlines) {
@@ -1176,7 +1176,7 @@ public class ClientRender {
         }
     }
 
-    /** Renders bounding box outline for COPY, FILL, TUNNEL, PASTE modes */
+    /** Renders bounding box outline for COPY, FILL, BOX, PASTE modes */
     static void preview_bbox(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
         float off2 = 0.05f;
         Matrix4f matrix=matrixStack.last().pose();

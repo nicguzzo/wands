@@ -351,10 +351,10 @@ public class WandsModClient {
                             case PASTE:
                                 line1Text = "Copied Blocks: " + wand.copy_paste_buffer.size();
                                 break;
-                            case TUNNEL:
-                                int tw = WandProps.getVal(stack, WandProps.Value.TUNNEL_W);
-                                int th = WandProps.getVal(stack, WandProps.Value.TUNNEL_H);
-                                int td = WandProps.getVal(stack, WandProps.Value.TUNNEL_DEPTH);
+                            case BOX:
+                                int tw = WandProps.getVal(stack, WandProps.Value.BOX_W);
+                                int th = WandProps.getVal(stack, WandProps.Value.BOX_H);
+                                int td = WandProps.getVal(stack, WandProps.Value.BOX_DEPTH);
                                 line1Text = "Size " + tw + "x" + th + " Depth: " + td;
                                 break;
                             case BLAST:
@@ -487,10 +487,10 @@ public class WandsModClient {
                             case PASTE:
                                 drawHudLabelValue(gui, font, "Copied Blocks: ", String.valueOf(wand.copy_paste_buffer.size()), lineX, currentY);
                                 break;
-                            case TUNNEL:
-                                int tw = WandProps.getVal(stack, WandProps.Value.TUNNEL_W);
-                                int th = WandProps.getVal(stack, WandProps.Value.TUNNEL_H);
-                                int td = WandProps.getVal(stack, WandProps.Value.TUNNEL_DEPTH);
+                            case BOX:
+                                int tw = WandProps.getVal(stack, WandProps.Value.BOX_W);
+                                int th = WandProps.getVal(stack, WandProps.Value.BOX_H);
+                                int td = WandProps.getVal(stack, WandProps.Value.BOX_DEPTH);
                                 lineX += drawHudLabelValue(gui, font, "Size ", tw + "x" + th, lineX, currentY);
                                 drawHudLabelValue(gui, font, " Depth: ", String.valueOf(td), lineX, currentY);
                                 break;
