@@ -1,5 +1,0 @@
-accessWidener   v2  named
-
-accessible   field   net/minecraft/world/item/context/UseOnContext   itemStack    Lnet/minecraft/world/item/ItemStack;
-mutable   field   net/minecraft/world/item/context/UseOnContext   itemStack    Lnet/minecraft/world/item/ItemStack;
-accessible   field   net/minecraft/world/level/block/DropExperienceBlock   xpRange    Lnet/minecraft/util/valueproviders/IntProvider;

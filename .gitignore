@@ -18,3 +18,7 @@ classes/
 .settings
 *.launch
 versions/mc*
+local.properties
+core-link/
+compat-link/
+core-res-link/

@@ -1,0 +1,25 @@
+apply from: "${project.rootDir}/shared-sources.gradle"
+
+architectury {
+    common enabled_platforms.split(',')
+}
+
+//loom {
+//    accessWidenerPath = file("src/main/resources/wands.accesswidener")
+//}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$fabric_loader_version"
+	modApi "dev.architectury:architectury:${architectury_version}"
+    modApi("me.shedaniel.cloth:cloth-config:${cloth_config_version}")
+}
+
+processResources {
+    inputs.property "java_version", java_version
+    filesMatching("wands.mixins.json") {
+        expand "java_version": java_version
+    }
+}

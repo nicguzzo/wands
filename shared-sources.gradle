@@ -1,0 +1,75 @@
+
+def coreSource = file("${project.rootDir}/core/src/main/java")
+def compatSource = file("${project.rootDir}/compat/src/main/java")
+//def coreRes = file("${project.rootDir}/core/src/main/resources")
+
+def linkedCore = file("${project.projectDir}/src/main/core-link")
+def linkedCompat = file("${project.projectDir}/src/main/compat-link")
+//def linkedRes = file("${project.projectDir}/src/main/core-res-link")
+
+task createSharedLinks {
+    doLast {
+        linkedCore.getParentFile().mkdirs()
+
+        def createLink = { File target, File source ->
+            if (target.exists()) return // Don't recreate if exists
+            
+            println "Creating link: $target -> $source"
+            
+            if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+                // Windows Junction (/J is safer than symbolic links for Java)
+                exec { commandLine "cmd", "/c", "mklink", "/J", target.absolutePath, source.absolutePath }
+            } else {
+                // Linux/Mac Symlink
+                exec { commandLine "ln", "-sfn", source.absolutePath, target.absolutePath }
+            }
+        }
+
+        createLink(linkedCore, coreSource)
+        createLink(linkedCompat, compatSource)
+        //createLink(linkedRes, coreRes)
+    }
+}
+
+tasks.named('compileJava').configure {
+    dependsOn createSharedLinks
+}
+tasks.named('processResources').configure {
+    dependsOn createSharedLinks
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir linkedCore
+            srcDir linkedCompat
+        }
+        //resources {
+        //    srcDir linkedRes
+        //}
+    }
+}
+//sourceSets {
+//    main {
+//        java {
+//            srcDir "${project.rootDir}/core/src/main/java"
+//            srcDir "${project.rootDir}/compat/src/main/java"
+//        }
+//        resources {
+//            srcDir "${project.rootDir}/core/src/main/resources"
+//        }
+//    }
+//}
+
+//subprojects {
+//    tasks.withType(JavaCompile).configureEach {
+//        it.options.compilerArgs += ['-Xplugin:Manifold']
+//    }
+//}
+
+//idea {
+//    module {
+//        sourceDirs += file("${project.rootDir}/core/src/main/java")
+//        sourceDirs += file("${project.rootDir}/compat/src/main/java")
+//    }
+//}

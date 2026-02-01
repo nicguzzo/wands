@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.minecraftforge.net/" }
+        maven { url "https://maven.shedaniel.me/" }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+        maven { url "https://cursemaven.com" }
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "wands"
+
+//include 'core'
+//include 'compat'
+
+include 'mc1.20.1:common', 'mc1.20.1:fabric', 'mc1.20.1:forge'
+include 'mc1.21.1:common', 'mc1.21.1:fabric', 'mc1.21.1:neoforge'
+include 'mc1.21.11:common', 'mc1.21.11:fabric', 'mc1.21.11:neoforge'
