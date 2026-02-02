@@ -189,7 +189,7 @@ public class WandItem extends Item {
             }
         }
         //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
-        Networking.sendPosPacket(side,has_p1_p2,p1,p2,hit,seed);
+        Networking.sendPosPacket(side,has_p1_p2,_p1,_p2,hit,seed);
         //NetworkManager.sendToServer(new Networking.PosPacket(side.ordinal(), has_p1_p2, _p1, _p2, new Networking.Vec3d(hit.x, hit.y, hit.z), seed));
     }
 

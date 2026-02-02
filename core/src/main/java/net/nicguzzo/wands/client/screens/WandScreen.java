@@ -53,7 +53,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     int[] empty_tools= new int[0];
     GpuTextureView wandInventoryTexture;
     #endif
-    private static final MyIdExt INV_TEX = new MyIdExt("textures/gui/inventory.png");
+    private static final MyIdExt INV_TEX = new MyIdExt(WandsMod.MOD_ID,"textures/gui/inventory.png");
     static final int IMG_WIDTH = 256;
     static final int IMG_HEIGHT = 256;
 

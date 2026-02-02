@@ -39,7 +39,6 @@ import net.nicguzzo.compat.MyIdExt;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.utils.Colorf;
-import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.wand.WandMode;
@@ -1112,10 +1111,10 @@ public class ClientRender {
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
 
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,1,0,light,overlay);
                                     break;
                                 case DOWN:
                                     x1 = pos_x + (float)aabb.minX;
@@ -1123,10 +1122,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     x2 = pos_x + (float)aabb.maxX;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,-1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,-1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,-1,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,-1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,-1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,-1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,-1,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,-1,0,light,overlay);
                                     break;
                                 case SOUTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -1134,10 +1133,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.maxZ + 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,0,1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,0,1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2,y2,z1,1.0f, 1.0f,color,0,0,1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1,y2,z1,0.0f, 1.0f,color,0,0,1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,0,1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,0,1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2,y2,z1,1.0f, 1.0f,color,0,0,1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1,y2,z1,0.0f, 1.0f,color,0,0,1,light,overlay);
                                     break;
                                 case NORTH:
                                     x1 = pos_x + (float)aabb.minX;
@@ -1145,10 +1144,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ - 0.02f;
                                     x2 = pos_x + (float)aabb.maxX;
                                     y2 = pos_y + (float)aabb.maxY;
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,0,0,-1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y2, z1,0.0f, 1.0f,color,0,0,-1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2, y2, z1,1.0f, 1.0f,color,0,0,-1,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x2, y1, z1,1.0f, 0.0f,color,0,0,-1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,0,0,-1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y2, z1,0.0f, 1.0f,color,0,0,-1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2, y2, z1,1.0f, 1.0f,color,0,0,-1,light,overlay);
+                                    consumerDirMode(consumer,matrix,x2, y1, z1,1.0f, 0.0f,color,0,0,-1,light,overlay);
                                     break;
                                 case EAST:
                                     x1 = pos_x + (float)aabb.maxX + 0.02f;
@@ -1156,10 +1155,10 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,1,0,0,light,overlay);
                                     break;
                                 case WEST:
                                     x1 = pos_x + (float)aabb.minX - 0.02f;
@@ -1167,16 +1166,21 @@ public class ClientRender {
                                     z1 = pos_z + (float)aabb.minZ;
                                     y2 = pos_y + (float)aabb.maxY;
                                     z2 = pos_z + (float)aabb.maxZ;
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,-1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,-1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,-1,0,0,light,overlay);
-                                    Compat.consumerAddVertexUvColorNormalLightOverlay(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,-1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,-1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,-1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,-1,0,0,light,overlay);
+                                    consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,-1,0,0,light,overlay);
                                     break;
                             }
                         }
                         vi++;
                     }
+                    #if MC_VERSION<=12001
+                    Tesselator tesselator = Tesselator.getInstance();
+                    tesselator.end();
+                    #else
                     bufferSource.endLastBatch();
+                    #endif
                 }
                 if (!fancy || !fat_lines) {
                     // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
@@ -1556,7 +1560,27 @@ public class ClientRender {
         #if MC_VERSION>=12111
             return bufferSource.getBuffer(RenderTypes.entityTranslucent(GRID_TEXTURE.res));
         #else
-            return bufferSource.getBuffer(RenderType.entityTranslucent(GRID_TEXTURE.res));
+            #if MC_VERSION>=12100
+                return bufferSource.getBuffer(RenderType.entityTranslucent(GRID_TEXTURE.res));
+            #else
+                Tesselator tesselator = Tesselator.getInstance();
+                BufferBuilder bufferBuilder = tesselator.getBuilder();
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+                RenderSystem.setShaderTexture(0, GRID_TEXTURE.res);
+                return  bufferBuilder;
+            #endif
+        #endif
+    }
+    static public void consumerDirMode(VertexConsumer consumer, Matrix4f matrix, float x, float y, float z, float u, float v, int color, float nx, float ny, float nz, int light, int overlay) {
+        #if MC_VERSION >=12100
+        consumer.addVertex(matrix,x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light).setOverlay(overlay);
+        #else
+            #if MC_VERSION>=12100
+            consumer.vertex(matrix,x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light).overlayCoords(overlay).endVertex();
+            #else
+            consumer.vertex(matrix,x, y, z).uv(u,v).endVertex();
+            #endif
         #endif
     }
 

@@ -1,17 +1,20 @@
 {
     "type": "minecraft:crafting_shaped",
-    "category": "misc",
     "pattern": [
         "  #",
         " / ",
         "/  "
     ],
     "key": {
-        "#":"minecraft:copper_ingot",
-        "/":"minecraft:stick"
+        "#": {
+            "item": "minecraft:copper_ingot"
+        },
+        "/": {
+            "item": "minecraft:stick"
+        }
     },
     "result": {
-        "id": "wands:copper_wand",
+        "item": "wands:copper_wand",
         "count": 1
     }
 }

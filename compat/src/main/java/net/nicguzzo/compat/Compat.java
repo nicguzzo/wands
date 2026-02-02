@@ -43,6 +43,9 @@ import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import com.mojang.blaze3d.textures.GpuTexture;
 #endif
+import net.nicguzzo.wands.menues.MagicBagMenu;
+import net.nicguzzo.wands.menues.PaletteMenu;
+import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.utils.Colorf;
 import org.jetbrains.annotations.NotNull;
 #if MC_VERSION >= 12111
@@ -155,18 +158,18 @@ public class Compat {
 			@Override
 			public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
                 AbstractContainerMenu menu=null;
-                //switch(m){
-                //    case 0: {
-                //        menu = new WandMenu(syncId, inv, item);
-                //    }
-                //    break;
-                //    case 1:
-                //        menu=new PaletteMenu(syncId, inv, item);
-                //    break;
-                //    case 2:
-                //        menu=new MagicBagMenu(syncId, inv, item);
-                //    break;
-                //}
+                switch(m){
+                    case 0: {
+                        menu = new WandMenu(syncId, inv, item);
+                    }
+                    break;
+                    case 1:
+                        menu=new PaletteMenu(syncId, inv, item);
+                    break;
+                    case 2:
+                        menu=new MagicBagMenu(syncId, inv, item);
+                    break;
+                }
                 return menu;
 			}
 		}
@@ -378,14 +381,14 @@ public class Compat {
         #if MC_VERSION >=12100
         consumer.addVertex(matrix, x, y, z).setColor(c.r, c.g, c.b, c.a);
         #else
-        consumer.vertex(matrix, x, y, z).color(c.r, c.g, c.b, c.a);
+        consumer.vertex(matrix, x, y, z).color(c.r, c.g, c.b, c.a).endVertex();
         #endif
     }
     static public void consumerAddVertexColor(VertexConsumer consumer, float x,float y,float z,Colorf c) {
         #if MC_VERSION >=12100
         consumer.addVertex(x, y, z).setColor(c.r, c.g, c.b, c.a);
         #else
-        consumer.vertex(x, y, z).color(c.r, c.g, c.b, c.a);
+        consumer.vertex(x, y, z).color(c.r, c.g, c.b, c.a).endVertex();
         #endif
     }
 
@@ -394,16 +397,10 @@ public class Compat {
         #if MC_VERSION >=12100
         consumer.addVertex(x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light);
         #else
-        consumer.vertex(x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light);
+        consumer.vertex(x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light).endVertex();
         #endif
     }
-    static public void consumerAddVertexUvColorNormalLightOverlay(VertexConsumer consumer,Matrix4f matrix, float x,float y,float z,float u,float v,int color,float nx,float ny, float nz,int light,int overlay) {
-        #if MC_VERSION >=12100
-        consumer.addVertex(matrix,x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light).setOverlay(overlay);
-        #else
-        consumer.vertex(matrix,x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light).overlayCoords(overlay);
-        #endif
-    }
+
     public final class NbtType {
         public static final int END = 0;
         public static final int BYTE = 1;

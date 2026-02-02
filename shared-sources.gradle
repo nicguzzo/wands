@@ -1,11 +1,13 @@
 
 def coreSource = file("${project.rootDir}/core/src/main/java")
 def compatSource = file("${project.rootDir}/compat/src/main/java")
-//def coreRes = file("${project.rootDir}/core/src/main/resources")
+def coreTextures = file("${project.rootDir}/core/textures")
+def coreLang = file("${project.rootDir}/core/lang")
 
 def linkedCore = file("${project.projectDir}/src/main/core-link")
 def linkedCompat = file("${project.projectDir}/src/main/compat-link")
-//def linkedRes = file("${project.projectDir}/src/main/core-res-link")
+def linkedTextures = file("${project.projectDir}/src/main/resources/assets/wands/textures")
+def linkedLang = file("${project.projectDir}/src/main/resources/assets/wands/lang")
 
 task createSharedLinks {
     doLast {
@@ -27,7 +29,8 @@ task createSharedLinks {
 
         createLink(linkedCore, coreSource)
         createLink(linkedCompat, compatSource)
-        //createLink(linkedRes, coreRes)
+        createLink(linkedTextures, coreTextures)
+        createLink(linkedLang, coreLang)
     }
 }
 

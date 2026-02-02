@@ -545,6 +545,16 @@ public class Networking {
                 //WandsMod.LOGGER.info("needs at least 1 position");
                 return;
             }
+            #if MC_VERSION >= 12005
+                Vec3 hit = new Vec3(data.hit().x, data.hit().y, data.hit().z);
+                long seed = data.seed();
+            #else
+                double hit_x = packet.readDouble();
+                double hit_y = packet.readDouble();
+                double hit_z = packet.readDouble();
+                Vec3 hit = new Vec3(hit_x, hit_y, hit_z);
+                long seed = packet.readLong();
+            #endif
             BlockPos finalP1 = p1;
             BlockPos finalP2 = p2;
             #if MC_VERSION < 12005
@@ -576,16 +586,7 @@ public class Networking {
                 }
                 wand.setP1(finalP1);
                 wand.setP2(finalP2);
-                #if MC_VERSION >= 12005
-                Vec3 hit = new Vec3(data.hit().x, data.hit().y, data.hit().z);
-                long seed = data.seed();
-                #else
-                double hit_x = packet.readDouble();
-                double hit_y = packet.readDouble();
-                double hit_z = packet.readDouble();
-                Vec3 hit = new Vec3(hit_x, hit_y, hit_z);
-                long seed = packet.readLong();
-                #endif
+
                 //WandsMod.log(" received_placement palette seed: " + seed,true);
                 wand.palette.seed = seed;
                 // Sync prevMode before do_or_preview to prevent false mode-change detection
@@ -827,10 +828,14 @@ public class Networking {
         FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(side.ordinal());
         packet.writeInt(has_p1_p2);
-        if(p1!=null){
+        if(has_p1_p2==1){
             packet.writeBlockPos(p1);
         }
-        if(p2!=null){
+        if(has_p1_p2==2){
+            packet.writeBlockPos(p2);
+        }
+        if(has_p1_p2==3){
+            packet.writeBlockPos(p1);
             packet.writeBlockPos(p2);
         }
         packet.writeDouble(hit.x);
