@@ -2,7 +2,6 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.wand.CopyBuffer;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
@@ -58,7 +57,7 @@ public class PasteMode extends WandMode {
                     wand.block_buffer.add(px, py, pz, st, st.getBlock().asItem());
                 }
             }
-            WandsMod.log("paste: "+wand.block_buffer.get_length(),true);
+            //WandsMod.log("paste: "+wand.block_buffer.get_length(),true);
             if(wand.block_buffer.get_length()>0) {
                 wand.valid = true;
                 wand.limit_reached=false;

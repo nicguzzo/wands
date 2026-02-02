@@ -1,12 +1,12 @@
 package net.nicguzzo.wands.wand;
 
-import java.util.*;
-import java.util.function.Consumer;
+import dev.architectury.networking.NetworkManager;
 import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.core.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -17,12 +17,13 @@ import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
@@ -30,6 +31,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
@@ -47,17 +49,24 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.WandsExpectPlatform;
-import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.items.*;
+import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.items.MagicBagItem;
+import net.nicguzzo.wands.items.PaletteItem;
+import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.mixin.DropExperienceBlockAccessor;
 import net.nicguzzo.wands.networking.Networking;
-import net.nicguzzo.wands.utils.*;
+import net.nicguzzo.wands.utils.BlockBuffer;
+import net.nicguzzo.wands.utils.CircularBuffer;
+import net.nicguzzo.wands.utils.Compat;
+import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.WandProps.Mode;
-import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.level.block.DropExperienceBlock;
-import dev.architectury.networking.NetworkManager;
-import net.minecraft.util.RandomSource;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Vector;
+import java.util.function.Consumer;
 
 
 //TODO implement https://github.com/Patbox/common-protection-api for claimed chunks
@@ -90,19 +99,19 @@ public class Wand {
     public int x2 = 0;
     public int y2 = 0;
     public int z2 = 0;
-    public int bb1_x=0;
-    public int bb1_y=0;
-    public int bb1_z=0;
-    public int bb2_x=0;
-    public int bb2_y=0;
-    public int bb2_z=0;
+    public int bb1_x = 0;
+    public int bb1_y = 0;
+    public int bb1_z = 0;
+    public int bb2_x = 0;
+    public int bb2_y = 0;
+    public int bb2_z = 0;
     public int fill_nx = 0;
     public int fill_ny = 0;
     public int fill_nz = 0;
     private BlockPos p1 = null;
     private BlockPos p2 = null;
-    public boolean clear_p1=true;
-    public boolean clear_p2=true;
+    public boolean clear_p1 = true;
+    public boolean clear_p2 = true;
     //public boolean p2 = false;
     public BlockState p1_state = null;
     public HitResult lastHitResult = null;
@@ -120,18 +129,20 @@ public class Wand {
     public Vec3 hit;
     public ItemStack wand_stack;
 
-    enum ToolType{
+    enum ToolType {
         PICKAXE,
         AXE,
         SHOVEL,
         HOE,
         SHEAR
     }
-    static class WandTool{
-        boolean empty=true;
-        ItemStack tool=null;
-        ToolType tooltype=null;
+
+    static class WandTool {
+        boolean empty = true;
+        ItemStack tool = null;
+        ToolType tooltype = null;
     }
+
     //ItemStack[] tools = new ItemStack[9 + 27];
     WandTool[] tools = new WandTool[9 + 27];
     int n_tools = 0;
@@ -158,7 +169,7 @@ public class Wand {
 
     boolean has_bucket = false;
     public boolean has_water_bucket = false;
-    public boolean has_lava_bucket  = false;
+    public boolean has_lava_bucket = false;
     public boolean has_empty_bucket = false;
     boolean has_water_potion = false;
     int send_sound = -1;
@@ -206,16 +217,19 @@ public class Wand {
         //WandsMod.LOGGER.info("set p2 "+p2);
     }
 
-    public enum Sounds{
-            SPLASH {
-                @Override
-                public SoundEvent get_sound(){return SoundEvents.GENERIC_SPLASH;}
-            };
+    public enum Sounds {
+        SPLASH {
+            @Override
+            public SoundEvent get_sound() {
+                return SoundEvents.GENERIC_SPLASH;
+            }
+        };
+
         public abstract SoundEvent get_sound();
     }
 
     public RandomSource random = RandomSource.create();
-    public Palette palette=new Palette();
+    public Palette palette = new Palette();
     public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
     public BlockBuffer block_buffer = new BlockBuffer(WandsConfig.max_limit);
     public CircularBuffer undo_buffer = new CircularBuffer(WandsConfig.max_limit);
@@ -235,38 +249,39 @@ public class Wand {
     public boolean slab_stair_bottom = true;
     static boolean once = true;
 
-    WandMode[] modes=null;
+    WandMode[] modes = null;
 
-    int[] inv_aux=new int[36];
-    int inv_aux_last=0;
-    public boolean drop_on_player=true;
+    int[] inv_aux = new int[36];
+    int inv_aux_last = 0;
+    public boolean drop_on_player = true;
 
     public CompoundTag player_data;
 
-    public Wand(){
-        modes=new WandMode[WandProps.modes.length];
-        for(int i=0;i<modes.length;i++){
-            modes[i]=WandProps.modes[i].get_mode();
+    public Wand() {
+        modes = new WandMode[WandProps.modes.length];
+        for (int i = 0; i < modes.length; i++) {
+            modes[i] = WandProps.modes[i].get_mode();
         }
         for (int i = 0; i < tools.length; i++) {
-            tools[i]= new WandTool();
+            tools[i] = new WandTool();
         }
         this.block_buffer.reset();
         this.clear(true);
     }
-    public WandMode get_mode(){
-        if(modes!=null && mode!=null)
+
+    public WandMode get_mode() {
+        if (modes != null && mode != null)
             return modes[mode.ordinal()];
-        else{
+        else {
             return null;
         }
     }
 
     public void clear(boolean force_clear_p1) {
-        this.clear_p1=WandProps.getFlag(wand_stack,WandProps.Flag.CLEAR_P1);
-        if(force_clear_p1 || clear_p1)
+        this.clear_p1 = WandProps.getFlag(wand_stack, WandProps.Flag.CLEAR_P1);
+        if (force_clear_p1 || clear_p1)
             setP1(null);
-        if(clear_p2)
+        if (clear_p2)
             setP2(null);
         p1_state = null;
         valid = false;
@@ -280,27 +295,27 @@ public class Wand {
         /*if(player!=null)
             player.displayClientMessage(Compat.literal("wand cleared"),false);*/
     }
-    public void do_or_preview(Player player,Level level,BlockState block_state,BlockPos pos,Direction side,
-            Vec3 hit,ItemStack wand_stack,WandItem wand_item,
-            boolean prnt)
-    {
-        if(wand_stack==null || wand_item==null)
+
+    public void do_or_preview(Player player, Level level, BlockState block_state, BlockPos pos, Direction side,
+                              Vec3 hit, ItemStack wand_stack, WandItem wand_item,
+                              boolean prnt) {
+        if (wand_stack == null || wand_item == null)
             return;
         this.limit = wand_item.limit;
-        if(limit>WandsConfig.max_limit){
-            this.limit=WandsConfig.max_limit;
+        if (limit > WandsConfig.max_limit) {
+            this.limit = WandsConfig.max_limit;
         }
-        this.unbreakable=wand_item.unbreakable;
-        this.removes_water=wand_item.removes_water;
-        this.removes_lava=wand_item.removes_lava;
-        this.can_blast=wand_item.can_blast;
-        this.replace=WandProps.getAction(wand_stack)== WandProps.Action.REPLACE;
-        this.destroy=WandProps.getAction(wand_stack)== WandProps.Action.DESTROY;
-        this.use=WandProps.getAction(wand_stack)== WandProps.Action.USE;
-        this.target_air=WandProps.getFlag(wand_stack,WandProps.Flag.TARGET_AIR);
-        if((destroy||replace) && WandsMod.config.disable_destroy_replace){
-            destroy=false;
-            replace=false;
+        this.unbreakable = wand_item.unbreakable;
+        this.removes_water = wand_item.removes_water;
+        this.removes_lava = wand_item.removes_lava;
+        this.can_blast = wand_item.can_blast;
+        this.replace = WandProps.getAction(wand_stack) == WandProps.Action.REPLACE;
+        this.destroy = WandProps.getAction(wand_stack) == WandProps.Action.DESTROY;
+        this.use = WandProps.getAction(wand_stack) == WandProps.Action.USE;
+        this.target_air = WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR);
+        if ((destroy || replace) && WandsMod.config.disable_destroy_replace) {
+            destroy = false;
+            replace = false;
             WandProps.setAction(wand_stack, WandProps.Action.PLACE);
 
         }
@@ -312,19 +327,19 @@ public class Wand {
         this.hit = hit;
         this.wand_stack = wand_stack;
         this.prnt = prnt;
-        if(this.player == null || this.level == null || this.pos == null || this.side == null || this.hit == null){
+        if (this.player == null || this.level == null || this.pos == null || this.side == null || this.hit == null) {
             return;
         }
         creative = Compat.is_creative(player);
         check_advancements();
         mode = WandProps.getMode(wand_stack);
-        axis= WandProps.getAxis(wand_stack);
-        plane= WandProps.getPlane(wand_stack);
-        rotation= WandProps.getRotation(wand_stack);
-        state_mode= WandProps.getStateMode(wand_stack);
-        slab_stair_bottom=WandProps.getFlag(wand_stack, WandProps.Flag.STAIRSLAB);
-        match_state=WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE);
-        player_inv= Compat.get_inventory(player);
+        axis = WandProps.getAxis(wand_stack);
+        plane = WandProps.getPlane(wand_stack);
+        rotation = WandProps.getRotation(wand_stack);
+        state_mode = WandProps.getStateMode(wand_stack);
+        slab_stair_bottom = WandProps.getFlag(wand_stack, WandProps.Flag.STAIRSLAB);
+        match_state = WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE);
+        player_inv = Compat.get_inventory(player);
         y0 = 0.0f;
         block_height = 1.0f;
         is_slab_top = false;
@@ -334,24 +349,24 @@ public class Wand {
         preview = level.isClientSide();
         offhand_state = null;
         stop = false;
-        radius=0;
-        limit_reached=false;
-        send_sound=-1;
+        radius = 0;
+        limit_reached = false;
+        send_sound = -1;
         random.setSeed(palette.seed);
         palette.random.setSeed(palette.seed);
+        target_air_distance = WandProps.getVal(wand_stack, WandProps.Value.AIR_TARGET_DISTANCE);
 
         if (block_state == null) {
             return;
         }
 
-        if(once){
-            once=false;
+        if (once) {
+            once = false;
             WandsMod.config.generate_lists();
         }
         boolean is_copy_paste = mode == Mode.COPY || mode == Mode.PASTE;
 
         valid = false;
-
 
         offhand = player.getOffhandItem();
         has_offhand = false;
@@ -360,7 +375,6 @@ public class Wand {
         has_shovel = false;
         has_axe = false;
         update_tools();
-        
         if (offhand != null && WandUtils.is_shulker(offhand)) {
             offhand = null;
         }
@@ -389,15 +403,16 @@ public class Wand {
                         has_lava_bucket = bucket.getItem().equals(Fluids.LAVA.getBucket());
                     }
                 }
-                this.replace=false;
-                this.destroy=false;
-                this.use=false;
+                this.replace = false;
+                this.destroy = false;
+                this.use = false;
             }
         }
+        this.has_water_potion = false;
         if (offhand != null && offhand.getItem() instanceof PotionItem) {
-            this.has_water_potion= PotionUtils.getPotion(offhand)== Potions.WATER;
-            if(!creative && has_water_potion) {
-                int nbuckets=0;
+            this.has_water_potion = PotionUtils.getPotion(offhand) == Potions.WATER;
+            if (!creative && has_water_potion) {
+                int nbuckets = 0;
                 for (int i = 0; i < 36; ++i) {
                     ItemStack stack = player_inv.getItem(i);
                     boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
@@ -405,8 +420,8 @@ public class Wand {
                         nbuckets++;
                     }
                 }
-                if (nbuckets<2) {
-                    has_water_potion=false;
+                if (nbuckets < 2) {
+                    has_water_potion = false;
                     if (!preview) {
                         player.displayClientMessage(Compat.literal("You need 2 water buckets in the inventory."), false);
                     }
@@ -414,36 +429,39 @@ public class Wand {
                 }
             }
         }
-
+        boolean has_torch = false;
         if (offhand != null) {
             offhand_block = Block.byItem(offhand.getItem());
             if (offhand_block != Blocks.AIR) {
                 has_offhand = true;
             }
+            has_torch = offhand_block instanceof TorchBlock;
         }
-        if (offhand!=null &&  !offhand.isEmpty() && !palette.has_palette && !has_bucket && !destroy) {
+        if (offhand != null && !offhand.isEmpty() && !palette.has_palette && !has_bucket && !destroy) {
             if (offhand.getTag() != null) {
                 offhand = null;
-                has_offhand =false;
-                offhand_block=null;
+                has_offhand = false;
+                offhand_block = null;
                 //return;
             }
             if (offhand != null && !offhand.isStackable() && !has_water_potion) {
-                if (!preview) {
-                    player.displayClientMessage(Compat.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
-                }
+                //if (!preview) {
+                //    player.displayClientMessage(Compat.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
+                //}
                 offhand = null;
-                has_offhand =false;
-                offhand_block=null;
-                return;
+                has_offhand = false;
+                offhand_block = null;
+                //return;
+            }
+            if (destroy && has_torch) {
+                offhand = null;
+                has_offhand = false;
+                offhand_block = null;
             }
         }
         block_accounting.clear();
         if (palette.has_palette /*&& !destroy && !is_copy_paste*/) {
-            //if(!preview){
-                //WandsMod.log("update_palette bp",true);
-            //}
-            palette.update_palette(block_accounting,level);
+            palette.update_palette(block_accounting, level);
         }
 
         if (!palette.has_palette && !has_bucket) {
@@ -451,8 +469,8 @@ public class Wand {
                 offhand_state = offhand_block.defaultBlockState();
             }
         }
-        if(replace && (mode != Mode.PASTE) && !palette.has_palette && (Blocks.AIR == offhand_block || offhand_block==null )){
-            valid=false;
+        if (replace && (mode != Mode.PASTE) && !palette.has_palette && (Blocks.AIR == offhand_block || offhand_block == null)) {
+            valid = false;
             if (!preview) {
                 player.displayClientMessage(Compat.literal("you need a block or palette in the left hand"), false);
             }
@@ -467,10 +485,10 @@ public class Wand {
         }*/
 
         update_inv_aux();
-        blocks_sent_to_inv=0;
+        blocks_sent_to_inv = 0;
         //process the current mode
-        int m=mode.ordinal();
-        if(m<modes.length && modes[m]!=null){
+        int m = mode.ordinal();
+        if (m < modes.length && modes[m] != null) {
             modes[m].place_in_buffer(this);
         }
 
@@ -478,13 +496,13 @@ public class Wand {
         //WandsMod.log(" using palette seed: " + palette.seed,prnt);
         if (!preview) {
             //log(" using palette seed: " + palette_seed);
-            if(limit_reached && (mode!=Mode.VEIN)){
-                player.displayClientMessage(Compat.literal("wand limit reached"),false);
+            if (limit_reached && (mode != Mode.VEIN)) {
+                player.displayClientMessage(Compat.literal("wand limit reached"), false);
             }
-            if(mode!=Mode.BLAST) {
+            if (mode != Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
                     for (int a = 0; a < block_buffer.get_length() && a < limit && a < WandsConfig.max_limit; a++) {
-                        if (!replace && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                        if (!replace && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
                             continue;
@@ -566,7 +584,7 @@ public class Wand {
                                     pa.needed++;
                                 }
                             } else {
-                                if (!replace && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a))) {
+                                if (!replace && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
                                     block_buffer.item[a] = null;
                                 } else {
@@ -580,12 +598,12 @@ public class Wand {
                     } else {
                         //copy paste
                         for (int a = 0; a < block_buffer.get_length() && a < WandsConfig.max_limit; a++) {
-                            boolean can_be_placed = can_place(level.getBlockState(block_buffer.get(a)),block_buffer.get(a));
+                            boolean can_be_placed = can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a));
                             if (!replace && !destroy && !can_be_placed) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                             } else {
-                                if(can_be_placed && !creative) {
+                                if (can_be_placed && !creative) {
                                     BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
                                     if (pa == null) {
                                         pa = new BlockAccounting();
@@ -608,7 +626,7 @@ public class Wand {
             // DO ACTIONS
             {
                 AABB bb = player.getBoundingBox();
-                if(mode!=Mode.COPY) {
+                if (mode != Mode.COPY) {
                     for (int a = 0; a < block_buffer.get_length() && a < WandsConfig.max_limit; a++) {
                         tmp_pos.set(block_buffer.buffer_x[a], block_buffer.buffer_y[a], block_buffer.buffer_z[a]);
                         if (!destroy && !has_bucket && !use) {
@@ -638,7 +656,7 @@ public class Wand {
                                 if (pa != null)
                                     pa.placed++;
                                 placed++;
-                                if(placed>limit) {
+                                if (placed > limit) {
                                     break;
                                 }
                             }
@@ -652,19 +670,21 @@ public class Wand {
 
                 remove_from_inventory(placed);
             }
-            System.out.println("placed "+placed);
-            if ((placed > 0 )||(no_tool||damaged_tool)) {
+            //System.out.println("placed " + placed);
+            if ((placed > 0) || (no_tool || damaged_tool)) {
 
                 if (blocks_sent_to_inv > 0) {
-                    MutableComponent mc = Compat.literal(blocks_sent_to_inv+" blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
+                    MutableComponent mc = Compat.literal(blocks_sent_to_inv + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
                     player.displayClientMessage(mc, false);
                 }
-                ItemStack is=ItemStack.EMPTY;
-                if(!no_tool && !damaged_tool) {
+                ItemStack is = ItemStack.EMPTY;
+                if (!no_tool && !damaged_tool) {
                     if (p1_state != null) {
-                        is=p1_state.getBlock().asItem().getDefaultInstance();
+                        is = p1_state.getBlock().asItem().getDefaultInstance();
                     } else {
-                        is = block_state.getBlock().asItem().getDefaultInstance();
+                        if (block_state != null) {
+                            is = block_state.getBlock().asItem().getDefaultInstance();
+                        }
                     }
                 }
                 FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
@@ -675,32 +695,33 @@ public class Wand {
                 packet.writeBoolean(damaged_tool);
                 //packet.writeBoolean(slab_stair_bottom);
                 packet.writeInt(send_sound);
-                NetworkManager.sendToPlayer((ServerPlayer)player, Networking.SND_PACKET, packet);
+                NetworkManager.sendToPlayer((ServerPlayer) player, Networking.SND_PACKET, packet);
 
                 //Compat.send_to_player((ServerPlayer) player, WandsMod.SND_PACKET, packet);
                 no_tool = false;
                 damaged_tool = false;
             }
         }
-        if (getP2() !=null) {
+        if (getP2() != null) {
             setP1(null);
             setP2(null);
             valid = false;
         }
     }
-    ItemStack consume_item(BlockAccounting pa,ItemStack stack_item){
+
+    ItemStack consume_item(BlockAccounting pa, ItemStack stack_item) {
         if (pa != null && pa.placed > 0) {
-            if(WandUtils.is_magicbag(stack_item)){
-                int total=MagicBagItem.getTotal(stack_item);
+            if (WandUtils.is_magicbag(stack_item)) {
+                int total = MagicBagItem.getTotal(stack_item);
                 //ItemStack item_in_bag=MagicBagItem.getItem(stack_item);
-                if(pa.placed<=total){
-                    MagicBagItem.dec(stack_item,pa.placed);
+                if (pa.placed <= total) {
+                    MagicBagItem.dec(stack_item, pa.placed);
                     pa.placed = 0;
-                }else{
-                    MagicBagItem.dec(stack_item,total);
-                    pa.placed-=total;
+                } else {
+                    MagicBagItem.dec(stack_item, total);
+                    pa.placed -= total;
                 }
-            }else {
+            } else {
                 if (stack_item.getItem().equals(Fluids.LAVA.getBucket())) {
                     pa.placed--;
                     //pa.consumed++;
@@ -721,19 +742,21 @@ public class Wand {
         }
         return null;
     }
-    public void skip(){
-        int skip_probability=WandProps.getVal(wand_stack, WandProps.Value.SKIPBLOCK);
-        if(skip_probability>0) {
+
+    public void skip() {
+        int skip_probability = WandProps.getVal(wand_stack, WandProps.Value.SKIPBLOCK);
+        if (skip_probability > 0) {
             for (int a = 0; a < block_buffer.get_length(); a++) {
                 int r = random.nextInt(100);
                 boolean skip = (r >= skip_probability);
                 if (!skip) {
-                    block_buffer.state[a]=null;
+                    block_buffer.state[a] = null;
                 }
             }
         }
     }
-    public void calc_pv_bbox(BlockPos bp1,BlockPos bp2){
+
+    public void calc_pv_bbox(BlockPos bp1, BlockPos bp2) {
         x1 = bp1.getX();
         y1 = bp1.getY();
         z1 = bp1.getZ();
@@ -743,57 +766,58 @@ public class Wand {
         if (!bp1.equals(bp2)) {
             if (x1 >= x2) {
                 x1 += 1;
-                bb1_x=x2;
-                bb2_x=x1;
+                bb1_x = x2;
+                bb2_x = x1;
             } else {
                 x2 += 1;
-                bb1_x=x1;
-                bb2_x=x2;
+                bb1_x = x1;
+                bb2_x = x2;
             }
             if (y1 >= y2) {
                 y1 += 1;
-                bb1_y=y2;
-                bb2_y=y1;
+                bb1_y = y2;
+                bb2_y = y1;
             } else {
                 y2 += 1;
-                bb1_y=y1;
-                bb2_y=y2;
+                bb1_y = y1;
+                bb2_y = y2;
             }
             if (z1 >= z2) {
                 z1 += 1;
-                bb1_z=z2;
-                bb2_z=z1;
+                bb1_z = z2;
+                bb2_z = z1;
             } else {
                 z2 += 1;
-                bb1_z=z1;
-                bb2_z=z2;
+                bb1_z = z1;
+                bb2_z = z2;
             }
         } else {
             x2 = x1 + 1;
             y2 = y1 + 1;
             z2 = z1 + 1;
-            bb1_x=x1;
-            bb1_y=y1;
-            bb1_z=z1;
-            bb2_x=x2;
-            bb2_y=y2;
-            bb2_z=z2;
+            bb1_x = x1;
+            bb1_y = y1;
+            bb1_z = z1;
+            bb2_x = x2;
+            bb2_y = y2;
+            bb2_z = z2;
         }
 
         //valid = true;
     }
-    public BlockState rotate_mirror(BlockState st, int mirroraxis){
-        switch (mirroraxis){
+
+    public BlockState rotate_mirror(BlockState st, int mirroraxis) {
+        switch (mirroraxis) {
             case 1:
-                if(rotation==Rotation.NONE || rotation==Rotation.CLOCKWISE_180) {
+                if (rotation == Rotation.NONE || rotation == Rotation.CLOCKWISE_180) {
                     return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation);
-                }else {
+                } else {
                     return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation.getRotated(Rotation.CLOCKWISE_180));
                 }
             case 2:
-                if(rotation==Rotation.NONE || rotation==Rotation.CLOCKWISE_180) {
+                if (rotation == Rotation.NONE || rotation == Rotation.CLOCKWISE_180) {
                     return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation.getRotated(Rotation.CLOCKWISE_180));
-                }else{
+                } else {
                     return st.mirror(Mirror.FRONT_BACK).rotate(this.rotation);
                 }
             default:
@@ -801,28 +825,28 @@ public class Wand {
         }
     }
 
-     public BlockState get_state(int y,BlockState state_behind_block) {
+    public BlockState get_state(int y, BlockState state_behind_block) {
         BlockState st = block_state;
         if (palette.has_palette) {
-            int min_y=!level.isOutsideBuildHeight(block_buffer.min_y)?block_buffer.min_y:0;
-            int max_y=!level.isOutsideBuildHeight(block_buffer.max_y)?block_buffer.max_y:0;
+            int min_y = !level.isOutsideBuildHeight(block_buffer.min_y) ? block_buffer.min_y : 0;
+            int max_y = !level.isOutsideBuildHeight(block_buffer.max_y) ? block_buffer.max_y : 0;
 
-            st = palette.get_state(this,min_y,max_y,y);
+            st = palette.get_state(this, min_y, max_y, y);
         } else {
             if (offhand_state != null && !offhand_state.isAir()) {
 
-                if( state_mode== WandProps.StateMode.CLONE && state_behind_block!=null
+                if (state_mode == WandProps.StateMode.CLONE && state_behind_block != null
                     /*&&(
                                 (blk instanceof StairBlock && hand_blk instanceof StairBlock)||
                                 (blk instanceof SlabBlock  && hand_blk instanceof SlabBlock)
                         )*/
-                ){
-                    st= offhand_state.getBlock().withPropertiesOf(state_behind_block);
-                }else {
+                ) {
+                    st = offhand_state.getBlock().withPropertiesOf(state_behind_block);
+                } else {
                     st = offhand_state;
                 }
             } else {
-                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode==Mode.SPHERE) {
+                if (mode == Mode.FILL || mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE) {
                     if (p1_state != null)
                         st = p1_state;
                 }
@@ -833,12 +857,13 @@ public class Wand {
         return st;
     }
 
-    public  Item get_item(BlockState state) {
+    public Item get_item(BlockState state) {
         if (state != null) {
             return state.getBlock().asItem();
         }
         return null;
     }
+
     BlockState state_for_placement(BlockState st, BlockPos bp) {
 
         if (mode == Mode.PASTE)
@@ -852,7 +877,7 @@ public class Wand {
             BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
             return st.getBlock().getStateForPlacement(pctx);
         }
-        switch (state_mode){
+        switch (state_mode) {
             case TARGET: {
                 BlockHitResult hit_res = new BlockHitResult(hit, side, (bp != null ? bp : pos), true);
                 BlockPlaceContext pctx = new BlockPlaceContext(player, InteractionHand.OFF_HAND, st.getBlock().asItem().getDefaultInstance(), hit_res);
@@ -888,7 +913,7 @@ public class Wand {
                         }
                     }
                 }
-            case CLONE:{
+            case CLONE: {
                 //return st.getBlock().withPropertiesOf(st);
             }
         }
@@ -901,11 +926,11 @@ public class Wand {
                 CircularBuffer.P p = undo_buffer.peek();
                 if (p != null) {
                     if (!p.destroyed) {
-                        if(level.destroyBlock(p.pos, false)){
+                        if (level.destroyBlock(p.pos, false)) {
                             undo_buffer.pop();
                         }
                     } else {
-                        if (p.state.canSurvive(level,p.pos) && level.setBlockAndUpdate(p.pos, p.state)) {
+                        if (p.state.canSurvive(level, p.pos) && level.setBlockAndUpdate(p.pos, p.state)) {
                             undo_buffer.pop();
                         }
                     }
@@ -914,6 +939,7 @@ public class Wand {
             //undo_buffer.print();
         }
     }
+
     public void redo(int n) {
         if (undo_buffer != null) {
             for (int i = 0; i < n && undo_buffer.can_go_forward(); i++) {
@@ -930,13 +956,15 @@ public class Wand {
             //undo_buffer.print();
         }
     }
+
     public void validate_buffer() {
-        valid = (block_buffer.get_length() > 0) && block_buffer.get_length()<= this.limit;
-        if(!preview && block_buffer.get_length()>this.limit){
-            limit_reached=true;
+        valid = (block_buffer.get_length() > 0) && block_buffer.get_length() <= this.limit;
+        if (!preview && block_buffer.get_length() > this.limit) {
+            limit_reached = true;
         }
     }
-    public void fill(BlockPos from, BlockPos to,boolean hollow,int xskip,int yskip,int zskip) {
+
+    public void fill(BlockPos from, BlockPos to, boolean hollow, int xskip, int yskip, int zskip) {
         int xs, ys, zs, xe, ye, ze;
         xs = from.getX();
         xe = to.getX();
@@ -944,28 +972,28 @@ public class Wand {
         ye = to.getY();
         zs = from.getZ();
         ze = to.getZ();
-        int ox=(xs >= xe)? -1: 1;
-        int oy=(ys >= ye)? -1: 1;
-        int oz=(zs >= ze)? -1: 1;
-        int nx=(xs >= xe)? xs-xe: xe-xs;
-        int ny=(ys >= ye)? ys-ye: ye-ys;
-        int nz=(zs >= ze)? zs-ze: ze-zs;
-        int    limit = this.limit;
-        int ll=0;
+        int ox = (xs >= xe) ? -1 : 1;
+        int oy = (ys >= ye) ? -1 : 1;
+        int oz = (zs >= ze) ? -1 : 1;
+        int nx = (xs >= xe) ? xs - xe : xe - xs;
+        int ny = (ys >= ye) ? ys - ye : ye - ys;
+        int nz = (zs >= ze) ? zs - ze : ze - zs;
+        int limit = this.limit;
+        int ll = 0;
         block_buffer.reset();
-        fill_nx=nx;
-        fill_ny=ny;
-        fill_nz=nz;
-        for (int z = zs,z0=0; z0 <= nz; z+=oz,z0++) {
-            if(zskip!=0 && (z0 % (zskip+1))!=0){
+        fill_nx = nx;
+        fill_ny = ny;
+        fill_nz = nz;
+        for (int z = zs, z0 = 0; z0 <= nz; z += oz, z0++) {
+            if (zskip != 0 && (z0 % (zskip + 1)) != 0) {
                 continue;
             }
-            for (int y = ys,y0=0; y0 <= ny; y+=oy,y0++) {
-                if(yskip!=0 && (y0 % (yskip+1))!=0){
+            for (int y = ys, y0 = 0; y0 <= ny; y += oy, y0++) {
+                if (yskip != 0 && (y0 % (yskip + 1)) != 0) {
                     continue;
                 }
-                for (int x = xs,x0=0; x0 <= nx; x+=ox,x0++) {
-                    if(hollow) {
+                for (int x = xs, x0 = 0; x0 <= nx; x += ox, x0++) {
+                    if (hollow) {
                         switch (this.axis) {
                             case X:
                                 //if (y > ys && y < ye && z > zs && z < ze)
@@ -984,11 +1012,11 @@ public class Wand {
                                 break;
                         }
                     }
-                    if(xskip!=0 && (x0 % (xskip+1))!=0){
+                    if (xskip != 0 && (x0 % (xskip + 1)) != 0) {
                         continue;
                     }
                     if (ll < limit && ll < WandsMod.config.max_limit) {
-                        if(add_to_buffer(x, y, z)) {
+                        if (add_to_buffer(x, y, z)) {
                             ll++;
                         }
                     }
@@ -997,39 +1025,41 @@ public class Wand {
         }
         skip();
     }
+
     void hurt_main_hand(ItemStack stack) {
         if (!this.unbreakable) {
-            //stack.hurtAndBreak(1, player, (Consumer<? super Player>) <LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
             stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.MAIN_HAND)));
         }
     }
-    void hurt_tool(ItemStack stack,int tool_slot) {
-        if (!this.unbreakable) {
-            stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
-        }
+
+    void hurt_tool(ItemStack stack, int tool_slot) {
+//        if (!this.unbreakable) {
+        stack.hurtAndBreak(1, player, (Consumer<LivingEntity>) ((p) -> p.broadcastBreakEvent(InteractionHand.OFF_HAND)));
+//        }
     }
-    boolean place_block(BlockPos block_pos,BlockState state) {
-                                                                                                                                                                                                                                                                                                    boolean placed = false;
-        if(!WandsExpectPlatform.claimCanInteract((ServerLevel) level,block_pos,player)){
-            player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"),false);
+
+    boolean place_block(BlockPos block_pos, BlockState state) {
+        boolean placed = false;
+        if (!WandsExpectPlatform.claimCanInteract((ServerLevel) level, block_pos, player)) {
+            player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"), false);
             return false;
         }
-        if(state==null /*&& !destroy*/){
+        if (state == null /*&& !destroy*/) {
             //log("state is null");
             return false;
         }
-        Block blk=state.getBlock();
-        if( WandsConfig.denied.contains(blk)){
+        Block blk = state.getBlock();
+        if (WandsConfig.denied.contains(blk)) {
             //WandsMod.log("block ("+blk+") is in the denied list",true);
             return false;
         }
         BlockState st = level.getBlockState(block_pos);
         Block actual_blk = st.getBlock();
-        if( WandsConfig.denied.contains(actual_blk)){
+        if (WandsConfig.denied.contains(actual_blk)) {
             //WandsMod.log("actual block ("+actual_blk+") is in the denied list",true);
             return false;
         }
-        if(destroy && (mode!=Mode.VEIN) && has_offhand && offhand_block!=null && offhand_state!=st){
+        if (destroy && (mode != Mode.VEIN) && has_offhand && offhand_block != null && offhand_state != st) {
             return false;
         }
 
@@ -1039,8 +1069,8 @@ public class Wand {
 
         boolean _can_destroy = creative;
         no_tool = false;
-        boolean _tool_would_break=false;
-        boolean _wand_would_break=wand_would_break();
+        boolean _tool_would_break = false;
+        boolean _wand_would_break = wand_would_break();
         if (!creative) {
             if (_wand_would_break) {
                 damaged_tool = true;
@@ -1068,14 +1098,14 @@ public class Wand {
                 }
             }
         }
-        if((use)&& has_shear &&  state.is(Blocks.PUMPKIN)){
-            BlockState carved_pumpkin=Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING,player.getDirection().getOpposite());
+        if ((use) && has_shear && state.is(Blocks.PUMPKIN)) {
+            BlockState carved_pumpkin = Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, player.getDirection().getOpposite());
             level.setBlockAndUpdate(block_pos, carved_pumpkin);
             if (!creative) {
-                ItemStack pumpkin_seeds=Items.PUMPKIN_SEEDS.getDefaultInstance();
+                ItemStack pumpkin_seeds = Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
-                drop(block_pos,state,null,pumpkin_seeds);
-                if(_wand_would_break) {
+                drop(block_pos, state, null, pumpkin_seeds);
+                if (_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
                 consume_xp();
@@ -1083,11 +1113,11 @@ public class Wand {
             return true;
         }
 
-        if((use)&& has_water_potion &&  state.is(BlockTags.CONVERTABLE_TO_MUD)){
+        if ((use) && has_water_potion && state.is(BlockTags.CONVERTABLE_TO_MUD)) {
             level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
-            send_sound=Sounds.SPLASH.ordinal();
+            send_sound = Sounds.SPLASH.ordinal();
             if (!creative) {
-                if(_wand_would_break) {
+                if (_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
                 consume_xp();
@@ -1095,27 +1125,27 @@ public class Wand {
             return true;
         }
 
-        p1_state=state;
-        if (!destroy ) {
-            if (offhand!=null) {
+        p1_state = state;
+        if (!destroy) {
+            if (offhand != null) {
                 blk = Block.byItem(offhand.getItem());
             }
 
             //if(!replace && !blk.canSurvive(state, level, block_pos)){
-            if(!(replace) && !state.canSurvive(level, block_pos)){
+            if (!(replace) && !state.canSurvive(level, block_pos)) {
                 return false;
             }
-            if(blk  instanceof SnowLayerBlock) {
+            if (blk instanceof SnowLayerBlock) {
                 BlockState below = level.getBlockState(block_pos.below());
                 if (below.getBlock() instanceof SnowLayerBlock) {
-                    int layers=below.getValue(SnowLayerBlock.LAYERS);
-                    if(layers<8){
-                        block_pos=block_pos.below();
-                        state=state.setValue(SnowLayerBlock.LAYERS,layers+1);
+                    int layers = below.getValue(SnowLayerBlock.LAYERS);
+                    if (layers < 8) {
+                        block_pos = block_pos.below();
+                        state = state.setValue(SnowLayerBlock.LAYERS, layers + 1);
                     }
                 }
-            }else{
-                if ( blk instanceof CrossCollisionBlock ||blk instanceof DoorBlock) {
+            } else {
+                if (blk instanceof CrossCollisionBlock || blk instanceof DoorBlock) {
                     BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), side, block_pos, true);
                     UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
                     BlockPlaceContext pctx = new BlockPlaceContext(uctx);
@@ -1124,20 +1154,20 @@ public class Wand {
             }
         }
 
-        if(use && digger_item!=null && (has_hoe||has_shovel||has_axe||has_shear) ) {
-            BlockHitResult hit_res=new BlockHitResult(new Vec3(block_pos.getX()+0.5,block_pos.getY()+1.0,block_pos.getZ()+0.5),Direction.UP,block_pos,true);
-            UseOnContext ctx=new UseOnContext(player,InteractionHand.OFF_HAND,hit_res);
-            if( digger_item.useOn(ctx) != InteractionResult.PASS) {
+        if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear)) {
+            BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
+            UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
+            if (digger_item.useOn(ctx) != InteractionResult.PASS) {
                 if (!creative) {
-                    if(_wand_would_break) {
+                    if (_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
-                    if(_tool_would_break) {
+                    if (_tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
                     consume_xp();
                 }
-            }else{
+            } else {
                 return false;
             }
             return true;
@@ -1147,15 +1177,15 @@ public class Wand {
             if (destroy) {
                 if (destroyBlock(block_pos, false)) {
                     if (undo_buffer != null) {
-                        undo_buffer.put(block_pos,  level.getBlockState(block_pos), destroy);
+                        undo_buffer.put(block_pos, level.getBlockState(block_pos), destroy);
                         //undo_buffer.print();
                     }
                     return true;
                 }
             } else {
-                if(!use) {
-                    state=state_for_placement(state,block_pos);
-                    if (state!=null && state.canSurvive(level,block_pos) && level.setBlockAndUpdate(block_pos, state)) {
+                if (!use) {
+                    state = state_for_placement(state, block_pos);
+                    if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
                         blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
                         if (undo_buffer != null) {
                             undo_buffer.put(block_pos, state, destroy);
@@ -1176,36 +1206,36 @@ public class Wand {
                     dec = (1.0f / BLOCKS_PER_XP);
                 }
                 if ((BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
-                    if (WandsMod.config.destroy_in_survival_drop&& (destroy || replace)) {
+                    if (WandsMod.config.destroy_in_survival_drop && (destroy || replace)) {
                         if (_can_destroy) {
                             placed = destroyBlock(block_pos, true);
                         }
                     }
-                    if(!destroy || (replace && placed)){
+                    if (!destroy || (replace && placed)) {
                         if (!use) {
-                            if (state!=null && state.canSurvive(level,block_pos) && level.setBlockAndUpdate(block_pos, state)) {
-                                blk.setPlacedBy(level,block_pos,state,player,blk.asItem().getDefaultInstance());
-                                placed=true;
+                            if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
+                                blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
+                                placed = true;
                             }
                         }
                     }
-                    if(replace && !placed){
-                        if(digger_item.getItem()==Items.AIR)
-                            player.displayClientMessage(Compat.literal("incorrect tool"),false);
-                        stop=true;
+                    if (replace && !placed) {
+                        if (digger_item.getItem() == Items.AIR)
+                            player.displayClientMessage(Compat.literal("incorrect tool"), false);
+                        stop = true;
                     }
-                }else{
-                    if(BLOCKS_PER_XP != 0 && (xp - dec) < 0){
-                        player.displayClientMessage(Compat.literal("not enough xp"),false);
-                        stop=true;
+                } else {
+                    if (BLOCKS_PER_XP != 0 && (xp - dec) < 0) {
+                        player.displayClientMessage(Compat.literal("not enough xp"), false);
+                        stop = true;
                     }
-                    if(wand_durability == 1 ){
-                        player.displayClientMessage(Compat.literal("wand damaged"),false);
-                        if(WandsMod.config.allow_wand_to_break &&
-                                digger_item !=null && digger_item.getItem()==Items.AIR
+                    if (wand_durability == 1) {
+                        player.displayClientMessage(Compat.literal("wand damaged"), false);
+                        if (WandsMod.config.allow_wand_to_break &&
+                                digger_item != null && digger_item.getItem() == Items.AIR
                         ) {
 
-                        }else {
+                        } else {
                             stop = true;
                         }
                     }
@@ -1224,6 +1254,7 @@ public class Wand {
         //log("place_block placed: "+placed);
         return placed;
     }
+
     public boolean destroyBlock(BlockPos blockPos, boolean bl) {
         BlockState blockState = level.getBlockState(blockPos);
         if (blockState.isAir()) {
@@ -1237,13 +1268,13 @@ public class Wand {
             if (bl) {
                 BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
                 //System.out.println("destroyBlock "+bl);
-                if(this.mine_to_inventory) {
+                if (this.mine_to_inventory) {
                     if (level instanceof ServerLevel) {
-                        if(!drop(blockPos,blockState,blockEntity,null)) {
+                        if (!drop(blockPos, blockState, blockEntity, null)) {
                             return false;
                         }
                     }
-                }else{
+                } else {
                     blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
                 }
             }
@@ -1256,20 +1287,21 @@ public class Wand {
             return bl2;
         }
     }
-    boolean drop(BlockPos blockPos,BlockState blockState,BlockEntity blockEntity,ItemStack drop_item){
+
+    boolean drop(BlockPos blockPos, BlockState blockState, BlockEntity blockEntity, ItemStack drop_item) {
         BlockPos drop_pos;
         if (drop_on_player) {
             drop_pos = player.getOnPos().above();
         } else {
             drop_pos = blockPos;
         }
-        if(drop_item!=null){
+        if (drop_item != null) {
             if (!place_into(drop_item)) {
                 if (!this.stop) {
                     Block.popResource(level, drop_pos, drop_item);
                 }
             }
-        }else {
+        } else {
             Block.getDrops(blockState, (ServerLevel) level, blockPos, blockEntity, player, digger_item).forEach(
                     (itemStackx) -> {
                         //player.displayClientMessage(Compat.literal(itemStackx.getDescriptionId()),false);
@@ -1281,16 +1313,15 @@ public class Wand {
                     });
         }
 
-        if(!this.stop && digger_item!=null && blockState.getBlock() instanceof  DropExperienceBlock  && !Compat.has_silktouch(digger_item,level) ) {
-            DropExperienceBlock dblock=(DropExperienceBlock) blockState.getBlock();
-            int xp=( (DropExperienceBlockAccessor)dblock).getXpRange().sample(level.random);
-            if(xp>0){
+        if (!this.stop && digger_item != null && blockState.getBlock() instanceof DropExperienceBlock && !Compat.has_silktouch(digger_item, level)) {
+            DropExperienceBlock dblock = (DropExperienceBlock) blockState.getBlock();
+            int xp = ((DropExperienceBlockAccessor) dblock).getXpRange().sample(level.random);
+            if (xp > 0) {
                 if (level.getGameRules().getBoolean(GameRules.RULE_DOBLOCKDROPS)) {
-                    ExperienceOrb.award((ServerLevel)level, Vec3.atCenterOf(drop_pos), xp);
+                    ExperienceOrb.award((ServerLevel) level, Vec3.atCenterOf(drop_pos), xp);
                 }
             }
         }
-
         if (stop) {
             if (!preview) {
                 player.displayClientMessage(Compat.literal("inventory full"), false);
@@ -1299,48 +1330,51 @@ public class Wand {
         }
         return true;
     }
+
     boolean place_into(ItemStack item_to_place) {
         ItemStack oh = player.getOffhandItem();
         //System.out.println("offhand "+oh.getTag());
-        if (!oh.isEmpty()){
-           if(WandUtils.is_shulker(oh)) {
-               return place_into_shulker(oh,item_to_place,false);
-           }else if(WandUtils.is_magicbag(oh)) {
-               return place_into_bag(oh,item_to_place);
-           }
+        if (!oh.isEmpty()) {
+            if (WandUtils.is_shulker(oh)) {
+                return place_into_shulker(oh, item_to_place, false);
+            } else if (WandUtils.is_magicbag(oh)) {
+                return place_into_bag(oh, item_to_place);
+            }
         }
         //look for bags and shulkers
         for (int pi = 0; pi < inv_aux_last; ++pi) {
             ItemStack stack = player_inv.getItem(inv_aux[pi]);
-            if(WandUtils.is_shulker(stack) ) {
-                if(place_into_shulker(stack,item_to_place,true)){
+            if (WandUtils.is_shulker(stack)) {
+                if (place_into_shulker(stack, item_to_place, true)) {
                     return true;
                 }
-            }else if(WandUtils.is_magicbag(stack) ) {
-                if(place_into_bag(stack,item_to_place)){
+            } else if (WandUtils.is_magicbag(stack)) {
+                if (place_into_bag(stack, item_to_place)) {
                     return true;
                 }
             }
         }
         return false;
     }
-    boolean place_into_bag(ItemStack bag,ItemStack item_to_place){
-        ItemStack mb_item= MagicBagItem.getItem(bag);
-        int total= MagicBagItem.getTotal(bag);
-        if(mb_item.isEmpty() && total==0){
-            MagicBagItem.setItem(bag,item_to_place);
-            mb_item=item_to_place;
+
+    boolean place_into_bag(ItemStack bag, ItemStack item_to_place) {
+        ItemStack mb_item = MagicBagItem.getItem(bag);
+        int total = MagicBagItem.getTotal(bag);
+        if (mb_item.isEmpty() && total == 0) {
+            MagicBagItem.setItem(bag, item_to_place);
+            mb_item = item_to_place;
         }
-        if(mb_item.getItem()==item_to_place.getItem()){
-            if(MagicBagItem.inc(bag,item_to_place.getCount())){
-                blocks_sent_to_inv+=item_to_place.getCount();
+        if (mb_item.getItem() == item_to_place.getItem()) {
+            if (MagicBagItem.inc(bag, item_to_place.getCount())) {
+                blocks_sent_to_inv += item_to_place.getCount();
                 return true;
             }
         }
         return false;
     }
-    boolean place_into_shulker(ItemStack shulker,ItemStack item_to_place, boolean bag_only){
-        if(shulker.getTag()==null){
+
+    boolean place_into_shulker(ItemStack shulker, ItemStack item_to_place, boolean bag_only) {
+        if (shulker.getTag() == null) {
             return false;
         }
         CompoundTag shulker_tag = shulker.getOrCreateTagElement("BlockEntityTag");
@@ -1352,17 +1386,17 @@ public class Wand {
             CompoundTag itemTag = shulker_items.getCompound(j);
             int slt = itemTag.getByte("Slot");
             ItemStack slot_item = ItemStack.of(itemTag);
-            if(WandUtils.is_magicbag(slot_item) ) {
-                ItemStack bag_with_same_item=MagicBagItem.getItem(slot_item);
-                if(bag_with_same_item.getItem()==item_to_place.getItem()){
-                    if(place_into_bag(slot_item,item_to_place)){
+            if (WandUtils.is_magicbag(slot_item)) {
+                ItemStack bag_with_same_item = MagicBagItem.getItem(slot_item);
+                if (bag_with_same_item.getItem() == item_to_place.getItem()) {
+                    if (place_into_bag(slot_item, item_to_place)) {
                         return true;
                     }
                     break;
                 }
             }
         }
-        if(!bag_only) {
+        if (!bag_only) {
             for (int j = 0, len = shulker_items.size(); j < len; ++j) {
                 CompoundTag itemTag = shulker_items.getCompound(j);
                 int slt = itemTag.getByte("Slot");
@@ -1371,7 +1405,7 @@ public class Wand {
                 }
                 ItemStack slot_item = ItemStack.of(itemTag);
                 if (slot_item != null) {
-                    if (Compat.is_same(item_to_place,slot_item)) {
+                    if (Compat.is_same(item_to_place, slot_item)) {
                         int total = item_count + slot_item.getCount();
                         if (total <= slot_item.getMaxStackSize()) {
                             item_to_place.setCount(total);
@@ -1416,24 +1450,27 @@ public class Wand {
         }
         return false;
     }
-    public void update_inv_aux(){
-        inv_aux_last=0;
+
+    public void update_inv_aux() {
+        inv_aux_last = 0;
         for (int s = 0; s < 36; s++) {
             ItemStack stack = player_inv.getItem(s);
-            if(WandUtils.is_shulker(stack) ) {
-                inv_aux[inv_aux_last]=s;
+            if (WandUtils.is_shulker(stack)) {
+                inv_aux[inv_aux_last] = s;
                 inv_aux_last++;
-            }else if(WandUtils.is_magicbag(stack) ) {
-                inv_aux[inv_aux_last]=s;
+            } else if (WandUtils.is_magicbag(stack)) {
+                inv_aux[inv_aux_last] = s;
                 inv_aux_last++;
             }
         }
     }
-	public boolean add_to_buffer(int x, int y, int z) {
-        return add_to_buffer(x,y,z,null);
+
+    public boolean add_to_buffer(int x, int y, int z) {
+        return add_to_buffer(x, y, z, null);
     }
+
     public boolean add_to_buffer(int x, int y, int z, BlockState with_state) {
-        if (!level.isOutsideBuildHeight(y) && block_buffer.get_length() < limit){
+        if (!level.isOutsideBuildHeight(y) && block_buffer.get_length() < limit) {
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
             if (destroy || replace || use) {
                 if (!st.isAir() || mode == Mode.AREA) {
@@ -1472,7 +1509,7 @@ public class Wand {
                         }
                     }
                 }
-                player.experienceProgress=prog;
+                player.experienceProgress = prog;
             }
         }
     }
@@ -1486,43 +1523,43 @@ public class Wand {
         has_axe = false;
         has_shear = false;
 
-        if(this.player_data==null)
+        if (this.player_data == null)
             return;
-        int[] tools_slots =this.player_data.getIntArray("Tools");
-        if(tools_slots.length==0) return;
+        int[] tools_slots = this.player_data.getIntArray("Tools");
+        if (tools_slots.length == 0) return;
 
 
         for (int t = 0; t < tools.length; t++) {
-             tools[t].empty=true;
-             tools[t].tool=null;
+            tools[t].empty = true;
+            tools[t].tool = null;
         }
         for (int t = 0; t < tools_slots.length; t++) {
-            int slot=tools_slots[t];
-            tools[slot].empty=true;
+            int slot = tools_slots[t];
+            tools[slot].empty = true;
             ItemStack tool_item = player.getInventory().getItem(slot);
             tools[slot].tool = tool_item;
             if (tool_item.isEmpty()) continue;
-            tools[slot].empty=false;
+            tools[slot].empty = false;
             Item item = tool_item.getItem();
             if (tool_item.is(ItemTags.PICKAXES) || WandsConfig.extra_pickaxes_list.contains(item)) {
-                has_pickaxe =  true;
-                tools[slot].tooltype=ToolType.PICKAXE;
+                has_pickaxe = true;
+                tools[slot].tooltype = ToolType.PICKAXE;
             }
-            if(tool_item.is(ItemTags.HOES)  || WandsConfig.extra_hoes_list.contains(item)){
+            if (tool_item.is(ItemTags.HOES) || WandsConfig.extra_hoes_list.contains(item)) {
                 has_hoe = true;
-                tools[slot].tooltype=ToolType.HOE;
+                tools[slot].tooltype = ToolType.HOE;
             }
-            if (tool_item.is(ItemTags.SHOVELS)|| WandsConfig.extra_shovels_list.contains(item)) {
+            if (tool_item.is(ItemTags.SHOVELS) || WandsConfig.extra_shovels_list.contains(item)) {
                 has_shovel = true;
-                tools[slot].tooltype=ToolType.SHOVEL;
+                tools[slot].tooltype = ToolType.SHOVEL;
             }
             if (tool_item.is(ItemTags.AXES) || WandsConfig.extra_axes_list.contains(item)) {
-                has_axe    = true;
-                tools[slot].tooltype=ToolType.AXE;
+                has_axe = true;
+                tools[slot].tooltype = ToolType.AXE;
             }
             if (item instanceof ShearsItem || WandsConfig.extra_shears_list.contains(item)) {
                 has_shear = true;
-                tools[slot].tooltype=ToolType.SHEAR;
+                tools[slot].tooltype = ToolType.SHEAR;
             }
             n_tools++;
         }
@@ -1530,16 +1567,16 @@ public class Wand {
 
     public boolean can_destroy(BlockState state, boolean check_speed) {
         digger_item = null;
-        //WandItem wand_item=(WandItem)this.wand_stack.getItem();
+        //WandItem wand_item = (WandItem) this.wand_stack.getItem();
         for (int i = 0; i < tools.length; i++) {
             if (!tools[i].empty && tools[i] != null) {
                 if (!tool_would_break(tools[i].tool)) {
                     if (((destroy || replace) && can_dig(state, check_speed, tools[i].tool)) ||
                             ((use) && (
-                                    (tools[i].tooltype == ToolType.HOE    && WandUtils.is_tillable(state)) ||
-                                    (tools[i].tooltype == ToolType.AXE    && WandUtils.is_strippable(state)) ||
-                                    (tools[i].tooltype == ToolType.SHOVEL && WandUtils.is_flattenable(state)) ||
-                                    (tools[i].tooltype == ToolType.SHEAR  && can_shear(state))
+                                    (tools[i].tooltype == ToolType.HOE && WandUtils.is_tillable(state)) ||
+                                            (tools[i].tooltype == ToolType.AXE && WandUtils.is_strippable(state)) ||
+                                            (tools[i].tooltype == ToolType.SHOVEL && WandUtils.is_flattenable(state)) ||
+                                            (tools[i].tooltype == ToolType.SHEAR && can_shear(state))
                             ))
                     ) {
                         if (digger_item == null) {
@@ -1555,7 +1592,7 @@ public class Wand {
     }
 
     boolean can_dig(BlockState state, boolean check_speed, ItemStack digger) {
-        if(digger==null){
+        if (digger == null) {
             return false;
         }
         boolean is_glass = state.getBlock() instanceof GlassBlock;
@@ -1566,12 +1603,12 @@ public class Wand {
             is_snow_layer = state.getValue(SnowLayerBlock.LAYERS) == 1;
         }
         Item item_digger = digger.getItem();
-        if (digger != null && !digger.isEmpty() && (item_digger instanceof DiggerItem ||item_digger instanceof ShearsItem)) {
+        if (digger != null && !digger.isEmpty() && (item_digger instanceof DiggerItem || item_digger instanceof ShearsItem)) {
             boolean is_allowed = false;
             boolean minable = false;
             if (item_digger instanceof ShearsItem) {
                 can_shear = can_shear(state);
-                is_allowed =  WandsConfig.shears_allowed.contains(blk);
+                is_allowed = WandsConfig.shears_allowed.contains(blk);
             } else {
                 if (item_digger instanceof AxeItem) {
                     is_allowed = WandsConfig.axe_allowed.contains(blk);
@@ -1581,19 +1618,19 @@ public class Wand {
                     } else {
                         if (item_digger instanceof HoeItem) {
                             is_allowed = WandsConfig.hoe_allowed.contains(blk);
-                        }else{
+                        } else {
                             //TODO: find a new way to check if it's a pickaxe
                             is_allowed = WandsConfig.pickaxe_allowed.contains(blk);
                         }
                     }
                 }
             }
-            if(check_speed){
-                float destroy_speed=item_digger.getDestroySpeed(digger, state);
-                boolean correct_tool=item_digger.isCorrectToolForDrops(state);
-                return creative || (destroy_speed > 1.0f&& correct_tool)
+            if (check_speed) {
+                float destroy_speed = item_digger.getDestroySpeed(digger, state);
+                boolean correct_tool = item_digger.isCorrectToolForDrops(state);
+                return creative || (destroy_speed > 1.0f && correct_tool)
                         || is_glass || is_snow_layer || is_allowed || can_shear;
-            }else{
+            } else {
                 return true;
             }
         }
@@ -1608,21 +1645,23 @@ public class Wand {
         }
         return false;
     }
+
     public boolean can_place(BlockState state, BlockPos p) {
-        if(offhand_state!=null && WandUtils.is_plant(offhand_state)){
-            return (state.isAir() || replace_fluid(state)) && offhand_state.canSurvive(level,p);
-        }else{
+        if (offhand_state != null && WandUtils.is_plant(offhand_state)) {
+            return (state.isAir() || replace_fluid(state)) && offhand_state.canSurvive(level, p);
+        } else {
             return (
-                    state.isAir() || replace_fluid(state) || WandUtils.is_plant(state)||
-                    state.getBlock() instanceof SnowLayerBlock||
-                    (has_empty_bucket && state.getFluidState().is(FluidTags.WATER)) ||
-                    (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA))
+                    state.isAir() || replace_fluid(state) || WandUtils.is_plant(state) ||
+                            state.getBlock() instanceof SnowLayerBlock ||
+                            (has_empty_bucket && state.getFluidState().is(FluidTags.WATER)) ||
+                            (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA))
             );
         }
     }
-    public boolean can_shear(BlockState state){
+
+    public boolean can_shear(BlockState state) {
         return (
-                        state.is(BlockTags.LEAVES) ||
+                state.is(BlockTags.LEAVES) ||
                         state.is(Blocks.COBWEB) ||
                         state.is(Blocks.GRASS) ||
                         state.is(Blocks.FERN) ||
@@ -1632,25 +1671,26 @@ public class Wand {
                         state.is(Blocks.PUMPKIN) ||
                         state.is(BlockTags.WOOL)
                         || state.is(Blocks.HANGING_ROOTS)
-                        );
+        );
     }
-    void check_inventory(){
-        if ((!creative||mode == Mode.BLAST) && !destroy && !use && !has_water_bucket && mode != Mode.COPY) {
+
+    void check_inventory() {
+        if ((!creative || mode == Mode.BLAST) && !destroy && !use && !has_water_bucket && mode != Mode.COPY) {
             ItemStack stack;
             //now the player inventory
             for (int i = 0; i < 36; ++i) {
                 stack = player_inv.getItem(i);
-                if(stack.getItem()!= Items.AIR) {
+                if (stack.getItem() != Items.AIR) {
                     if (WandUtils.is_shulker(stack)) {
                         for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                             pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey());
                         }
-                    }else if( WandUtils.is_magicbag(stack)) {
-                        int total=MagicBagItem.getTotal(stack);
-                        ItemStack stack2=MagicBagItem.getItem(stack);
-                        if(!stack2.isEmpty()&& total >0){
-                            BlockAccounting ba=block_accounting.get(stack2.getItem());
-                            if(ba!=null) {
+                    } else if (WandUtils.is_magicbag(stack)) {
+                        int total = MagicBagItem.getTotal(stack);
+                        ItemStack stack2 = MagicBagItem.getItem(stack);
+                        if (!stack2.isEmpty() && total > 0) {
+                            BlockAccounting ba = block_accounting.get(stack2.getItem());
+                            if (ba != null) {
                                 ba.in_player += total;
                             }
                         }
@@ -1666,29 +1706,29 @@ public class Wand {
                     }
                 }
             }
-            ItemStack oh=player.getOffhandItem();
+            ItemStack oh = player.getOffhandItem();
             if (oh != null && !oh.isEmpty()) {
-                 if( oh.getItem() instanceof MagicBagItem) {
-                    stack=MagicBagItem.getItem(oh);
-                    int total=MagicBagItem.getTotal(oh);
-                    if(!stack.isEmpty()&& total >0){
-                        BlockAccounting ba=block_accounting.get(stack.getItem());
-                        if(ba!=null) {
+                if (oh.getItem() instanceof MagicBagItem) {
+                    stack = MagicBagItem.getItem(oh);
+                    int total = MagicBagItem.getTotal(oh);
+                    if (!stack.isEmpty() && total > 0) {
+                        BlockAccounting ba = block_accounting.get(stack.getItem());
+                        if (ba != null) {
                             ba.in_player += total;
                         }
                     }
-                }else {
-                   if(offhand!=null) {
-                      BlockAccounting ba = block_accounting.get(offhand.getItem());
-                      if(ba != null) {
-                         ba.in_player += offhand.getCount();
-                      }
-                   }
+                } else {
+                    if (offhand != null) {
+                        BlockAccounting ba = block_accounting.get(offhand.getItem());
+                        if (ba != null) {
+                            ba.in_player += offhand.getCount();
+                        }
+                    }
                 }
             }
             for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
                 if (pa.getValue().in_player < pa.getValue().needed) {
-                    MutableComponent name=Compat.translatable(pa.getKey().getDescriptionId());
+                    MutableComponent name = Compat.translatable(pa.getKey().getDescriptionId());
                     MutableComponent mc = Compat.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
                     mc.append(". " + pa.getValue().in_player);
                     mc.append("/");
@@ -1700,14 +1740,15 @@ public class Wand {
             }
         }
     }
-    void remove_from_inventory(int placed){
-        if (!creative && ((!destroy && placed > 0)||mode==Mode.BLAST)) {
+
+    void remove_from_inventory(int placed) {
+        if (!creative && ((!destroy && placed > 0) || mode == Mode.BLAST)) {
             ItemStack stack;
             ItemStack stack_item;
             //look for items on shulker boxes first
             for (int pi = 0; pi < 36; ++pi) {
                 stack = player_inv.getItem(pi);
-                if(stack.getItem() != Items.AIR) {
+                if (stack.getItem() != Items.AIR) {
                     if (WandUtils.is_shulker(stack)) {
                         CompoundTag shulker_tag = stack.getTagElement("BlockEntityTag");
                         if (shulker_tag != null) {
@@ -1715,9 +1756,9 @@ public class Wand {
                             for (int j = 0, len = shulker_items.size(); j < len; ++j) {
                                 CompoundTag itemTag = shulker_items.getCompound(j);
                                 stack_item = ItemStack.of(itemTag);
-                                if (!stack_item.isEmpty() ) {
+                                if (!stack_item.isEmpty()) {
                                     if (WandUtils.is_magicbag(stack_item)) {
-                                        ItemStack bag_it=MagicBagItem.getItem(stack_item);
+                                        ItemStack bag_it = MagicBagItem.getItem(stack_item);
                                         BlockAccounting pa = block_accounting.get(bag_it.getItem());
                                         consume_item(pa, stack_item);
                                     } else {
@@ -1741,17 +1782,17 @@ public class Wand {
                     }
                 }
             }
-            ItemStack oh=player.getOffhandItem();
+            ItemStack oh = player.getOffhandItem();
             if (!oh.isEmpty() && oh.getItem() instanceof MagicBagItem) {
-                stack_item=MagicBagItem.getItem(oh);
+                stack_item = MagicBagItem.getItem(oh);
                 BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                consume_item(pa,oh);
+                consume_item(pa, oh);
             }
             //now look for bags on player inv
             for (int i = 0; i < 36; ++i) {
                 stack_item = player_inv.getItem(i);
                 if (WandUtils.is_magicbag(stack_item)) {
-                    ItemStack bag_it=MagicBagItem.getItem(stack_item);
+                    ItemStack bag_it = MagicBagItem.getItem(stack_item);
                     BlockAccounting pa = block_accounting.get(bag_it.getItem());
                     consume_item(pa, stack_item);
                 }
@@ -1759,15 +1800,15 @@ public class Wand {
             //now look for items on player inv
             for (int i = 0; i < 36; ++i) {
                 stack_item = player_inv.getItem(i);
-                if(stack_item.getItem() != Items.AIR) {
+                if (stack_item.getItem() != Items.AIR) {
                     if (!WandUtils.is_shulker(stack_item) && !WandUtils.is_magicbag(stack_item)
                             &&
-                            stack_item.getTag()==null
-                     ) {
+                            stack_item.getTag() == null
+                    ) {
                         BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                        ItemStack rep=consume_item(pa,stack_item);
-                        if(rep!=null && !rep.isEmpty()) {
-                            player_inv.setItem(i,rep);
+                        ItemStack rep = consume_item(pa, stack_item);
+                        if (rep != null && !rep.isEmpty()) {
+                            player_inv.setItem(i, rep);
                         }
                     }
                 }
@@ -1776,154 +1817,162 @@ public class Wand {
                 BlockAccounting pa = block_accounting.get(offhand.getItem());
                 if (pa != null) {
                     //pa.in_player += offhand.getCount();
-                    consume_item(pa,offhand);
+                    consume_item(pa, offhand);
                 }
             }
         }
     }
-    boolean check_advancement(ServerAdvancementManager server_advancements,PlayerAdvancements player_advancements,String a){
-        ResourceLocation res=ResourceLocation.tryParse(a);
-        if(res==null){
-            WandsMod.log("bad advancement: "+res,prnt);
+
+    boolean check_advancement(ServerAdvancementManager server_advancements, PlayerAdvancements player_advancements, String a) {
+        ResourceLocation res = ResourceLocation.tryParse(a);
+        if (res == null) {
+            WandsMod.log("bad advancement: " + res, prnt);
             return false;
         }
-        Advancement adv= server_advancements.getAdvancement(res);
-        if(adv==null){
-            WandsMod.log("bad advancement: "+res,prnt);
+        Advancement adv = server_advancements.getAdvancement(res);
+        if (adv == null) {
+            WandsMod.log("bad advancement: " + res, prnt);
             return false;
         }
-        AdvancementProgress prog=player_advancements.getOrStartProgress(adv);
+        AdvancementProgress prog = player_advancements.getOrStartProgress(adv);
         return prog.isDone();
     }
-    void check_advancements(){
-        if(!creative && WandsMod.config.check_advancements && !level.isClientSide()) {
-            PlayerAdvancements advs=((ServerPlayer)player).getAdvancements();
-            MinecraftServer server= player.getServer();
-            if(server==null) return;
-            ServerAdvancementManager advancements=server.getAdvancements();
-            if(advancements==null) return;
 
-            if(!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.STONE_WAND) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)){
+    void check_advancements() {
+        if (!creative && WandsMod.config.check_advancements && !level.isClientSide()) {
+            PlayerAdvancements advs = ((ServerPlayer) player).getAdvancements();
+            MinecraftServer server = player.getServer();
+            if (server == null) return;
+            ServerAdvancementManager advancements = server.getAdvancements();
+            if (advancements == null) return;
+
+            if (!Objects.equals(WandsMod.config.advancement_allow_stone_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.STONE_WAND) {
+                if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_stone_wand)) {
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.IRON_WAND ) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)){
+            if (!Objects.equals(WandsMod.config.advancement_allow_iron_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.IRON_WAND) {
+                if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_iron_wand)) {
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem) (wand_stack.getItem())).tier ==WandItem.WandTier.DIAMOND_WAND ) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)){
+            if (!Objects.equals(WandsMod.config.advancement_allow_diamond_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.DIAMOND_WAND) {
+                if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_diamond_wand)) {
                     //WandsMod.log("need advancement: "+WandsMod.config.advancement_allow_diamond_wand,prnt);
                     return;
                 }
             }
-            if(!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem)(wand_stack.getItem())).tier==WandItem.WandTier.NETHERITE_WAND ) {
-                if(!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)){
+            if (!Objects.equals(WandsMod.config.advancement_allow_netherite_wand, "") && ((WandItem) (wand_stack.getItem())).tier == WandItem.WandTier.NETHERITE_WAND) {
+                if (!check_advancement(advancements, advs, WandsMod.config.advancement_allow_netherite_wand)) {
                     return;
                 }
             }
 
         }
     }
-    public BlockPos get_pos_from_air(Vec3 hit){
-        if(player==null)
-            return  new BlockPos((int)hit.x,(int)hit.y,(int)hit.z);
-        Direction dir=player.getDirection();
-        int offx=0;
-        int offy=0;
-        int offz=0;
-        switch (dir){
+
+    public BlockPos get_pos_from_air(Vec3 hit) {
+        if (player == null)
+            return new BlockPos((int) hit.x, (int) hit.y, (int) hit.z);
+        float r = player.getYRot();
+        Vec3 eye = player.getEyePosition();
+        hit = hit.add(hit.subtract(eye).normalize().scale(target_air_distance));
+        Direction dir = player.getDirection();
+        int offx = 0;
+        int offy = 0;
+        int offz = 0;
+        switch (dir) {
             case NORTH:
             case SOUTH:
-                if(hit.x<0) {
+                if (hit.x < 0) {
                     offx = -1;
                 }
                 break;
             case EAST:
             case WEST:
-                if(hit.z<0) {
+                if (hit.z < 0) {
                     //offz = 1;
                     offz = -1;
-                }else{
+                } else {
 
                 }
                 break;
 
         }
-        if(hit.y<0) {
+        if (hit.y < 0) {
             offy = -1;
         }
-        return new BlockPos((int)hit.x+offx,(int)hit.y+offy,(int)hit.z+offz);
+        return new BlockPos((int) hit.x + offx, (int) hit.y + offy, (int) hit.z + offz);
     }
-    public void copy(){
-        if(mode==Mode.COPY) {
-            int m=mode.ordinal();
+
+    public void copy() {
+        if (mode == Mode.COPY) {
+            int m = mode.ordinal();
             modes[m].place_in_buffer(this);
         }
     }
 
-    private boolean tool_would_break(ItemStack tool){
-        if(tool==null){
+    private boolean tool_would_break(ItemStack tool) {
+        if (tool == null) {
             return true;
         }
         int dmg = tool.getMaxDamage() - tool.getDamageValue();
         boolean would_break = dmg <= TOOL_DAMAGE_STOP;
-        Item tool_item=tool.getItem();
-        if(WandsMod.config.allow_wooden_tools_to_break) {
-            if(Items.WOODEN_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.WOODEN_AXE.getDefaultInstance().is(tool_item) ||
-               Items.WOODEN_SHOVEL.getDefaultInstance().is(tool_item) ||
-               Items.WOODEN_HOE.getDefaultInstance().is(tool_item)
+        Item tool_item = tool.getItem();
+        if (WandsMod.config.allow_wooden_tools_to_break) {
+            if (Items.WOODEN_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.WOODEN_HOE.getDefaultInstance().is(tool_item)
             ) {
                 return false;
             }
         }
-        if(WandsMod.config.allow_stone_tools_to_break) {
-            if(Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
-               Items.STONE_HOE.getDefaultInstance().is(tool_item)
+        if (WandsMod.config.allow_stone_tools_to_break) {
+            if (Items.STONE_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.STONE_HOE.getDefaultInstance().is(tool_item)
             ) {
                 return false;
             }
         }
-        if(WandsMod.config.allow_iron_tools_to_break) {
-            if(Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
-               Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
-               Items.IRON_HOE.getDefaultInstance().is(tool_item)
+        if (WandsMod.config.allow_iron_tools_to_break) {
+            if (Items.IRON_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.IRON_HOE.getDefaultInstance().is(tool_item)
             ) {
                 return false;
             }
         }
-        if(WandsMod.config.allow_diamond_tools_to_break) {
-            if(Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
-               Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
+        if (WandsMod.config.allow_diamond_tools_to_break) {
+            if (Items.DIAMOND_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.DIAMOND_HOE.getDefaultInstance().is(tool_item)
             ) {
                 return false;
             }
         }
-        if(WandsMod.config.allow_netherite_tools_to_break) {
-            if(Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
-               Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
+        if (WandsMod.config.allow_netherite_tools_to_break) {
+            if (Items.NETHERITE_PICKAXE.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_AXE.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_SHOVEL.getDefaultInstance().is(tool_item) ||
+                    Items.NETHERITE_HOE.getDefaultInstance().is(tool_item)
             ) {
                 return false;
             }
         }
         return would_break;
     }
-    private boolean wand_would_break(){
-        if(this.wand_stack==null){
+
+    private boolean wand_would_break() {
+        if (this.wand_stack == null) {
             return true;
         }
         int dmg = this.wand_stack.getMaxDamage() - this.wand_stack.getDamageValue();
-        if(dmg<=1) {
+        if (dmg <= 1) {
             WandItem wand_item = (WandItem) this.wand_stack.getItem();
             switch (wand_item.tier) {
                 case STONE_WAND:
@@ -1940,6 +1989,6 @@ public class Wand {
                     return false;
             }
         }
-        return dmg<=1;
+        return dmg <= 1;
     }
 }
