@@ -45,4 +45,88 @@ subprojects {
     java {
         withSourcesJar()
     }
+    // Load local dev settings if present (local.properties is gitignored)
+    def localPropsFile = rootProject.file('local.properties')
+    if (localPropsFile.exists()) {
+        def localProps = new Properties()
+        localProps.load(localPropsFile.newDataInputStream())
+        def world = localProps.getProperty('quickPlayWorld')
+        def width = localProps.getProperty('windowWidth')
+        def height = localProps.getProperty('windowHeight')
+
+        if (project.name == 'fabric' || project.name == 'neoforge') {
+            loom.runs.named('client') {
+                if (world) {
+                    programArgs "--quickPlaySingleplayer", world
+                }
+                if (width && height) {
+                    programArgs "--width", width, "--height", height
+                }
+            }
+        }
+    }
+    if (project.name in ["fabric", "neoforge", "forge"]) {
+
+        apply plugin: "me.shedaniel.unified-publishing"
+
+        def isFabric = project.name == "fabric"
+        def currentLoader = project.name
+
+        def supportedMinecraftVersions = project.findProperty('minecraft_versions')?.split(',')*.trim() ?: []
+
+        unifiedPublishing {
+            project {
+                gameVersions = supportedMinecraftVersions
+                gameLoaders = [currentLoader]
+
+                displayName = "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - ${currentLoader} - ${project.minecraft_version}"
+                version = "${rootProject.mod_version}_${rootProject.release_type}_${currentLoader}_${project.minecraft_version}"
+                releaseType = "${rootProject.release_type}"
+
+                var chlog = System.getenv("WANDS_CHANGELOG")
+                if (chlog != null) {
+                    changelog = chlog
+                }
+
+                mainPublication tasks.remapJar
+                relations {
+                    depends {
+                        curseforge = "architectury-api"
+                        modrinth = "lhGA9TYQ"
+                    }
+                    depends {
+                        curseforge = "cloth-config"
+                        modrinth = "9s6osm5g"
+                    }
+
+                    if (isFabric) {
+                        depends {
+                            curseforge = "fabric-api"
+                            modrinth = "P7dR8mSH"
+                        }
+                        optional {
+                            curseforge = "modmenu"
+                            modrinth = "mOgUt4GM"
+                        }
+                    }
+                }
+
+                var cfToken = System.getenv("CF_TOKEN")
+                if (cfToken != null) {
+                    curseforge {
+                        token = cfToken
+                        id = "363392"
+                    }
+                }
+
+                var mrToken = System.getenv("MODRINTH_TOKEN")
+                if (mrToken != null) {
+                    modrinth {
+                        token = mrToken
+                        id = "XkisZUfp"
+                    }
+                }
+            }
+        }
+    }
 }
