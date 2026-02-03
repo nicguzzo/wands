@@ -2,12 +2,15 @@ package net.nicguzzo.wands.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.config.WandsConfig;
+
 
 public class BlockBuffer{
     
@@ -121,5 +124,34 @@ public class BlockBuffer{
 
     public void add(BlockPos p,Wand w,BlockState with_state){
         add(p.getX(),p.getY(),p.getZ(),w,with_state);
+    }
+
+    public void renmove_neighbors_lte(int n){
+        LongSet positions = new LongOpenHashSet(this.length);
+
+        for (int i = 0; i < this.length; i++) {
+            positions.add(BlockPos.asLong(buffer_x[i], buffer_y[i], buffer_z[i]));
+        }
+
+        for (int i = 0; i < this.length; i++) {
+            int x = buffer_x[i];
+            int y = buffer_y[i];
+            int z = buffer_z[i];
+            byte count = 0;
+
+            if (positions.contains(BlockPos.asLong(x + 1, y, z))) count++;
+            if (positions.contains(BlockPos.asLong(x - 1, y, z))) count++;
+            if (positions.contains(BlockPos.asLong(x, y + 1, z))) count++;
+            if (positions.contains(BlockPos.asLong(x, y - 1, z))) count++;
+            if (positions.contains(BlockPos.asLong(x, y, z + 1))) count++;
+            if (positions.contains(BlockPos.asLong(x, y, z - 1))) count++;
+
+            if (count <= n) {
+                this.state[i] = null;
+                if (this.item != null) {
+                    this.item[i] = null;
+                }
+            }
+        }
     }
 }

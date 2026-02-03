@@ -1,19 +1,13 @@
 package net.nicguzzo.wands.wand.modes;
 
-import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
-import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
-
-import java.util.stream.IntStream;
 
 public class RockMode extends WandMode {
     SimplexNoise noise=null;
@@ -104,6 +98,7 @@ public class RockMode extends WandMode {
                     }
                 }
             }
+            wand.block_buffer.renmove_neighbors_lte(1);
             //wand.validate_buffer();
             wand.valid=true;
         }
