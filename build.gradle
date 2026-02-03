@@ -75,6 +75,13 @@ subprojects {
 
         def supportedMinecraftVersions = project.findProperty('minecraft_versions')?.split(',')*.trim() ?: []
 
+        println "--- CONFIG CHECK for ${project.name} ---"
+        println "Display Name: Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - ${currentLoader} - ${project.minecraft_version}"
+        println "Version Slug: ${rootProject.mod_version}_${rootProject.release_type}_${currentLoader}_${project.minecraft_version}"
+        println "Game Versions: ${supportedMinecraftVersions}"
+        println "Loaders: ${[currentLoader]}"
+        println "---------------------------------------"
+
         unifiedPublishing {
             project {
                 gameVersions = supportedMinecraftVersions
