@@ -595,7 +595,7 @@ public class Networking {
                 //wand.lastPlayerDirection=player_dir;
                 //WandsMod.LOGGER.info("got_placement p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+ pos);
                 wand.do_or_preview(player, level, block_state, pos, side, hit, stack, (WandItem) stack.getItem(), true);
-                wand.clear(wand.mode == WandProps.Mode.PASTE || wand.mode == WandProps.Mode.COPY);
+                wand.clear(wand.mode == WandProps.Mode.PASTE || wand.mode == WandProps.Mode.COPY || mode== WandProps.Mode.AREA);
             #if MC_VERSION < 12005
             });
             #endif

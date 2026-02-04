@@ -110,7 +110,7 @@ public class WandItem extends Item {
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
             if (mode != Mode.COPY) {
-                ClientRender.wand.clear(mode == Mode.PASTE);
+                ClientRender.wand.clear(mode == Mode.PASTE || mode==Mode.AREA);
             }
         }
         return InteractionResult.SUCCESS;

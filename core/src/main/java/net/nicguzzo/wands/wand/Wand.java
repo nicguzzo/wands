@@ -583,6 +583,10 @@ public class Wand {
         //process the current mode
         int m = mode.ordinal();
         if (m >= 0 && m < modes.length && modes[m] != null) {
+            //if (!preview) {
+                //debug only
+            //    player.displayClientMessage(Compat.literal("wand debug"), false);
+            //}
             modes[m].place_in_buffer(this);
         }
 
