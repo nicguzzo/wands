@@ -303,6 +303,10 @@ public class ClientRender {
                         if(mode!=Mode.ROCK) {
                             wand.block_buffer.reset();
                         }
+                        // Still show bbox when P1 is set even without a target
+                        if(mode.n_clicks() == 2 && wand.getP1() != null) {
+                            preview_mode(wand.mode, matrixStack, bufferSource);
+                        }
                     }
                 }
                 if (water) {
@@ -371,7 +375,6 @@ public class ClientRender {
                     if (wand.valid || (mode.n_clicks() == 2 && wand.getP1() != null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
-                            (mode == Mode.PASTE && paste_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.BOX));
                         if (drawlines && showBbox) {
                             preview_bbox(bufferSource,matrixStack);
@@ -1461,6 +1464,25 @@ public class ClientRender {
         }
         bufferSource.endLastBatch();
     }
+        // Draw P1 outline when P1 is set in 2-click modes
+        if (drawlines && wand.getP1() != null && mode.n_clicks() == 2) {
+            float p1x = wand.getP1().getX();
+            float p1y = wand.getP1().getY();
+            float p1z = wand.getP1().getZ();
+            VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
+            if (fat_lines) {
+                preview_block_fat(matrix, consumer,
+                        p1x - off, p1y - off, p1z - off,
+                        p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
+                        start_col, false);
+            } else {
+                preview_block(matrix, consumer,
+                        p1x - off, p1y - off, p1z - off,
+                        p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
+                        start_col);
+            }
+            bufferSource.endLastBatch();
+        }
     }
     /** Renders P1/P2 markers and connecting line for LINE, CIRCLE, SPHERE, FILL modes */
     static void preview_line_circle(Matrix4f matrix, Mode mode,MultiBufferSource.BufferSource bufferSource,

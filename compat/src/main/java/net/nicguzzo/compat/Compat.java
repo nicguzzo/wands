@@ -55,6 +55,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceLocation;
 #endif
 import org.joml.Matrix4f;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -354,13 +356,21 @@ public class Compat {
             return Minecraft.getInstance().getWindow().getWindow();
         #endif
     }
+    private static final Map<KeyMapping, Integer> keyCodeMap = new HashMap<>();
+    static public int getKeyCode(KeyMapping km) {
+        return keyCodeMap.getOrDefault(km, -1);
+    }
 #if MC_VERSION >= 12111
     static public KeyMapping newKeyMapping(String name,int key,KeyMapping.Category tab) {
-        return new KeyMapping(name,key,tab);
+        KeyMapping km = new KeyMapping(name,key,tab);
+        keyCodeMap.put(km, key);
+        return km;
     }
 #else
     static public KeyMapping newKeyMapping(String name,int key,String tab) {
-        return new KeyMapping(name, key,tab);
+        KeyMapping km = new KeyMapping(name, key,tab);
+        keyCodeMap.put(km, key);
+        return km;
     }
 #endif
 

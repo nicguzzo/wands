@@ -45,6 +45,15 @@ public class PaletteItem extends Item {
     static public Component mode_val_gradient = Compat.translatable("item.wands.gradient");
     static public Component mode_val_rr = Compat.translatable("item.wands.round_robin");
 
+    /** Get the display name Component for the current palette mode */
+    static public Component getModeName(ItemStack stack) {
+        switch (getMode(stack)) {
+            case ROUND_ROBIN: return mode_val_rr;
+            case GRADIENT: return mode_val_gradient;
+            default: return mode_val_random;
+        }
+    }
+
     public PaletteItem(Properties properties) {
         super(properties);
     }
@@ -88,19 +97,7 @@ public class PaletteItem extends Item {
                 }
             }
         }
-        PaletteMode mode = PaletteItem.getMode(stack);
-        Component mode_val = null;
-        switch (mode ) {
-            case RANDOM:
-                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_random.getString());
-            break;
-            case ROUND_ROBIN:
-                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_rr.getString());
-            break;
-            case GRADIENT:
-                mode_val = Compat.literal("mode: " + PaletteItem.mode_val_gradient.getString());
-            break;
-        }
+        Component mode_val = Compat.literal("mode: " + getModeName(stack).getString());
         if(mode_val!=null) {
             #if MC_VERSION >= 12111
             consumer.accept(mode_val);

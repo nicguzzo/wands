@@ -21,8 +21,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.compat.Compat;
@@ -94,6 +97,8 @@ public class WandItem extends Item {
             } else {
                 ClientRender.wand.setP1(pos);
             }
+            // Store P1's block state so client preview uses it in 2-click modes
+            ClientRender.wand.p1_state = block_state;
         } else {
             if (ClientRender.wand.getP2() == null && mode.n_clicks() == 2) {
                 ClientRender.wand.setP2(pos);
@@ -141,6 +146,21 @@ public class WandItem extends Item {
         Wand wand = ClientRender.wand;
         Mode mode = WandProps.getMode(stack);
         if (wand.target_air && mode.can_target_air()) {
+            // Check if player has something to place with (offhand block, palette, or copy/paste mode)
+            // Destroy and Use actions don't need an offhand block
+            WandProps.Action action = WandProps.getAction(stack);
+            boolean hasPalette = wand.palette.has_palette && !wand.palette.palette_slots.isEmpty();
+            Block offhandBlock = Block.byItem(player.getOffhandItem().getItem());
+            boolean hasOffhand = offhandBlock != Blocks.AIR;
+            if (!hasOffhand && !hasPalette && mode != Mode.PASTE && mode != Mode.COPY
+                    && action != WandProps.Action.DESTROY && action != WandProps.Action.USE) {
+                player.displayClientMessage(Compat.translatable("wands.message.target_air_needs_offhand"), true);
+#if MC_VERSION>=12111
+                return InteractionResult.FAIL;
+#else
+                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+#endif
+            }
             if (wand.getP1() == null) {
                 wand.setP1(ClientRender.last_pos);
                 wand.setP2(null);

@@ -35,7 +35,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.compat.MyIdExt;
-import net.nicguzzo.wands.client.WandToast;
+import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.utils.WandUtils;
@@ -562,12 +562,12 @@ public class Networking {
             #endif
                 BlockState block_state;
                 BlockPos pos;
-                if (finalP2 != null) {
+                // Always prefer P1's block state - in 2-click modes, P1 defines the block type to place
+                block_state = level.getBlockState(finalP1);
+                pos = finalP1;
+                if (block_state.isAir() && finalP2 != null) {
                     block_state = level.getBlockState(finalP2);
                     pos = finalP2;
-                } else {
-                    block_state = level.getBlockState(finalP1);
-                    pos = finalP1;
                 }
                 if (block_state.isAir()) {
                     block_state = level.getBlockState(finalP1);
@@ -688,28 +688,16 @@ public class Networking {
             String needed_tool = packet.readUtf();
             context.queue(() -> {
 #endif
-                //LOGGER.info("got ToastPacket");
-                if (WandsMod.config.toast_in_action_bar) {
-                    Player player = context.getPlayer();
-                    if (no_tool) {
-                        player.displayClientMessage(Compat.literal("no tool"), true);
-                    }
-                    if (damaged_tool) {
-                        player.displayClientMessage(Compat.literal("invalid or damaged"), true);
-                    }
-                    if (!needed_tool.isEmpty()) {
-                        player.displayClientMessage(Compat.literal("missing tool: "+needed_tool), true);
-                    }
-                } else {
-                    if (no_tool) {
-                        Compat.toast(new WandToast("no tool"));
-                    }
-                    if (damaged_tool) {
-                        Compat.toast(new WandToast("invalid or damaged"));
-                    }
-                    if (!needed_tool.isEmpty()) {
-                        Compat.toast(new WandToast("missing tool: "+needed_tool));
-                    }
+                Player player = context.getPlayer();
+                String menuKey = WandsModClient.getKeyName(WandsMod.WandKeys.MENU);
+                if (no_tool) {
+                    player.displayClientMessage(Compat.literal("No tool - Add appropriate tool to wand [" + menuKey + "]"), true);
+                }
+                if (damaged_tool) {
+                    player.displayClientMessage(Compat.literal("No tool - Add appropriate tool to wand [" + menuKey + "]"), true);
+                }
+                if (!needed_tool.isEmpty()) {
+                    player.displayClientMessage(Compat.literal("Wrong tool - Add " + needed_tool + " to wand [" + menuKey + "] for action"), true);
                 }
 #if MC_VERSION < 12005
             });

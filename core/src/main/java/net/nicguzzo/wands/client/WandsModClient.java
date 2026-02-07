@@ -31,24 +31,30 @@ import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.client.gui.Section;
 import net.nicguzzo.wands.client.screens.WandScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class WandsModClient {
     static boolean shift = false;
     static boolean alt = false;
+    // Track which keys were pressed last tick for edge detection
+    private static final Set<Integer> prevKeyState = new HashSet<>();
     public static boolean has_optifine = false;
     public static boolean has_opac = false;
     public static KeyMapping wand_menu_km;
 
     public static final Logger LOGGER = LogManager.getLogger();
     static final public Map<KeyMapping, WandsMod.WandKeys> keys = new HashMap<KeyMapping, WandsMod.WandKeys>();
+    static final public Map<WandsMod.WandKeys, KeyMapping> reverseKeys = new HashMap<>();
     static final public int wand_menu_key = GLFW.GLFW_KEY_Y;// InputConstants.KEY_Y;
     static final public int wand_mode_key = GLFW.GLFW_KEY_V;//InputConstants.KEY_V;
     static final public int wand_action_key = GLFW.GLFW_KEY_H;//InputConstants.KEY_H;
@@ -68,7 +74,7 @@ public class WandsModClient {
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
     #if MC_VERSION >= 12111
-    public static final KeyMapping.Category tab = KeyMapping.Category.register(new MyIdExt(WandsMod.MOD_ID, "key.categories.wands").res);
+    public static final KeyMapping.Category tab = KeyMapping.Category.register(new MyIdExt(WandsMod.MOD_ID, "wands").res);
     #else
     static final String tab = "key.categories.wands";
     #endif
@@ -76,7 +82,7 @@ public class WandsModClient {
 
     public static void initialize() {
 
-        wand_menu_km = new KeyMapping(k + "wand_menu", wand_menu_key, tab);
+        wand_menu_km = Compat.newKeyMapping(k + "wand_menu", wand_menu_key, tab);
         keys.put(wand_menu_km, WandsMod.WandKeys.MENU);
         keys.put(Compat.newKeyMapping(k + "wand_mode", wand_mode_key, tab), WandsMod.WandKeys.MODE);
         keys.put(Compat.newKeyMapping(k + "palette_menu", palette_menu_key, tab), WandsMod.WandKeys.PALETTE_MENU);
@@ -98,25 +104,83 @@ public class WandsModClient {
 
         keys.forEach((km, v) -> Compat.register_key((KeyMapping) km));
 
-        ClientTickEvent.CLIENT_POST.register(e -> {
-            boolean any = false;
-            Iterator<Map.Entry<KeyMapping, WandsMod.WandKeys>> itr = keys.entrySet().iterator();
-            while (itr.hasNext()) {
-                Map.Entry<KeyMapping, WandsMod.WandKeys> me = itr.next();
-                KeyMapping km = me.getKey();
-                WandsMod.WandKeys key = me.getValue();
-                if (km.consumeClick()) {
-                    if (!any) any = true;
-                    if (key == WandsMod.WandKeys.CLEAR) {
-                        cancel_wand();
-                    } else {
-                        Networking.send_key(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
-                    }
-                    if (key == WandsMod.WandKeys.ROTATE) {
+        // Build reverse lookup: WandKeys -> KeyMapping
+        keys.forEach((km, v) -> reverseKeys.put((WandsMod.WandKeys) v, (KeyMapping) km));
 
-                        //TODO:move this to another key?
-                        if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
-                            ClientRender.wand.get_mode().randomize();
+        ClientTickEvent.CLIENT_POST.register(e -> {
+            Minecraft client = Minecraft.getInstance();
+            if (client.player == null) return;
+
+            ItemStack mainHand = client.player.getMainHandItem();
+            boolean holdingWand = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
+            boolean holdingPalette = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
+            boolean holdingOffhandPalette = false;
+            ItemStack offHand = client.player.getOffhandItem();
+            if (offHand != null && !offHand.isEmpty() && offHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem) {
+                holdingOffhandPalette = true;
+            }
+            boolean useRawInput = holdingWand || holdingPalette || holdingOffhandPalette;
+
+            boolean any = false;
+
+            if (useRawInput && client.screen == null) {
+                // Bypass KeyMapping conflicts: poll GLFW directly for wand keys
+                long window = Compat.getWindow();
+                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                    KeyMapping km = me.getKey();
+                    WandsMod.WandKeys key = me.getValue();
+                    int keyCode = Compat.getKeyCode(km);
+                    if (keyCode <= 0) continue; // Unbound
+
+                    boolean pressed = GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS;
+                    boolean wasPressed = prevKeyState.contains(keyCode);
+
+                    if (pressed && !wasPressed) {
+                        // New press detected
+                        if (!any) any = true;
+                        if (key == WandsMod.WandKeys.CLEAR) {
+                            cancel_wand();
+                        } else {
+                            Networking.send_key(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
+                        }
+                        if (key == WandsMod.WandKeys.ROTATE) {
+                            if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
+                                ClientRender.wand.get_mode().randomize();
+                            }
+                        }
+                    }
+                }
+
+                // Update key state tracking
+                prevKeyState.clear();
+                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                    int keyCode = Compat.getKeyCode(me.getKey());
+                    if (keyCode > 0 && GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS) {
+                        prevKeyState.add(keyCode);
+                    }
+                }
+
+                // Drain any pending clicks so conflicting bindings don't also fire
+                for (KeyMapping km : keys.keySet()) {
+                    while (km.consumeClick()) {}
+                }
+            } else {
+                // Normal KeyMapping path when not holding wand
+                prevKeyState.clear();
+                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                    KeyMapping km = me.getKey();
+                    WandsMod.WandKeys key = me.getValue();
+                    if (km.consumeClick()) {
+                        if (!any) any = true;
+                        if (key == WandsMod.WandKeys.CLEAR) {
+                            cancel_wand();
+                        } else {
+                            Networking.send_key(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
+                        }
+                        if (key == WandsMod.WandKeys.ROTATE) {
+                            if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
+                                ClientRender.wand.get_mode().randomize();
+                            }
                         }
                     }
                 }
@@ -126,8 +190,10 @@ public class WandsModClient {
                 if (alt != Compat.hasAltDown() || shift != Compat.hasShiftDown()) {
                     alt = Compat.hasAltDown();
                     shift = Compat.hasShiftDown();
-                    ClientRender.wand.is_alt_pressed = alt;
-                    ClientRender.wand.is_shift_pressed = shift;
+                    if (ClientRender.wand != null) {
+                        ClientRender.wand.is_alt_pressed = alt;
+                        ClientRender.wand.is_shift_pressed = shift;
+                    }
                     Networking.send_key(-1, shift, alt);
                 }
             }
@@ -136,11 +202,29 @@ public class WandsModClient {
         //Compat.render_info();
         ClientGuiEvent.RENDER_HUD.register((e, d) -> {
             WandsModClient.render_wand_info(e);
+            ModeInstructionOverlay.render(e);
         });
         Networking.RegisterReceiversS2C();
     }
 
-
+    /** Get a short display name for a keybind (e.g. "V", "H", "Right") */
+    public static String getKeyName(WandsMod.WandKeys key) {
+        KeyMapping km = reverseKeys.get(key);
+        if (km == null) return "?";
+        String name = km.getTranslatedKeyMessage().getString();
+        // Strip common suffixes for shorter display
+        if (name.endsWith(" Key")) {
+            name = name.substring(0, name.length() - 4);
+        }
+        // Map common long names to short forms
+        switch (name) {
+            case "Right Arrow": return "Right";
+            case "Left Arrow": return "Left";
+            case "Up Arrow": return "Up";
+            case "Down Arrow": return "Down";
+        }
+        return name;
+    }
 
     public static void render_wand_info(GuiGraphics gui) {
         Minecraft client = Minecraft.getInstance();
@@ -189,10 +273,15 @@ public class WandsModClient {
                             rot = "270°";
                             break;
                     }
-                    // Determine which HUD elements to show based on mode
-                    boolean showP1P2 = mode.n_clicks() == 2;  // Two-click modes show P1/P2
-                    boolean showAction = WandProps.anyActionAppliesTo(mode);
+                    boolean showP1P2 = mode == WandProps.Mode.COPY;
+                    boolean showAction = WandProps.hasMultipleActions(mode);
                     boolean showRotation = WandProps.rotationAppliesTo(mode);
+
+                    String modeStr = Compat.translatable(mode.toString()).getString();
+                    String actionStr = showAction ? Compat.translatable(action.toString()).getString() : "";
+                    String modeKey = getKeyName(WandsMod.WandKeys.MODE);
+                    String actionKey = getKeyName(WandsMod.WandKeys.ACTION);
+                    String rotateKey = getKeyName(WandsMod.WandKeys.ROTATE);
 
                     String p1Val = "";
                     String p2Val = "";
@@ -200,156 +289,201 @@ public class WandsModClient {
                         BlockPos bp1 = wand.getP1();
                         BlockPos bp2 = wand.getP2();
                         if (wand.getP1() != null) {
-                            p1Val = "[" + bp1.getX() + "," + bp1.getY() + "," + bp1.getZ() + "]";
+                            p1Val = bp1.getX() + ", " + bp1.getY() + ", " + bp1.getZ();
                         }
                         if (wand.getP2() != null) {
-                            p2Val = "[" + bp2.getX() + "," + bp2.getY() + "," + bp2.getZ() + "]";
+                            p2Val = bp2.getX() + ", " + bp2.getY() + ", " + bp2.getZ();
                         } else {
                             if (wand.getP1() != null) {
-                                p2Val = "[" + ClientRender.last_pos.getX() + "," + ClientRender.last_pos.getY() + "," + ClientRender.last_pos.getZ() + "]";
+                                p2Val = ClientRender.last_pos.getX() + ", " + ClientRender.last_pos.getY() + ", " + ClientRender.last_pos.getZ();
                             }
                         }
                     }
 
-                    // Build text content for each line to measure width
-                    String line1Text = "";
+                    String rotText = "";
+                    if (showRotation) {
+                        rotText = "Rotation " + rot + " [" + rotateKey + "]";
+                    }
+
+                    // Build orientation/plane text
+                    String orientKey = getKeyName(WandsMod.WandKeys.ORIENTATION);
+                    String orientText = "";
+                    switch (mode) {
+                        case CIRCLE:
+                            orientText = Compat.translatable("screen.wands.plane").getString() + " " + WandProps.getPlane(stack) + " [" + orientKey + "]";
+                            break;
+                        case ROW_COL:
+                            orientText = Compat.translatable(WandProps.getOrientation(stack).toString()).getString() + " [" + orientKey + "]";
+                            break;
+                    }
+
+                    // Build P1/P2 text (separate lines)
+                    String p1Text = "";
+                    String p2Text = "";
+                    if (showP1P2) {
+                        if (!p1Val.isEmpty()) {
+                            p1Text = "P1: " + p1Val;
+                        }
+                        if (!p2Val.isEmpty()) {
+                            p2Text = "P2: " + p2Val;
+                        }
+                    }
+
+                    // Build mode-specific info text
+                    String infoText = "";
                     if (wand.valid) {
                         switch (mode) {
                             case DIRECTION:
                                 int mult = WandProps.getVal(stack, WandProps.Value.MULTIPLIER);
-                                line1Text = "pos: [" + wand.pos.getX() + "," + wand.pos.getY() + "," + wand.pos.getZ() + "] x" + mult;
+                                infoText = "pos: " + wand.pos.getX() + ", " + wand.pos.getY() + ", " + wand.pos.getZ() + " x" + mult;
                                 break;
                             case GRID:
                                 int gm = WandProps.getVal(stack, WandProps.Value.GRIDM);
                                 int gn = WandProps.getVal(stack, WandProps.Value.GRIDN);
                                 int gms = WandProps.getVal(stack, WandProps.Value.GRIDMS);
                                 int gns = WandProps.getVal(stack, WandProps.Value.GRIDNS);
-                                line1Text = "Grid " + gm + "x" + gn;
+                                infoText = "Grid " + gm + "x" + gn;
                                 if (gms > 0 || gns > 0) {
-                                    line1Text += " Skip " + gms + "x" + gns;
+                                    infoText += " Skip " + gms + "x" + gns;
                                 }
                                 break;
                             case FILL:
                                 int nx = wand.fill_nx + 1;
                                 int ny = wand.fill_ny + 1;
                                 int nz = wand.fill_nz + 1;
-                                line1Text = "Volume [" + nx + "," + ny + "," + nz + "] Blocks: " + wand.block_buffer.get_length();
+                                infoText = "Volume " + nx + "x" + ny + "x" + nz + " Blocks: " + wand.block_buffer.get_length();
                                 break;
                             case ROW_COL:
                                 int rowcollim = WandProps.getVal(stack, WandProps.Value.ROWCOLLIM);
-                                line1Text = "Blocks: " + wand.block_buffer.get_length();
+                                infoText = "Blocks: " + wand.block_buffer.get_length();
                                 if (rowcollim > 0) {
-                                    line1Text += " Limit: " + rowcollim;
+                                    infoText += " Limit: " + rowcollim;
                                 }
                                 break;
                             case LINE:
-                                line1Text = "Blocks: " + wand.block_buffer.get_length();
+                                infoText = "Blocks: " + wand.block_buffer.get_length();
                                 break;
                             case AREA:
                             case VEIN:
                                 int arealim = WandProps.getVal(stack, WandProps.Value.AREALIM);
-                                line1Text = "Blocks: " + wand.block_buffer.get_length();
+                                infoText = "Blocks: " + wand.block_buffer.get_length();
                                 if (arealim > 0) {
-                                    line1Text += " Limit: " + arealim;
+                                    infoText += " Limit: " + arealim;
                                 }
                                 break;
                             case CIRCLE:
                             case SPHERE:
-                                line1Text = "Radius: " + wand.radius + " N: " + wand.block_buffer.get_length();
+                                infoText = "Radius: " + wand.radius + " N: " + wand.block_buffer.get_length();
                                 break;
                             case COPY:
                             case PASTE:
-                                line1Text = "Copied Blocks: " + wand.copy_paste_buffer.size();
+                                infoText = "Copied Blocks: " + wand.copy_paste_buffer.size();
                                 break;
                             case BOX:
                                 int tw = WandProps.getVal(stack, WandProps.Value.BOX_W);
                                 int th = WandProps.getVal(stack, WandProps.Value.BOX_H);
                                 int td = WandProps.getVal(stack, WandProps.Value.BOX_DEPTH);
-                                line1Text = "Size " + tw + "x" + th + " Depth: " + td;
+                                infoText = "Size " + tw + "x" + th + " Depth: " + td;
                                 break;
                             case BLAST:
                                 int blastRad = WandProps.getVal(stack, WandProps.Value.BLASTRAD);
-                                line1Text = "Radius: " + blastRad;
+                                infoText = "Radius: " + blastRad;
                                 break;
                             case ROCK:
                                 int rockRad = WandProps.getVal(stack, WandProps.Value.ROCK_RADIUS);
                                 int rockNoise = WandProps.getVal(stack, WandProps.Value.ROCK_NOISE);
-                                line1Text = "Radius: " + rockRad + " Noise: " + rockNoise;
+                                infoText = "Radius: " + rockRad + " Noise: " + rockNoise;
                                 break;
                         }
                     }
 
-                    String line2Text = showAction ? "Action: " + Compat.translatable(action.toString()).getString() : "";
-                    String line3Text = "Mode: " + Compat.translatable(mode.toString()).getString();
-                    if (showRotation) {
-                        line3Text += " Rot: " + rot;
-                    }
-
-                    // Calculate max width for background
-                    int maxWidth = font.width(line1Text);
-                    maxWidth = Math.max(maxWidth, font.width(line2Text));
-                    maxWidth = Math.max(maxWidth, font.width(line3Text));
-                    if (showP1P2) {
-                        if (!p1Val.isEmpty()) maxWidth = Math.max(maxWidth, font.width("P1: " + p1Val));
-                        if (!p2Val.isEmpty()) maxWidth = Math.max(maxWidth, font.width("P2: " + p2Val));
-                    }
-
-                    // Count actual lines for dynamic height
-                    int lineCount = 0;
-                    if (showP1P2 && !p1Val.isEmpty()) lineCount++;
-                    if (showP1P2 && !p2Val.isEmpty()) lineCount++;
-                    if (!line1Text.isEmpty()) lineCount++;
-                    if (showAction) lineCount++;
-                    lineCount++; // Mode line is always shown
+                    // Undo line (creative only)
+                    boolean showUndo = client.player.isCreative();
+                    String undoKey = showUndo ? getKeyName(WandsMod.WandKeys.UNDO) : "";
+                    String undoText = showUndo ? "Undo [" + undoKey + "]" : "";
 
                     int pad = WandScreen.SCREEN_MARGIN;
-                    int contentHeight = lineCount * font.lineHeight;
+                    int lineSpacing = font.lineHeight + Section.VERTICAL_SPACING;
+
+                    // Count lines — each item gets its own row
+                    int lineCount = 1; // mode
+                    if (showAction) lineCount++;
+                    if (!orientText.isEmpty()) lineCount++;
+                    if (!rotText.isEmpty()) lineCount++;
+                    if (!p1Text.isEmpty()) lineCount++;
+                    if (!p2Text.isEmpty()) lineCount++;
+                    if (!infoText.isEmpty()) lineCount++;
+                    if (showUndo) lineCount++;
+
+                    // Calculate max width across all lines
+                    String modeText = modeStr + " [" + modeKey + "]";
+                    String actionText = showAction ? actionStr + " [" + actionKey + "]" : "";
+                    int maxWidth = font.width(modeText);
+                    if (showAction) maxWidth = Math.max(maxWidth, font.width(actionText));
+                    if (!orientText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(orientText));
+                    if (!rotText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(rotText));
+                    if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
+                    if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
+                    if (!infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
+                    if (showUndo) maxWidth = Math.max(maxWidth, font.width(undoText));
+
+                    int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
 
-                    // Calculate HUD position
-                    // At 100%: background right/bottom edge is pad pixels from screen edge
                     int hudX = pad * 2 + (int) ((screenWidth - contentWidth - pad * 4) * (WandsMod.config.wand_mode_display_x_pos / 100.0f));
                     int hudY = pad * 2 + (int) ((screenHeight - contentHeight - pad * 4) * (WandsMod.config.wand_mode_display_y_pos / 100.0f));
 
-                    // Draw background (with padding on all sides)
                     gui.fill(hudX - pad, hudY - pad, hudX + contentWidth + pad, hudY + contentHeight + pad, WandScreen.COLOR_PANEL_BACKGROUND);
 
-                    // Draw lines sequentially from top to bottom
                     int currentY = hudY;
-                    int lineX = hudX;
 
-                    // Mode line (always shown first)
-                    lineX += drawHudLabelValue(gui, font, "Mode: ", Compat.translatable(mode.toString()).getString(), lineX, currentY);
-                    if (showRotation) {
-                        drawHudLabelValue(gui, font, " Rot: ", rot, lineX, currentY);
-                    }
-                    currentY += font.lineHeight;
+                    // Mode [V]
+                    drawHudValueWithHint(gui, font, modeStr, modeKey, hudX, currentY);
+                    currentY += lineSpacing;
 
-                    // Action line (if shown)
+                    // Action [H]
                     if (showAction) {
-                        drawHudLabelValue(gui, font, "Action: ", Compat.translatable(action.toString()).getString(), hudX, currentY);
-                        currentY += font.lineHeight;
+                        drawHudValueWithHint(gui, font, actionStr, actionKey, hudX, currentY);
+                        currentY += lineSpacing;
                     }
 
-                    // P1 and P2 (if shown)
-                    if (showP1P2) {
-                        if (!p1Val.isEmpty()) {
-                            drawHudLabelValue(gui, font, "P1: ", p1Val, hudX, currentY);
-                            currentY += font.lineHeight;
+                    // Orientation/Plane [X]
+                    if (!orientText.isEmpty()) {
+                        switch (mode) {
+                            case CIRCLE:
+                                drawHudValueWithHint(gui, font, Compat.translatable("screen.wands.plane").getString() + " " + WandProps.getPlane(stack), orientKey, hudX, currentY);
+                                break;
+                            case ROW_COL:
+                                drawHudValueWithHint(gui, font, Compat.translatable(WandProps.getOrientation(stack).toString()).getString(), orientKey, hudX, currentY);
+                                break;
                         }
-                        if (!p2Val.isEmpty()) {
-                            drawHudLabelValue(gui, font, "P2: ", p2Val, hudX, currentY);
-                            currentY += font.lineHeight;
-                        }
+                        currentY += lineSpacing;
                     }
 
-                    // Mode-specific info line
-                    lineX = hudX;
-                    if (wand.valid && !line1Text.isEmpty()) {
+                    // Rotation [R]
+                    if (showRotation) {
+                        drawHudValueWithHint(gui, font, "Rotation " + rot, rotateKey, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+
+                    // P1
+                    if (!p1Text.isEmpty()) {
+                        drawHudLabelValue(gui, font, "P1: ", p1Val, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+                    // P2
+                    if (!p2Text.isEmpty()) {
+                        drawHudLabelValue(gui, font, "P2: ", p2Val, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+
+                    // Mode-specific info
+                    if (wand.valid && !infoText.isEmpty()) {
+                        int lineX = hudX;
                         switch (mode) {
                             case DIRECTION:
                                 int mult = WandProps.getVal(stack, WandProps.Value.MULTIPLIER);
-                                lineX += drawHudLabelValue(gui, font, "pos: ", "[" + wand.pos.getX() + "," + wand.pos.getY() + "," + wand.pos.getZ() + "]", lineX, currentY);
+                                lineX += drawHudLabelValue(gui, font, "pos: ", wand.pos.getX() + ", " + wand.pos.getY() + ", " + wand.pos.getZ(), lineX, currentY);
                                 drawHudLabelValue(gui, font, " x", String.valueOf(mult), lineX, currentY);
                                 break;
                             case GRID:
@@ -366,7 +500,7 @@ public class WandsModClient {
                                 int nx = wand.fill_nx + 1;
                                 int ny = wand.fill_ny + 1;
                                 int nz = wand.fill_nz + 1;
-                                lineX += drawHudLabelValue(gui, font, "Volume ", "[" + nx + "," + ny + "," + nz + "]", lineX, currentY);
+                                lineX += drawHudLabelValue(gui, font, "Volume ", nx + "x" + ny + "x" + nz, lineX, currentY);
                                 lineX += font.width(" ");
                                 drawHudLabelValue(gui, font, "Blocks: ", String.valueOf(wand.block_buffer.get_length()), lineX, currentY);
                                 break;
@@ -415,30 +549,55 @@ public class WandsModClient {
                                 drawHudLabelValue(gui, font, " Noise: ", String.valueOf(rockNoise), lineX, currentY);
                                 break;
                         }
+                        currentY += lineSpacing;
+                    }
+
+                    // Undo [U]
+                    if (showUndo) {
+                        drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
                     }
                 }
             }
         }
     }
 
-    /** Draw HUD text with label in gray and value in white */
+    /** Draw HUD text with label in white and value in gray */
     private static int drawHudLabelValue(GuiGraphics gui, Font font, String label, String value, int x, int y) {
-        gui.drawString(font, label, x, y, WandScreen.COLOR_WDGT_LABEL);
+        gui.drawString(font, label, x, y, WandScreen.COLOR_TEXT_PRIMARY);
         int labelWidth = font.width(label);
-        gui.drawString(font, value, x + labelWidth, y, WandScreen.COLOR_TEXT_PRIMARY);
+        gui.drawString(font, value, x + labelWidth, y, WandScreen.COLOR_WDGT_LABEL);
         return labelWidth + font.width(value);
     }
 
-    /** Draw HUD text - value only in white */
-    private static void drawHudValue(GuiGraphics gui, Font font, String value, int x, int y) {
+    /** Draw HUD text - value only in white, returns width */
+    private static int drawHudValue(GuiGraphics gui, Font font, String value, int x, int y) {
         gui.drawString(font, value, x, y, WandScreen.COLOR_TEXT_PRIMARY);
+        return font.width(value);
+    }
+
+    /** Draw a keybind hint like [V] in dim gray, returns total width */
+    private static int drawHudKeybindHint(GuiGraphics gui, Font font, String keyName, int x, int y) {
+        String hint = "[" + keyName + "]";
+        gui.drawString(font, hint, x, y, WandScreen.COLOR_WDGT_LABEL);
+        return font.width(hint);
+    }
+
+    /** Draw value in white followed by keybind hint in gray with a space between, returns total width */
+    private static int drawHudValueWithHint(GuiGraphics gui, Font font, String value, String keyName, int x, int y) {
+        int w = 0;
+        gui.drawString(font, value, x, y, WandScreen.COLOR_TEXT_PRIMARY);
+        w += font.width(value);
+        String hint = " [" + keyName + "]";
+        gui.drawString(font, hint, x + w, y, WandScreen.COLOR_WDGT_LABEL);
+        w += font.width(hint);
+        return w;
     }
 
     public static void cancel_wand() {
         if (ClientRender.wand != null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)) {
             ClientRender.wand.clear(true);
             if (ClientRender.wand.player != null && !WandsMod.config.disable_info_messages) {
-                ClientRender.wand.player.displayClientMessage(Compat.literal("wand cleared"), false);
+                ClientRender.wand.player.displayClientMessage(Compat.literal("Wand cleared"), true);
             }
         }
     }
