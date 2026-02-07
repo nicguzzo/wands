@@ -663,14 +663,14 @@ public class WandProps {
     public static final EnumSet<Mode> ROTATION_MODES = EnumSet.of(Mode.GRID, Mode.PASTE);
 
     // Action-to-mode mappings: which actions apply to which modes
-    // COPY and BLAST ignore actions entirely, VEIN doesn't support PLACE
+    // COPY ignores actions entirely, BLAST only supports DESTROY, VEIN doesn't support PLACE
     public static final Map<Action, EnumSet<Mode>> ACTION_MODES = Map.of(
         Action.PLACE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
             Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.SPHERE, Mode.ROCK),
         Action.REPLACE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
             Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
         Action.DESTROY, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
-            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK),
+            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.VEIN, Mode.BLAST, Mode.SPHERE, Mode.ROCK),
         Action.USE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
             Mode.CIRCLE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK)
     );
@@ -686,6 +686,18 @@ public class WandProps {
         for (Action action : Action.values()) {
             if (actionAppliesTo(action, mode)) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    // Check if a mode has multiple valid actions (worth showing/toggling)
+    public static boolean hasMultipleActions(Mode mode) {
+        int count = 0;
+        for (Action action : actions) {
+            if (actionAppliesTo(action, mode)) {
+                count++;
+                if (count > 1) return true;
             }
         }
         return false;
@@ -895,7 +907,6 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        //WandsMod.LOGGER.info("tag: "+tag);
         int mode = (Compat.getInt(tag,"mode").orElse(0) + 1) % (modes.length);
 
         if (mode == Mode.VEIN.ordinal() && !WandsMod.config.enable_vein_mode) {
@@ -904,8 +915,7 @@ public class WandProps {
         if ((!can_blast && mode == Mode.BLAST.ordinal()) || (!WandsMod.config.enable_blast_mode && mode == Mode.BLAST.ordinal())) {
             mode = Mode.DIRECTION.ordinal();
         }
-        tag.putInt("mode", mode);
-        Compat.saveCustomData(stack, tag);
+        switchMode(stack, modes[mode]);
     }
 
     static public void prevMode(ItemStack stack, boolean can_blast) {
@@ -913,7 +923,6 @@ public class WandProps {
             return;
         }
         CompoundTag tag = Compat.getTags(stack);
-        //WandsMod.LOGGER.info("tag: "+tag);
         int mode = Compat.getInt(tag,"mode").orElse(1) - 1;
         if (mode < 0) {
             mode = modes.length - 1;
@@ -924,8 +933,7 @@ public class WandProps {
         if (mode == Mode.VEIN.ordinal() && !WandsMod.config.enable_vein_mode) {
             mode = Mode.VEIN.ordinal() - 1;
         }
-        tag.putInt("mode", mode);
-        Compat.saveCustomData(stack, tag);
+        switchMode(stack, modes[mode]);
     }
 
     static public Orientation getOrientation(ItemStack stack) {
@@ -1064,6 +1072,81 @@ public class WandProps {
             tag.putInt("action", a);
             Compat.saveCustomData(stack, tag);
         }
+    }
+
+    // Mode-aware action cycling: only cycles to actions valid for the given mode
+    static public void nextAction(ItemStack stack, Mode mode) {
+        if (WandUtils.is_wand(stack)) {
+            if (!anyActionAppliesTo(mode)) return;
+            CompoundTag tag = Compat.getTags(stack);
+            int current = Compat.getInt(tag, "action").orElse(0);
+            int a = current;
+            for (int i = 0; i < actions.length; i++) {
+                a = (a + 1) % actions.length;
+                if (isActionValidForMode(actions[a], mode)) {
+                    tag.putInt("action", a);
+                    Compat.saveCustomData(stack, tag);
+                    return;
+                }
+            }
+        }
+    }
+
+    static public void prevAction(ItemStack stack, Mode mode) {
+        if (WandUtils.is_wand(stack)) {
+            if (!anyActionAppliesTo(mode)) return;
+            CompoundTag tag = Compat.getTags(stack);
+            int current = Compat.getInt(tag, "action").orElse(0);
+            int a = current;
+            for (int i = 0; i < actions.length; i++) {
+                a = a - 1;
+                if (a < 0) a = actions.length - 1;
+                if (isActionValidForMode(actions[a], mode)) {
+                    tag.putInt("action", a);
+                    Compat.saveCustomData(stack, tag);
+                    return;
+                }
+            }
+        }
+    }
+
+    // After a mode switch, ensure the current action is valid for the new mode.
+    // Used by both keybind mode cycling (server-side) and WandScreen (client-side).
+    static public void validateAction(ItemStack stack, Mode mode) {
+        if (!WandUtils.is_wand(stack)) return;
+        if (!anyActionAppliesTo(mode)) return; // Mode ignores actions (e.g. COPY)
+        Action current = getAction(stack);
+        if (isActionValidForMode(current, mode)) return; // Already valid
+        // Find first valid action
+        for (Action a : actions) {
+            if (isActionValidForMode(a, mode)) {
+                setAction(stack, a);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Switch mode and set default action for the new mode.
+     * Blast and Vein default to Destroy; all others default to Place.
+     * Single source of truth used by both keybinds and WandScreen.
+     */
+    static public void switchMode(ItemStack stack, Mode newMode) {
+        if (!WandUtils.is_wand(stack)) return;
+        setMode(stack, newMode);
+        if (newMode == Mode.BLAST || newMode == Mode.VEIN) {
+            setAction(stack, Action.DESTROY);
+        } else if (anyActionAppliesTo(newMode)) {
+            setAction(stack, Action.PLACE);
+        }
+    }
+
+    // Check if an action is valid for a mode, considering config
+    static public boolean isActionValidForMode(Action action, Mode mode) {
+        if (!actionAppliesTo(action, mode)) return false;
+        if (WandsMod.config.disable_destroy_replace &&
+            (action == Action.DESTROY || action == Action.REPLACE)) return false;
+        return true;
     }
 
     static public Direction.Axis getAxis(ItemStack stack) {

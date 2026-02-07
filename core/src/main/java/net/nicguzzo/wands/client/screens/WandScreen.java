@@ -252,48 +252,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         wandInventoryTexture=textureManager.getTexture(INV_TEX.res).getTextureView();
         #endif
     }
-    // Remember last action for modes that don't support actions (like COPY, BLAST)
-    private WandProps.Action lastRememberedAction = WandProps.Action.PLACE;
-
-    // Preserve action when switching modes if applicable, otherwise remember and restore
-    private void resetActionForMode(WandProps.Mode mode) {
-        ItemStack actualWand = getPlayerHeldWand();
-        WandProps.Action currentAction = WandProps.getAction(actualWand);
-
-        // Check if current action is valid for the new mode
-        if (isActionValidForMode(currentAction, mode)) {
-            // Keep current action, but remember it for later
-            lastRememberedAction = currentAction;
-            return;
-        }
-
-        // Current action not valid - try to restore last remembered action
-        if (isActionValidForMode(lastRememberedAction, mode)) {
-            WandProps.setAction(actualWand, lastRememberedAction);
-            return;
-        }
-
-        // Neither current nor remembered action works - find first valid action
-        for (WandProps.Action action : WandProps.actions) {
-            if (isActionValidForMode(action, mode)) {
-                WandProps.setAction(actualWand, action);
-                return;
-            }
-        }
-    }
-
-    // Helper to check if an action is valid for a mode (considering config)
-    private boolean isActionValidForMode(WandProps.Action action, WandProps.Mode mode) {
-        if (!WandProps.actionAppliesTo(action, mode)) {
-            return false;
-        }
-        if (WandsMod.config.disable_destroy_replace &&
-            (action == WandProps.Action.DESTROY || action == WandProps.Action.REPLACE)) {
-            return false;
-        }
-        return true;
-    }
-
     // Helper for creating a spinner bound to a WandProps.Value
     private Spinner valSpinner(Value val, int w, int h, Component label) {
         return new Spinner(WandProps.getVal(wandStack, val), val.min, val.max, w, h, label)
@@ -451,8 +409,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         Btn btn = new Btn(0, 0, Tabs.TAB_SIZE, Tabs.TAB_SIZE, label, (mouseX, mouseY) -> {
             isToolsTabSelected = false;
             ItemStack actualWand = getPlayerHeldWand();
-            WandProps.setMode(actualWand, mode);
-            resetActionForMode(mode);
+            WandProps.switchMode(actualWand, mode);
             Networking.send_wand(actualWand);
         });
         btn.withTooltip(Compat.translatable(titleKey), Compat.translatable(descKey));

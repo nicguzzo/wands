@@ -1161,7 +1161,7 @@ public class Wand {
             //WandsMod.log("actual block ("+actual_blk+") is in the denied list",true);
             return false;
         }
-        if (destroy && (mode != Mode.VEIN) && has_offhand && offhand_block != null && offhand_state != st) {
+        if (destroy && (mode != Mode.VEIN) && has_offhand && offhand_block != null && offhand_block != st.getBlock()) {
             // Action bar message: offhand block restricts destroy to matching blocks only
             player.displayClientMessage(Compat.translatable("wands.message.offhand_restricts_destroy"), true);
             return false;
