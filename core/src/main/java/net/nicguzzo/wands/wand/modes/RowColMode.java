@@ -16,8 +16,9 @@ public class RowColMode extends WandMode {
         Level level= Compat.player_level(wand.player);
         boolean preview = level.isClientSide();
         Direction dir = Direction.EAST;
-        BlockPos pos_m= wand.pos.relative(wand.side, 1);;
-        //WandItem wand_item = (WandItem) wand.wand_stack.getItem();
+        // INCSELBLOCK flag does not apply to ROW_COL (not in FLAG_MODES), so
+        // wand.pos is always the clicked block — offset to placement position here
+        BlockPos pos_m = wand.pos.relative(wand.side, 1);
         BlockState state = level.getBlockState(pos_m);
 
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
