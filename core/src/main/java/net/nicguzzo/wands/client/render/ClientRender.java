@@ -1438,7 +1438,7 @@ public class ClientRender {
             mode == Mode.PASTE ||
             mode == Mode.ROW_COL||
             mode == Mode.ROCK )){
-        if (fancy && wand.offhand_state!=null){
+        if (fancy && wand.offhand_state!=null && mode != Mode.COPY){
             random.setSeed(0);
             VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
             render_shape(matrixStack,consumer, wand.offhand_state,
