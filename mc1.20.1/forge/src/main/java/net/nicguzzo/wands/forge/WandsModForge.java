@@ -10,12 +10,16 @@ import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
 #endif
 
-//import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
+import net.nicguzzo.wands.client.screens.MagicBagScreen;
+import net.nicguzzo.wands.client.screens.PaletteScreen;
+import net.nicguzzo.wands.client.screens.WandScreen;
 import net.minecraftforge.fml.ModList;
 @Mod(WandsMod.MOD_ID)
 
@@ -37,19 +41,19 @@ public class WandsModForge {
         WandsMod.log("Has flan!! "+WandsMod.has_goml,true);
 
         WandsMod.init();
-        EnvExecutor.runInEnv(Env.CLIENT, () -> 
+        EnvExecutor.runInEnv(Env.CLIENT, () ->
             ()-> {
                 WandsModClient.initialize();
-                //MinecraftForge.EVENT_BUS.register(new KeyBindingRegistry());
             }
         );
-        //MinecraftForge.EVENT_BUS.register(this);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
     }
-    /*@Mod.EventBusSubscriber(modid = WandsMod.MOD_ID, value = Dist.CLIENT)
-    public static class ClientModBusEvents {
-        @SubscribeEvent
-        public static void onKeyRegister(RegisterKeyMappingsEvent event) {
-            WandsModClient.keys.forEach((km,v) -> event.register((KeyMapping)km));
-        }
-    }*/
+
+    private void clientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            MenuScreens.register(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
+            MenuScreens.register(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
+            MenuScreens.register(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
+        });
+    }
 }
