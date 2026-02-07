@@ -35,7 +35,11 @@ public class WandsExpectPlatformImpl {
         return true;
     }
     public static CompoundTag getPlayerData(Player player){
-        //return player.getData(WandsModForge.PLAYER_DATA);
-        throw new AssertionError();
+        CompoundTag forgeData = player.getPersistentData();
+        String key = "wands_player_data";
+        if (!forgeData.contains(key)) {
+            forgeData.put(key, new CompoundTag());
+        }
+        return forgeData.getCompound(key);
     }
 }

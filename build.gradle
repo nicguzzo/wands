@@ -6,6 +6,8 @@ plugins {
     id "me.shedaniel.unified-publishing" version "0.1.+" apply false
 }
 
+version = mod_version
+
 subprojects {
 
 

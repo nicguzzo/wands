@@ -98,7 +98,7 @@ public class WandsModClient {
 
         keys.forEach((km, v) -> Compat.register_key((KeyMapping) km));
 
-        ClientTickEvent.CLIENT_PRE.register(e -> {
+        ClientTickEvent.CLIENT_POST.register(e -> {
             boolean any = false;
             Iterator<Map.Entry<KeyMapping, WandsMod.WandKeys>> itr = keys.entrySet().iterator();
             while (itr.hasNext()) {

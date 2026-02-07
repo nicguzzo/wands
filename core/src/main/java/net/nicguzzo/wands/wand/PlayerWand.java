@@ -18,7 +18,7 @@ public class PlayerWand{
             wand.player_data = ((IEntityDataSaver) player).getPersistentData();
         }
 
-        if(WandsMod.is_neoforge) {
+        if(WandsMod.is_neoforge || WandsMod.is_forge) {
             wand.player_data= WandsExpectPlatform.getPlayerData(player);
         }
         WandsMod.log("player_data "+wand.player_data.toString(),true);
