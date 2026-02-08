@@ -3,6 +3,7 @@ package net.nicguzzo.wands.client.screens;
 import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 #if MC_VERSION >= 12111
 import com.mojang.blaze3d.textures.GpuTextureView;
@@ -29,6 +30,7 @@ import net.nicguzzo.wands.client.gui.CycleSpinner;
 import net.nicguzzo.wands.client.gui.Section;
 import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.client.gui.Tabs;
+import net.nicguzzo.wands.client.gui.Divider;
 import net.nicguzzo.wands.client.gui.Wdgt;
 import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.networking.Networking;
@@ -85,7 +87,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     // Toggle for vertical divider line between tabs and mode options
     private static final boolean SHOW_TAB_DIVIDER = true;
-    private static final int COLOR_TAB_DIVIDER = 0xFF444444;  // Dark gray line
+    public static final int COLOR_TAB_DIVIDER = 0xFF444444;  // Dark gray line
     private static final int DIVIDER_LINE_WIDTH = 1;          // Divider line thickness in pixels
 
     // EXPERIMENTAL: Extended divider that fills from tabs to right edge with widget background color
@@ -104,8 +106,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Tabs modeTabs;
     boolean isToolsTabSelected = false;  // Track if Tools tab is selected
 
-    // Block State Section - combined state + axis
-    CycleToggle<Integer> blockStateCycle;
+    // Block State Section - independent controls
+    CycleToggle<WandProps.StateMode> stateModeCycle;
+    CycleToggle<Boolean> stateFlipToggle;
+    CycleToggle<Rotation> blockRotationCycle;
+    CycleToggle<Direction.Axis> stateAxisCycle;
 
     // Tools Section
     CycleToggle<Boolean> dropPositionToggle;
@@ -147,6 +152,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner boxOffsetYSpinner;
     CycleToggle<Boolean> includeBlockToggle;
     CycleToggle<Boolean> keepStartToggle;
+    Divider sectionDivider;
 
     // Map widget to the modes it should be visible for
     Map<Wdgt, EnumSet<WandProps.Mode>> modeWidgets = new HashMap<>();
@@ -290,45 +296,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         forceClientRedraw();
     }
 
-    /** Build dynamic tooltip for block state options based on context */
-    private Component buildBlockStateTooltip(int idx, boolean isPillarBlock, boolean isHollowFill) {
-        // Base tooltip keys for each option
-        String baseKey = switch (idx) {
-            case WandProps.BLOCK_STATE_CLONE -> "tooltip.wands.clone_state";
-            case WandProps.BLOCK_STATE_APPLY_X -> "tooltip.wands.apply_x";
-            case WandProps.BLOCK_STATE_APPLY_Y -> "tooltip.wands.apply_y";
-            case WandProps.BLOCK_STATE_APPLY_Z -> "tooltip.wands.apply_z";
-            case WandProps.BLOCK_STATE_FLIP_X -> "tooltip.wands.flip_x";
-            case WandProps.BLOCK_STATE_FLIP_Y -> "tooltip.wands.flip_y";
-            case WandProps.BLOCK_STATE_FLIP_Z -> "tooltip.wands.flip_z";
-            case WandProps.BLOCK_STATE_NORMAL -> "tooltip.wands.normal_place";
-            default -> "tooltip.wands.normal_place";
-        };
-
-        // For Clone and Normal, just return the base tooltip
-        if (idx == WandProps.BLOCK_STATE_CLONE || idx == WandProps.BLOCK_STATE_NORMAL) {
-            return Compat.translatable(baseKey);
-        }
-
-        // Build tooltip with context-specific additions
-        StringBuilder tooltip = new StringBuilder();
-        tooltip.append(Compat.translatable(baseKey).getString());
-
-        // Add pillar block info if applicable
-        if (isPillarBlock) {
-            String pillarKey = baseKey + ".pillar";
-            tooltip.append(" ").append(Compat.translatable(pillarKey).getString());
-        }
-
-        // Add hollow fill info if applicable
-        if (isHollowFill) {
-            String hollowKey = baseKey + ".hollow";
-            tooltip.append(" ").append(Compat.translatable(hollowKey).getString());
-        }
-
-        return Compat.literal(tooltip.toString());
-    }
-
     // Helper for creating a boolean toggle bound to a WandProps.Flag
     private CycleToggle<Boolean> flagToggle(WandProps.Flag flag, int w, Component label) {
         CycleToggle<Boolean> toggle = CycleToggle.ofBoolean(label,
@@ -343,12 +310,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
 
     /** Create boolean toggle with auto-computed translations, add to section, and auto-register mode visibility */
-    private CycleToggle<Boolean> addFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
+    private CycleToggle<Boolean> makeFlagToggle(WandProps.Flag flag, int w, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         CycleToggle<Boolean> toggle = flagToggle(flag, w, label);
         toggle.withTooltip(label, tooltip);
-        section.add(toggle);
         // Auto-register mode visibility from FLAG_MODES
         EnumSet<WandProps.Mode> modes = WandProps.FLAG_MODES.get(flag);
         if (modes != null) {
@@ -358,7 +324,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
 
     /** Create inverted boolean toggle (ON = flag false, OFF = flag true) with auto-computed translations and auto-register */
-    private CycleToggle<Boolean> addInvertedFlagToggle(Section section, WandProps.Flag flag, int w, String key) {
+    private CycleToggle<Boolean> makeInvertedFlagToggle(WandProps.Flag flag, int w, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         CycleToggle<Boolean> toggle = CycleToggle.ofBoolean(label,
@@ -370,7 +336,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             });
         toggle.width = w;
         toggle.withTooltip(label, tooltip);
-        section.add(toggle);
         // Auto-register mode visibility from FLAG_MODES
         EnumSet<WandProps.Mode> modes = WandProps.FLAG_MODES.get(flag);
         if (modes != null) {
@@ -379,13 +344,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return toggle;
     }
 
-    /** Create Spinner with auto-computed translations, add to section, and auto-register mode visibility */
-    private Spinner addValSpinner(Section section, Value val, int w, int h, String key) {
+    /** Create Spinner with auto-computed translations and auto-register mode visibility */
+    private Spinner makeValSpinner(Value val, int w, int h, String key) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         Spinner spinner = valSpinner(val, w, h, label);
         spinner.withTooltip(label, tooltip);
-        section.add(spinner);
         // Auto-register mode visibility from VALUE_MODES
         EnumSet<WandProps.Mode> modes = WandProps.VALUE_MODES.get(val);
         if (modes != null) {
@@ -525,6 +489,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     private Section createModeOptionsSection(int layoutColWidth, int spinnerHeight) {
         Section section = new Section();
 
+        // ===== Create all widgets =====
+
         // Action select (mode-conditional - hidden for COPY and BLAST, filtered for VEIN)
         Component[] actionLabels = {
             Compat.translatable("wands.action.place"),
@@ -544,7 +510,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 (a != WandProps.Action.DESTROY && a != WandProps.Action.REPLACE))
             .withTooltips("tooltip.wands.action.place", "tooltip.wands.action.replace", "tooltip.wands.action.destroy", "tooltip.wands.action.use");
         actionCycle.width = layoutColWidth;
-        section.add(actionCycle);
 
         // Target Air - combined toggle + spinner
         targetAirSpinner = new CycleSpinner(
@@ -554,30 +519,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.target_air"));
         targetAirSpinner.withTooltip(Compat.translatable("screen.wands.target_air"), Compat.translatable("tooltip.wands.target_air"));
         targetAirSpinner.withOnChange(this::forceClientRedraw);
-        section.add(targetAirSpinner);
-
-        // Mirror (PASTE mode) - boolean toggles
-        mirrorLRToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_lr"),
-            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 1,
-            value -> {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 1 : 0);
-                syncWand(actualWand);
-            });
-        mirrorLRToggle.width = layoutColWidth;
-        mirrorLRToggle.withTooltip(Compat.translatable("screen.wands.mirror_lr"), Compat.translatable("tooltip.wands.mirror_lr"));
-        section.add(mirrorLRToggle);
-
-        mirrorFBToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_fb"),
-            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 2,
-            value -> {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 2 : 0);
-                syncWand(actualWand);
-            });
-        mirrorFBToggle.width = layoutColWidth;
-        mirrorFBToggle.withTooltip(Compat.translatable("screen.wands.mirror_fb"), Compat.translatable("tooltip.wands.mirror_fb"));
-        section.add(mirrorFBToggle);
 
         // Rotation select (GRID and PASTE modes)
         Component[] rotationLabels = {
@@ -594,20 +535,135 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 WandProps.setRotation(actualWand, r);
                 syncWand(actualWand);
             })
-            .withTooltips("tooltip.wands.rot_0", "tooltip.wands.rot_90", "tooltip.wands.rot_180", "tooltip.wands.rot_270");
+            .withTooltips("tooltip.wands.area_rot_0", "tooltip.wands.area_rot_90", "tooltip.wands.area_rot_180", "tooltip.wands.area_rot_270");
         rotationCycle.width = layoutColWidth;
-        section.add(rotationCycle);
 
-        // Rock mode spinners
-        rockRadiusSpinner = addValSpinner(section, Value.ROCK_RADIUS, layoutColWidth, spinnerHeight, "rock_radius");
-        rockNoiseSpinner = addValSpinner(section, Value.ROCK_NOISE, layoutColWidth, spinnerHeight, "rock_noise");
+        // Match state (AREA, VEIN modes)
+        matchStateToggle = makeFlagToggle(WandProps.Flag.MATCHSTATE, layoutColWidth, "match_state");
 
-        // Direction mode
-        multiplierSpinner = addValSpinner(section, Value.MULTIPLIER, layoutColWidth, spinnerHeight, "multiplier");
-        invertToggle = addFlagToggle(section, WandProps.Flag.INVERTED, layoutColWidth, "invert");
+        // Include selected block in selection
+        includeBlockToggle = makeFlagToggle(WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
 
-        // Row/Col mode limit spinner
-        rowColumnLimitSpinner = addValSpinner(section, Value.ROWCOLLIM, layoutColWidth, spinnerHeight, "limit");
+        // Keep start point (inverted: ON = don't clear P1, OFF = clear P1)
+        keepStartToggle = makeInvertedFlagToggle(WandProps.Flag.CLEAR_P1, layoutColWidth, "keep_start");
+
+        // Fill mode - use custom labels for box
+        boxFillToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.filled"),
+            () -> WandProps.getFlag(getPlayerHeldWand(), WandProps.Flag.RFILLED),
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setFlag(actualWand, WandProps.Flag.RFILLED, value);
+                syncWand(actualWand);
+            },
+            "Solid", "Hollow");
+        boxFillToggle.width = layoutColWidth;
+        boxFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
+
+        // Area/Vein mode limit
+        areaLimitSpinner = makeValSpinner(Value.AREALIM, layoutColWidth, spinnerHeight, "limit");
+
+        // Block State controls - independent state mode, flip, block rotation, and axis
+        // State mode cycle: Clone / Adjust / Auto
+        WandProps.StateMode[] stateModeOptions = { WandProps.StateMode.CLONE, WandProps.StateMode.APPLY, WandProps.StateMode.TARGET };
+        Component[] stateModeLabels = {
+            Compat.translatable("screen.wands.state_mode.clone"),
+            Compat.translatable("screen.wands.state_mode.adjust"),
+            Compat.translatable("screen.wands.state_mode.auto")
+        };
+        stateModeCycle = new CycleToggle<>(Compat.translatable("screen.wands.state_mode_prefix"),
+            stateModeOptions, stateModeLabels,
+            () -> {
+                WandProps.StateMode sm = WandProps.getStateMode(getPlayerHeldWand());
+                // Map APPLY_FLIP to APPLY (= Adjust) for display
+                if (sm == WandProps.StateMode.APPLY_FLIP) return WandProps.StateMode.APPLY;
+                return sm;
+            },
+            (sm) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setStateMode(actualWand, sm);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.state_mode.clone", "tooltip.wands.state_mode.adjust", "tooltip.wands.state_mode.auto");
+        stateModeCycle.width = layoutColWidth;
+
+        // Flip toggle: Bottom / Top (controls APPLY vs APPLY_FLIP)
+        stateFlipToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.state_flip"),
+            () -> WandProps.getStateMode(getPlayerHeldWand()) == WandProps.StateMode.APPLY_FLIP,
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setStateMode(actualWand, value ? WandProps.StateMode.APPLY_FLIP : WandProps.StateMode.APPLY);
+                syncWand(actualWand);
+            },
+            "Bottom", "Top");
+        stateFlipToggle.width = layoutColWidth;
+        stateFlipToggle.withTooltips("tooltip.wands.state_flip.bottom", "tooltip.wands.state_flip.top");
+
+        // Block rotation cycle: 0° / 90° / 180° / 270° (independent of area rotation)
+        Component[] blockRotLabels = {
+            Compat.translatable("screen.wands.rot_0"),
+            Compat.translatable("screen.wands.rot_90"),
+            Compat.translatable("screen.wands.rot_180"),
+            Compat.translatable("screen.wands.rot_270")
+        };
+        blockRotationCycle = new CycleToggle<>(Compat.translatable("screen.wands.block_rotation_prefix"),
+            WandProps.rotations, blockRotLabels,
+            () -> WandProps.getBlockRotation(getPlayerHeldWand()),
+            (r) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setBlockRotation(actualWand, r);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.block_rotation.0", "tooltip.wands.block_rotation.90", "tooltip.wands.block_rotation.180", "tooltip.wands.block_rotation.270");
+        blockRotationCycle.width = layoutColWidth;
+
+        // Axis cycle: X / Y / Z (for pillar blocks and hollow fill)
+        Component[] axisLabels = {
+            Compat.literal("X"),
+            Compat.literal("Y"),
+            Compat.literal("Z")
+        };
+        stateAxisCycle = new CycleToggle<>(Compat.translatable("screen.wands.axis"),
+            WandProps.axes, axisLabels,
+            () -> WandProps.getAxis(getPlayerHeldWand()),
+            (a) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setAxis(actualWand, a);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.axis_x", "tooltip.wands.axis_y", "tooltip.wands.axis_z");
+        stateAxisCycle.width = layoutColWidth;
+
+        // Drop position toggle - only shown for DESTROY/REPLACE actions
+        dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
+            () -> ClientRender.wand.drop_on_player,
+            value -> {
+                ClientRender.wand.drop_on_player = value;
+                Networking.SendGlobalSettings(value);
+            },
+            "player", "block");
+        dropPositionToggle.width = layoutColWidth;
+        dropPositionToggle.withTooltip(Compat.translatable("screen.wands.drop_on"), Compat.translatable("tooltip.wands.drop_on_player"));
+
+        // Mirror (PASTE mode) - boolean toggles
+        mirrorLRToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_lr"),
+            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 1,
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 1 : 0);
+                syncWand(actualWand);
+            });
+        mirrorLRToggle.width = layoutColWidth;
+        mirrorLRToggle.withTooltip(Compat.translatable("screen.wands.mirror_lr"), Compat.translatable("tooltip.wands.mirror_lr"));
+
+        mirrorFBToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.mirror_fb"),
+            () -> WandProps.getVal(getPlayerHeldWand(), Value.MIRRORAXIS) == 2,
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.MIRRORAXIS, value ? 2 : 0);
+                syncWand(actualWand);
+            });
+        mirrorFBToggle.width = layoutColWidth;
+        mirrorFBToggle.withTooltip(Compat.translatable("screen.wands.mirror_fb"), Compat.translatable("tooltip.wands.mirror_fb"));
 
         // Row/Col mode orientation select
         Component[] orientationLabels = {
@@ -625,13 +681,17 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             })
             .withTooltips("tooltip.wands.orientation.row", "tooltip.wands.orientation.col");
         orientationCycle.width = layoutColWidth;
-        section.add(orientationCycle);
 
-        // Area/Vein mode
-        areaLimitSpinner = addValSpinner(section, Value.AREALIM, layoutColWidth, spinnerHeight, "limit");
-        diagonalSpreadToggle = addFlagToggle(section, WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only");
-        skipBlockSpinner = addValSpinner(section, Value.SKIPBLOCK, layoutColWidth, spinnerHeight, "skip_block");
-        matchStateToggle = addFlagToggle(section, WandProps.Flag.MATCHSTATE, layoutColWidth, "match_state");
+        // Row/Col mode limit spinner
+        rowColumnLimitSpinner = makeValSpinner(Value.ROWCOLLIM, layoutColWidth, spinnerHeight, "limit");
+
+        // Direction mode
+        multiplierSpinner = makeValSpinner(Value.MULTIPLIER, layoutColWidth, spinnerHeight, "multiplier");
+        invertToggle = makeFlagToggle(WandProps.Flag.INVERTED, layoutColWidth, "invert");
+
+        // Area mode
+        diagonalSpreadToggle = makeFlagToggle(WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only");
+        skipBlockSpinner = makeValSpinner(Value.SKIPBLOCK, layoutColWidth, spinnerHeight, "skip_block");
 
         // Circle mode - plane selection
         Component[] planeLabels = {
@@ -649,23 +709,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             })
             .withTooltips("tooltip.wands.plane_xz", "tooltip.wands.plane_xy", "tooltip.wands.plane_yz");
         planeCycle.width = layoutColWidth;
-        section.add(planeCycle);
 
-        circleFillToggle = addFlagToggle(section, WandProps.Flag.CFILLED, layoutColWidth, "filled");
-        evenSizeToggle = addFlagToggle(section, WandProps.Flag.EVEN, layoutColWidth, "even_size");
-
-        // Fill mode - use custom labels for box
-        boxFillToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.filled"),
-            () -> WandProps.getFlag(getPlayerHeldWand(), WandProps.Flag.RFILLED),
-            value -> {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.setFlag(actualWand, WandProps.Flag.RFILLED, value);
-                syncWand(actualWand);
-            },
-            "Solid", "Hollow");
-        boxFillToggle.width = layoutColWidth;
-        boxFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
-        section.add(boxFillToggle);
+        circleFillToggle = makeFlagToggle(WandProps.Flag.CFILLED, layoutColWidth, "filled");
+        evenSizeToggle = makeFlagToggle(WandProps.Flag.EVEN, layoutColWidth, "even_size");
 
         // Grid mode spinners - M is rows/horizontal, N is columns/vertical
         gridMSpinner = new Spinner(WandProps.getVal(wandStack, Value.GRIDM), 1, wandItem.limit, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.grid_m"))
@@ -675,7 +721,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 syncWand(actualWand);
             });
         gridMSpinner.withTooltip(Compat.translatable("screen.wands.grid_m"), Compat.translatable("tooltip.wands.grid_m"));
-        section.add(gridMSpinner);
 
         gridNSpinner = new Spinner(WandProps.getVal(wandStack, Value.GRIDN), 1, wandItem.limit, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.grid_n"))
             .withOnChange(value -> {
@@ -684,81 +729,77 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 syncWand(actualWand);
             });
         gridNSpinner.withTooltip(Compat.translatable("screen.wands.grid_n"), Compat.translatable("tooltip.wands.grid_n"));
-        section.add(gridNSpinner);
 
-        gridMSkipSpinner = addValSpinner(section, Value.GRIDMS, layoutColWidth, spinnerHeight, "grid_m_skip");
-        gridNSkipSpinner = addValSpinner(section, Value.GRIDNS, layoutColWidth, spinnerHeight, "grid_n_skip");
-        gridMOffsetSpinner = addValSpinner(section, Value.GRIDMOFF, layoutColWidth, spinnerHeight, "grid_m_offset");
-        gridNOffsetSpinner = addValSpinner(section, Value.GRIDNOFF, layoutColWidth, spinnerHeight, "grid_n_offset");
+        gridMSkipSpinner = makeValSpinner(Value.GRIDMS, layoutColWidth, spinnerHeight, "grid_m_skip");
+        gridNSkipSpinner = makeValSpinner(Value.GRIDNS, layoutColWidth, spinnerHeight, "grid_n_skip");
+        gridMOffsetSpinner = makeValSpinner(Value.GRIDMOFF, layoutColWidth, spinnerHeight, "grid_m_offset");
+        gridNOffsetSpinner = makeValSpinner(Value.GRIDNOFF, layoutColWidth, spinnerHeight, "grid_n_offset");
+
+        // Rock mode spinners
+        rockRadiusSpinner = makeValSpinner(Value.ROCK_RADIUS, layoutColWidth, spinnerHeight, "rock_radius");
+        rockNoiseSpinner = makeValSpinner(Value.ROCK_NOISE, layoutColWidth, spinnerHeight, "rock_noise");
 
         // Blast mode
-        blastRadiusSpinner = addValSpinner(section, Value.BLASTRAD, layoutColWidth, spinnerHeight, "blast_radius");
+        blastRadiusSpinner = makeValSpinner(Value.BLASTRAD, layoutColWidth, spinnerHeight, "blast_radius");
         blastRadiusSpinner.incrementValue = 2;
         blastRadiusSpinner.shiftIncrementValue = 4;
 
         // Box mode spinners
-        boxWidthSpinner = addValSpinner(section, Value.BOX_W, layoutColWidth, spinnerHeight, "box_width");
-        boxHeightSpinner = addValSpinner(section, Value.BOX_H, layoutColWidth, spinnerHeight, "box_height");
-        boxDepthSpinner = addValSpinner(section, Value.BOX_DEPTH, layoutColWidth, spinnerHeight, "box_depth");
-        boxOffsetXSpinner = addValSpinner(section, Value.BOX_OX, layoutColWidth, spinnerHeight, "box_offset_x");
-        boxOffsetYSpinner = addValSpinner(section, Value.BOX_OY, layoutColWidth, spinnerHeight, "box_offset_y");
+        boxWidthSpinner = makeValSpinner(Value.BOX_W, layoutColWidth, spinnerHeight, "box_width");
+        boxHeightSpinner = makeValSpinner(Value.BOX_H, layoutColWidth, spinnerHeight, "box_height");
+        boxDepthSpinner = makeValSpinner(Value.BOX_DEPTH, layoutColWidth, spinnerHeight, "box_depth");
+        boxOffsetXSpinner = makeValSpinner(Value.BOX_OX, layoutColWidth, spinnerHeight, "box_offset_x");
+        boxOffsetYSpinner = makeValSpinner(Value.BOX_OY, layoutColWidth, spinnerHeight, "box_offset_y");
 
-        // Include selected block in selection
-        includeBlockToggle = addFlagToggle(section, WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
+        // Divider between shared and mode-specific options
+        sectionDivider = new Divider(layoutColWidth);
 
-        // Keep start point (inverted: ON = don't clear P1, OFF = clear P1)
-        keepStartToggle = addInvertedFlagToggle(section, WandProps.Flag.CLEAR_P1, layoutColWidth, "keep_start");
+        // ===== Add widgets to section in display order =====
 
-        // Block State select - at the bottom, only visible with Place action
-        Component[] stateLabels = {
-            Compat.translatable("screen.wands.clone_state"),
-            Compat.translatable("screen.wands.apply_x"),
-            Compat.translatable("screen.wands.apply_y"),
-            Compat.translatable("screen.wands.apply_z"),
-            Compat.translatable("screen.wands.flip_x"),
-            Compat.translatable("screen.wands.flip_y"),
-            Compat.translatable("screen.wands.flip_z"),
-            Compat.translatable("screen.wands.normal_place")
-        };
-        // Simplified labels when only Y-axis options are available (non-pillar blocks)
-        Component[] alternateStateLabels = {
-            Compat.translatable("screen.wands.clone_state"),
-            Compat.translatable("screen.wands.apply_x"),      // Not shown when filtered
-            Compat.translatable("screen.wands.rotate"),       // "Rotate" instead of "Apply Y rotation"
-            Compat.translatable("screen.wands.apply_z"),      // Not shown when filtered
-            Compat.translatable("screen.wands.flip_x"),       // Not shown when filtered
-            Compat.translatable("screen.wands.flip"),         // "Flip" instead of "Flip Y rotation"
-            Compat.translatable("screen.wands.flip_z"),       // Not shown when filtered
-            Compat.translatable("screen.wands.normal_place")
-        };
-        blockStateCycle = new CycleToggle<>(Compat.translatable("screen.wands.block_prefix"),
-            WandProps.BLOCK_STATE_OPTIONS, stateLabels,
-            () -> WandProps.getBlockStateIndex(getPlayerHeldWand()),
-            (idx) -> {
-                ItemStack actualWand = getPlayerHeldWand();
-                WandProps.setBlockStateIndex(actualWand, idx);
-                syncWand(actualWand);
-            })
-            .withAlternateLabels(alternateStateLabels)
-            .withTooltips(
-                "tooltip.wands.clone_state",
-                "tooltip.wands.apply_x", "tooltip.wands.apply_y", "tooltip.wands.apply_z",
-                "tooltip.wands.flip_x", "tooltip.wands.flip_y", "tooltip.wands.flip_z",
-                "tooltip.wands.normal_place");
-        blockStateCycle.width = layoutColWidth;
-        section.add(blockStateCycle);
-
-        // Drop position toggle - only shown for DESTROY/REPLACE actions (at bottom)
-        dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
-            () -> ClientRender.wand.drop_on_player,
-            value -> {
-                ClientRender.wand.drop_on_player = value;
-                Networking.SendGlobalSettings(value);
-            },
-            "player", "block");
-        dropPositionToggle.width = layoutColWidth;
-        dropPositionToggle.withTooltip(Compat.translatable("screen.wands.drop_on"), Compat.translatable("tooltip.wands.drop_on_player"));
+        // --- Shared options (used by 2+ modes) ---
+        section.add(actionCycle);
+        section.add(targetAirSpinner);
+        section.add(rotationCycle);
+        section.add(matchStateToggle);
+        section.add(includeBlockToggle);
+        section.add(keepStartToggle);
+        section.add(boxFillToggle);
+        section.add(areaLimitSpinner);
+        section.add(stateModeCycle);
+        section.add(stateFlipToggle);
+        section.add(blockRotationCycle);
+        section.add(stateAxisCycle);
         section.add(dropPositionToggle);
+
+        // --- Divider ---
+        section.add(sectionDivider);
+
+        // --- Mode-specific options (unique to 1 mode) ---
+        section.add(mirrorLRToggle);
+        section.add(mirrorFBToggle);
+        section.add(orientationCycle);
+        section.add(rowColumnLimitSpinner);
+        section.add(multiplierSpinner);
+        section.add(invertToggle);
+        section.add(diagonalSpreadToggle);
+        section.add(skipBlockSpinner);
+        section.add(planeCycle);
+        section.add(circleFillToggle);
+        section.add(evenSizeToggle);
+        section.add(gridMSpinner);
+        section.add(gridNSpinner);
+        section.add(gridMSkipSpinner);
+        section.add(gridNSkipSpinner);
+        section.add(gridMOffsetSpinner);
+        section.add(gridNOffsetSpinner);
+        section.add(rockRadiusSpinner);
+        section.add(rockNoiseSpinner);
+        section.add(blastRadiusSpinner);
+        section.add(boxWidthSpinner);
+        section.add(boxHeightSpinner);
+        section.add(boxDepthSpinner);
+        section.add(boxOffsetXSpinner);
+        section.add(boxOffsetYSpinner);
 
         return section;
     }
@@ -771,6 +812,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), orientationCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
+
+        // Block state controls - visible for all state_mode-applicable modes
+        registerModeWidgets(WandProps.STATE_MODE_MODES, stateModeCycle, stateFlipToggle,
+            blockRotationCycle, stateAxisCycle);
 
         // CycleSpinner (combined flag+value widget)
         registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.TARGET_AIR), targetAirSpinner);
@@ -903,6 +948,15 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             // Update mode-specific widget visibility using the map
             modeWidgets.forEach((widget, modes) -> widget.visible = modes.contains(currentMode));
 
+            // Show divider only when there are mode-specific widgets visible below it
+            sectionDivider.visible = mirrorLRToggle.visible || mirrorFBToggle.visible
+                || orientationCycle.visible || rowColumnLimitSpinner.visible
+                || multiplierSpinner.visible || invertToggle.visible
+                || diagonalSpreadToggle.visible || skipBlockSpinner.visible
+                || planeCycle.visible || circleFillToggle.visible || evenSizeToggle.visible
+                || gridMSpinner.visible || rockRadiusSpinner.visible
+                || blastRadiusSpinner.visible || boxWidthSpinner.visible;
+
             // Update action select visibility and filter based on mode
             boolean configDisabledDestroyReplace = WandsMod.config.disable_destroy_replace;
             final WandProps.Mode mode = currentMode;  // For lambda capture
@@ -921,36 +975,24 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 actionCycle.validateSelection();
             }
 
-            // Block state only relevant for Place action and modes that use state_mode
+            // Block state controls - only relevant for Place action and modes that use state_mode
             WandProps.Action currentAction = WandProps.getAction(actualWand);
-            blockStateCycle.visible = (currentAction == WandProps.Action.PLACE) && WandProps.stateModeAppliesTo(currentMode);
+            boolean showStateControls = (currentAction == WandProps.Action.PLACE)
+                && WandProps.stateModeAppliesTo(currentMode);
+            WandProps.StateMode stateMode = WandProps.getStateMode(actualWand);
+            boolean isAdjustMode = (stateMode == WandProps.StateMode.APPLY
+                || stateMode == WandProps.StateMode.APPLY_FLIP);
+
+            stateModeCycle.visible = showStateControls;
+            stateFlipToggle.visible = showStateControls && isAdjustMode;
+            blockRotationCycle.visible = showStateControls && isAdjustMode;
+
+            boolean isHollowFill = (currentMode == WandProps.Mode.FILL && !WandProps.getFlag(actualWand, WandProps.Flag.RFILLED));
+            boolean isPillarBlock = ClientRender.wand != null && ClientRender.wand.hasPillarBlock();
+            stateAxisCycle.visible = showStateControls && isAdjustMode && (isPillarBlock || isHollowFill);
 
             // Drop position only relevant for Destroy/Replace actions
             dropPositionToggle.visible = (currentAction == WandProps.Action.DESTROY || currentAction == WandProps.Action.REPLACE);
-
-            if (blockStateCycle.visible) {
-                // Filter block state options - show axis variants only when relevant
-                boolean isHollowFill = (currentMode == WandProps.Mode.FILL && !WandProps.getFlag(actualWand, WandProps.Flag.RFILLED));
-                boolean isPillarBlock = ClientRender.wand != null && ClientRender.wand.hasPillarBlock();
-                boolean showAllAxisOptions = isPillarBlock || isHollowFill;
-                blockStateCycle.withFilter(idx -> {
-                    // Clone and Normal always available
-                    if (idx == WandProps.BLOCK_STATE_CLONE || idx == WandProps.BLOCK_STATE_NORMAL) return true;
-                    // Apply-Y and Flip-Y always available (default axis for slabs/stairs)
-                    if (idx == WandProps.BLOCK_STATE_APPLY_Y || idx == WandProps.BLOCK_STATE_FLIP_Y) return true;
-                    // X/Z axis variants only when pillar block or hollow fill
-                    return showAllAxisOptions;
-                });
-                // Use simplified labels ("Rotate", "Flip") when only Y-axis options available
-                blockStateCycle.setUseAlternateLabels(!showAllAxisOptions);
-
-                // Dynamic tooltips based on context
-                blockStateCycle.setTooltipProvider(idx -> {
-                    return buildBlockStateTooltip(idx, isPillarBlock, isHollowFill);
-                });
-
-                blockStateCycle.validateSelection();
-            }
         }
     }
     @Override

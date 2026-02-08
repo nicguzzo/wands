@@ -537,83 +537,6 @@ public class WandProps {
     static public StateMode[] state_modes = StateMode.values();
     static public MirrorAxis[] mirrorAxes = MirrorAxis.values();
 
-    // Block state UI indices - combined StateMode + Axis for UI display
-    public static final int BLOCK_STATE_CLONE = 0;
-    public static final int BLOCK_STATE_APPLY_X = 1;
-    public static final int BLOCK_STATE_APPLY_Y = 2;
-    public static final int BLOCK_STATE_APPLY_Z = 3;
-    public static final int BLOCK_STATE_FLIP_X = 4;
-    public static final int BLOCK_STATE_FLIP_Y = 5;
-    public static final int BLOCK_STATE_FLIP_Z = 6;
-    public static final int BLOCK_STATE_NORMAL = 7;
-    public static final Integer[] BLOCK_STATE_OPTIONS = {0, 1, 2, 3, 4, 5, 6, 7};
-
-    /** Convert current StateMode + Axis to UI index */
-    public static int getBlockStateIndex(ItemStack stack) {
-        StateMode mode = getStateMode(stack);
-        Direction.Axis axis = getAxis(stack);
-        switch (mode) {
-            case CLONE: return BLOCK_STATE_CLONE;
-            case APPLY:
-                switch (axis) {
-                    case X: return BLOCK_STATE_APPLY_X;
-                    case Y: return BLOCK_STATE_APPLY_Y;
-                    case Z: return BLOCK_STATE_APPLY_Z;
-                }
-                break;
-            case APPLY_FLIP:
-                switch (axis) {
-                    case X: return BLOCK_STATE_FLIP_X;
-                    case Y: return BLOCK_STATE_FLIP_Y;
-                    case Z: return BLOCK_STATE_FLIP_Z;
-                }
-                break;
-            case TARGET: return BLOCK_STATE_NORMAL;
-        }
-        return BLOCK_STATE_NORMAL;
-    }
-
-    /** Set StateMode + Axis from UI index */
-    public static void setBlockStateIndex(ItemStack stack, int index) {
-        StateMode mode;
-        Direction.Axis axis = Direction.Axis.Y;  // Default
-        switch (index) {
-            case BLOCK_STATE_CLONE:
-                mode = StateMode.CLONE;
-                break;
-            case BLOCK_STATE_APPLY_X:
-                mode = StateMode.APPLY;
-                axis = Direction.Axis.X;
-                break;
-            case BLOCK_STATE_APPLY_Y:
-                mode = StateMode.APPLY;
-                axis = Direction.Axis.Y;
-                break;
-            case BLOCK_STATE_APPLY_Z:
-                mode = StateMode.APPLY;
-                axis = Direction.Axis.Z;
-                break;
-            case BLOCK_STATE_FLIP_X:
-                mode = StateMode.APPLY_FLIP;
-                axis = Direction.Axis.X;
-                break;
-            case BLOCK_STATE_FLIP_Y:
-                mode = StateMode.APPLY_FLIP;
-                axis = Direction.Axis.Y;
-                break;
-            case BLOCK_STATE_FLIP_Z:
-                mode = StateMode.APPLY_FLIP;
-                axis = Direction.Axis.Z;
-                break;
-            case BLOCK_STATE_NORMAL:
-            default:
-                mode = StateMode.TARGET;
-                break;
-        }
-        setStateMode(stack, mode);
-        setAxis(stack, axis);
-    }
-
     // Mode-specific flag mappings: which flags apply to which modes
     public static final Map<Flag, EnumSet<Mode>> FLAG_MODES = Map.ofEntries(
         Map.entry(Flag.INVERTED, EnumSet.of(Mode.DIRECTION, Mode.BOX)),
@@ -1024,6 +947,25 @@ public class WandProps {
         }
         CompoundTag tag = Compat.getTags(stack);
         tag.putInt("rotation", rot.ordinal());
+        Compat.saveCustomData(stack, tag);
+    }
+
+    static public Rotation getBlockRotation(ItemStack stack) {
+        if (!WandUtils.is_wand(stack)) {
+            return Rotation.NONE;
+        }
+        CompoundTag tag = Compat.getTags(stack);
+        int r = Compat.getInt(tag, "block_rotation").orElse(0);
+        if (r >= 0 && r < rotations.length) return rotations[r];
+        return Rotation.NONE;
+    }
+
+    static public void setBlockRotation(ItemStack stack, Rotation rot) {
+        if (!WandUtils.is_wand(stack)) {
+            return;
+        }
+        CompoundTag tag = Compat.getTags(stack);
+        tag.putInt("block_rotation", rot.ordinal());
         Compat.saveCustomData(stack, tag);
     }
 
