@@ -616,7 +616,7 @@ public class WandProps {
 
     // Mode-specific flag mappings: which flags apply to which modes
     public static final Map<Flag, EnumSet<Mode>> FLAG_MODES = Map.ofEntries(
-        Map.entry(Flag.INVERTED, EnumSet.of(Mode.DIRECTION)),
+        Map.entry(Flag.INVERTED, EnumSet.of(Mode.DIRECTION, Mode.BOX)),
         Map.entry(Flag.CFILLED, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),

@@ -25,15 +25,8 @@ public class PasteMode extends WandMode {
                 mz=-1;
                 break;
         }
-        BlockPos b_pos;
-        boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
-        // When targeting air, wand.pos is already the target position - don't offset
-        // When clicking a block with INCSELBLOCK off, offset by 1 to place next to the block
-        if(!sel && !wand.target_air){
-            b_pos = wand.pos.relative(wand.side, 1);
-        } else {
-            b_pos = wand.pos;
-        }
+        // wand.pos is already offset by ClientRender/WandItem when INCSELBLOCK is off
+        BlockPos b_pos = wand.pos;
         wand.block_buffer.reset();
 
         for (CopyBuffer b : wand.copy_paste_buffer) {

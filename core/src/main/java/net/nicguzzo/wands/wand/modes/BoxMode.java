@@ -14,22 +14,23 @@ public class BoxMode extends WandMode {
             wand.valid=false;
             return;
         }*/
-        int tw=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_W);
-        int th=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_H);
-        int td=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_DEPTH);
-        int tox=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OX);
-        int toy=  WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OY);
+        int tw = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_W);
+        int th = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_H);
+        int td = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_DEPTH);
+        int tox = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OX);
+        int toy = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OY);
 
-        Direction pdir=wand.player.getDirection();
-
-        BlockPos b_pos = wand.pos;
-        boolean sel = WandProps.getFlag(wand.wand_stack, WandProps.Flag.INCSELBLOCK);
-        if(!sel){
-           b_pos = wand.pos.relative(wand.side, 1);
+        // Use clicked face direction so the box is stable regardless of player angle
+        Direction depthDir = wand.side;
+        if (WandProps.getFlag(wand.wand_stack, WandProps.Flag.INVERTED)) {
+            depthDir = depthDir.getOpposite();
         }
 
+        // wand.pos is already offset by ClientRender/WandItem when INCSELBLOCK is off
+        BlockPos b_pos = wand.pos;
+
         wand.valid = true;
-        switch (pdir){
+        switch (depthDir){
             case NORTH:{
                 tp1.set(b_pos.getX()-tox,b_pos.getY()-toy,b_pos.getZ());
                 tp2.set(b_pos.getX()+(tw-1)-tox ,b_pos.getY()+(th-1)-toy ,b_pos.getZ()-(td-1));
