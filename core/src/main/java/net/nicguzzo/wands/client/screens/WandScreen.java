@@ -108,9 +108,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     // Block State Section - independent controls
     CycleToggle<WandProps.StateMode> stateModeCycle;
-    CycleToggle<Boolean> stateFlipToggle;
-    CycleToggle<Rotation> blockRotationCycle;
-    CycleToggle<Direction.Axis> stateAxisCycle;
+    CycleToggle<Boolean> blockFlipToggle;
+    CycleToggle<Rotation> blockFacingCycle;
+    CycleToggle<Direction.Axis> blockAxisCycle;
 
     // Tools Section
     CycleToggle<Boolean> dropPositionToggle;
@@ -128,6 +128,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     Spinner rockNoiseSpinner;
     Spinner multiplierSpinner;
     CycleToggle<Boolean> invertToggle;
+    CycleToggle<Boolean> boxInvertToggle;
     Spinner rowColumnLimitSpinner;
     CycleToggle<WandProps.Orientation> orientationCycle;
     Spinner areaLimitSpinner;
@@ -251,6 +252,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         wandInventoryTexture=textureManager.getTexture(INV_TEX.res).getTextureView();
         #endif
+        if (WandsModClient.openToolsTab) {
+            isToolsTabSelected = true;
+            showInventory = true;
+            WandsModClient.openToolsTab = false;
+        }
     }
     // Helper for creating a spinner bound to a WandProps.Value
     private Spinner valSpinner(Value val, int w, int h, Component label) {
@@ -587,7 +593,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         stateModeCycle.width = layoutColWidth;
 
         // Flip toggle: Bottom / Top (controls APPLY vs APPLY_FLIP)
-        stateFlipToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.state_flip"),
+        blockFlipToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.block_flip"),
             () -> WandProps.getStateMode(getPlayerHeldWand()) == WandProps.StateMode.APPLY_FLIP,
             value -> {
                 ItemStack actualWand = getPlayerHeldWand();
@@ -595,8 +601,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 syncWand(actualWand);
             },
             "Bottom", "Top");
-        stateFlipToggle.width = layoutColWidth;
-        stateFlipToggle.withTooltips("tooltip.wands.state_flip.bottom", "tooltip.wands.state_flip.top");
+        blockFlipToggle.width = layoutColWidth;
+        blockFlipToggle.withTooltips("tooltip.wands.block_flip.bottom", "tooltip.wands.block_flip.top");
 
         // Block rotation cycle: 0° / 90° / 180° / 270° (independent of area rotation)
         Component[] blockRotLabels = {
@@ -605,7 +611,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             Compat.translatable("screen.wands.rot_180"),
             Compat.translatable("screen.wands.rot_270")
         };
-        blockRotationCycle = new CycleToggle<>(Compat.translatable("screen.wands.block_rotation_prefix"),
+        blockFacingCycle = new CycleToggle<>(Compat.translatable("screen.wands.block_facing_prefix"),
             WandProps.rotations, blockRotLabels,
             () -> WandProps.getBlockRotation(getPlayerHeldWand()),
             (r) -> {
@@ -613,8 +619,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 WandProps.setBlockRotation(actualWand, r);
                 syncWand(actualWand);
             })
-            .withTooltips("tooltip.wands.block_rotation.0", "tooltip.wands.block_rotation.90", "tooltip.wands.block_rotation.180", "tooltip.wands.block_rotation.270");
-        blockRotationCycle.width = layoutColWidth;
+            .withTooltips("tooltip.wands.block_facing.0", "tooltip.wands.block_facing.90", "tooltip.wands.block_facing.180", "tooltip.wands.block_facing.270");
+        blockFacingCycle.width = layoutColWidth;
 
         // Axis cycle: X / Y / Z (for pillar blocks and hollow fill)
         Component[] axisLabels = {
@@ -622,7 +628,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             Compat.literal("Y"),
             Compat.literal("Z")
         };
-        stateAxisCycle = new CycleToggle<>(Compat.translatable("screen.wands.axis"),
+        blockAxisCycle = new CycleToggle<>(Compat.translatable("screen.wands.axis"),
             WandProps.axes, axisLabels,
             () -> WandProps.getAxis(getPlayerHeldWand()),
             (a) -> {
@@ -631,7 +637,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 syncWand(actualWand);
             })
             .withTooltips("tooltip.wands.axis_x", "tooltip.wands.axis_y", "tooltip.wands.axis_z");
-        stateAxisCycle.width = layoutColWidth;
+        blockAxisCycle.width = layoutColWidth;
 
         // Drop position toggle - only shown for DESTROY/REPLACE actions
         dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
@@ -688,6 +694,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         // Direction mode
         multiplierSpinner = makeValSpinner(Value.MULTIPLIER, layoutColWidth, spinnerHeight, "multiplier");
         invertToggle = makeFlagToggle(WandProps.Flag.INVERTED, layoutColWidth, "invert");
+
+        // Box mode
+        boxInvertToggle = makeFlagToggle(WandProps.Flag.BOX_INVERTED, layoutColWidth, "box_invert");
 
         // Area mode
         diagonalSpreadToggle = makeFlagToggle(WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only");
@@ -760,9 +769,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         section.add(actionCycle);
         section.add(dropPositionToggle);       // shown/hidden by actionCycle (DESTROY/REPLACE)
         section.add(stateModeCycle);            // shown/hidden by actionCycle (PLACE)
-        section.add(stateFlipToggle);           // shown/hidden by stateModeCycle
-        section.add(blockRotationCycle);        // shown/hidden by stateModeCycle
-        section.add(stateAxisCycle);            // shown/hidden by stateModeCycle
+        section.add(blockFlipToggle);           // shown/hidden by stateModeCycle
+        section.add(blockFacingCycle);        // shown/hidden by stateModeCycle
+        section.add(blockAxisCycle);            // shown/hidden by stateModeCycle
         section.add(targetAirSpinner);
         section.add(rotationCycle);
         section.add(matchStateToggle);
@@ -795,6 +804,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         section.add(rockRadiusSpinner);
         section.add(rockNoiseSpinner);
         section.add(blastRadiusSpinner);
+        section.add(boxInvertToggle);
         section.add(boxWidthSpinner);
         section.add(boxHeightSpinner);
         section.add(boxDepthSpinner);
@@ -814,8 +824,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
 
         // Block state controls - visible for all state_mode-applicable modes
-        registerModeWidgets(WandProps.STATE_MODE_MODES, stateModeCycle, stateFlipToggle,
-            blockRotationCycle, stateAxisCycle);
+        registerModeWidgets(WandProps.STATE_MODE_MODES, stateModeCycle, blockFlipToggle,
+            blockFacingCycle, blockAxisCycle);
 
         // CycleSpinner (combined flag+value widget)
         registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.TARGET_AIR), targetAirSpinner);
@@ -952,7 +962,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             sectionDivider.visible = mirrorLRToggle.visible || mirrorFBToggle.visible
                 || orientationCycle.visible || rowColumnLimitSpinner.visible
                 || multiplierSpinner.visible || invertToggle.visible
-                || boxFillToggle.visible || diagonalSpreadToggle.visible || skipBlockSpinner.visible
+                || boxFillToggle.visible || boxInvertToggle.visible
+                || diagonalSpreadToggle.visible || skipBlockSpinner.visible
                 || planeCycle.visible || circleFillToggle.visible || evenSizeToggle.visible
                 || gridMSpinner.visible || rockRadiusSpinner.visible
                 || blastRadiusSpinner.visible || boxWidthSpinner.visible;
@@ -984,12 +995,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 || stateMode == WandProps.StateMode.APPLY_FLIP);
 
             stateModeCycle.visible = showStateControls;
-            stateFlipToggle.visible = showStateControls && isAdjustMode;
-            blockRotationCycle.visible = showStateControls && isAdjustMode;
+            blockFlipToggle.visible = showStateControls && isAdjustMode;
+            blockFacingCycle.visible = showStateControls && isAdjustMode;
 
             boolean isHollowFill = (currentMode == WandProps.Mode.FILL && !WandProps.getFlag(actualWand, WandProps.Flag.RFILLED));
             boolean isPillarBlock = ClientRender.wand != null && ClientRender.wand.hasPillarBlock();
-            stateAxisCycle.visible = showStateControls && isAdjustMode && (isPillarBlock || isHollowFill);
+            blockAxisCycle.visible = showStateControls && isAdjustMode && (isPillarBlock || isHollowFill);
 
             // Drop position only relevant for Destroy/Replace actions
             dropPositionToggle.visible = (currentAction == WandProps.Action.DESTROY || currentAction == WandProps.Action.REPLACE);

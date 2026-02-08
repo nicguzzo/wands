@@ -51,6 +51,7 @@ public class WandsModClient {
     public static boolean has_optifine = false;
     public static boolean has_opac = false;
     public static KeyMapping wand_menu_km;
+    public static boolean openToolsTab = false;
 
     public static final Logger LOGGER = LogManager.getLogger();
     static final public Map<KeyMapping, WandsMod.WandKeys> keys = new HashMap<KeyMapping, WandsMod.WandKeys>();
@@ -138,6 +139,9 @@ public class WandsModClient {
                     if (pressed && !wasPressed) {
                         // New press detected
                         if (!any) any = true;
+                        if (key == WandsMod.WandKeys.MENU && Compat.hasShiftDown()) {
+                            openToolsTab = true;
+                        }
                         if (key == WandsMod.WandKeys.CLEAR) {
                             cancel_wand();
                         } else {
@@ -172,6 +176,9 @@ public class WandsModClient {
                     WandsMod.WandKeys key = me.getValue();
                     if (km.consumeClick()) {
                         if (!any) any = true;
+                        if (key == WandsMod.WandKeys.MENU && Compat.hasShiftDown()) {
+                            openToolsTab = true;
+                        }
                         if (key == WandsMod.WandKeys.CLEAR) {
                             cancel_wand();
                         } else {

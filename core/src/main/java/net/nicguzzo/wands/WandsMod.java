@@ -443,10 +443,11 @@ public class WandsMod {
                         }
                         break;
                     case INVERT:
-                        if (WandProps.flagAppliesTo(WandProps.Flag.INVERTED, mode)) {
-                            WandProps.toggleFlag(main_stack, WandProps.Flag.INVERTED);
+                        WandProps.Flag invertFlag = (mode == WandProps.Mode.BOX) ? WandProps.Flag.BOX_INVERTED : WandProps.Flag.INVERTED;
+                        if (WandProps.flagAppliesTo(invertFlag, mode)) {
+                            WandProps.toggleFlag(main_stack, invertFlag);
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.INVERTED))), true);
+                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + WandProps.getFlag(main_stack, invertFlag))), true);
                             }
                         }
                         break;

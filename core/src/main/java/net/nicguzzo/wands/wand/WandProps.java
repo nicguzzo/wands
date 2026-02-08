@@ -403,6 +403,16 @@ public class WandProps {
                 return true;
             }
 
+            ;},
+        BOX_INVERTED {
+            public String toString() {
+                return "box_inverted";
+            }
+
+            public boolean get_default() {
+                return false;
+            }
+
             ;};
 
         public abstract boolean get_default();
@@ -539,7 +549,8 @@ public class WandProps {
 
     // Mode-specific flag mappings: which flags apply to which modes
     public static final Map<Flag, EnumSet<Mode>> FLAG_MODES = Map.ofEntries(
-        Map.entry(Flag.INVERTED, EnumSet.of(Mode.DIRECTION, Mode.BOX)),
+        Map.entry(Flag.INVERTED, EnumSet.of(Mode.DIRECTION)),
+        Map.entry(Flag.BOX_INVERTED, EnumSet.of(Mode.BOX)),
         Map.entry(Flag.CFILLED, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),
