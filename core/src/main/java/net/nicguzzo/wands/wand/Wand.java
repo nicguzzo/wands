@@ -192,6 +192,7 @@ public class Wand {
     public WandProps.Plane plane = WandProps.Plane.XZ;
     public Direction.Axis axis = Direction.Axis.Y;
     public Rotation rotation;
+    public Rotation block_rotation = Rotation.NONE;
     public WandProps.StateMode state_mode = WandProps.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
@@ -408,6 +409,7 @@ public class Wand {
         axis = WandProps.getAxis(wand_stack);
         plane = WandProps.getPlane(wand_stack);
         rotation = WandProps.getRotation(wand_stack);
+        block_rotation = WandProps.getBlockRotation(wand_stack);
         state_mode = WandProps.getStateMode(wand_stack);
         slab_stair_bottom = WandProps.getFlag(wand_stack, WandProps.Flag.STAIRSLAB);
         match_state = WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE);
@@ -995,7 +997,7 @@ public class Wand {
                         } else {
                             h = Half.TOP;
                         }
-                        return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(rotation);
+                        return blk.defaultBlockState().setValue(StairBlock.HALF, h).rotate(block_rotation);
 
                     } else {
                         if (blk instanceof RotatedPillarBlock) {
