@@ -758,18 +758,17 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
         // --- Shared options (used by 2+ modes) ---
         section.add(actionCycle);
+        section.add(dropPositionToggle);       // shown/hidden by actionCycle (DESTROY/REPLACE)
+        section.add(stateModeCycle);            // shown/hidden by actionCycle (PLACE)
+        section.add(stateFlipToggle);           // shown/hidden by stateModeCycle
+        section.add(blockRotationCycle);        // shown/hidden by stateModeCycle
+        section.add(stateAxisCycle);            // shown/hidden by stateModeCycle
         section.add(targetAirSpinner);
         section.add(rotationCycle);
         section.add(matchStateToggle);
         section.add(includeBlockToggle);
         section.add(keepStartToggle);
-        section.add(boxFillToggle);
         section.add(areaLimitSpinner);
-        section.add(stateModeCycle);
-        section.add(stateFlipToggle);
-        section.add(blockRotationCycle);
-        section.add(stateAxisCycle);
-        section.add(dropPositionToggle);
 
         // --- Divider ---
         section.add(sectionDivider);
@@ -781,6 +780,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         section.add(rowColumnLimitSpinner);
         section.add(multiplierSpinner);
         section.add(invertToggle);
+        section.add(boxFillToggle);
         section.add(diagonalSpreadToggle);
         section.add(skipBlockSpinner);
         section.add(planeCycle);
@@ -952,7 +952,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             sectionDivider.visible = mirrorLRToggle.visible || mirrorFBToggle.visible
                 || orientationCycle.visible || rowColumnLimitSpinner.visible
                 || multiplierSpinner.visible || invertToggle.visible
-                || diagonalSpreadToggle.visible || skipBlockSpinner.visible
+                || boxFillToggle.visible || diagonalSpreadToggle.visible || skipBlockSpinner.visible
                 || planeCycle.visible || circleFillToggle.visible || evenSizeToggle.visible
                 || gridMSpinner.visible || rockRadiusSpinner.visible
                 || blastRadiusSpinner.visible || boxWidthSpinner.visible;
