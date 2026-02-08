@@ -475,10 +475,10 @@ public class WandsMod {
                             if (!WandsMod.config.disable_info_messages) {
                                 String rotKey;
                                 switch (WandProps.getRotation(main_stack)) {
-                                    case CLOCKWISE_90: rotKey = "tooltip.wands.rot_90"; break;
-                                    case CLOCKWISE_180: rotKey = "tooltip.wands.rot_180"; break;
-                                    case COUNTERCLOCKWISE_90: rotKey = "tooltip.wands.rot_270"; break;
-                                    default: rotKey = "tooltip.wands.rot_0"; break;
+                                    case CLOCKWISE_90: rotKey = "screen.wands.rot_90"; break;
+                                    case CLOCKWISE_180: rotKey = "screen.wands.rot_180"; break;
+                                    case COUNTERCLOCKWISE_90: rotKey = "screen.wands.rot_270"; break;
+                                    default: rotKey = "screen.wands.rot_0"; break;
                                 }
                                 player.displayClientMessage(Compat.translatable(rotKey), true);
                             }
