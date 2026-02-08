@@ -73,12 +73,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     // Shared with PaletteScreen - use for non-shadowed instructional text
     public static final int COLOR_TEXT_DARK = Compat.DARK_GRAY;
 
-    // Tooltip colors
-    public static final int COLOR_TOOLTIP_TITLE = 0xFFFFFFFF;       // White for title line
-    public static final int COLOR_TOOLTIP_DESC = 0xFFAAAAAA;        // Gray for description lines
-    public static final int COLOR_TOOLTIP_BG = 0xF0100010;          // Dark background
-    public static final int COLOR_TOOLTIP_BORDER = 0x505000FF;      // Purple border
-
     // ===== Layout Constants =====
     /** Distance from screen edges to the panel */
     public static final int SCREEN_MARGIN = 4;
@@ -1024,10 +1018,10 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 gui.drawString(font, rockMessage, leftPos + 103, topPos + 62, 0x00ff0000, true);
             }
 
-            // Render widget tooltips
+            // Render widget tooltips using vanilla tooltip rendering
             Wdgt hoveredWidget = findHoveredWidget(mouseX, mouseY);
             if (hoveredWidget != null) {
-                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width, this.height);
+                Compat.renderComponentTooltip(gui, font, hoveredWidget.getTooltipLines(), mouseX, mouseY);
             }
         }
         // Update cursor based on hover

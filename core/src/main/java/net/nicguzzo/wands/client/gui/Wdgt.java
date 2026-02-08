@@ -1,15 +1,14 @@
 package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.FormattedCharSequence;
 import net.nicguzzo.wands.client.screens.WandScreen;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,13 +20,6 @@ public abstract class Wdgt {
     public static final int TEXT_PADDING = 4;
     public static final int DEFAULT_HEIGHT = 14;
     public static final int SPINNER_BUTTON_WIDTH = 10;  // Width of +/- buttons in spinners
-
-    // Tooltip layout constants
-    public static final int TOOLTIP_X_OFFSET = 8;       // Horizontal offset from cursor
-    public static final int TOOLTIP_Y_OFFSET = 2;       // Vertical offset above cursor
-    public static final int TOOLTIP_MIN_WIDTH = 100;    // Minimum tooltip width
-    public static final int TOOLTIP_MARGIN = 8;         // Margin from screen edge
-    public static final int TOOLTIP_PADDING = 4;        // Internal padding (all edges)
 
     // Default colors for label:value style widgets
     public int labelColor = WandScreen.COLOR_WDGT_LABEL;
@@ -146,11 +138,14 @@ public abstract class Wdgt {
      */
     public List<Component> getTooltipLines() {
         if (tooltipTitle != null && tooltip != null) {
-            return List.of(tooltipTitle, tooltip);
+            return List.of(
+                tooltipTitle.copy().withStyle(ChatFormatting.WHITE),
+                tooltip.copy().withStyle(ChatFormatting.GRAY)
+            );
         } else if (tooltipTitle != null) {
-            return List.of(tooltipTitle);
+            return List.of(tooltipTitle.copy().withStyle(ChatFormatting.WHITE));
         } else if (tooltip != null) {
-            return List.of(tooltip);
+            return List.of(tooltip.copy().withStyle(ChatFormatting.GRAY));
         }
         return List.of();
     }
@@ -179,71 +174,4 @@ public abstract class Wdgt {
             SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0F, 1.0F));
     }
 
-    /**
-     * Render a tooltip for a widget with automatic line wrapping and styling.
-     * Title is rendered in white, description in gray.
-     *
-     * @param gui Graphics context
-     * @param font Font for text rendering
-     * @param widget The widget whose tooltip to render
-     * @param mouseX Current mouse X position
-     * @param mouseY Current mouse Y position
-     * @param screenWidth Total screen width for wrapping calculations
-     * @param screenHeight Total screen height for vertical bounds checking
-     */
-    public static void renderWidgetTooltip(GuiGraphics gui, Font font, Wdgt widget, int mouseX, int mouseY, int screenWidth, int screenHeight) {
-        List<Component> tooltipLines = widget.getTooltipLines();
-        if (tooltipLines.isEmpty()) return;
-
-        int tooltipX = mouseX + TOOLTIP_X_OFFSET;
-        int maxWidth = screenWidth - tooltipX - TOOLTIP_MARGIN;
-        if (maxWidth < TOOLTIP_MIN_WIDTH) maxWidth = TOOLTIP_MIN_WIDTH;
-
-        // Wrap lines that exceed max width and track if it's a title line
-        List<FormattedCharSequence> wrappedLines = new ArrayList<>();
-        List<Boolean> isTitleLine = new ArrayList<>();
-        boolean isFirstLine = true;
-        for (Component line : tooltipLines) {
-            boolean isTitle = isFirstLine && widget.tooltipTitle != null;
-            List<FormattedCharSequence> split = font.split(line, maxWidth);
-            for (FormattedCharSequence seq : split) {
-                wrappedLines.add(seq);
-                isTitleLine.add(isTitle);
-            }
-            isFirstLine = false;
-        }
-
-        int textWidth = 0;
-        for (FormattedCharSequence line : wrappedLines) {
-            textWidth = Math.max(textWidth, font.width(line));
-        }
-        int textHeight = wrappedLines.size() * font.lineHeight;
-
-        // Box dimensions with consistent padding on all sides
-        int boxWidth = textWidth + TOOLTIP_PADDING * 2;
-        int boxHeight = textHeight + TOOLTIP_PADDING * 2;
-        int boxX = tooltipX;
-        int boxY = mouseY - boxHeight - TOOLTIP_Y_OFFSET;
-
-        // Clamp to screen bounds - if clipped at top, show below cursor instead
-        if (boxY < TOOLTIP_MARGIN) {
-            boxY = mouseY + TOOLTIP_Y_OFFSET + font.lineHeight;
-        }
-        // If still clipped at bottom, clamp to bottom edge
-        if (boxY + boxHeight > screenHeight - TOOLTIP_MARGIN) {
-            boxY = screenHeight - TOOLTIP_MARGIN - boxHeight;
-        }
-
-        // Draw background
-        gui.fill(boxX, boxY, boxX + boxWidth, boxY + boxHeight, WandScreen.COLOR_TOOLTIP_BG);
-
-        // Draw text with padding offset
-        int textX = boxX + TOOLTIP_PADDING;
-        int textY = boxY + TOOLTIP_PADDING;
-        for (int i = 0; i < wrappedLines.size(); i++) {
-            int color = isTitleLine.get(i) ? WandScreen.COLOR_TOOLTIP_TITLE : WandScreen.COLOR_TOOLTIP_DESC;
-            gui.drawString(font, wrappedLines.get(i), textX, textY, color, true);
-            textY += font.lineHeight;
-        }
-    }
 }

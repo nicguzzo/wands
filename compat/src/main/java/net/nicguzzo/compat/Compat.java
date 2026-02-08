@@ -2,6 +2,7 @@ package net.nicguzzo.compat;
 
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.screens.Screen;
@@ -55,7 +56,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceLocation;
 #endif
 import org.joml.Matrix4f;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -284,6 +287,14 @@ public class Compat {
             #endif
         #endif
     }
+    static public void renderComponentTooltip(GuiGraphics gui, Font font, List<Component> lines, int mouseX, int mouseY) {
+        #if MC_VERSION >= 12111
+        gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
+        #else
+        gui.renderComponentTooltip(font, lines, mouseX, mouseY);
+        #endif
+    }
+
     static public boolean hasShiftDown(){
         #if MC_VERSION >= 12111
              return Minecraft.getInstance().hasShiftDown();

@@ -137,7 +137,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 gradient_h.render(gui, this.font, mouseX, mouseY);
             }
 
-            // Render widget tooltips
+            // Render widget tooltips using vanilla tooltip rendering
             Wdgt hoveredWidget = null;
             if (btn_rotate.shouldShowTooltip(mouseX, mouseY)) {
                 hoveredWidget = btn_rotate;
@@ -145,7 +145,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                 hoveredWidget = modeToggle;
             }
             if (hoveredWidget != null) {
-                Wdgt.renderWidgetTooltip(gui, font, hoveredWidget, mouseX, mouseY, this.width, this.height);
+                Compat.renderComponentTooltip(gui, font, hoveredWidget.getTooltipLines(), mouseX, mouseY);
             }
         }
         this.renderTooltip(gui, mouseX, mouseY);
