@@ -5,8 +5,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 
 /**
@@ -36,8 +38,9 @@ public class ModeInstructionOverlay {
         // Get the current mode
         WandProps.Mode mode = WandProps.getMode(stack);
 
-        // Only show instructions for two-click modes
-        if (mode.n_clicks() != 2) {
+        // Show instructions overlay for two-click modes, or any mode when anchor is active/available
+        boolean anchorRelevant = mode.supports_anchor() && ClientRender.wand != null && (ClientRender.wand.anchor.isSet() || mode.n_clicks() == 1);
+        if (mode.n_clicks() != 2 && !anchorRelevant) {
             return;
         }
 
@@ -119,6 +122,17 @@ public class ModeInstructionOverlay {
 
             default:
                 break;
+        }
+
+        // General anchor instructions (supported modes only)
+        Wand wand = ClientRender.wand;
+        if (wand != null && mode.supports_anchor()) {
+            String anchorKeyName = WandsModClient.getKeyName(WandsMod.WandKeys.ANCHOR);
+            if (wand.anchor.isSet() && wand.anchor.isPersistent()) {
+                return Component.translatable("wands.instruction.anchor.move", anchorKeyName);
+            } else if (mode.n_clicks() == 1) {
+                return Component.translatable("wands.instruction.anchor.set", anchorKeyName);
+            }
         }
 
         return null;

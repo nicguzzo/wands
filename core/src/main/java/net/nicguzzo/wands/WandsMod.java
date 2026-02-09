@@ -177,7 +177,7 @@ public class WandsMod {
     public static final RegistrySupplier<MenuType<MagicBagMenu>> MAGIC_WAND_CONTANIER = MENUES.register("magic_bag_menu", () -> MenuRegistry.ofExtended(MagicBagMenu::new));
 
     public enum WandKeys {
-        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR
+        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, ANCHOR
     }
 
     public static boolean is_forge = false;
@@ -514,6 +514,7 @@ public class WandsMod {
                             player.displayClientMessage(Compat.literal("wand cleared"), true);
                         }
                         break;
+                    // ANCHOR is handled client-side only — never sent to server
                 }
 
             }
@@ -539,7 +540,6 @@ public class WandsMod {
                     }
                 }
                 if (wand != null) {
-                    wand.is_alt_pressed = alt;
                     wand.is_shift_pressed = shift;
                 }
             }
