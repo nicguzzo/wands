@@ -200,11 +200,11 @@ public class ClientRender {
             Mode mode = WandProps.getMode(stack);
             mirroraxis=WandProps.getVal(player.getMainHandItem(), WandProps.Value.MIRRORAXIS);
             //WandsMod.LOGGER.info("hit result "+hitResult.getLocation());
-            boolean hasBlockTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.anchor.isActive();
+            boolean hasBlockTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.pin.isActive();
 
-            boolean anchorActive = wand.anchor.isActive();
+            boolean pinActive = wand.pin.isActive();
 
-            if (anchorActive || hasBlockTarget) {
+            if (pinActive || hasBlockTarget) {
                 has_target = true;
                 targeting_air = false;
 
@@ -213,9 +213,9 @@ public class ClientRender {
                 Direction side;
                 BlockState block_state;
                 Vec3 hitLoc;
-                if (anchorActive) {
-                    pos = wand.anchor.getPos();
-                    side = wand.anchor.getEffectiveSide(hitResult, player.getDirection());
+                if (pinActive) {
+                    pos = wand.pin.getPos();
+                    side = wand.pin.getEffectiveSide(hitResult, player.getDirection());
                     block_state = client.level.getBlockState(pos);
                     hitLoc = player.getEyePosition();
                 } else {
@@ -241,8 +241,8 @@ public class ClientRender {
 
                 if (force) {
                     wand.force_render = false;
-                    // Only apply INCSELBLOCK offset for modes that support it (skip for anchor — already applied when set)
-                    if (!anchorActive && WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode) && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+                    // Only apply INCSELBLOCK offset for modes that support it (skip for pin — already applied when set)
+                    if (!pinActive && WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode) && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
                         pos = pos.relative(side, 1);
                     }
                     last_pos = pos;
@@ -1213,7 +1213,7 @@ public class ClientRender {
 
     /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
     static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
-        if (wand.has_empty_bucket || (wand.valid && (has_target || wand.anchor.isActive()) && wand.block_buffer != null)) {
+        if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
             random.setSeed(0);
             int block_buffer_length=wand.block_buffer.get_length();
             if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
@@ -1439,9 +1439,9 @@ public class ClientRender {
                                  float off
     ){
         Matrix4f matrix=matrixStack.last().pose();
-        boolean anchorActive = wand.anchor.isActive();
-        // Skip cursor ghost block/outline when anchor is active — anchor outline replaces it
-        if (drawlines && !anchorActive && wand.getP1() ==null &&(
+        boolean pinActive = wand.pin.isActive();
+        // Skip cursor ghost block/outline when pin is active — pin outline replaces it
+        if (drawlines && !pinActive && wand.getP1() ==null &&(
             mode == Mode.FILL ||
             mode == Mode.LINE ||
             mode == Mode.CIRCLE ||
@@ -1495,19 +1495,19 @@ public class ClientRender {
             }
             bufferSource.endLastBatch();
         }
-        // Draw anchor outline at the position where blocks will appear
-        if (drawlines && anchorActive) {
-            BlockPos anchorDrawPos = wand.anchor.getPos();
+        // Draw pin outline at the position where blocks will appear
+        if (drawlines && pinActive) {
+            BlockPos pinDrawPos = wand.pin.getPos();
             // Modes that offset internally (ROW_COL, GRID) place at pos+side, not pos
             if (mode.offsets_pos_internally()) {
-                Direction anchorSide = wand.anchor.getSide();
-                if (anchorSide != null) {
-                    anchorDrawPos = anchorDrawPos.relative(anchorSide, 1);
+                Direction pinSide = wand.pin.getSide();
+                if (pinSide != null) {
+                    pinDrawPos = pinDrawPos.relative(pinSide, 1);
                 }
             }
-            float ax = anchorDrawPos.getX();
-            float ay = anchorDrawPos.getY();
-            float az = anchorDrawPos.getZ();
+            float ax = pinDrawPos.getX();
+            float ay = pinDrawPos.getY();
+            float az = pinDrawPos.getZ();
             VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
             if (fat_lines) {
                 preview_block_fat(matrix, consumer,

@@ -299,7 +299,7 @@ public class Wand {
     public CircularBuffer undo_buffer = new CircularBuffer(WandsConfig.max_limit);
     public Vector<CopyBuffer> copy_paste_buffer = new Vector<>();
 
-    public final Anchor anchor = new Anchor();
+    public final Pin pin = new Pin();
 
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
     private int blocks_sent_to_inv = 0;
@@ -405,7 +405,7 @@ public class Wand {
         if (prevMode != null && prevMode != newMode) {
             block_buffer.reset();
             clear(true);
-            anchor.clear();
+            pin.clear();
         }
         prevMode = newMode;
         mode = newMode;
@@ -1201,12 +1201,9 @@ public class Wand {
                         no_use_action = true;
                         return false;
                     }
-                    // allow breaking hand-mineable blocks without a tool
-                    if (st.requiresCorrectToolForDrops()) {
-                        no_tool = true;
-                        needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
-                        return false;
-                    }
+                    no_tool = true;
+                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
+                    return false;
                 }
                 if (_tool_would_break) {
                     damaged_tool = true;
@@ -1855,10 +1852,7 @@ public class Wand {
                         correct_tool = item_digger.isCorrectToolForDrops(state);
                     #endif
                 }
-                // allow any tool to break hand-mineable blocks (flowers, grass, torches, etc.)
-                boolean requires_tool = state.requiresCorrectToolForDrops();
                 return creative || (destroy_speed > 1.0f && correct_tool)
-                        || !requires_tool
                         || is_glass || is_snow_layer || is_allowed || can_shear;
             } else {
                 return true;

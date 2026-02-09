@@ -92,15 +92,15 @@ public class WandItem extends Item {
         boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
         boolean shouldOffset = modeSupportsIncSel && !inc_sel && !block_state.isAir();
 
-        // Anchor: override target position (offset already applied when anchor was set)
-        boolean anchorActive = ClientRender.wand.anchor.isActive();
-        if (anchorActive) {
-            pos = ClientRender.wand.anchor.getPos();
-            // Dynamic side: if clicking on the anchor block, use clicked face
-            if (context.getClickedPos().equals(ClientRender.wand.anchor.getPos())) {
+        // Pin: override target position (offset already applied when pin was set)
+        boolean pinActive = ClientRender.wand.pin.isActive();
+        if (pinActive) {
+            pos = ClientRender.wand.pin.getPos();
+            // Dynamic side: if clicking on the pin block, use clicked face
+            if (context.getClickedPos().equals(ClientRender.wand.pin.getPos())) {
                 side = context.getClickedFace();
             } else {
-                side = ClientRender.wand.anchor.getSide() != null ? ClientRender.wand.anchor.getSide() : side;
+                side = ClientRender.wand.pin.getSide() != null ? ClientRender.wand.pin.getSide() : side;
             }
             block_state = world.getBlockState(pos);
             shouldOffset = false;
@@ -128,7 +128,7 @@ public class WandItem extends Item {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
-            ClientRender.wand.anchor.clear();
+            ClientRender.wand.pin.clear();
             if (mode != Mode.COPY) {
                 ClientRender.wand.clear(mode == Mode.PASTE  || mode==Mode.AREA || mode == Mode.VEIN);
             }
@@ -160,24 +160,24 @@ public class WandItem extends Item {
         }
         Wand wand = ClientRender.wand;
         Mode mode = WandProps.getMode(stack);
-        if (wand.anchor.isActive()) {
-            BlockPos anchor = wand.anchor.getPos();
-            Direction side = wand.anchor.getSide() != null ? wand.anchor.getSide() : player.getDirection().getOpposite();
+        if (wand.pin.isActive()) {
+            BlockPos pinPos = wand.pin.getPos();
+            Direction side = wand.pin.getSide() != null ? wand.pin.getSide() : player.getDirection().getOpposite();
             if (wand.getP1() == null) {
-                wand.setP1(anchor);
+                wand.setP1(pinPos);
                 if (mode.n_clicks() == 1) {
-                    send_placement(side, anchor, null, player.getEyePosition(), wand.palette.seed);
+                    send_placement(side, pinPos, null, player.getEyePosition(), wand.palette.seed);
                     wand.palette.seed = System.currentTimeMillis();
                     wand.copy();
-                    wand.anchor.clear();
+                    wand.pin.clear();
                     wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
                 }
             } else if (mode.n_clicks() == 2 && wand.getP2() == null) {
-                wand.setP2(anchor);
-                send_placement(side, wand.getP1(), anchor, player.getEyePosition(), wand.palette.seed);
+                wand.setP2(pinPos);
+                send_placement(side, wand.getP1(), pinPos, player.getEyePosition(), wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 wand.copy();
-                wand.anchor.clear();
+                wand.pin.clear();
                 wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
             }
             #if MC_VERSION>=12111

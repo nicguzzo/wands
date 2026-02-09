@@ -8,14 +8,14 @@ import net.minecraft.world.phys.HitResult;
 import net.nicguzzo.wands.WandsMod;
 
 /**
- * Client-side anchor that decouples wand preview/placement from the crosshair.
+ * Client-side pin that decouples wand preview/placement from the crosshair.
  * Works for all modes. Cleared after each action or on mode change.
  *
  * Two activation paths:
  * - toggle() — persistent, activated by G key, supports arrow-key movement
  * - freeze() — non-persistent, activated by alt-hold, no arrow-key movement
  */
-public class Anchor {
+public class Pin {
     private boolean set = false;
     private boolean persistent = false;
     private BlockPos pos = null;
@@ -35,7 +35,7 @@ public class Anchor {
     }
 
     /**
-     * Toggle anchor on/off from the crosshair hit (G key).
+     * Toggle pin on/off from the crosshair hit (G key).
      * Persistent — supports arrow-key movement.
      * Applies INCSELBLOCK offset only for modes that support it.
      * @return true always — the key is always consumed client-side
@@ -43,7 +43,7 @@ public class Anchor {
     public boolean toggle(HitResult hitResult, ItemStack wand, WandProps.Mode mode) {
         if (set) {
             clear();
-        } else if (!mode.supports_anchor()) {
+        } else if (!mode.supports_pin()) {
             return false;
         } else if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
             BlockHitResult blockHit = (BlockHitResult) hitResult;
@@ -62,13 +62,13 @@ public class Anchor {
     }
 
     /**
-     * Freeze anchor from alt-hold. Non-persistent — no arrow movement, released on key up.
-     * Does nothing if anchor is already active (toggle takes precedence).
+     * Freeze pin from alt-hold. Non-persistent — no arrow movement, released on key up.
+     * Does nothing if pin is already active (toggle takes precedence).
      * @return true if freeze was activated, false if not (already active, unsupported mode, no block target)
      */
     public boolean freeze(HitResult hitResult, ItemStack wand, WandProps.Mode mode) {
         if (set) return false;
-        if (!mode.supports_anchor()) return false;
+        if (!mode.supports_pin()) return false;
         if (hitResult == null || hitResult.getType() != HitResult.Type.BLOCK) return false;
 
         BlockHitResult blockHit = (BlockHitResult) hitResult;
@@ -87,7 +87,7 @@ public class Anchor {
 
     /**
      * Release alt-hold freeze. Only clears if non-persistent (alt-hold).
-     * @return true if the anchor was cleared
+     * @return true if the pin was cleared
      */
     public boolean release() {
         if (!set || persistent) return false;
@@ -96,8 +96,8 @@ public class Anchor {
     }
 
     /**
-     * Move anchor by arrow key. Only allowed for persistent (toggle) anchors.
-     * @return true if the key was consumed (anchor active), false to let the key pass through to server
+     * Move pin by arrow key. Only allowed for persistent (toggle) pins.
+     * @return true if the key was consumed (pin active), false to let the key pass through to server
      */
     public boolean move(WandsMod.WandKeys key, boolean shift, Direction playerFacing) {
         if (!isActive()) return false;
@@ -114,9 +114,9 @@ public class Anchor {
     }
 
     /**
-     * Get the effective side direction. If the crosshair is on the anchor block,
+     * Get the effective side direction. If the crosshair is on the pin block,
      * use that face (allows changing direction by looking at different faces).
-     * Otherwise fall back to the stored side from when the anchor was set.
+     * Otherwise fall back to the stored side from when the pin was set.
      */
     public Direction getEffectiveSide(HitResult hitResult, Direction playerDirection) {
         if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK

@@ -25,6 +25,7 @@ public class CircleMode extends WandMode {
             // log("circle plane:"+plane+ " fill: "+fill);
             int r = (int) Math.sqrt(px * px + py * py + pz * pz);
             int radius=r+1;
+            wand.radius = r;
             if(r<1){
                 return;
             }
