@@ -48,11 +48,11 @@ public class RowColMode extends WandMode {
                             offz = -1;
                         }break;
                         case COL: {
-                            if(player_dir==Direction.SOUTH ||player_dir==Direction.NORTH) {
-                                dir = Direction.SOUTH;
-                            }else{
-                                dir = Direction.EAST;
-                            }
+                            //if(player_dir==Direction.SOUTH ||player_dir==Direction.NORTH) {
+                                dir =player_dir;
+                            //}else{
+                                //dir = Direction.EAST;
+                            //}
                             offx = -1;
                         }break;
                     }

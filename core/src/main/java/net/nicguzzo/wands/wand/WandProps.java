@@ -579,7 +579,7 @@ public class WandProps {
         Map.entry(Flag.CFILLED, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.EVEN, EnumSet.of(Mode.CIRCLE)),
         Map.entry(Flag.DIAGSPREAD, EnumSet.of(Mode.AREA)),
-        Map.entry(Flag.MATCHSTATE, EnumSet.of(Mode.AREA, Mode.VEIN)),
+        Map.entry(Flag.MATCHSTATE, EnumSet.of(Mode.AREA, Mode.VEIN,Mode.ROW_COL)),
         Map.entry(Flag.INCSELBLOCK, EnumSet.of(Mode.FILL, Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.SPHERE, Mode.PASTE, Mode.BOX)),  // Two-click modes + paste/box
         Map.entry(Flag.STAIRSLAB, EnumSet.allOf(Mode.class)),  // All modes
         Map.entry(Flag.RFILLED, EnumSet.of(Mode.FILL)),
