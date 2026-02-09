@@ -199,6 +199,9 @@ public class Compat {
     static public MutableComponent translatable(String key){
         return Component.translatable(key);
     }
+    static public MutableComponent translatable(String key, Object... args){
+        return Component.translatable(key, args);
+    }
 
     static public MutableComponent literal(String msg){
         return Component.literal(msg);

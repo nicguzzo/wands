@@ -689,15 +689,15 @@ public class Networking {
             context.queue(() -> {
 #endif
                 Player player = context.getPlayer();
-                String menuKey = WandsModClient.getKeyName(WandsMod.WandKeys.MENU);
+                String toolsKey = "Shift+" + WandsModClient.getKeyName(WandsMod.WandKeys.MENU);
                 if (no_tool) {
-                    player.displayClientMessage(Compat.literal("No tool - Add appropriate tool to wand [" + menuKey + "]"), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.no_tool", toolsKey), true);
                 }
                 if (damaged_tool) {
-                    player.displayClientMessage(Compat.literal("No tool - Add appropriate tool to wand [" + menuKey + "]"), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.damaged_tool", toolsKey), true);
                 }
                 if (!needed_tool.isEmpty()) {
-                    player.displayClientMessage(Compat.literal("Wrong tool - Add " + needed_tool + " to wand [" + menuKey + "] for action"), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.wrong_tool", needed_tool, toolsKey), true);
                 }
 #if MC_VERSION < 12005
             });
