@@ -162,7 +162,6 @@ public class Wand {
     boolean is_stair = false;
     boolean is_slab_top = false;
     boolean is_slab_bottom = false;
-    public boolean is_alt_pressed = false;
     public boolean is_shift_pressed = false;
     public boolean replace;
     public boolean destroy;
@@ -300,6 +299,8 @@ public class Wand {
     public CircularBuffer undo_buffer = new CircularBuffer(WandsConfig.max_limit);
     public Vector<CopyBuffer> copy_paste_buffer = new Vector<>();
 
+    public final Anchor anchor = new Anchor();
+
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
     private int blocks_sent_to_inv = 0;
     public int MAX_COPY_VOL = WandsConfig.max_limit;
@@ -404,6 +405,7 @@ public class Wand {
         if (prevMode != null && prevMode != newMode) {
             block_buffer.reset();
             clear(true);
+            anchor.clear();
         }
         prevMode = newMode;
         mode = newMode;
@@ -778,7 +780,8 @@ public class Wand {
 
                 if (blocks_sent_to_inv > 0 && !WandsMod.config.disable_info_messages) {
                     MutableComponent mc = Compat.literal(blocks_sent_to_inv + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
-                    player.displayClientMessage(mc, false);
+                    player.displayClientMessage(mc, true);
+                    Compat.player_level(player).playSound(player, player.blockPosition(), SoundEvents.ITEM_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.2f, ((player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 0.7f + 1.0f) * 2.0f);
                 }
                 ItemStack is = ItemStack.EMPTY;
                 if (!no_tool && !damaged_tool) {

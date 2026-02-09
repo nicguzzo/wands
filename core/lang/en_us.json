@@ -297,6 +297,11 @@
   "wands.instruction.copy.expand_selection": "Copy: Expand selection [%s]",
   "wands.instruction.line.set_start": "Line: Set start point [%s]",
   "wands.instruction.line.set_end": "Line: Set end point [%s]",
+  "wands.instruction.anchor.set": "Lock position [%s]",
+  "wands.instruction.anchor.move": "Move position [Arrows, Shift+Up/Down]. Toggle lock position off [%s]",
   "wands.message.target_air_needs_offhand": "Target air requires a block in offhand or palette",
-  "wands.message.no_use_action": "No Use action for some blocks in selection"
+  "wands.message.no_use_action": "No Use action for some blocks in selection",
+  "key.wands.anchor": "Lock position",
+  "wands.message.anchor_set": "Position locked",
+  "wands.message.anchor_cleared": "Position cleared"
 }

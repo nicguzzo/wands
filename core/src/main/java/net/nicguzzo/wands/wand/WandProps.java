@@ -34,6 +34,10 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
+
+            public boolean supports_anchor() {
+                return false;
+            }
         }, ROW_COL {
             public String toString() {
                 return "wands.modes.row_col";
@@ -49,6 +53,10 @@ public class WandProps {
 
             public int n_clicks() {
                 return 1;
+            }
+
+            public boolean offsets_pos_internally() {
+                return true;
             }
         }, FILL {
             public String toString() {
@@ -97,6 +105,10 @@ public class WandProps {
 
             public int n_clicks() {
                 return 1;
+            }
+
+            public boolean offsets_pos_internally() {
+                return true;
             }
         }, LINE {
             public String toString() {
@@ -210,6 +222,10 @@ public class WandProps {
             public int n_clicks() {
                 return 1;
             }
+
+            public boolean supports_anchor() {
+                return false;
+            }
         }, SPHERE {
             public String toString() {
                 return "wands.modes.sphere";
@@ -249,6 +265,15 @@ public class WandProps {
         public abstract boolean can_target_air();
 
         public abstract int n_clicks();
+
+        public boolean supports_anchor() {
+            return true;
+        }
+
+        /** Whether this mode applies its own pos.relative(side,1) offset in place_in_buffer. */
+        public boolean offsets_pos_internally() {
+            return false;
+        }
     }
 
     public enum Orientation {

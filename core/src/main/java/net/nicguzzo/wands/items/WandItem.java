@@ -91,6 +91,20 @@ public class WandItem extends Item {
         boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
         boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
         boolean shouldOffset = modeSupportsIncSel && !inc_sel && !block_state.isAir();
+
+        // Anchor: override target position (offset already applied when anchor was set)
+        boolean anchorActive = ClientRender.wand.anchor.isActive();
+        if (anchorActive) {
+            pos = ClientRender.wand.anchor.getPos();
+            // Dynamic side: if clicking on the anchor block, use clicked face
+            if (context.getClickedPos().equals(ClientRender.wand.anchor.getPos())) {
+                side = context.getClickedFace();
+            } else {
+                side = ClientRender.wand.anchor.getSide() != null ? ClientRender.wand.anchor.getSide() : side;
+            }
+            block_state = world.getBlockState(pos);
+            shouldOffset = false;
+        }
         if (ClientRender.wand.getP1() == null) {
             if (shouldOffset) {
                 ClientRender.wand.setP1(pos.relative(side, 1));
@@ -114,6 +128,7 @@ public class WandItem extends Item {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
+            ClientRender.wand.anchor.clear();
             if (mode != Mode.COPY) {
                 ClientRender.wand.clear(mode == Mode.PASTE  || mode==Mode.AREA || mode == Mode.VEIN);
             }
@@ -145,6 +160,32 @@ public class WandItem extends Item {
         }
         Wand wand = ClientRender.wand;
         Mode mode = WandProps.getMode(stack);
+        if (wand.anchor.isActive()) {
+            BlockPos anchor = wand.anchor.getPos();
+            Direction side = wand.anchor.getSide() != null ? wand.anchor.getSide() : player.getDirection().getOpposite();
+            if (wand.getP1() == null) {
+                wand.setP1(anchor);
+                if (mode.n_clicks() == 1) {
+                    send_placement(side, anchor, null, player.getEyePosition(), wand.palette.seed);
+                    wand.palette.seed = System.currentTimeMillis();
+                    wand.copy();
+                    wand.anchor.clear();
+                    wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+                }
+            } else if (mode.n_clicks() == 2 && wand.getP2() == null) {
+                wand.setP2(anchor);
+                send_placement(side, wand.getP1(), anchor, player.getEyePosition(), wand.palette.seed);
+                wand.palette.seed = System.currentTimeMillis();
+                wand.copy();
+                wand.anchor.clear();
+                wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+            }
+            #if MC_VERSION>=12111
+            return InteractionResult.SUCCESS;
+            #else
+            return InteractionResultHolder.success(player.getItemInHand(interactionHand));
+            #endif
+        }
         if (wand.target_air && mode.can_target_air()) {
             // Check if player has something to place with (offhand block, palette, or copy/paste mode)
             // Destroy and Use actions don't need an offhand block
