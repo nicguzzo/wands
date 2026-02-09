@@ -1198,9 +1198,12 @@ public class Wand {
                         no_use_action = true;
                         return false;
                     }
-                    no_tool = true;
-                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
-                    return false;
+                    // allow breaking hand-mineable blocks without a tool
+                    if (st.requiresCorrectToolForDrops()) {
+                        no_tool = true;
+                        needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
+                        return false;
+                    }
                 }
                 if (_tool_would_break) {
                     damaged_tool = true;
@@ -1849,7 +1852,10 @@ public class Wand {
                         correct_tool = item_digger.isCorrectToolForDrops(state);
                     #endif
                 }
+                // allow any tool to break hand-mineable blocks (flowers, grass, torches, etc.)
+                boolean requires_tool = state.requiresCorrectToolForDrops();
                 return creative || (destroy_speed > 1.0f && correct_tool)
+                        || !requires_tool
                         || is_glass || is_snow_layer || is_allowed || can_shear;
             } else {
                 return true;
