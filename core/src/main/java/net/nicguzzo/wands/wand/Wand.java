@@ -196,6 +196,7 @@ public class Wand {
     public WandProps.StateMode state_mode = WandProps.StateMode.CLONE;
     private boolean no_tool;
     private boolean damaged_tool;
+    private boolean no_use_action;
     private String needed_tool = "";
     public boolean match_state = false;
     //public boolean even_circle=false;
@@ -722,6 +723,7 @@ public class Wand {
             check_inventory();
 
             int placed = 0;
+            no_use_action = false;
 
             // DO ACTIONS - process blocks that have matching tools, skip others
             {
@@ -768,6 +770,10 @@ public class Wand {
                 remove_from_inventory(placed);
             }
             //System.out.println("placed " + placed);
+            if (no_use_action && placed == 0) {
+                player.displayClientMessage(Compat.translatable("wands.message.no_use_action"), true);
+                no_use_action = false;
+            }
             if ((placed > 0) || (no_tool || damaged_tool)) {
 
                 if (blocks_sent_to_inv > 0 && !WandsMod.config.disable_info_messages) {
@@ -1188,6 +1194,10 @@ public class Wand {
                 if (digger_item != null) {
                     _tool_would_break = tool_would_break(digger_item);
                 } else {
+                    if (use && !WandUtils.has_use_action(st) && !can_shear(st)) {
+                        no_use_action = true;
+                        return false;
+                    }
                     no_tool = true;
                     needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
@@ -1201,10 +1211,13 @@ public class Wand {
             if (creative && use) {
                 can_destroy(st, true);
                 if (digger_item == null && !has_water_potion) {
+                    if (!WandUtils.has_use_action(st) && !can_shear(st)) {
+                        no_use_action = true;
+                        return false;
+                    }
                     no_tool = true;
                     needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
-
                 }
             }
         }

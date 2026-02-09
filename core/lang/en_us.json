@@ -297,5 +297,6 @@
   "wands.instruction.copy.expand_selection": "Copy: Expand selection [%s]",
   "wands.instruction.line.set_start": "Line: Set start point [%s]",
   "wands.instruction.line.set_end": "Line: Set end point [%s]",
-  "wands.message.target_air_needs_offhand": "Target air requires a block in offhand or palette"
+  "wands.message.target_air_needs_offhand": "Target air requires a block in offhand or palette",
+  "wands.message.no_use_action": "No Use action for some blocks in selection"
 }

@@ -35,6 +35,9 @@ public class WandUtils{
     public static boolean is_flattenable(BlockState state){
         return ShovelItemAccessor.getFlattenables().get(state.getBlock())!=null;
     }
+    public static boolean has_use_action(BlockState state){
+        return is_tillable(state) || is_strippable(state) || is_flattenable(state);
+    }
     static public boolean is_wand(ItemStack stack) {
         return stack!=null && !stack.isEmpty() && stack.getItem() instanceof WandItem;
     }
