@@ -74,7 +74,7 @@ public class WandsModClient {
     static final public int toggle_stair_slab_key = GLFW.GLFW_KEY_PERIOD;//InputConstants.KEY_PERIOD;
     static final public int area_diagonal_spread = GLFW.GLFW_KEY_COMMA;//InputConstants.KEY_COMMA;
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
-    static final public int anchor_key = GLFW.GLFW_KEY_G;
+    static final public int pin_key = GLFW.GLFW_KEY_G;
     #if MC_VERSION >= 12111
     public static final KeyMapping.Category tab = KeyMapping.Category.register(new MyIdExt(WandsMod.MOD_ID, "wands").res);
     #else
@@ -103,7 +103,7 @@ public class WandsModClient {
         keys.put(Compat.newKeyMapping(k + "area_diagonal_spread", area_diagonal_spread, tab), WandsMod.WandKeys.DIAGONAL_SPREAD);
         keys.put(Compat.newKeyMapping(k + "inc_sel_block", inc_sel_block, tab), WandsMod.WandKeys.INC_SEL_BLK);
         keys.put(Compat.newKeyMapping(k + "clear_wand", GLFW.GLFW_KEY_C, tab), WandsMod.WandKeys.CLEAR);
-        keys.put(Compat.newKeyMapping(k + "anchor", anchor_key, tab), WandsMod.WandKeys.ANCHOR);
+        keys.put(Compat.newKeyMapping(k + "pin", pin_key, tab), WandsMod.WandKeys.PIN);
 
         keys.forEach((km, v) -> Compat.register_key((KeyMapping) km));
 
@@ -146,10 +146,10 @@ public class WandsModClient {
                             openToolsTab = true;
                         }
 
-                        // Try anchor handling first — if consumed, don't send to server
+                        // Try pin handling first — if consumed, don't send to server
                         boolean consumed = false;
                         if (holdingWand && ClientRender.wand != null) {
-                            consumed = handleAnchorKey(client, mainHand, key, Compat.hasShiftDown());
+                            consumed = handlePinKey(client, mainHand, key, Compat.hasShiftDown());
                         }
 
                         if (!consumed) {
@@ -209,15 +209,15 @@ public class WandsModClient {
                 boolean newAlt = Compat.hasAltDown();
                 boolean newShift = Compat.hasShiftDown();
                 if (alt != newAlt || shift != newShift) {
-                    // Handle alt freeze/release via anchor system
+                    // Handle alt freeze/release via pin system
                     if (alt != newAlt && holdingWand && ClientRender.wand != null) {
                         if (newAlt) {
-                            // Alt pressed — freeze at crosshair if no toggle anchor active
+                            // Alt pressed — freeze at crosshair if no toggle pin active
                             WandProps.Mode mode = WandProps.getMode(mainHand);
-                            ClientRender.wand.anchor.freeze(client.hitResult, mainHand, mode);
+                            ClientRender.wand.pin.freeze(client.hitResult, mainHand, mode);
                         } else {
                             // Alt released — release non-persistent freeze
-                            ClientRender.wand.anchor.release();
+                            ClientRender.wand.pin.release();
                         }
                     }
                     alt = newAlt;
@@ -225,7 +225,7 @@ public class WandsModClient {
                     if (ClientRender.wand != null) {
                         ClientRender.wand.is_shift_pressed = shift;
                     }
-                    boolean frozen = ClientRender.wand != null && ClientRender.wand.anchor.isActive();
+                    boolean frozen = ClientRender.wand != null && ClientRender.wand.pin.isActive();
                     Networking.send_key(-1, shift, frozen);
                 }
             }
@@ -434,6 +434,11 @@ public class WandsModClient {
                     String undoKey = showUndo ? getKeyName(WandsMod.WandKeys.UNDO) : "";
                     String undoText = showUndo ? "Undo [" + undoKey + "]" : "";
 
+                    // Pin line (modes that support it)
+                    boolean showPin = mode.supports_pin();
+                    String pinKey = showPin ? getKeyName(WandsMod.WandKeys.PIN) : "";
+                    String pinText = showPin ? "Pin [" + pinKey + "]" : "";
+
                     int pad = WandScreen.SCREEN_MARGIN;
                     int lineSpacing = font.lineHeight + Section.VERTICAL_SPACING;
 
@@ -446,6 +451,7 @@ public class WandsModClient {
                     if (!p2Text.isEmpty()) lineCount++;
                     if (!infoText.isEmpty()) lineCount++;
                     if (showUndo) lineCount++;
+                    if (showPin) lineCount++;
 
                     // Calculate max width across all lines
                     String modeText = modeStr + " [" + modeKey + "]";
@@ -458,6 +464,7 @@ public class WandsModClient {
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (!infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
                     if (showUndo) maxWidth = Math.max(maxWidth, font.width(undoText));
+                    if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
 
                     int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
@@ -465,7 +472,7 @@ public class WandsModClient {
                     int hudX = pad * 2 + (int) ((screenWidth - contentWidth - pad * 4) * (WandsMod.config.wand_mode_display_x_pos / 100.0f));
                     int hudY = pad * 2 + (int) ((screenHeight - contentHeight - pad * 4) * (WandsMod.config.wand_mode_display_y_pos / 100.0f));
 
-                    gui.fill(hudX - pad, hudY - pad, hudX + contentWidth + pad, hudY + contentHeight + pad, WandScreen.COLOR_PANEL_BACKGROUND);
+                    gui.fill(hudX - pad, hudY - pad, hudX + contentWidth + pad, hudY + contentHeight + pad, 0x00000000);
 
                     int currentY = hudY;
 
@@ -587,6 +594,13 @@ public class WandsModClient {
                     // Undo [U]
                     if (showUndo) {
                         drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+
+                    // Pin / Unpin [G]
+                    if (showPin) {
+                        String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
+                        drawHudValueWithHint(gui, font, pinLabel, pinKey, hudX, currentY);
                     }
                 }
             }
@@ -628,7 +642,7 @@ public class WandsModClient {
     public static void cancel_wand() {
         if (ClientRender.wand != null && ClientRender.wand.wand_stack != null && WandUtils.is_wand(ClientRender.wand.wand_stack)) {
             ClientRender.wand.clear(true);
-            ClientRender.wand.anchor.clear();
+            ClientRender.wand.pin.clear();
             if (ClientRender.wand.player != null && !WandsMod.config.disable_info_messages) {
                 ClientRender.wand.player.displayClientMessage(Compat.literal("Wand cleared"), true);
             }
@@ -636,32 +650,32 @@ public class WandsModClient {
     }
 
     /**
-     * Handle anchor key input. Returns true if the key was consumed (should NOT be sent to server).
+     * Handle pin key input. Returns true if the key was consumed (should NOT be sent to server).
      */
-    private static boolean handleAnchorKey(Minecraft client, ItemStack mainHand, WandsMod.WandKeys key, boolean shift) {
+    private static boolean handlePinKey(Minecraft client, ItemStack mainHand, WandsMod.WandKeys key, boolean shift) {
         Wand wand = ClientRender.wand;
         if (wand == null) return false;
 
         WandProps.Mode mode = WandProps.getMode(mainHand);
 
-        if (key == WandsMod.WandKeys.ANCHOR) {
-            if (!wand.anchor.isSet() && !mode.supports_anchor()) {
-                // Mode doesn't support anchor — consume the key but do nothing
+        if (key == WandsMod.WandKeys.PIN) {
+            if (!wand.pin.isSet() && !mode.supports_pin()) {
+                // Mode doesn't support pin — consume the key but do nothing
                 return true;
             }
-            boolean wasSet = wand.anchor.isSet();
-            wand.anchor.toggle(client.hitResult, mainHand, mode);
+            boolean wasSet = wand.pin.isSet();
+            wand.pin.toggle(client.hitResult, mainHand, mode);
             if (client.player != null && !WandsMod.config.disable_info_messages) {
-                String msgKey = wasSet ? "wands.message.anchor_cleared" : "wands.message.anchor_set";
-                if (wand.anchor.isSet() || wasSet) {
+                String msgKey = wasSet ? "wands.message.pin_cleared" : "wands.message.pin_set";
+                if (wand.pin.isSet() || wasSet) {
                     client.player.displayClientMessage(Compat.translatable(msgKey), true);
                 }
             }
             return true;
         }
 
-        // Arrow keys: delegate to anchor.move()
+        // Arrow keys: delegate to pin.move()
         if (client.player == null) return false;
-        return wand.anchor.move(key, shift, client.player.getDirection());
+        return wand.pin.move(key, shift, client.player.getDirection());
     }
 }

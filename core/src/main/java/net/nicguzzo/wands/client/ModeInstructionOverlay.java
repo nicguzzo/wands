@@ -5,7 +5,6 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.wand.Wand;
@@ -38,9 +37,9 @@ public class ModeInstructionOverlay {
         // Get the current mode
         WandProps.Mode mode = WandProps.getMode(stack);
 
-        // Show instructions overlay for two-click modes, or any mode when anchor is active/available
-        boolean anchorRelevant = mode.supports_anchor() && ClientRender.wand != null && (ClientRender.wand.anchor.isSet() || mode.n_clicks() == 1);
-        if (mode.n_clicks() != 2 && !anchorRelevant) {
+        // Show instructions overlay for two-click modes, or when pin is actively set
+        boolean pinActive = ClientRender.wand != null && ClientRender.wand.pin.isSet() && ClientRender.wand.pin.isPersistent();
+        if (mode.n_clicks() != 2 && !pinActive) {
             return;
         }
 
@@ -124,15 +123,10 @@ public class ModeInstructionOverlay {
                 break;
         }
 
-        // General anchor instructions (supported modes only)
+        // Pin movement instructions (only when pin is actively set)
         Wand wand = ClientRender.wand;
-        if (wand != null && mode.supports_anchor()) {
-            String anchorKeyName = WandsModClient.getKeyName(WandsMod.WandKeys.ANCHOR);
-            if (wand.anchor.isSet() && wand.anchor.isPersistent()) {
-                return Component.translatable("wands.instruction.anchor.move", anchorKeyName);
-            } else if (mode.n_clicks() == 1) {
-                return Component.translatable("wands.instruction.anchor.set", anchorKeyName);
-            }
+        if (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) {
+            return Component.translatable("wands.instruction.pin.move");
         }
 
         return null;

@@ -35,7 +35,7 @@ public class WandProps {
                 return 1;
             }
 
-            public boolean supports_anchor() {
+            public boolean supports_pin() {
                 return false;
             }
         }, ROW_COL {
@@ -223,7 +223,7 @@ public class WandProps {
                 return 1;
             }
 
-            public boolean supports_anchor() {
+            public boolean supports_pin() {
                 return false;
             }
         }, SPHERE {
@@ -266,7 +266,7 @@ public class WandProps {
 
         public abstract int n_clicks();
 
-        public boolean supports_anchor() {
+        public boolean supports_pin() {
             return true;
         }
 
