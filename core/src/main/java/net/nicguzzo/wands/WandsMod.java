@@ -443,10 +443,11 @@ public class WandsMod {
                         }
                         break;
                     case INVERT:
-                        if (WandProps.flagAppliesTo(WandProps.Flag.INVERTED, mode)) {
-                            WandProps.toggleFlag(main_stack, WandProps.Flag.INVERTED);
+                        WandProps.Flag invertFlag = (mode == WandProps.Mode.BOX) ? WandProps.Flag.BOX_INVERTED : WandProps.Flag.INVERTED;
+                        if (WandProps.flagAppliesTo(invertFlag, mode)) {
+                            WandProps.toggleFlag(main_stack, invertFlag);
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.INVERTED))), true);
+                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + WandProps.getFlag(main_stack, invertFlag))), true);
                             }
                         }
                         break;
@@ -475,10 +476,10 @@ public class WandsMod {
                             if (!WandsMod.config.disable_info_messages) {
                                 String rotKey;
                                 switch (WandProps.getRotation(main_stack)) {
-                                    case CLOCKWISE_90: rotKey = "tooltip.wands.rot_90"; break;
-                                    case CLOCKWISE_180: rotKey = "tooltip.wands.rot_180"; break;
-                                    case COUNTERCLOCKWISE_90: rotKey = "tooltip.wands.rot_270"; break;
-                                    default: rotKey = "tooltip.wands.rot_0"; break;
+                                    case CLOCKWISE_90: rotKey = "screen.wands.rot_90"; break;
+                                    case CLOCKWISE_180: rotKey = "screen.wands.rot_180"; break;
+                                    case COUNTERCLOCKWISE_90: rotKey = "screen.wands.rot_270"; break;
+                                    default: rotKey = "screen.wands.rot_0"; break;
                                 }
                                 player.displayClientMessage(Compat.translatable(rotKey), true);
                             }
