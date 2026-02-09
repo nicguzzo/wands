@@ -115,7 +115,7 @@ public class WandItem extends Item {
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
             if (mode != Mode.COPY) {
-                ClientRender.wand.clear(mode == Mode.PASTE || mode==Mode.AREA);
+                ClientRender.wand.clear(mode == Mode.PASTE  || mode==Mode.AREA || mode == Mode.VEIN);
             }
         }
         return InteractionResult.SUCCESS;
@@ -175,7 +175,7 @@ public class WandItem extends Item {
                 send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(), wand.hit, wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 ClientRender.wand.copy();
-                ClientRender.wand.clear(mode==Mode.PASTE || wand.mode== WandProps.Mode.COPY);
+                ClientRender.wand.clear(mode==Mode.PASTE || wand.mode== WandProps.Mode.COPY || mode == Mode.VEIN);
             }
         } else {
             //ClientRender.wand.clear();
