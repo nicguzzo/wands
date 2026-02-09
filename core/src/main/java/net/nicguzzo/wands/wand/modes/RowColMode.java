@@ -34,17 +34,25 @@ public class RowColMode extends WandMode {
             int offx = 0;
             int offy = 0;
             int offz = 0;
-
+            Direction player_dir=wand.player.getDirection();
             switch (wand.side) {
                 case UP:
                 case DOWN:
                     switch (orientation) {
                         case ROW: {
-                            dir = Direction.SOUTH;
+                            if(player_dir==Direction.SOUTH ||player_dir==Direction.NORTH) {
+                                dir = Direction.EAST;
+                            }else{
+                                dir = Direction.SOUTH;
+                            }
                             offz = -1;
                         }break;
                         case COL: {
-                            dir = Direction.EAST;
+                            if(player_dir==Direction.SOUTH ||player_dir==Direction.NORTH) {
+                                dir = Direction.SOUTH;
+                            }else{
+                                dir = Direction.EAST;
+                            }
                             offx = -1;
                         }break;
                     }
