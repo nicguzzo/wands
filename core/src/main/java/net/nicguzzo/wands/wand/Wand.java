@@ -1339,6 +1339,7 @@ public class Wand {
                     }
                     if (!destroy || (replace && placed)) {
                         if (!use) {
+                            state = state_for_placement(state, block_pos);
                             if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
                                 blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
                                 placed = true;

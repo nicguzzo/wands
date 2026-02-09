@@ -988,7 +988,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
             // Block state controls - only relevant for Place action and modes that use state_mode
             WandProps.Action currentAction = WandProps.getAction(actualWand);
-            boolean showStateControls = (currentAction == WandProps.Action.PLACE)
+            boolean showStateControls = (currentAction == WandProps.Action.PLACE || currentAction == WandProps.Action.REPLACE)
                 && WandProps.stateModeAppliesTo(currentMode);
             WandProps.StateMode stateMode = WandProps.getStateMode(actualWand);
             boolean isAdjustMode = (stateMode == WandProps.StateMode.APPLY
