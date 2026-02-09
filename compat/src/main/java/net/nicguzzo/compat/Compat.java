@@ -57,11 +57,16 @@ import net.minecraft.resources.ResourceLocation;
 #endif
 import org.joml.Matrix4f;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+#if MC_VERSION >= 12101
+import net.minecraft.world.item.component.ItemContainerContents;
+#endif
 
 public class Compat {
     //public int debugVersion = MC_VERSION;
@@ -220,7 +225,7 @@ public class Compat {
         return player.getOnPos().getCenter();
     }
     static public boolean is_same(ItemStack i1,ItemStack i2){
-        return ItemStack.isSameItem(i2,i2);
+        return ItemStack.isSameItem(i1,i2);
     }
     static public Level player_level(Player player){
         return player.level();
@@ -399,6 +404,58 @@ public class Compat {
     static public void saveCustomData(ItemStack stack,CompoundTag tag){
         #if MC_VERSION >=12005
             CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+        #endif
+    }
+    static public boolean has_no_custom_data(ItemStack stack) {
+        #if MC_VERSION >= 12005
+            return stack.get(DataComponents.CUSTOM_DATA) == null
+                && stack.get(DataComponents.CUSTOM_NAME) == null;
+        #else
+            return stack.getTag() == null;
+        #endif
+    }
+    static public List<ItemStack> get_shulker_contents(ItemStack shulker) {
+        #if MC_VERSION >= 12101
+            ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+            List<ItemStack> list = new ArrayList<>();
+            Iterator<ItemStack> it = contents.nonEmptyItems().iterator();
+            while (it.hasNext()) {
+                list.add(it.next());
+            }
+            return list;
+        #else
+            CompoundTag entity_tag = shulker.getTagElement("BlockEntityTag");
+            if (entity_tag == null) {
+                return Collections.emptyList();
+            }
+            ListTag shulker_items = entity_tag.getList("Items", NbtType.COMPOUND);
+            List<ItemStack> list = new ArrayList<>();
+            for (int i = 0, len = shulker_items.size(); i < len; ++i) {
+                CompoundTag itemTag = shulker_items.getCompound(i);
+                ItemStack s = ItemStack.of(itemTag);
+                if (!s.isEmpty()) {
+                    list.add(s);
+                }
+            }
+            return list;
+        #endif
+    }
+    static public void set_shulker_contents(ItemStack shulker, List<ItemStack> items) {
+        #if MC_VERSION >= 12101
+            shulker.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(items));
+        #else
+            CompoundTag shulker_tag = shulker.getOrCreateTagElement("BlockEntityTag");
+            ListTag shulker_items = new ListTag();
+            int slot = 0;
+            for (ItemStack item : items) {
+                if (!item.isEmpty()) {
+                    CompoundTag stackTag = item.save(new CompoundTag());
+                    stackTag.putByte("Slot", (byte) slot);
+                    shulker_items.add(stackTag);
+                }
+                slot++;
+            }
+            shulker_tag.put("Items", shulker_items);
         #endif
     }
     static public void consumerAddVertexColor(VertexConsumer consumer, Matrix4f matrix, float x,float y,float z,Colorf c) {

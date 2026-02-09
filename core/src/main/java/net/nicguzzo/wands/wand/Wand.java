@@ -302,7 +302,7 @@ public class Wand {
     public final Pin pin = new Pin();
 
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
-    private int blocks_sent_to_inv = 0;
+    InventoryManager inventory;
     public int MAX_COPY_VOL = WandsConfig.max_limit;
     public int radius = 0;
 
@@ -312,14 +312,11 @@ public class Wand {
     public WandProps.Mode prevMode = null;  // Track previous mode to detect changes
     public boolean prnt = false;
     public int limit = WandsConfig.max_limit;
-    Inventory player_inv;
     public boolean slab_stair_bottom = true;
     static boolean once = true;
 
     WandMode[] modes = null;
 
-    int[] inv_aux = new int[36];
-    int inv_aux_last = 0;
     public boolean drop_on_player = true;
 
     public CompoundTag player_data;
@@ -416,7 +413,7 @@ public class Wand {
         state_mode = WandProps.getStateMode(wand_stack);
         slab_stair_bottom = WandProps.getFlag(wand_stack, WandProps.Flag.STAIRSLAB);
         match_state = WandProps.getFlag(wand_stack, WandProps.Flag.MATCHSTATE);
-        player_inv = Compat.get_inventory(player);
+        inventory = new InventoryManager(Compat.get_inventory(player));
         y0 = 0.0f;
         block_height = 1.0f;
         is_slab_top = false;
@@ -508,7 +505,7 @@ public class Wand {
             if (!creative && has_water_potion) {
                 int nbuckets = 0;
                 for (int i = 0; i < 36; ++i) {
-                    ItemStack stack = player_inv.getItem(i);
+                    ItemStack stack = inventory.getItem(i);
                     boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
                     if (stack.getItem() instanceof BucketItem && is_water_bucket) {
                         nbuckets++;
@@ -583,8 +580,8 @@ public class Wand {
             return;
         }*/
 
-        update_inv_aux();
-        blocks_sent_to_inv = 0;
+        inventory.update_inv_aux();
+        inventory.resetBlocksSentToInv();
         //process the current mode
         int m = mode.ordinal();
         if (m >= 0 && m < modes.length && modes[m] != null) {
@@ -656,7 +653,7 @@ public class Wand {
                                     if (has_water_bucket) {
                                         //in survival check if player has another water bucket apart from the one in the offhand
                                         for (int i = 0; i < 36; ++i) {
-                                            ItemStack stack = player_inv.getItem(i);
+                                            ItemStack stack = inventory.getItem(i);
                                             boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
                                             if (stack.getItem() instanceof BucketItem && is_water_bucket) {
                                                 has_bucket = true;
@@ -722,7 +719,7 @@ public class Wand {
                 }
             }
             //deal with inventory
-            check_inventory();
+            inventory.check_inventory(this);
 
             int placed = 0;
             no_use_action = false;
@@ -769,7 +766,8 @@ public class Wand {
                 }
                 modes[m].action(this);
 
-                remove_from_inventory(placed);
+                inventory.remove_from_inventory(this, placed);
+                player.inventoryMenu.broadcastChanges();
             }
             //System.out.println("placed " + placed);
             if (no_use_action && placed == 0) {
@@ -778,10 +776,9 @@ public class Wand {
             }
             if ((placed > 0) || (no_tool || damaged_tool)) {
 
-                if (blocks_sent_to_inv > 0 && !WandsMod.config.disable_info_messages) {
-                    MutableComponent mc = Compat.literal(blocks_sent_to_inv + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
-                    player.displayClientMessage(mc, true);
-                    Compat.player_level(player).playSound(player, player.blockPosition(), SoundEvents.ITEM_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.2f, ((player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 0.7f + 1.0f) * 2.0f);
+                if (inventory.getBlocksSentToInv() > 0 && !WandsMod.config.disable_info_messages) {
+                    MutableComponent mc = Compat.literal(inventory.getBlocksSentToInv() + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
+                    player.displayClientMessage(mc, false);
                 }
                 ItemStack is = ItemStack.EMPTY;
                 if (!no_tool && !damaged_tool) {
@@ -811,41 +808,6 @@ public class Wand {
             setP2(null);
             valid = false;
         }
-    }
-
-    ItemStack consume_item(BlockAccounting pa, ItemStack stack_item) {
-        if (pa != null && pa.placed > 0) {
-            if (WandUtils.is_magicbag(stack_item)) {
-                int total = MagicBagItem.getTotal(stack_item);
-                //ItemStack item_in_bag=MagicBagItem.getItem(stack_item);
-                if (pa.placed <= total) {
-                    MagicBagItem.dec(stack_item, pa.placed);
-                    pa.placed = 0;
-                } else {
-                    MagicBagItem.dec(stack_item, total);
-                    pa.placed -= total;
-                }
-            } else {
-                if (stack_item.getItem().equals(Fluids.LAVA.getBucket())) {
-                    pa.placed--;
-                    //pa.consumed++;
-                    ItemStack ret = Items.BUCKET.getDefaultInstance();
-                    return ret;
-                } else {
-                    if (pa.placed <= stack_item.getCount()) {
-                        //pa.consumed+=stack_item.getCount();
-                        stack_item.setCount(stack_item.getCount() - pa.placed);
-                        pa.placed = 0;
-                    } else {
-                        //pa.consumed+=stack_item.getCount();
-                        pa.placed -= stack_item.getCount();
-                        stack_item.setCount(0);
-                    }
-                }
-            }
-            return ItemStack.EMPTY;
-        }
-        return null;
     }
 
     public void skip() {
@@ -1426,7 +1388,7 @@ public class Wand {
             drop_pos = blockPos;
         }
         if (drop_item != null) {
-            if (!place_into(drop_item)) {
+            if (!inventory.place_into(this, drop_item)) {
                 if (!this.stop) {
                     Block.popResource(level, drop_pos, drop_item);
                 }
@@ -1435,7 +1397,7 @@ public class Wand {
             Block.getDrops(blockState, (ServerLevel) level, blockPos, blockEntity, player, digger_item).forEach(
                     (itemStackx) -> {
                         //player.displayClientMessage(Compat.literal(itemStackx.getDescriptionId()),false);
-                        if (!place_into(itemStackx)) {
+                        if (!inventory.place_into(this, itemStackx)) {
                             if (!this.stop) {
                                 Block.popResource(level, drop_pos, itemStackx);
                             }
@@ -1467,206 +1429,7 @@ public class Wand {
         return true;
     }
 
-    boolean place_into(ItemStack item_to_place) {
-        ItemStack oh = player.getOffhandItem();
-        //System.out.println("offhand "+oh.getTag());
-        if (!oh.isEmpty()) {
-            if (WandUtils.is_shulker(oh)) {
-                return place_into_shulker(oh, item_to_place, false);
-            } else if (WandUtils.is_magicbag(oh)) {
-                return place_into_bag(oh, item_to_place);
-            }
-        }
-        //look for bags and shulkers
-        for (int pi = 0; pi < inv_aux_last; ++pi) {
-            ItemStack stack = player_inv.getItem(inv_aux[pi]);
-            if (WandUtils.is_shulker(stack)) {
-                if (place_into_shulker(stack, item_to_place, true)) {
-                    return true;
-                }
-            }
-            if (WandUtils.is_magicbag(stack)) {
-                if (place_into_bag(stack, item_to_place)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 
-    boolean place_into_bag(ItemStack bag, ItemStack item_to_place) {
-        ItemStack mb_item = MagicBagItem.getItem(bag, this.level);
-        int total = MagicBagItem.getTotal(bag);
-        if (mb_item.isEmpty() && total == 0) {
-            MagicBagItem.setItem(bag, item_to_place, this.level);
-            mb_item = item_to_place;
-        }
-        if (mb_item.getItem() == item_to_place.getItem()) {
-            if (MagicBagItem.inc(bag, item_to_place.getCount())) {
-                blocks_sent_to_inv += item_to_place.getCount();
-                return true;
-            }
-        }
-        return false;
-    }
-#if MC_VERSION >= 12101
-    boolean place_into_shulker(ItemStack shulker, ItemStack item_to_place, boolean bag_only) {
-
-        ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-        Iterator<ItemStack> it = contents.nonEmptyItems().iterator();
-        while (it.hasNext()) {
-            ItemStack slot_item = it.next();
-            if (WandUtils.is_magicbag(slot_item)) {
-                ItemStack bag_with_same_item = MagicBagItem.getItem(slot_item, this.level);
-                if (bag_with_same_item.getItem() == item_to_place.getItem()) {
-                    if (place_into_bag(slot_item, item_to_place)) {
-                        return true;
-                    }
-                    break;
-                }
-            }
-        }
-        if (!bag_only) {
-            Iterator<ItemStack> it2 = contents.nonEmptyItems().iterator();
-            int item_count = item_to_place.getCount();
-            //look for stack that alreadey have the item
-            int slots = 0;
-            while (it2.hasNext()) {
-                slots++;
-                ItemStack slot_item = it2.next();
-                if (slot_item != null) {
-                    if (Compat.is_same(item_to_place, slot_item)) {
-                        int total = item_count + slot_item.getCount();
-                        if (total <= slot_item.getMaxStackSize()) {
-                            slot_item.setCount(total);
-                            blocks_sent_to_inv += item_count;
-                            return true;
-                        } else {
-                            //slot full
-                            blocks_sent_to_inv += slot_item.getMaxStackSize() - slot_item.getCount();
-                            slot_item.setCount(slot_item.getMaxStackSize());
-                            item_count = total - slot_item.getMaxStackSize();
-                        }
-                    } else {
-                        if (WandUtils.is_magicbag(slot_item)) {
-                            if (place_into_bag(slot_item, item_to_place)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            item_to_place.setCount(item_count);
-            if (item_count > 0) {
-                if (slots >= 0 && slots < 27) {
-                    List<ItemStack> list = new ArrayList<>(contents.stream().toList());
-                    if (list.size() < 27) {
-                        list.add(item_to_place);
-                        blocks_sent_to_inv += item_count;
-                        shulker.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(list));
-                        return true;
-                    }
-                }
-                //if we get here the shulker is full
-                if (this.stop_on_full_inventory) {
-                    stop = true;
-                }
-            }
-        }
-        return false;
-    }
-#else
-    boolean place_into_shulker(ItemStack shulker, ItemStack item_to_place, boolean bag_only) {
-        if (shulker.getTag() == null) {
-            return false;
-        }
-        CompoundTag shulker_tag = shulker.getOrCreateTagElement("BlockEntityTag");
-        ListTag shulker_items = shulker_tag.getList("Items", Compat.NbtType.COMPOUND);
-        boolean[] sh_slots = new boolean[27];
-        int item_count = item_to_place.getCount();
-        //look for bags with same item first
-        for (int j = 0, len = shulker_items.size(); j < len; ++j) {
-            CompoundTag itemTag = shulker_items.getCompound(j);
-            int slt = itemTag.getByte("Slot");
-            ItemStack slot_item = ItemStack.of(itemTag);
-            if (WandUtils.is_magicbag(slot_item)) {
-                ItemStack bag_with_same_item = MagicBagItem.getItem(slot_item,level);
-                if (bag_with_same_item.getItem() == item_to_place.getItem()) {
-                    if (place_into_bag(slot_item, item_to_place)) {
-                        return true;
-                    }
-                    break;
-                }
-            }
-        }
-        if (!bag_only) {
-            for (int j = 0, len = shulker_items.size(); j < len; ++j) {
-                CompoundTag itemTag = shulker_items.getCompound(j);
-                int slt = itemTag.getByte("Slot");
-                if (slt >= 0 && slt < 27) {
-                    sh_slots[slt] = true;
-                }
-                ItemStack slot_item = ItemStack.of(itemTag);
-                if (slot_item != null) {
-                    if (Compat.is_same(item_to_place, slot_item)) {
-                        int total = item_count + slot_item.getCount();
-                        if (total <= slot_item.getMaxStackSize()) {
-                            item_to_place.setCount(total);
-                            blocks_sent_to_inv += total;
-                            shulker_items.set(j, item_to_place.save(itemTag));
-                            return true;
-                        } else {
-                            item_to_place.setCount(slot_item.getMaxStackSize());
-                            blocks_sent_to_inv += slot_item.getMaxStackSize();
-                            shulker_items.set(j, item_to_place.save(itemTag));
-                            item_count = total - slot_item.getMaxStackSize();
-                        }
-                    } else {
-                        if (WandUtils.is_magicbag(slot_item)) {
-                            if (place_into_bag(slot_item, item_to_place)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-            item_to_place.setCount(item_count);
-            if (item_count > 0) {
-                int empty_slot = -1;
-                for (int j = 0, len = 27; j < len; ++j) {
-                    if (!sh_slots[j]) {
-                        empty_slot = j;
-                        break;
-                    }
-                }
-                if (empty_slot >= 0 && empty_slot < 27) {
-                    CompoundTag stackTag = item_to_place.save(new CompoundTag());
-                    stackTag.putByte("Slot", (byte) empty_slot);
-                    shulker_items.add(stackTag);
-                    return true;
-                }
-                //if we get here the shulker is full
-                if (this.stop_on_full_inventory) {
-                    stop = true;
-                }
-            }
-        }
-        return false;
-    }
-#endif
-    public void update_inv_aux() {
-        inv_aux_last = 0;
-        for (int s = 0; s < 36; s++) {
-            ItemStack stack = player_inv.getItem(s);
-            if (WandUtils.is_shulker(stack)) {
-                inv_aux[inv_aux_last] = s;
-                inv_aux_last++;
-            } else if (WandUtils.is_magicbag(stack)) {
-                inv_aux[inv_aux_last] = s;
-                inv_aux_last++;
-            }
-        }
-    }
     public boolean add_to_buffer(int x, int y, int z) {
         return add_to_buffer(x, y, z, null);
     }
@@ -1899,227 +1662,6 @@ public class Wand {
         );
     }
 
-    void check_inventory() {
-        if ((!creative || mode == Mode.BLAST) && !destroy && !use && !has_water_bucket && mode != Mode.COPY) {
-            ItemStack stack;
-            //now the player inventory
-            for (int i = 0; i < 36; ++i) {
-                stack = player_inv.getItem(i);
-                if (stack.getItem() != Items.AIR) {
-                    if (WandUtils.is_shulker(stack)) {
-                        for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
-                            pa.getValue().in_player += WandUtils.count_in_shulker(stack, pa.getKey(), level);
-                        }
-                    } else if (WandUtils.is_magicbag(stack)) {
-                        int total = MagicBagItem.getTotal(stack);
-                        ItemStack stack2 = MagicBagItem.getItem(stack, this.level);
-                        if (!stack2.isEmpty() && total > 0) {
-                            BlockAccounting ba = block_accounting.get(stack2.getItem());
-                            if (ba != null) {
-                                ba.in_player += total;
-                            }
-                        }
-                    } else {
-#if MC_VERSION >=12005
-                        if (stack.get(DataComponents.CUSTOM_DATA) == null) { //TODO: verify
-#else
-                        if (stack.getTags().findAny().isEmpty()) {
-#endif
-                            for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
-                                Item item = pa.getKey();
-                                if (item != null && !stack.isEmpty() && item == stack.getItem()) {
-                                    pa.getValue().in_player += stack.getCount();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            ItemStack oh = player.getOffhandItem();
-            if (oh != null && !oh.isEmpty()) {
-                if (oh.getItem() instanceof MagicBagItem) {
-                    stack = MagicBagItem.getItem(oh, this.level);
-                    int total = MagicBagItem.getTotal(oh);
-                    if (!stack.isEmpty() && total > 0) {
-                        BlockAccounting ba = block_accounting.get(stack.getItem());
-                        if (ba != null) {
-                            ba.in_player += total;
-                        }
-                    }
-                } else {
-                    if (offhand != null) {
-                        BlockAccounting ba = block_accounting.get(offhand.getItem());
-                        if (ba != null) {
-                            ba.in_player += offhand.getCount();
-                        }
-                    }
-                }
-            }
-            for (Map.Entry<Item, BlockAccounting> pa : block_accounting.entrySet()) {
-                if (pa.getValue().in_player < pa.getValue().needed) {
-                    MutableComponent name = Compat.translatable(pa.getKey().getDescriptionId());
-                    MutableComponent mc = Compat.literal("Not enough ").withStyle(ChatFormatting.RED).append(name);
-                    mc.append(". " + pa.getValue().in_player);
-                    mc.append("/");
-                    mc.append("" + pa.getValue().needed);
-                    player.displayClientMessage(mc, false);
-                    //missing_blocks = true;
-                }
-                //log(pa.getKey().getDescriptionId()+" needed: "+pa.getValue().needed+" player has: "+pa.getValue().in_player);
-            }
-        }
-    }
-#if MC_VERSION >=12005
-    void remove_from_inventory(int placed) {
-        if (!creative && ((!destroy && placed > 0) || mode == Mode.BLAST)) {
-            ItemStack stack;
-            ItemStack stack_item;
-            //look for items on shulker boxes first
-            for (int pi = 0; pi < 36; ++pi) {
-                stack = player_inv.getItem(pi);
-                if (stack.getItem() != Items.AIR) {
-                    if (WandUtils.is_shulker(stack)) {
-                        Iterator<ItemStack> it = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).nonEmptyItems().iterator();
-                        while (it.hasNext()) {
-                            stack_item = it.next();
-                            if (!stack_item.isEmpty()) {
-                                if (WandUtils.is_magicbag(stack_item)) {
-                                    ItemStack bag_it = MagicBagItem.getItem(stack_item, this.level);
-                                    BlockAccounting pa = block_accounting.get(bag_it.getItem());
-                                    consume_item(pa, stack_item);
-                                } else {
-                                    BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                                    consume_item(pa, stack_item);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            ItemStack oh = player.getOffhandItem();
-            if (!oh.isEmpty() && oh.getItem() instanceof MagicBagItem) {
-                stack_item = MagicBagItem.getItem(oh, this.level);
-                BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                consume_item(pa, oh);
-            }
-            //now look for bags on player inv
-            for (int i = 0; i < 36; ++i) {
-                stack_item = player_inv.getItem(i);
-                if (WandUtils.is_magicbag(stack_item)) {
-                    ItemStack bag_it = MagicBagItem.getItem(stack_item, this.level);
-                    BlockAccounting pa = block_accounting.get(bag_it.getItem());
-                    consume_item(pa, stack_item);
-                }
-            }
-            //now look for items on player inv
-            for (int i = 0; i < 36; ++i) {
-                stack_item = player_inv.getItem(i);
-                if (stack_item.getItem() != Items.AIR) {
-                    if (!WandUtils.is_shulker(stack_item) && !WandUtils.is_magicbag(stack_item)
-                            &&
-                            stack_item.get(DataComponents.CUSTOM_DATA) == null
-                    ) {
-                        BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                        ItemStack rep = consume_item(pa, stack_item);
-                        if (rep != null && !rep.isEmpty()) {
-                            player_inv.setItem(i, rep);
-                        }
-                    }
-                }
-            }
-            if (offhand != null && !offhand.isEmpty() && !WandUtils.is_magicbag(offhand)) {
-                BlockAccounting pa = block_accounting.get(offhand.getItem());
-                if (pa != null) {
-                    //pa.in_player += offhand.getCount();
-                    consume_item(pa, offhand);
-                }
-            }
-        }
-    }
-#else
-    void remove_from_inventory(int placed) {
-        if (!creative && ((!destroy && placed > 0) || mode == Mode.BLAST)) {
-            ItemStack stack;
-            ItemStack stack_item;
-            //look for items on shulker boxes first
-            for (int pi = 0; pi < 36; ++pi) {
-                stack = player_inv.getItem(pi);
-                if (stack.getItem() != Items.AIR) {
-                    if (WandUtils.is_shulker(stack)) {
-                        CompoundTag shulker_tag = stack.getTagElement("BlockEntityTag");
-                        if (shulker_tag != null) {
-                            ListTag shulker_items = shulker_tag.getList("Items", Compat.NbtType.COMPOUND);
-                            for (int j = 0, len = shulker_items.size(); j < len; ++j) {
-                                CompoundTag itemTag = shulker_items.getCompound(j);
-                                stack_item = ItemStack.of(itemTag);
-                                if (!stack_item.isEmpty()) {
-                                    if (WandUtils.is_magicbag(stack_item)) {
-                                        ItemStack bag_it = MagicBagItem.getItem(stack_item,level);
-                                        BlockAccounting pa = block_accounting.get(bag_it.getItem());
-                                        consume_item(pa, stack_item);
-                                    } else {
-                                        if (stack_item.getTag() == null) {
-                                            BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                                            ItemStack rep = consume_item(pa, stack_item);
-                                            if (rep != null) {
-                                                if (!rep.isEmpty()) {
-                                                    CompoundTag stackTag = rep.save(new CompoundTag());
-                                                    stackTag.putByte("Slot", (byte) j);
-                                                    shulker_items.set(j, stackTag);
-                                                } else {
-                                                    shulker_items.set(j, stack_item.save(itemTag));
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            ItemStack oh = player.getOffhandItem();
-            if (!oh.isEmpty() && oh.getItem() instanceof MagicBagItem) {
-                stack_item = MagicBagItem.getItem(oh,level);
-                BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                consume_item(pa, oh);
-            }
-            //now look for bags on player inv
-            for (int i = 0; i < 36; ++i) {
-                stack_item = player_inv.getItem(i);
-                if (WandUtils.is_magicbag(stack_item)) {
-                    ItemStack bag_it = MagicBagItem.getItem(stack_item,level);
-                    BlockAccounting pa = block_accounting.get(bag_it.getItem());
-                    consume_item(pa, stack_item);
-                }
-            }
-            //now look for items on player inv
-            for (int i = 0; i < 36; ++i) {
-                stack_item = player_inv.getItem(i);
-                if (stack_item.getItem() != Items.AIR) {
-                    if (!WandUtils.is_shulker(stack_item) && !WandUtils.is_magicbag(stack_item)
-                            &&
-                            stack_item.getTag() == null
-                    ) {
-                        BlockAccounting pa = block_accounting.get(stack_item.getItem());
-                        ItemStack rep = consume_item(pa, stack_item);
-                        if (rep != null && !rep.isEmpty()) {
-                            player_inv.setItem(i, rep);
-                        }
-                    }
-                }
-            }
-            if (offhand != null && !offhand.isEmpty() && !WandUtils.is_magicbag(offhand)) {
-                BlockAccounting pa = block_accounting.get(offhand.getItem());
-                if (pa != null) {
-                    //pa.in_player += offhand.getCount();
-                    consume_item(pa, offhand);
-                }
-            }
-        }
-    }
-#endif
     boolean check_advancement(ServerAdvancementManager server_advancements, PlayerAdvancements player_advancements, String a) {
 
         adv_id.tryParse(a);
