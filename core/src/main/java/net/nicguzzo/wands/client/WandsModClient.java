@@ -415,7 +415,7 @@ public class WandsModClient {
                                 int tw = WandProps.getVal(stack, WandProps.Value.BOX_W);
                                 int th = WandProps.getVal(stack, WandProps.Value.BOX_H);
                                 int td = WandProps.getVal(stack, WandProps.Value.BOX_DEPTH);
-                                infoText = "Size " + tw + "x" + th + " Depth: " + td;
+                                infoText = "Size " + tw + "x" + th + "x" + td;
                                 break;
                             case BLAST:
                                 int blastRad = WandProps.getVal(stack, WandProps.Value.BLASTRAD);
@@ -450,8 +450,7 @@ public class WandsModClient {
                     if (!p1Text.isEmpty()) lineCount++;
                     if (!p2Text.isEmpty()) lineCount++;
                     if (!infoText.isEmpty()) lineCount++;
-                    if (showUndo) lineCount++;
-                    if (showPin) lineCount++;
+                    if (showUndo || showPin) lineCount++;
 
                     // Calculate max width across all lines
                     String modeText = modeStr + " [" + modeKey + "]";
@@ -463,8 +462,12 @@ public class WandsModClient {
                     if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (!infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
-                    if (showUndo) maxWidth = Math.max(maxWidth, font.width(undoText));
-                    if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
+                    // Undo and Pin share a line
+                    String undoPinLine = "";
+                    if (showUndo) undoPinLine += undoText;
+                    if (showUndo && showPin) undoPinLine += "  ";
+                    if (showPin) undoPinLine += pinText;
+                    if (!undoPinLine.isEmpty()) maxWidth = Math.max(maxWidth, font.width(undoPinLine));
 
                     int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
@@ -574,8 +577,7 @@ public class WandsModClient {
                                 int tw = WandProps.getVal(stack, WandProps.Value.BOX_W);
                                 int th = WandProps.getVal(stack, WandProps.Value.BOX_H);
                                 int td = WandProps.getVal(stack, WandProps.Value.BOX_DEPTH);
-                                lineX += drawHudLabelValue(gui, font, "Size ", tw + "x" + th, lineX, currentY);
-                                drawHudLabelValue(gui, font, " Depth: ", String.valueOf(td), lineX, currentY);
+                                drawHudLabelValue(gui, font, "Size ", tw + "x" + th + "x" + td, lineX, currentY);
                                 break;
                             case BLAST:
                                 int blastRad = WandProps.getVal(stack, WandProps.Value.BLASTRAD);
@@ -591,16 +593,17 @@ public class WandsModClient {
                         currentY += lineSpacing;
                     }
 
-                    // Undo [U]
-                    if (showUndo) {
-                        drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
-                        currentY += lineSpacing;
-                    }
-
-                    // Pin / Unpin [G]
-                    if (showPin) {
-                        String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
-                        drawHudValueWithHint(gui, font, pinLabel, pinKey, hudX, currentY);
+                    // Undo [U] + Pin/Unpin [G] on same line
+                    if (showUndo || showPin) {
+                        int lineX = hudX;
+                        if (showUndo) {
+                            lineX += drawHudValueWithHint(gui, font, "Undo", undoKey, lineX, currentY);
+                        }
+                        if (showPin) {
+                            if (showUndo) lineX += font.width("  ");
+                            String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
+                            drawHudValueWithHint(gui, font, pinLabel, pinKey, lineX, currentY);
+                        }
                     }
                 }
             }
