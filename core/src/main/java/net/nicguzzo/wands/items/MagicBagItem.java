@@ -114,7 +114,7 @@ public class MagicBagItem extends Item {
     }
 
     static public void setItem(ItemStack bag, ItemStack item, Level level) {
-        if (bag != null && item != null && !item.isEmpty() && bag.getItem() instanceof MagicBagItem) {
+        if (bag != null && item != null && bag.getItem() instanceof MagicBagItem) {
             ItemStack item2 = item.copy();
             item2.setCount(1);
             CompoundTag tag = Compat.getTags(bag);

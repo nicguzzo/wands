@@ -17,11 +17,14 @@ import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.WandsMod;
 
+import java.util.List;
+
 public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
     private static final MyIdExt TEXTURE = new MyIdExt(WandsMod.MOD_ID,"textures/gui/magicbag.png");
     ItemStack bag_stack=null;
     Item bag_item=null;
     MagicBagItem.MagicBagItemTier tier= MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_1;
+    List<Component> help;
     #if MC_VERSION >= 12111
     GpuTexture magicbag_Texture;
     #endif
@@ -40,6 +43,12 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
             bag_item = bag_stack.getItem();
             this.tier=((MagicBagItem)bag_item).tier;
         }
+        help=List.of(
+                Compat.literal("shift click to load/unload"),
+                Compat.literal("left click to unload 1 item"),
+                Compat.literal("right click to unload 1 stack"),
+                Compat.literal("click when total is 0 to clear the item")
+        );
     }
     @Override
     protected void renderBg(GuiGraphics gui, float f, int i, int j) {
@@ -69,9 +78,15 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         gui.drawString(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
 
 
-        Component text3=Compat.literal("shift click to load/unload");
+        Component text3=Compat.literal("help");
         int w3=font.width(text3);
-        gui.drawString(client.font, text3, (width / 2)-w3/2, (height / 2) - 65, text_color,false);
+        int x3=(width / 2)-w3/2;
+        int y3= (height / 2) - 65;
+        gui.drawString(client.font, text3, x3, y3, text_color,false);
+
+        if(mouseX>=x3 && mouseX<x3+w3 && mouseY>=y3 && mouseY<y3+10) {
+            Compat.renderComponentTooltip(gui,font,help,mouseX,mouseY);
+        }
 
         this.renderTooltip(gui, mouseX,mouseY);
         //RenderSystem.enableDepthTest();

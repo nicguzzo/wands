@@ -80,6 +80,8 @@ public class MagicBagMenu extends AbstractContainerMenu {
     @Override
     public void clicked(int slotIndex, int button, ClickType actionType, Player player)
     {
+        if (bag == null)
+            return;
         //LOGGER.info("clicked "+button+" index "+slotIndex +" action: "+actionType);
         try {
             Level level= player.level();
@@ -90,50 +92,41 @@ public class MagicBagMenu extends AbstractContainerMenu {
                         case QUICK_CRAFT:
                         case PICKUP: {
                             ItemStack carried=Compat.get_carried(player,this);
-
-                            if (bag != null /*&& !slot.getItem().isEmpty()*/) {
-                                ItemStack itemStack = slot.getItem();
-                                ItemStack itemStack2 = itemStack.copy();
-                                int total = MagicBagItem.getTotal(bag);
-                                if(carried.isEmpty()) {
-                                    if (total > 0) {
-                                        int c = 1;
-                                        if (button == 1) {
-                                            int m = itemStack.getMaxStackSize();
-                                            c = m;
-                                            if (total < m) {
-                                                c = total;
-                                            }
+                            ItemStack itemStack = slot.getItem();
+                            ItemStack itemStack2 = itemStack.copy();
+                            int total = MagicBagItem.getTotal(bag);
+                            if(carried.isEmpty()) {
+                                if (total > 0) {
+                                    int c = 1;
+                                    if (button == 1) {
+                                        int m = itemStack.getMaxStackSize();
+                                        c = m;
+                                        if (total < m) {
+                                            c = total;
                                         }
-                                        itemStack2.setCount(c);
-                                        MagicBagItem.dec(bag, c);
-                                        if (total - c == 0) {
-                                            MagicBagItem.setItem(bag, ItemStack.EMPTY,level);
-                                            slot.set(ItemStack.EMPTY);
-                                        }
-                                        Compat.set_carried(player, this, itemStack2);
-                                    }else{
-                                        MagicBagItem.setItem(bag, ItemStack.EMPTY,level);
-                                        slot.set(ItemStack.EMPTY);
                                     }
+                                    itemStack2.setCount(c);
+                                    MagicBagItem.dec(bag, c);
+                                    if (total - c == 0) {
+                                        //MagicBagItem.setItem(bag, ItemStack.EMPTY,level);
+                                        //slot.set(ItemStack.EMPTY);
+                                    }
+                                    Compat.set_carried(player, this, itemStack2);
                                 }else{
-                                    ItemStack bag_item= MagicBagItem.getItem(bag,level);
-                                    ItemStack itemStack3 =Compat.get_carried(player,this);
-                                    if(itemStack3.isStackable()){
-                                        if(bag_item.isEmpty()){
-                                            MagicBagItem.setItem(bag, itemStack3,level);
-                                            bag_item=itemStack3.copy();
-                                            bag_item.setCount(1);
-                                        }
-                                        if(itemStack3.getItem()==bag_item.getItem()){
-                                            boolean tags_match=true;
-                                            //TODO: verify
-                                            if(itemStack3.getTags().findAny().isPresent() || bag_item.getTags().findAny().isPresent()){
-                                                tags_match=itemStack3.getTags().equals(bag_item.getTags());
-                                            }
-                                            if(tags_match &&  MagicBagItem.inc(bag,itemStack3.getCount())) {
-                                                Compat.set_carried(player, this, ItemStack.EMPTY);
-                                            }
+                                    MagicBagItem.setItem(bag, ItemStack.EMPTY,level);
+                                    slot.set(ItemStack.EMPTY);
+                                }
+                            }else{
+                                ItemStack bag_item= MagicBagItem.getItem(bag,level);
+                                if(carried.isStackable()){
+                                    if(bag_item.isEmpty()){
+                                        MagicBagItem.setItem(bag, carried,level);
+                                        bag_item=carried.copy();
+                                        bag_item.setCount(1);
+                                    }
+                                    if(carried.getItem()==bag_item.getItem()){
+                                        if(ItemStack.isSameItemSameTags(carried,bag_item) &&  MagicBagItem.inc(bag,carried.getCount())) {
+                                            Compat.set_carried(player, this, ItemStack.EMPTY);
                                         }
                                     }
                                 }
