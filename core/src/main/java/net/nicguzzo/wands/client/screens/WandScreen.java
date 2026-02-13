@@ -395,12 +395,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         btn = modeTextBtn(WandProps.Mode.DIRECTION, "wands.modes.direction", "tooltip.wands.mode.direction");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.DIRECTION);
 
-        btn = modeTextBtn(WandProps.Mode.LINE, "wands.modes.line", "tooltip.wands.mode.line");
-        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.LINE);
-
-        btn = modeTextBtn(WandProps.Mode.CIRCLE, "wands.modes.circle", "tooltip.wands.mode.circle");
-        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.CIRCLE);
-
         btn = modeTextBtn(WandProps.Mode.ROW_COL, "wands.modes.row_col", "tooltip.wands.mode.row_col");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.ROW_COL);
 
@@ -413,23 +407,29 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         btn = modeTextBtn(WandProps.Mode.BOX, "wands.modes.box", "tooltip.wands.mode.box");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BOX);
 
-        btn = modeTextBtn(WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere");
-        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.SPHERE);
-
         btn = modeTextBtn(WandProps.Mode.GRID, "wands.modes.grid", "tooltip.wands.mode.grid");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.GRID);
+
+        btn = modeTextBtn(WandProps.Mode.LINE, "wands.modes.line", "tooltip.wands.mode.line");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.LINE);
+
+        btn = modeTextBtn(WandProps.Mode.CIRCLE, "wands.modes.circle", "tooltip.wands.mode.circle");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.CIRCLE);
 
         btn = modeTextBtn(WandProps.Mode.ROCK, "wands.modes.rock", "tooltip.wands.mode.rock");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.ROCK);
 
-        if (canBlast) {
-            btn = modeTextBtn(WandProps.Mode.BLAST, "wands.modes.blast", "tooltip.wands.mode.blast");
-            tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BLAST);
-        }
+        btn = modeTextBtn(WandProps.Mode.SPHERE, "wands.modes.sphere", "tooltip.wands.mode.sphere");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.SPHERE);
 
         if (canVein) {
             btn = modeTextBtn(WandProps.Mode.VEIN, "wands.modes.vein", "tooltip.wands.mode.vein");
             tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.VEIN);
+        }
+
+        if (canBlast) {
+            btn = modeTextBtn(WandProps.Mode.BLAST, "wands.modes.blast", "tooltip.wands.mode.blast");
+            tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BLAST);
         }
 
         btn = modeTextBtn(WandProps.Mode.COPY, "wands.modes.copy", "tooltip.wands.mode.copy");

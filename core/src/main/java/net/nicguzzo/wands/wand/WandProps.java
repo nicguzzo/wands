@@ -142,38 +142,6 @@ public class WandProps {
             public int n_clicks() {
                 return 2;
             }
-        }, COPY {
-            public String toString() {
-                return "wands.modes.copy";
-            }
-
-            public WandMode get_mode() {
-                return new CopyMode();
-            }
-
-            public boolean can_target_air() {
-                return true;
-            }
-
-            public int n_clicks() {
-                return 2;
-            }
-        }, PASTE {
-            public String toString() {
-                return "wands.modes.paste";
-            }
-
-            public WandMode get_mode() {
-                return new PasteMode();
-            }
-
-            public boolean can_target_air() {
-                return true;
-            }
-
-            public int n_clicks() {
-                return 1;
-            }
         }, BOX {
             public String toString() {
                 return "wands.modes.box";
@@ -249,6 +217,38 @@ public class WandProps {
 
             public WandMode get_mode() {
                 return new RockMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 1;
+            }
+        }, COPY {
+            public String toString() {
+                return "wands.modes.copy";
+            }
+
+            public WandMode get_mode() {
+                return new CopyMode();
+            }
+
+            public boolean can_target_air() {
+                return true;
+            }
+
+            public int n_clicks() {
+                return 2;
+            }
+        }, PASTE {
+            public String toString() {
+                return "wands.modes.paste";
+            }
+
+            public WandMode get_mode() {
+                return new PasteMode();
             }
 
             public boolean can_target_air() {
@@ -1112,9 +1112,10 @@ public class WandProps {
     static public void switchMode(ItemStack stack, Mode newMode) {
         if (!WandUtils.is_wand(stack)) return;
         setMode(stack, newMode);
+        Action action=getAction(stack);
         if (newMode == Mode.BLAST || newMode == Mode.VEIN) {
             setAction(stack, Action.DESTROY);
-        } else if (anyActionAppliesTo(newMode)) {
+        } else if (!isActionValidForMode(action,newMode)) {
             setAction(stack, Action.PLACE);
         }
     }
