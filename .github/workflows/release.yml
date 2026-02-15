@@ -1,0 +1,141 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'Changelog text (markdown). If empty, reads from CHANGELOG.md.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run — build and upload artifacts but skip publishing'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Read mod metadata
+        id: meta
+        run: |
+          mod_version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
+          release_type=$(grep '^release_type=' gradle.properties | cut -d= -f2)
+          echo "mod_version=$mod_version" >> "$GITHUB_OUTPUT"
+          echo "release_type=$release_type" >> "$GITHUB_OUTPUT"
+
+          # Build release name: "Building Wands 3.0-beta" or "Building Wands 3.0"
+          if [[ "$release_type" == "release" ]]; then
+            echo "release_name=Building Wands ${mod_version}" >> "$GITHUB_OUTPUT"
+          else
+            echo "release_name=Building Wands ${mod_version}-${release_type}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build MC version support list
+        id: mc_versions
+        run: |
+          # Read minecraft_versions and loaders from each mc target directory
+          {
+            echo "text<<MC_EOF"
+            echo "### Supported Minecraft Versions"
+            for dir in mc*/; do
+              mc_ver=$(grep '^minecraft_versions=' "$dir/gradle.properties" | cut -d= -f2)
+              loaders=$(ls -d "$dir"*/ 2>/dev/null | grep -v common | xargs -I{} basename {} | paste -sd ', ')
+              echo "- **${mc_ver}** — ${loaders}"
+            done
+            echo "MC_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Determine changelog
+        id: changelog
+        run: |
+          # Manual dispatch with explicit changelog text
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.changelog }}" ]]; then
+            echo "source=input" >> "$GITHUB_OUTPUT"
+            cat <<'CHLOG_EOF' > /tmp/changelog.txt
+          ${{ inputs.changelog }}
+          CHLOG_EOF
+          else
+            echo "source=file" >> "$GITHUB_OUTPUT"
+            version="${{ steps.meta.outputs.mod_version }}"
+            # Extract section between ## {version} and the next ## header (or EOF)
+            sed -n "/^## ${version}$/,/^## /{/^## ${version}$/d;/^## /d;p}" CHANGELOG.md > /tmp/changelog.txt
+          fi
+
+          if [[ ! -s /tmp/changelog.txt ]]; then
+            echo "No changelog found for version ${{ steps.meta.outputs.mod_version }}" > /tmp/changelog.txt
+          fi
+
+          # Combine MC versions + changelog into release body
+          {
+            echo "body<<BODY_EOF"
+            echo "${{ steps.mc_versions.outputs.text }}"
+            echo ""
+            cat /tmp/changelog.txt
+            echo "BODY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          # Changelog only (for CurseForge/Modrinth — they don't need MC list)
+          {
+            echo "text<<CHLOG_EOF"
+            cat /tmp/changelog.txt
+            echo "CHLOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build all targets
+        run: ./gradlew build
+
+      - name: Publish to CurseForge and Modrinth
+        if: ${{ !inputs.dry_run }}
+        run: ./gradlew publishUnified
+        env:
+          CF_TOKEN: ${{ secrets.CF_TOKEN }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          WANDS_CHANGELOG: ${{ steps.changelog.outputs.text }}
+
+      - name: Upload release JARs
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuildingWands-${{ steps.meta.outputs.mod_version }}
+          retention-days: 90
+          path: |
+            mc*/*/build/libs/BuildingWands-*-MC*-*.jar
+            !**/common/**
+            !**/*-dev-shadow.jar
+            !**/*-sources.jar
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') && !inputs.dry_run
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.meta.outputs.release_name }}
+          body: ${{ steps.changelog.outputs.body }}
+          prerelease: ${{ steps.meta.outputs.release_type != 'release' }}
+          files: |
+            mc*/*/build/libs/BuildingWands-*-MC*-*.jar
+            !**/common/**
+            !**/*-dev-shadow.jar
+            !**/*-sources.jar
