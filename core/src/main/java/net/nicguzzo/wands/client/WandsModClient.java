@@ -114,6 +114,9 @@ public class WandsModClient {
             Minecraft client = Minecraft.getInstance();
             if (client.player == null) return;
 
+            // Tick the mode selector grid (handles hold/tap/release for MODE key)
+            ModeSelectorScreen.clientTick();
+
             ItemStack mainHand = client.player.getMainHandItem();
             boolean holdingWand = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
             boolean holdingPalette = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
@@ -139,6 +142,9 @@ public class WandsModClient {
                     boolean wasPressed = prevKeyState.contains(keyCode);
 
                     if (pressed && !wasPressed) {
+                        // Skip keys consumed by ModeSelector (MODE key, arrow keys while grid is open)
+                        if (ModeSelectorScreen.consumesKey(key)) continue;
+
                         // New press detected
                         if (!any) any = true;
 
@@ -187,6 +193,8 @@ public class WandsModClient {
                     KeyMapping km = me.getKey();
                     WandsMod.WandKeys key = me.getValue();
                     if (km.consumeClick()) {
+                        // Skip keys consumed by ModeSelector
+                        if (ModeSelectorScreen.consumesKey(key)) continue;
                         if (!any) any = true;
                         if (key == WandsMod.WandKeys.MENU && Compat.hasShiftDown()) {
                             openToolsTab = true;
