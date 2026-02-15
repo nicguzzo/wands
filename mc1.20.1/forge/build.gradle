@@ -1,0 +1,109 @@
+plugins {
+    id "com.github.johnrengelman.shadow"
+}
+
+architectury {
+    platformSetupLoomIde()
+    forge()
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentForge.extendsFrom common
+
+    // Files in this configuration will be bundled into your mod using the Shadow plugin.
+    // Don't use the `shadow` configuration from the plugin itself as it's meant for excluding files.
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+    }
+    maven {
+        url "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.ftb.mods"
+        }
+    }
+    maven {
+        url = "https://maven.jamieswhiteshirt.com/libs-release/"
+        content {
+            includeGroup 'com.jamieswhiteshirt'
+        }
+    }
+}
+dependencies {
+    forge "net.minecraftforge:forge:${forge_version}"
+    // Remove the next line if you don't want to depend on the API
+    modApi "dev.architectury:architectury-forge:${architectury_version}"
+    modApi "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
+    
+    if(opac_forge!=""){
+        modCompileOnly("${opac_forge}")  { transitive = false }
+    }
+    if(ftb_chunks_forge!=""){
+        modCompileOnly("${ftb_chunks_forge}") { transitive = false }
+    }
+    if(ftb_library_forge!=""){
+        modCompileOnly("${ftb_library_forge}") { transitive = false }
+    }
+    if(flan_forge!=""){
+        modCompileOnly("${flan_forge}") { transitive = false }
+    }
+    def commonPath = ":${project.parent.name}:common"
+    common(project(path: commonPath, configuration: 'namedElements')) { transitive false }
+    shadowBundle project(path: commonPath, configuration: 'transformProductionForge')
+}
+
+processResources {
+    inputs.property "version", rootProject.version
+    inputs.property "minecraft_version", minecraft_version
+    inputs.property "architectury_version", architectury_version
+    inputs.property "forge_cloth_config", forge_cloth_config
+    inputs.property "cloth_config_version", cloth_config_version
+    inputs.property "forge", forge
+    inputs.property "pack_format", pack_format
+    inputs.property "resource_pack_format", resource_pack_format
+    inputs.property "data_pack_format", data_pack_format
+    
+    inputs.property "java_version", java_version
+
+    filesMatching("META-INF/mods.toml") {
+        expand (
+            "version": rootProject.version,
+            "minecraft_version": minecraft_version,
+            "architectury_version": architectury_version,
+            "forge": forge,
+            "forge_cloth_config": forge_cloth_config,
+            "cloth_config_version": cloth_config_version
+        )
+    }
+    filesMatching("pack.mcmeta") {
+        expand(
+            "pack_format": pack_format,
+            "resource_pack_format": resource_pack_format,
+            "data_pack_format": data_pack_format
+        )
+    }
+    filesMatching("wands.mixins.json") {
+        expand "java_version": java_version
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    input.set shadowJar.archiveFile
+}

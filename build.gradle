@@ -1,0 +1,142 @@
+plugins {
+    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'systems.manifold.manifold-gradle-plugin' version '0.0.2-alpha' apply false
+    id "me.shedaniel.unified-publishing" version "0.1.+" apply false
+}
+
+version = mod_version
+
+subprojects {
+
+
+    if (project.name == 'core' || project.name == 'compat') {
+        tasks.withType(JavaCompile).configureEach { enabled = false }
+        tasks.withType(Jar).configureEach { enabled = false }
+        tasks.withType(Javadoc).configureEach { enabled = false }
+        // Prevent them from running tests or generating jars
+        tasks.matching { it.name.startsWith('test') }.configureEach { enabled = false }
+        return
+    }
+
+    if (
+        project.name == 'mc1.20.1' || 
+        project.name == 'mc1.21.1' || 
+        project.name == 'mc1.21.11'
+    ) {
+        return // Stop configuring these container/logic folders as mods
+    }
+    apply plugin: "java"
+    apply plugin: "maven-publish"
+    apply plugin: 'dev.architectury.loom'
+    
+    repositories {
+        maven { url "https://maven.nucleoid.xyz/" }
+    }
+
+    dependencies {
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
+    }
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        options.release.set(21) // Default target (can be overridden by sub-modules)
+        it.options.compilerArgs += ['-Xplugin:Manifold']
+    }
+
+    java {
+        withSourcesJar()
+    }
+    // Load local dev settings if present (local.properties is gitignored)
+    def localPropsFile = rootProject.file('local.properties')
+    if (localPropsFile.exists()) {
+        def localProps = new Properties()
+        localProps.load(localPropsFile.newDataInputStream())
+        def world = localProps.getProperty('quickPlayWorld')
+        def width = localProps.getProperty('windowWidth')
+        def height = localProps.getProperty('windowHeight')
+
+        if (project.name == 'fabric' || project.name == 'neoforge') {
+            loom.runs.named('client') {
+                if (world) {
+                    programArgs "--quickPlaySingleplayer", world
+                }
+                if (width && height) {
+                    programArgs "--width", width, "--height", height
+                }
+            }
+        }
+    }
+    if (project.name in ["fabric", "neoforge", "forge"]) {
+
+        apply plugin: "me.shedaniel.unified-publishing"
+
+        def isFabric = project.name == "fabric"
+        def currentLoader = project.name
+
+        def supportedMinecraftVersions = project.findProperty('minecraft_versions')?.split(',')*.trim() ?: []
+
+        println "--- CONFIG CHECK for ${project.name} ---"
+        println "Display Name: Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - ${currentLoader} - ${project.minecraft_version}"
+        println "Version Slug: ${rootProject.mod_version}_${rootProject.release_type}_${currentLoader}_${project.minecraft_version}"
+        println "Game Versions: ${supportedMinecraftVersions}"
+        println "Loaders: ${[currentLoader]}"
+        println "---------------------------------------"
+
+        unifiedPublishing {
+            project {
+                gameVersions = supportedMinecraftVersions
+                gameLoaders = [currentLoader]
+
+                displayName = "Building Wands ${rootProject.mod_version} - ${rootProject.release_type} - ${currentLoader} - ${project.minecraft_version}"
+                version = "${rootProject.mod_version}_${rootProject.release_type}_${currentLoader}_${project.minecraft_version}"
+                releaseType = "${rootProject.release_type}"
+
+                var chlog = System.getenv("WANDS_CHANGELOG")
+                if (chlog != null) {
+                    changelog = chlog
+                }
+
+                mainPublication tasks.remapJar
+                relations {
+                    depends {
+                        curseforge = "architectury-api"
+                        modrinth = "lhGA9TYQ"
+                    }
+                    depends {
+                        curseforge = "cloth-config"
+                        modrinth = "9s6osm5g"
+                    }
+
+                    if (isFabric) {
+                        depends {
+                            curseforge = "fabric-api"
+                            modrinth = "P7dR8mSH"
+                        }
+                        optional {
+                            curseforge = "modmenu"
+                            modrinth = "mOgUt4GM"
+                        }
+                    }
+                }
+
+                var cfToken = System.getenv("CF_TOKEN")
+                if (cfToken != null) {
+                    curseforge {
+                        token = cfToken
+                        id = "363392"
+                    }
+                }
+
+                var mrToken = System.getenv("MODRINTH_TOKEN")
+                if (mrToken != null) {
+                    modrinth {
+                        token = mrToken
+                        id = "XkisZUfp"
+                    }
+                }
+            }
+        }
+    }
+}

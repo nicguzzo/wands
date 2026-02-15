@@ -1,0 +1,56 @@
+plugins {
+}
+
+allprojects {
+    group = rootProject.maven_group
+    version = rootProject.mod_version
+}
+
+subprojects {
+    apply plugin: 'dev.architectury.loom'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
+
+    architectury {
+        minecraft = minecraft_version
+    }
+    base {
+        archivesName = "$rootProject.archives_base_name-$project.name-MC$minecraft_version"
+    }
+
+    repositories {
+        maven { url "https://maven.nucleoid.xyz/" }
+    }
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "net.minecraft:minecraft:$minecraft_version"
+        mappings loom.officialMojangMappings()
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+        //toolchain {
+        //    languageVersion = JavaLanguageVersion.of(17)
+        //}
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+
+        options.release = java_version as Integer
+        it.options.compilerArgs += ['-Xplugin:Manifold']
+        //it.options.compilerArgs += [
+        //    '-Xplugin:Manifold',
+        //    '-AMC_VERSION=12001',
+        //    '-AUSE_CLOTHCONFIG=true',
+        //    '-AHAS_FLAN=true',
+        //    '-AHAS_FTB_CHUNKS=true',
+        //    '-AHAS_OPAC=true',
+        //    '-AHAS_GOML=true']
+        //doFirst { println "Compiler Args for ${project.name}: ${options.compilerArgs}" }
+    }
+}

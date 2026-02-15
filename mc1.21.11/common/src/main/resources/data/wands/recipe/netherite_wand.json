@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smithing_transform",
+  "base": "wands:diamond_wand",
+  "template": "minecraft:netherite_upgrade_smithing_template",
+  "addition": "minecraft:netherite_ingot",
+  "result": {
+    "id": "wands:netherite_wand"
+  }
+}
