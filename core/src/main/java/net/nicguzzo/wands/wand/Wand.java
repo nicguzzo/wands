@@ -775,10 +775,8 @@ public class Wand {
                 no_use_action = false;
             }
             if ((placed > 0) || (no_tool || damaged_tool)) {
-
-                if (inventory.getBlocksSentToInv() > 0 && !WandsMod.config.disable_info_messages) {
-                    MutableComponent mc = Compat.literal(inventory.getBlocksSentToInv() + " blocks sent to bag/shulker").withStyle(ChatFormatting.BLUE);
-                    player.displayClientMessage(mc, false);
+                if (inventory.getBlocksSentToInv() > 0) {
+                    Compat.player_level(player).playSound(null, player.blockPosition(), SoundEvents.ITEM_PICKUP, net.minecraft.sounds.SoundSource.PLAYERS, 0.2f, ((player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 0.7f + 1.0f) * 2.0f);
                 }
                 ItemStack is = ItemStack.EMPTY;
                 if (!no_tool && !damaged_tool) {
