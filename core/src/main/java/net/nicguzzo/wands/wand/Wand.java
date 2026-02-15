@@ -1,5 +1,8 @@
 package net.nicguzzo.wands.wand;
 
+#if MC_VERSION >= 12101
+import net.minecraft.world.entity.EquipmentSlot;
+#endif
 #if MC_VERSION >= 12005
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.ItemContainerContents;
