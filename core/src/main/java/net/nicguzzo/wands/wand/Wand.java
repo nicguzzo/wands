@@ -175,6 +175,7 @@ public class Wand {
     boolean has_bucket = false;
     public boolean has_water_bucket = false;
     public boolean has_lava_bucket = false;
+    public boolean has_powder_snow_bucket = false;
     public boolean has_empty_bucket = false;
     #if MC_VERSION>="11900"
     boolean has_water_potion = false;
@@ -455,11 +456,23 @@ public class Wand {
         if (offhand != null && WandUtils.is_shulker(offhand)) {
             offhand = null;
         }
+        if (offhand != null && WandUtils.is_magicbag(offhand)) {
+            ItemStack bag_item = MagicBagItem.getItem(offhand, level);
+            int total = MagicBagItem.getTotal(offhand);
+            if (!bag_item.isEmpty() && total > 0) {
+                offhand_block = Block.byItem(bag_item.getItem());
+                if (offhand_block != Blocks.AIR) {
+                    has_offhand = true;
+                }
+            }
+            offhand = null;
+        }
         palette.item = null;
         palette.has_palette = false;
         has_bucket = false;
         has_water_bucket = false;
         has_lava_bucket = false;
+        has_powder_snow_bucket = false;
         has_empty_bucket = false;
         if (offhand != null && offhand.getItem() instanceof PaletteItem) {
             palette.item = offhand;
@@ -473,30 +486,7 @@ public class Wand {
                 }
             }
         }
-        if (offhand != null && offhand.getItem() instanceof BucketItem) {
-            if (mode != Mode.DIRECTION) {
-                // Show action bar message if bucket overrides destroy/replace (server-side only)
-                if (!level.isClientSide() && (this.destroy || this.replace)) {
-                    player.displayClientMessage(Compat.translatable("wands.message.bucket_blocks_destroy"), true);
-                }
-                bucket = offhand;
-                has_bucket = true;
-                has_empty_bucket = bucket.isStackable();
-                //Item itt=Fluids.EMPTY.getBucket();
-                //BucketItem
-                //has_empty_bucket=bucket.getItem().equals(Fluids.EMPTY.getBucket());
-                //TODO: other mods fluids?
-                if (!has_empty_bucket) {
-                    has_water_bucket = bucket.getItem().equals(Fluids.WATER.getBucket());
-                    if (!has_water_bucket) {
-                        has_lava_bucket = bucket.getItem().equals(Fluids.LAVA.getBucket());
-                    }
-                }
-                this.replace = false;
-                this.destroy = false;
-                this.use = false;
-            }
-        }
+        detect_bucket();
         this.has_water_potion = false;
         if (offhand != null && offhand.getItem() instanceof PotionItem) {
 
@@ -580,6 +570,8 @@ public class Wand {
             return;
         }*/
 
+        setup_bucket_block_state();
+
         inventory.update_inv_aux();
         inventory.resetBlocksSentToInv();
         //process the current mode
@@ -591,6 +583,8 @@ public class Wand {
             //}
             modes[m].place_in_buffer(this);
         }
+
+        override_buffer_for_bucket();
 
         // Copy and Paste modes use global limit instead of wand limit
         int effectiveLimit = (mode == Mode.COPY || mode == Mode.PASTE) ? WandsConfig.max_limit : limit;
@@ -639,53 +633,13 @@ public class Wand {
                 } else {
                     if (!is_copy_paste) {
                         if (has_bucket) {
-                            has_bucket = false;
-                            if (has_water_bucket || has_lava_bucket) {
-                                if (creative) {
-                                    has_bucket = true;
-                                    if (has_water_bucket) {
-                                        block_state = Blocks.WATER.defaultBlockState();
-                                    }
-                                    if (has_lava_bucket) {
-                                        block_state = Blocks.LAVA.defaultBlockState();
-                                    }
-                                } else {
-                                    if (has_water_bucket) {
-                                        //in survival check if player has another water bucket apart from the one in the offhand
-                                        for (int i = 0; i < 36; ++i) {
-                                            ItemStack stack = inventory.getItem(i);
-                                            boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
-                                            if (stack.getItem() instanceof BucketItem && is_water_bucket) {
-                                                has_bucket = true;
-                                                has_water_bucket = true;
-                                                block_state = Blocks.WATER.defaultBlockState();
-                                                break;
-                                            }
-                                        }
-                                        if (!has_bucket) {
-                                            player.displayClientMessage(Compat.literal("You need another water bucket in the inventory."), false);
-                                            return;
-                                        }
-                                    }
-                                    if (has_lava_bucket) {
-                                        block_state = Blocks.LAVA.defaultBlockState();
-                                    }
-                                }
-                            }
-                            if (has_empty_bucket) {
-                                has_bucket = true;
-                                block_state = Blocks.AIR.defaultBlockState();
-                            }
+                            if (!validate_bucket_for_server()) return;
                         }
 
                         BlockAccounting pa = new BlockAccounting();
                         for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                            if (has_empty_bucket || has_water_bucket || has_lava_bucket) {
-                                block_buffer.state[a] = block_state;
-                                if (has_lava_bucket) {
-                                    block_buffer.item[a] = bucket.getItem();
-                                    pa.needed++;
-                                }
+                            if (has_empty_bucket || has_water_bucket || has_lava_bucket || has_powder_snow_bucket) {
+                                apply_bucket_accounting(pa, a);
                             } else {
                                 if (!replace && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
@@ -805,6 +759,104 @@ public class Wand {
             setP1(null);
             setP2(null);
             valid = false;
+        }
+    }
+
+    /** Inspects offhand for bucket items and sets bucket type flags. */
+    private void detect_bucket() {
+        if (offhand != null && (offhand.getItem() instanceof BucketItem || offhand.getItem() == Items.POWDER_SNOW_BUCKET)) {
+            if (mode != Mode.DIRECTION) {
+                // Show action bar message if bucket overrides destroy/replace (server-side only)
+                if (!level.isClientSide() && (this.destroy || this.replace)) {
+                    player.displayClientMessage(Compat.translatable("wands.message.bucket_blocks_destroy"), true);
+                }
+                bucket = offhand;
+                has_bucket = true;
+                has_powder_snow_bucket = bucket.getItem() == Items.POWDER_SNOW_BUCKET;
+                has_empty_bucket = !has_powder_snow_bucket && bucket.isStackable();
+                if (!has_empty_bucket && !has_powder_snow_bucket) {
+                    has_water_bucket = bucket.getItem().equals(Fluids.WATER.getBucket());
+                    if (!has_water_bucket) {
+                        has_lava_bucket = bucket.getItem().equals(Fluids.LAVA.getBucket());
+                    }
+                }
+                this.replace = false;
+                this.destroy = false;
+                this.use = false;
+            }
+        }
+    }
+
+    /** Maps bucket type to the corresponding block_state for preview and placement. */
+    private void setup_bucket_block_state() {
+        if (has_bucket) {
+            if (has_water_bucket) {
+                block_state = Blocks.WATER.defaultBlockState();
+            } else if (has_lava_bucket) {
+                block_state = Blocks.LAVA.defaultBlockState();
+            } else if (has_powder_snow_bucket) {
+                block_state = Blocks.POWDER_SNOW.defaultBlockState();
+            } else if (has_empty_bucket) {
+                block_state = Blocks.AIR.defaultBlockState();
+            }
+        }
+    }
+
+    /** Overrides all buffer block states for bucket modes after place_in_buffer. */
+    private void override_buffer_for_bucket() {
+        if (has_water_bucket || has_lava_bucket || has_powder_snow_bucket || has_empty_bucket) {
+            int len = block_buffer.get_length();
+            for (int a = 0; a < len; a++) {
+                block_buffer.state[a] = block_state;
+            }
+        }
+    }
+
+    /**
+     * Re-validates bucket state on the server side before placement.
+     * In creative mode, always allows. In survival, checks for a second water bucket.
+     * Returns false if placement should be aborted.
+     */
+    private boolean validate_bucket_for_server() {
+        has_bucket = false;
+        if (has_water_bucket || has_lava_bucket || has_powder_snow_bucket) {
+            if (creative) {
+                has_bucket = true;
+                if (has_water_bucket) {
+                    block_state = Blocks.WATER.defaultBlockState();
+                }
+                if (has_lava_bucket) {
+                    block_state = Blocks.LAVA.defaultBlockState();
+                }
+                if (has_powder_snow_bucket) {
+                    block_state = Blocks.POWDER_SNOW.defaultBlockState();
+                }
+            } else {
+                has_bucket = true;
+                if (has_water_bucket) {
+                    block_state = Blocks.WATER.defaultBlockState();
+                }
+                if (has_lava_bucket) {
+                    block_state = Blocks.LAVA.defaultBlockState();
+                }
+                if (has_powder_snow_bucket) {
+                    block_state = Blocks.POWDER_SNOW.defaultBlockState();
+                }
+            }
+        }
+        if (has_empty_bucket) {
+            has_bucket = true;
+            block_state = Blocks.AIR.defaultBlockState();
+        }
+        return true;
+    }
+
+    /** Sets buffer state/item for a single bucket entry and increments accounting for lava/powder snow. */
+    private void apply_bucket_accounting(BlockAccounting pa, int a) {
+        block_buffer.state[a] = block_state;
+        if (has_lava_bucket || has_powder_snow_bucket) {
+            block_buffer.item[a] = bucket.getItem();
+            pa.needed++;
         }
     }
 

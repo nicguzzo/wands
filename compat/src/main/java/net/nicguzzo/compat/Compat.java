@@ -2,6 +2,10 @@ package net.nicguzzo.compat;
 
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelBakery;
+import org.joml.Matrix4f;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -51,6 +55,8 @@ import net.nicguzzo.wands.utils.Colorf;
 import org.jetbrains.annotations.NotNull;
 #if MC_VERSION >= 12111
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.AtlasManager;
 import net.minecraft.resources.Identifier;
 #else
 import net.minecraft.resources.ResourceLocation;
@@ -486,6 +492,33 @@ public class Compat {
         consumer.addVertex(x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light);
         #else
         consumer.vertex(x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light).endVertex();
+        #endif
+    }
+
+    static public void consumerAddVertexUvColorNormalLight(VertexConsumer consumer, Matrix4f matrix, float x,float y,float z,float u,float v,int color,float nx,float ny, float nz,int light) {
+        #if MC_VERSION >=12100
+        consumer.addVertex(matrix, x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light);
+        #else
+        consumer.vertex(matrix, x, y, z).color(color).uv(u,v).uv2(light).normal(nx,ny,nz).endVertex();
+        #endif
+    }
+
+    static public TextureAtlasSprite getFluidFlowSprite(boolean isWater) {
+        #if MC_VERSION >= 12111
+        AtlasManager am = Minecraft.getInstance().getAtlasManager();
+        Identifier atlasId = Identifier.parse("minecraft:blocks");
+        TextureAtlas atlas = am.getAtlasOrThrow(atlasId);
+        if (isWater) {
+            return atlas.getSprite(ModelBakery.WATER_FLOW.texture());
+        } else {
+            return atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
+        }
+        #else
+        if (isWater) {
+            return ModelBakery.WATER_FLOW.sprite();
+        } else {
+            return ModelBakery.LAVA_FLOW.sprite();
+        }
         #endif
     }
 

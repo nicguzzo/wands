@@ -2,11 +2,9 @@ package net.nicguzzo.wands.client.render;
 
 #if MC_VERSION>=12111
 import com.mojang.blaze3d.textures.GpuTextureView;
-import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.client.resources.model.AtlasManager;
 import net.minecraft.world.level.material.FluidState;
 #else
 import net.minecraft.client.resources.model.BakedModel;
@@ -860,45 +858,84 @@ public class ClientRender {
         //WandsMod.log("x: "+x+" y: "+y+" z: "+z,prnt);
 
     }
-    static void render_fluid(VertexConsumer consumer,float x, float y,float z,int color,float u1,float v1,float u0,float v0) {
+    static void render_fluid(VertexConsumer consumer, Matrix4f matrix, float x, float y,float z,int color,float u1,float v1,float u0,float v0) {
 
-            float h = 0.875f;
-            float o = 0.1f;
-            bp.set(x,y,z);
-            int bf = LevelRenderer.getLightColor(wand.level, bp);
+            float h = 1.0f;
+            float o = 0.05f;
+            int bf = 15728880;
             //up
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o    , y + h - o, z + o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o    , y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + o    ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + h - o, z + o    ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o    ,u0, v1,color,0,1,0,bf);
             //down
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o    , y + o, z + o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o    , y + o, z + 1 - o,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + o, z + o    ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + o, z + 1 - o,u1, v0,color,0,1,0,bf);
             //north -z
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + o, z + o        ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + h - o, z + o    ,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + o        ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + o    ,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
             //south +z
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + o, z + 1 - o        ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + 1 - o    ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + h - o, z + 1 - o    ,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + 1 - o        ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o    ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + 1 - o    ,u1, v0,color,0,1,0,bf);
             //east
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
             //weast
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,x + 1 - o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
+            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
 
         //}
     }
+
+    static int get_fluid_color() {
+        int alpha = ((int)(opacity * 255)) << 24;
+        if (wand.has_water_bucket) {
+            return BiomeColors.getAverageWaterColor(wand.level, wand.pos) | alpha;
+        } else {
+            return 0xFFFFFF | alpha;
+        }
+    }
+
+    static void preview_fluid_buffer(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack) {
+        try {
+            TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
+            int color = get_fluid_color();
+            VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
+
+            float u0 = sprite.getU0();
+            float v0 = sprite.getV0();
+            float u1 = sprite.getU1();
+            float v1 = sprite.getV1();
+
+            int block_buffer_length = wand.block_buffer.get_length();
+            for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
+                bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
+                matrixStack.pushPose();
+                matrixStack.translate(
+                    wand.block_buffer.buffer_x[idx],
+                    wand.block_buffer.buffer_y[idx],
+                    wand.block_buffer.buffer_z[idx]);
+                render_fluid(consumer, matrixStack.last().pose(),
+                    0, 0, 0,
+                    color, u0, v1, u1, v0);
+                matrixStack.popPose();
+            }
+            bufferSource.endLastBatch();
+        } catch (Exception e) {
+            WandsMod.log("preview_fluid_buffer exception: " + e.getMessage(), true);
+        }
+    }
+
 //#if true
 #if MC_VERSION>=12111
     static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
@@ -1227,71 +1264,7 @@ public class ClientRender {
                 }
                 //st=Blocks.STONE.defaultBlockState();
                 if(st!=null) {
-                    //FluidState fluidState = st.getFluidState();
-                    ////VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.solidMovingBlock());
-                    //BlockRenderDispatcher renderer= Minecraft.getInstance().getBlockRenderer();
-                    //int l = LevelRenderer.getLightColor(wand.level, bp);
-                    //for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
-                    //    bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
-                    //    //renderer.renderLiquid(bp,wand.level,consumer,st,fluidState);
-                    //    renderer.renderSingleBlock(st,matrixStack,bufferSource,l,OverlayTexture.NO_OVERLAY);
-                    //    bufferSource.endLastBatch();
-                    //}
-
-                    //bufferSource.endLastBatch();
-                    /*int i;
-                    //RenderSystem.enableCull();
-                    try {
-                        TextureAtlasSprite sprite;
-                        if (wand.has_water_bucket) {
-
-                            AtlasManager am = Minecraft.getInstance().getAtlasManager();
-                            TextureAtlas atlas = am.getAtlasOrThrow(ModelBakery.WATER_FLOW.atlasLocation());
-                            sprite = atlas.getSprite(ModelBakery.WATER_FLOW.texture());
-                            i = BiomeColors.getAverageWaterColor(wand.level,wand.pos);
-                            //if(water_texture==null) {
-                            //    TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            //    water_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
-                            //}
-                            //RenderSystem.setShaderTexture(0,water_texture );
-                        } else {
-                            AtlasManager am = Minecraft.getInstance().getAtlasManager();
-                            TextureAtlas atlas = am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
-                            sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
-
-                            //AtlasManager am= Minecraft.getInstance().getAtlasManager();
-                            //TextureAtlas atlas= am.getAtlasOrThrow(ModelBakery.LAVA_FLOW.atlasLocation());
-                            //sprite = atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
-                            i = 16777215;
-                            //if(lava_texture==null) {
-                            //    TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                            //    lava_texture=textureManager.getTexture(sprite.atlasLocation()).getTextureView();
-                            //}
-
-                            //RenderSystem.setShaderTexture(0,lava_texture );
-                        }
-
-                        //Compat.set_texture(TextureAtlas.LOCATION_BLOCKS);
-                        VertexConsumer consumer= bufferSource.getBuffer(RenderTypes.entitySolid(ModelBakery.LAVA_FLOW.texture()));
-
-                        float u0 = sprite.getU0();
-                        float v0 = sprite.getV0();
-                        float u1 = sprite.getU1();
-                        float v1 = sprite.getV1();
-
-                        for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
-                            bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
-                            render_fluid(
-                                    consumer,
-                                    (float) wand.block_buffer.buffer_x[idx],
-                                    (float) wand.block_buffer.buffer_y[idx],
-                                    (float) wand.block_buffer.buffer_z[idx], i, u0, v0, u1, v1);
-                        }
-                        bufferSource.endLastBatch();
-                    }catch (Exception e){
-                        WandsMod.log("exception " + e.getMessage(),true);
-                    }*/
-
+                    preview_fluid_buffer(bufferSource, matrixStack);
                 }else {
                     //RenderType rt=RenderTypes.translucentMovingBlock();
                     //String sampler0=rt.pipeline().getSamplers().getFirst();
