@@ -1,7 +1,5 @@
 package net.nicguzzo.wands.utils;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potions;
@@ -14,14 +12,13 @@ import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.mixin.AxeItemAccessor;
 import net.nicguzzo.wands.mixin.HoeItemAccessor;
 import net.nicguzzo.wands.mixin.ShovelItemAccessor;
+import java.util.List;
 #if MC_VERSION >= 12005
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.ItemContainerContents;
 #else
 import net.minecraft.world.item.alchemy.PotionUtils;
 #endif
-import java.util.Iterator;
 import java.util.Optional;
 
 public class WandUtils{
@@ -47,60 +44,26 @@ public class WandUtils{
     static public boolean is_magicbag(ItemStack item_stack){
         return item_stack.getItem() instanceof MagicBagItem;
     }
-    #if MC_VERSION >= 12005
     static public int count_in_shulker(ItemStack shulker, Item item, Level level){
-        //HolderLookup.Provider provider=level.registryAccess();
         int n=0;
         if(item!=null){
-            ItemContainerContents contents= shulker.get(DataComponents.CONTAINER);
-            if(contents!=null){
-                Iterable<ItemStack> shulker_items=contents.nonEmptyItems();
-                Iterator<ItemStack> it=shulker_items.iterator();
-                while(it.hasNext()) {
-                    ItemStack s = it.next();
-                    if( WandUtils.is_magicbag(s)) {
-                        int total=MagicBagItem.getTotal(s);
-                        ItemStack stack2=MagicBagItem.getItem(s,level);
-                        if(!stack2.isEmpty()&& stack2.is(item) && total >0 ){
-                            n+=total;
-                        }
-                    }else{
-                        if(!s.isEmpty() && s.is(item)){
-                            n+=s.getCount();
-                        }
+            List<ItemStack> contents = Compat.get_shulker_contents(shulker);
+            for (ItemStack s : contents) {
+                if( WandUtils.is_magicbag(s)) {
+                    int total=MagicBagItem.getTotal(s);
+                    ItemStack stack2=MagicBagItem.getItem(s,level);
+                    if(!stack2.isEmpty()&& total >0 && stack2.getItem()==item){
+                        n+=total;
+                    }
+                }else{
+                    if(!s.isEmpty() && Compat.has_no_custom_data(s) && s.getItem()== item){
+                        n+=s.getCount();
                     }
                 }
             }
         }
         return n;
     }
-    #else
-    static public int count_in_shulker(ItemStack shulker, Item item, Level level){
-        int n=0;
-        if(item!=null){
-            CompoundTag entity_tag =shulker.getTagElement("BlockEntityTag");
-            if(entity_tag!=null){
-                ListTag shulker_items = entity_tag.getList("Items", Compat.NbtType.COMPOUND);
-                for (int i = 0, len = shulker_items.size(); i < len; ++i) {
-                    CompoundTag itemTag = shulker_items.getCompound(i);
-                    ItemStack s = ItemStack.of(itemTag);
-                    if( WandUtils.is_magicbag(s)) {
-                        int total=MagicBagItem.getTotal(s);
-                        ItemStack stack2=MagicBagItem.getItem(s,level);
-                        if(!stack2.isEmpty()&& total >0 && stack2.getItem()==item){
-                            n+=total;
-                        }
-                    }else{
-                        if(!s.isEmpty() && s.getTag()==null && s.getItem()== item){
-                            n+=s.getCount();
-                        }
-                    }
-                }
-            }
-        }
-        return n;
-    }
-    #endif
     static public boolean is_plant(BlockState state) {
         return (state.getBlock() instanceof BushBlock)|| (state.getBlock() instanceof VineBlock);
     }
