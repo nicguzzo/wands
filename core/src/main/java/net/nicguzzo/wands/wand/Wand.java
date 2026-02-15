@@ -33,7 +33,6 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -1124,8 +1123,10 @@ public class Wand {
                         continue;
                     }
                     if (ll < limit && ll < WandsMod.config.max_limit) {
-                        add_to_buffer(x, y, z, null);
-                        ll++;
+                        boolean added=add_to_buffer(x, y, z, null);
+                        if(added){
+                            ll++;
+                        }
                     }
                 }
             }
@@ -1193,7 +1194,7 @@ public class Wand {
                 return false;
             }
             if (destroy || replace || (use && !has_water_potion)) {
-                _can_destroy = can_destroy(st, true);
+                _can_destroy = can_destroy_or_use(st, true);
                 if (digger_item != null) {
                     _tool_would_break = tool_would_break(digger_item);
                 } else {
@@ -1212,7 +1213,7 @@ public class Wand {
             }
         } else {
             if (creative && use) {
-                can_destroy(st, true);
+                //can_destroy(st, true);
                 if (digger_item == null && !has_water_potion) {
                     if (!WandUtils.has_use_action(st) && !can_shear(st)) {
                         no_use_action = true;
@@ -1676,11 +1677,18 @@ public class Wand {
             BlockState st = level.getBlockState(tmp_pos.set(x, y, z));
             if (destroy || replace || use) {
                 if (!st.isAir() || mode == Mode.AREA) {
-                    return block_buffer.add(x, y, z, this, with_state);
+                    if(use){
+                        if(can_destroy_or_use(st,false)) {
+                            return block_buffer.add(x, y, z, this, with_state);
+                        }
+                    }else {
+                        return block_buffer.add(x, y, z, this, with_state);
+                    }
                 }
             } else {
-                if (can_place(st, tmp_pos))
-                    return block_buffer.add(x, y, z, this, with_state);
+                if (can_place(st, tmp_pos)) {
+                   return block_buffer.add(x, y, z, this, with_state);
+                }
             }
         } else {
             limit_reached = true;
@@ -1773,9 +1781,9 @@ public class Wand {
         }
     }
 
-    public boolean can_destroy(BlockState state, boolean check_speed) {
+    public boolean can_destroy_or_use(BlockState state, boolean check_speed) {
         digger_item = null;
-        WandItem wand_item=(WandItem)this.wand_stack.getItem();
+        //WandItem wand_item=(WandItem)this.wand_stack.getItem();
         for (int i = 0; i < tools.length; i++) {
             if (!tools[i].empty && tools[i] != null) {
                 if (!tool_would_break(tools[i].tool)) {
@@ -1820,7 +1828,7 @@ public class Wand {
         #else
             boolean is_tool=item_digger instanceof DiggerItem ;
         #endif
-        if (digger != null && !digger.isEmpty() && (is_tool || item_digger instanceof ShearsItem)) {
+        if ( !digger.isEmpty() && (is_tool || item_digger instanceof ShearsItem)) {
             boolean is_allowed = false;
             boolean minable = false;
             if (item_digger instanceof ShearsItem) {

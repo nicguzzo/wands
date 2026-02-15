@@ -7,6 +7,9 @@ import net.nicguzzo.wands.wand.WandProps;
 
 public class FillMode extends WandMode {
     public void place_in_buffer(Wand wand) {
+        if(!need_update(wand,true)){
+            return;
+        }
         if (wand.getP1() != null ){
             if(wand.getP2() !=null || wand.preview){
                 // Use P2 if set (placement - already offset), otherwise use effective pos (preview)

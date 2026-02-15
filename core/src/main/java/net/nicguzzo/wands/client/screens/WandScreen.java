@@ -398,11 +398,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         btn = modeTextBtn(WandProps.Mode.ROW_COL, "wands.modes.row_col", "tooltip.wands.mode.row_col");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.ROW_COL);
 
-        btn = modeTextBtn(WandProps.Mode.AREA, "wands.modes.area", "tooltip.wands.mode.area");
-        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.AREA);
-
         btn = modeTextBtn(WandProps.Mode.FILL, "wands.modes.fill", "tooltip.wands.mode.fill");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.FILL);
+
+        btn = modeTextBtn(WandProps.Mode.AREA, "wands.modes.area", "tooltip.wands.mode.area");
+        tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.AREA);
 
         btn = modeTextBtn(WandProps.Mode.BOX, "wands.modes.box", "tooltip.wands.mode.box");
         tabs.add(btn); textButtons.add(btn); modesList.add(WandProps.Mode.BOX);
