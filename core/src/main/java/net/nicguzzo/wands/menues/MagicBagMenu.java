@@ -125,7 +125,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                         bag_item.setCount(1);
                                     }
                                     if(carried.getItem()==bag_item.getItem()){
-                                        if(ItemStack.isSameItemSameTags(carried,bag_item) &&  MagicBagItem.inc(bag,carried.getCount())) {
+                                        if(Compat.is_same_with_components(carried,bag_item) &&  MagicBagItem.inc(bag,carried.getCount())) {
                                             Compat.set_carried(player, this, ItemStack.EMPTY);
                                         }
                                     }

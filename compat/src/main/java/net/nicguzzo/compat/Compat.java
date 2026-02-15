@@ -227,6 +227,13 @@ public class Compat {
     static public boolean is_same(ItemStack i1,ItemStack i2){
         return ItemStack.isSameItem(i1,i2);
     }
+    static public boolean is_same_with_components(ItemStack i1, ItemStack i2){
+        #if MC_VERSION < 12005
+            return ItemStack.isSameItemSameTags(i1,i2);
+        #else
+            return ItemStack.isSameItemSameComponents(i1,i2);
+        #endif
+    }
     static public Level player_level(Player player){
         return player.level();
     }
