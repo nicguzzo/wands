@@ -572,20 +572,17 @@ public class Wand {
             return;
         }*/
 
-        setup_bucket_block_state();
-
         inventory.update_inv_aux();
         inventory.resetBlocksSentToInv();
         //process the current mode
         int m = mode.ordinal();
         if (m >= 0 && m < modes.length && modes[m] != null) {
-            //if (!preview) {
-                //debug only
-            //    player.displayClientMessage(Compat.literal("wand debug"), false);
-            //}
             modes[m].place_in_buffer(this);
         }
 
+        // Set block_state to the fluid AFTER modes have used the original block_state
+        // for neighbour matching, then override all buffer entries with the fluid state.
+        setup_bucket_block_state();
         override_buffer_for_bucket();
 
         // Copy and Paste modes use global limit instead of wand limit
