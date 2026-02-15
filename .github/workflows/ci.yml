@@ -11,8 +11,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  discover:
     runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.find.outputs.targets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find MC targets
+        id: find
+        run: echo "targets=$(ls -d mc* | jq -R -s -c 'split("\n") | map(select(. != ""))')" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJson(needs.discover.outputs.targets) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,16 +42,26 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
-      - name: Build all targets
-        run: ./gradlew build
+      - name: Build ${{ matrix.target }}
+        run: |
+          chmod +x ./gradlew
+          tasks=""
+          for loader in ${{ matrix.target }}/*/; do
+            name=$(basename "$loader")
+            [ "$name" = "common" ] && continue
+            tasks="$tasks :${{ matrix.target }}:$name:build"
+          done
+          ./gradlew -Ptarget=${{ matrix.target }} $tasks
 
-      - name: Upload release JARs
+      - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
-          name: BuildingWands-${{ github.sha }}
+          name: BuildingWands-${{ matrix.target }}-${{ github.sha }}
           path: |
-            mc*/*/build/libs/BuildingWands-*-MC*-*.jar
+            ${{ matrix.target }}/*/build/libs/BuildingWands-*-MC*-*.jar
             !**/common/**
             !**/*-dev-shadow.jar
             !**/*-sources.jar

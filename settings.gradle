@@ -15,6 +15,16 @@ rootProject.name = "wands"
 //include 'core'
 //include 'compat'
 
-include 'mc1.20.1:common', 'mc1.20.1:fabric', 'mc1.20.1:forge'
-include 'mc1.21.1:common', 'mc1.21.1:fabric', 'mc1.21.1:neoforge'
-include 'mc1.21.11:common', 'mc1.21.11:fabric', 'mc1.21.11:neoforge'
+// When -Ptarget=mc1.20.1 is passed, only configure that MC version (used by CI).
+// Without -Ptarget, all versions are configured (local dev default).
+def target = providers.gradleProperty('target').getOrNull()
+
+if (!target || target == 'mc1.20.1') {
+    include 'mc1.20.1:common', 'mc1.20.1:fabric', 'mc1.20.1:forge'
+}
+if (!target || target == 'mc1.21.1') {
+    include 'mc1.21.1:common', 'mc1.21.1:fabric', 'mc1.21.1:neoforge'
+}
+if (!target || target == 'mc1.21.11') {
+    include 'mc1.21.11:common', 'mc1.21.11:fabric', 'mc1.21.11:neoforge'
+}
