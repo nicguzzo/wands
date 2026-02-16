@@ -126,54 +126,54 @@ public class WandConfigScreen {
                     .build());
     //allow_wand_to_break
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_stone_wand_to_break"), conf.allow_stone_wand_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_stone_wand_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_copper_wand_to_break"), conf.allow_copper_wand_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_copper_wand_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_iron_wand_to_break"), conf.allow_iron_wand_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_iron_wand_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_diamond_wand_to_break"), conf.allow_diamond_wand_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_diamond_wand_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_netherite_wand_to_break"), conf.allow_netherite_wand_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_netherite_wand_to_break = newValue)
                     .build());
 
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_wooden_tools_to_break"), conf.allow_wooden_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_wooden_tools_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_stone_tools_to_break"), conf.allow_stone_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_stone_tools_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_copper_tools_to_break"), conf.allow_copper_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_copper_tools_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_iron_tools_to_break"), conf.allow_iron_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_iron_tools_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_diamond_tools_to_break"), conf.allow_diamond_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_diamond_tools_to_break = newValue)
                     .build());
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.allow_netherite_tools_to_break"), conf.allow_netherite_tools_to_break)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.allow_netherite_tools_to_break = newValue)
                     .build());
 
     //check_advancements
             general.addEntry(entryBuilder.startBooleanToggle(Compat.translatable("option.wands.check_advancements"), conf.check_advancements)
-                    .setDefaultValue(true)
+                    .setDefaultValue(false)
                     .setSaveConsumer(newValue -> conf.check_advancements = newValue)
                     .build());
     //advancement_allow_stone_wand

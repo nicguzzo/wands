@@ -5,12 +5,12 @@ import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
-import net.minecraft.world.level.material.FluidState;
 #else
 import net.minecraft.client.resources.model.BakedModel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.RenderType;
 #endif
+import net.minecraft.world.level.material.FluidState;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
 import net.minecraft.client.CameraType;
