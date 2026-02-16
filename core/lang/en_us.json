@@ -284,7 +284,7 @@
   "tooltip.wands.palette.mode.round_robin": "Sequential",
   "tooltip.wands.palette.mode.round_robin_desc": "Cycle through palette blocks in order (1, 2, 3, 1, 2, 3...)",
   "tooltip.wands.palette.mode.gradient": "Gradient",
-  "tooltip.wands.palette.mode.gradient_desc": "Create vertical gradients using palette rows. Height sets the vertical span. Works with: Fill, Sphere, Box, Rock, vertical Lines.",
+  "tooltip.wands.palette.mode.gradient_desc": "Create vertical gradients using palette rows.\nHeight sets the vertical span. \nWorks with: Fill, Sphere, Box, Rock, and vertical Lines.",
   "wands.message.gradient_no_effect": "Gradient has no effect (mode places blocks at same Y level)",
   "wands.instruction.circle.set_center": "Set center [%s]",
   "wands.instruction.circle.set_edge": "Set edge point [%s]",

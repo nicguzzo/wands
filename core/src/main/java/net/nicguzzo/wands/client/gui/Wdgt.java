@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.nicguzzo.wands.client.screens.WandScreen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -137,17 +138,21 @@ public abstract class Wdgt {
      * @return Tooltip lines to display (title first, then description)
      */
     public List<Component> getTooltipLines() {
-        if (tooltipTitle != null && tooltip != null) {
-            return List.of(
-                tooltipTitle.copy().withStyle(ChatFormatting.WHITE),
-                tooltip.copy().withStyle(ChatFormatting.GRAY)
-            );
-        } else if (tooltipTitle != null) {
-            return List.of(tooltipTitle.copy().withStyle(ChatFormatting.WHITE));
-        } else if (tooltip != null) {
-            return List.of(tooltip.copy().withStyle(ChatFormatting.GRAY));
+        List<Component> lines = new ArrayList<>();
+        if (tooltipTitle != null) {
+            lines.add(tooltipTitle.copy().withStyle(ChatFormatting.WHITE));
         }
-        return List.of();
+        if (tooltip != null) {
+            String text = tooltip.getString();
+            if (text.contains("\n")) {
+                for (String part : text.split("\n")) {
+                    lines.add(Component.literal(part).withStyle(ChatFormatting.GRAY));
+                }
+            } else {
+                lines.add(tooltip.copy().withStyle(ChatFormatting.GRAY));
+            }
+        }
+        return lines;
     }
 
     /**
