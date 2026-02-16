@@ -430,11 +430,7 @@ public class WandsMod {
                                 }
                                 send_state((ServerPlayer) player, wand);
                                 break;
-                            case DIRECTION:
-                            case PASTE:
-
-                                break;
-                            default:
+                            case ROW_COL:
                                 WandProps.nextOrientation(main_stack);
                                 if (!WandsMod.config.disable_info_messages) {
                                     player.displayClientMessage(Compat.translatable(WandProps.getOrientation(main_stack).toString()), true);
