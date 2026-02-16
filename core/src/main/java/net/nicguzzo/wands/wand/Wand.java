@@ -743,6 +743,16 @@ public class Wand {
                 player.inventoryMenu.broadcastChanges();
             }
             //System.out.println("placed " + placed);
+            // Use action produced no results: check the clicked block for warnings
+            if (use && placed == 0 && !no_tool && !damaged_tool) {
+                BlockState clickedState = level.getBlockState(pos);
+                if (!WandUtils.has_use_action(clickedState) && !can_shear(clickedState)) {
+                    no_use_action = true;
+                } else if (!can_destroy_or_use(clickedState, false)) {
+                    no_tool = true;
+                    needed_tool = (n_tools > 0) ? getNeededToolType(clickedState) : "";
+                }
+            }
             if (no_use_action && placed == 0) {
                 player.displayClientMessage(Compat.translatable("wands.message.no_use_action"), true);
                 no_use_action = false;
@@ -1497,6 +1507,12 @@ public class Wand {
                         BlockState useTarget = (mode == Mode.AREA) ? level.getBlockState(tmp_pos.set(x, y, z).move(side, -1)) : st;
                         if(can_destroy_or_use(useTarget,false)) {
                             return block_buffer.add(x, y, z, this, with_state);
+                        // Set warning flags when block can't be used (mirrors place_block logic)
+                        } else if (!WandUtils.has_use_action(useTarget) && !can_shear(useTarget)) {
+                            no_use_action = true;
+                        } else {
+                            no_tool = true;
+                            needed_tool = (n_tools > 0) ? getNeededToolType(useTarget) : "";
                         }
                     }else {
                         return block_buffer.add(x, y, z, this, with_state);
