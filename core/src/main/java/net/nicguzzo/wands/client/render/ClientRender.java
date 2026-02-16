@@ -1423,12 +1423,29 @@ public class ClientRender {
             mode == Mode.PASTE ||
             mode == Mode.ROW_COL||
             mode == Mode.ROCK )){
-        if (fancy && wand.offhand_state!=null && mode != Mode.COPY){
-            random.setSeed(0);
-            VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
-            render_shape(matrixStack,consumer, wand.offhand_state,
-                                    pos_x,pos_y,pos_z);
-            bufferSource.endLastBatch();
+        if (fancy && mode != Mode.COPY){
+            if (wand.offhand_state!=null) {
+                random.setSeed(0);
+                VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
+                render_shape(matrixStack,consumer, wand.offhand_state,
+                                        pos_x,pos_y,pos_z);
+                bufferSource.endLastBatch();
+            } else if (wand.has_water_bucket || wand.has_lava_bucket) {
+                try {
+                    TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
+                    int color = get_fluid_color();
+                    VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
+                    matrixStack.pushPose();
+                    matrixStack.translate(pos_x, pos_y, pos_z);
+                    render_fluid(consumer, matrixStack.last().pose(),
+                        0, 0, 0, color,
+                        sprite.getU0(), sprite.getV1(), sprite.getU1(), sprite.getV0());
+                    matrixStack.popPose();
+                    bufferSource.endLastBatch();
+                } catch (Exception e) {
+                    WandsMod.log("preview_selected fluid exception: " + e.getMessage(), true);
+                }
+            }
         }
         // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
         VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
