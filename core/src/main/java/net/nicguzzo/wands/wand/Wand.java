@@ -750,7 +750,7 @@ public class Wand {
                     no_use_action = true;
                 } else if (!can_destroy_or_use(clickedState, false)) {
                     no_tool = true;
-                    needed_tool = (n_tools > 0) ? getNeededToolType(clickedState) : "";
+                    needed_tool = (use || n_tools > 0) ? getNeededToolType(clickedState) : "";
                 }
             }
             if (no_use_action && placed == 0) {
@@ -1212,7 +1212,7 @@ public class Wand {
                         return false;
                     }
                     no_tool = true;
-                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
+                    needed_tool = (use || n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
                 }
                 if (_tool_would_break) {
@@ -1229,7 +1229,7 @@ public class Wand {
                         return false;
                     }
                     no_tool = true;
-                    needed_tool = (n_tools > 0) ? getNeededToolType(st) : "";
+                    needed_tool = (use || n_tools > 0) ? getNeededToolType(st) : "";
                     return false;
                 }
             }
@@ -1512,7 +1512,7 @@ public class Wand {
                             no_use_action = true;
                         } else {
                             no_tool = true;
-                            needed_tool = (n_tools > 0) ? getNeededToolType(useTarget) : "";
+                            needed_tool = (use || n_tools > 0) ? getNeededToolType(useTarget) : "";
                         }
                     }else {
                         return block_buffer.add(x, y, z, this, with_state);
@@ -1936,6 +1936,9 @@ public class Wand {
     }
 
     private String getNeededToolType(BlockState state) {
+        if (use) {
+            return getNeededUseToolType(state);
+        }
         if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) {
             return "pickaxe";
         } else if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) {
@@ -1944,6 +1947,16 @@ public class Wand {
             return "axe";
         } else if (state.is(BlockTags.MINEABLE_WITH_HOE)) {
             return "hoe";
+        }
+        return "";
+    }
+    private String getNeededUseToolType(BlockState state) {
+        if (WandUtils.can_axe_use(state)) {
+            return "axe";
+        } else if (WandUtils.is_tillable(state)) {
+            return "hoe";
+        } else if (WandUtils.is_flattenable(state)) {
+            return "shovel";
         }
         return "";
     }
