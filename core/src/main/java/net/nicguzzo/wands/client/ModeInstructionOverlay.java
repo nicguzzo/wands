@@ -16,8 +16,9 @@ import net.nicguzzo.wands.wand.WandProps;
  */
 public class ModeInstructionOverlay {
 
-    // White with 60% opacity
-    private static final int TEXT_COLOR = 0x99FFFFFF;
+    // White with 60% opacity — also used by the wand HUD overlay
+    public static final int TEXT_COLOR = 0x99FFFFFF;
+    public static final int TEXT_COLOR_DIM = 0x99AAAAAA;
 
     /**
      * Main render method called from HUD event.

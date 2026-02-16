@@ -21,7 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.chat.MutableComponent;
+
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
@@ -68,7 +68,7 @@ import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.mixin.DropExperienceBlockAccessor;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.BlockBuffer;
-import net.nicguzzo.wands.utils.CircularBuffer;
+
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.WandProps.Mode;
@@ -299,7 +299,7 @@ public class Wand {
     public Palette palette = new Palette();
     public Map<Item, BlockAccounting> block_accounting = new HashMap<>();
     public BlockBuffer block_buffer = new BlockBuffer(WandsConfig.max_limit);
-    public CircularBuffer undo_buffer = new CircularBuffer(WandsConfig.max_limit);
+    public final UndoManager undoManager = new UndoManager();
     public Vector<CopyBuffer> copy_paste_buffer = new Vector<>();
 
     public final Pin pin = new Pin();
@@ -591,6 +591,7 @@ public class Wand {
         //server stuff
         //WandsMod.log(" using palette seed: " + palette.seed,prnt);
         if (!preview) {
+            undoManager.beginAction();
             //log(" using palette seed: " + palette_seed);
             if (limit_reached && (mode != Mode.VEIN)) {
                 player.displayClientMessage(Compat.literal("wand limit reached"), false);
@@ -1036,41 +1037,8 @@ public class Wand {
         return st;
     }
 
-    public void undo(int n) {
-        if (undo_buffer != null) {
-            for (int i = 0; i < n && i < undo_buffer.size(); i++) {
-                CircularBuffer.P p = undo_buffer.peek();
-                if (p != null) {
-                    if (!p.destroyed) {
-                        if (level.destroyBlock(p.pos, false)) {
-                            undo_buffer.pop();
-                        }
-                    } else {
-                        if (p.state.canSurvive(level, p.pos) && level.setBlockAndUpdate(p.pos, p.state)) {
-                            undo_buffer.pop();
-                        }
-                    }
-                }
-            }
-            //undo_buffer.print();
-        }
-    }
-
-    public void redo(int n) {
-        if (undo_buffer != null) {
-            for (int i = 0; i < n && undo_buffer.can_go_forward(); i++) {
-                undo_buffer.forward();
-                CircularBuffer.P p = undo_buffer.peek();
-                if (p != null && p.pos != null && p.state != null) {
-                    if (!p.destroyed) {
-                        level.setBlockAndUpdate(p.pos, p.state);
-                    } else {
-                        level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-            //undo_buffer.print();
-        }
+    private void recordUndo(BlockPos pos, BlockState originalState, boolean destroyed, BlockState newState) {
+        undoManager.record(pos, originalState, destroyed, newState, mode != null ? mode.toString() : null);
     }
 
     public void validate_buffer() {
@@ -1238,8 +1206,10 @@ public class Wand {
             }
         }
         if ((use) && has_shear && state.is(Blocks.PUMPKIN)) {
+            BlockState originalState = level.getBlockState(block_pos);
             BlockState carved_pumpkin = Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, player.getDirection().getOpposite());
             level.setBlockAndUpdate(block_pos, carved_pumpkin);
+            recordUndo(block_pos, originalState, true, carved_pumpkin);
             if (!creative) {
                 ItemStack pumpkin_seeds = Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
@@ -1253,7 +1223,10 @@ public class Wand {
         }
 
         if ((use) && has_water_potion && state.is(BlockTags.CONVERTABLE_TO_MUD)) {
-            level.setBlockAndUpdate(block_pos, Blocks.MUD.defaultBlockState());
+            BlockState originalState = level.getBlockState(block_pos);
+            BlockState mudState = Blocks.MUD.defaultBlockState();
+            level.setBlockAndUpdate(block_pos, mudState);
+            recordUndo(block_pos, originalState, true, mudState);
             send_sound = Sounds.SPLASH.ordinal();
             if (!creative) {
                 if (!_wand_would_break) {
@@ -1294,9 +1267,12 @@ public class Wand {
         }
 
         if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear)) {
+            BlockState originalState = level.getBlockState(block_pos);
             BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
             if (digger_item.useOn(ctx) != InteractionResult.PASS) {
+                BlockState afterState = level.getBlockState(block_pos);
+                recordUndo(block_pos, originalState, true, afterState);
                 if (!creative) {
                     if (!_wand_would_break) {
                         hurt_main_hand(wand_stack);
@@ -1314,11 +1290,9 @@ public class Wand {
 
         if (creative) {
             if (destroy) {
+                BlockState stateBeforeDestroy = level.getBlockState(block_pos);
                 if (destroyBlock(block_pos, false)) {
-                    if (undo_buffer != null) {
-                        undo_buffer.put(block_pos, level.getBlockState(block_pos), destroy);
-                        //undo_buffer.print();
-                    }
+                    recordUndo(block_pos, stateBeforeDestroy, true, null);
                     return true;
                 }
             } else {
@@ -1326,10 +1300,7 @@ public class Wand {
                     state = state_for_placement(state, block_pos);
                     if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
                         blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
-                        if (undo_buffer != null) {
-                            undo_buffer.put(block_pos, state, destroy);
-                            //undo_buffer.print();
-                        }
+                        recordUndo(block_pos, state, false, null);
                         return true;
                     }
                 }
@@ -1491,7 +1462,9 @@ public class Wand {
             if (destroy || replace || use) {
                 if (!st.isAir() || mode == Mode.AREA) {
                     if(use){
-                        if(can_destroy_or_use(st,false)) {
+                        // Area mode adds offset positions (above surface), so check the actual target block
+                        BlockState useTarget = (mode == Mode.AREA) ? level.getBlockState(tmp_pos.set(x, y, z).move(side, -1)) : st;
+                        if(can_destroy_or_use(useTarget,false)) {
                             return block_buffer.add(x, y, z, this, with_state);
                         }
                     }else {
