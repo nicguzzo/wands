@@ -27,6 +27,7 @@ import net.minecraft.server.PlayerAdvancements;
 import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
@@ -289,6 +290,24 @@ public class Wand {
             @Override
             public SoundEvent get_sound() {
                 return SoundEvents.GENERIC_SPLASH;
+            }
+        },
+        AXE_STRIP {
+            @Override
+            public SoundEvent get_sound() {
+                return SoundEvents.AXE_STRIP;
+            }
+        },
+        AXE_WAX_OFF {
+            @Override
+            public SoundEvent get_sound() {
+                return SoundEvents.AXE_WAX_OFF;
+            }
+        },
+        AXE_SCRAPE {
+            @Override
+            public SoundEvent get_sound() {
+                return SoundEvents.AXE_SCRAPE;
             }
         };
 
@@ -1273,6 +1292,18 @@ public class Wand {
             if (digger_item.useOn(ctx) != InteractionResult.PASS) {
                 BlockState afterState = level.getBlockState(block_pos);
                 recordUndo(block_pos, originalState, true, afterState);
+                // Vanilla useOn() excludes the acting player from sounds/particles, so send them directly
+                if (has_axe) {
+                    if (HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(originalState.getBlock())) {
+                        ((ServerPlayer) player).connection.send(new ClientboundLevelEventPacket(3004, block_pos, 0, false));
+                        send_sound = Sounds.AXE_WAX_OFF.ordinal();
+                    } else if (WeatheringCopper.getPrevious(originalState).isPresent()) {
+                        ((ServerPlayer) player).connection.send(new ClientboundLevelEventPacket(3005, block_pos, 0, false));
+                        send_sound = Sounds.AXE_SCRAPE.ordinal();
+                    } else {
+                        send_sound = Sounds.AXE_STRIP.ordinal();
+                    }
+                }
                 if (!creative) {
                     if (!_wand_would_break) {
                         hurt_main_hand(wand_stack);
@@ -1576,7 +1607,7 @@ public class Wand {
                     if (((destroy || replace) && can_dig(state, check_speed, tools[i].tool)) ||
                             ((use) && (
                                     (tools[i].tooltype == ToolType.HOE && WandUtils.is_tillable(state)) ||
-                                    (tools[i].tooltype == ToolType.AXE && WandUtils.is_strippable(state)) ||
+                                    (tools[i].tooltype == ToolType.AXE && WandUtils.can_axe_use(state)) ||
                                     (tools[i].tooltype == ToolType.SHOVEL && WandUtils.is_flattenable(state)) ||
                                     (tools[i].tooltype == ToolType.SHEAR && can_shear(state))
                             ))
