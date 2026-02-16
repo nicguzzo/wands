@@ -19,9 +19,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Find MC targets
+      - name: Find build targets
         id: find
-        run: echo "targets=$(ls -d mc* | jq -R -s -c 'split("\n") | map(select(. != ""))')" >> "$GITHUB_OUTPUT"
+        run: |
+          targets=$(
+            for dir in mc*/; do
+              target=$(basename "$dir")
+              for loader in "$dir"*/; do
+                name=$(basename "$loader")
+                [ "$name" = "common" ] && continue
+                echo "{\"target\":\"$target\",\"loader\":\"$name\"}"
+              done
+            done | jq -s -c '.'
+          )
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
   build:
     needs: discover
@@ -45,23 +56,16 @@ jobs:
         with:
           cache-read-only: false
 
-      - name: Build ${{ matrix.target }}
+      - name: Build ${{ matrix.target.target }}/${{ matrix.target.loader }}
         run: |
           chmod +x ./gradlew
-          tasks=""
-          for loader in ${{ matrix.target }}/*/; do
-            name=$(basename "$loader")
-            [ "$name" = "common" ] && continue
-            tasks="$tasks :${{ matrix.target }}:$name:build"
-          done
-          ./gradlew -Ptarget=${{ matrix.target }} $tasks
+          ./gradlew -Ptarget=${{ matrix.target.target }} :${{ matrix.target.target }}:${{ matrix.target.loader }}:build
 
       - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
-          name: BuildingWands-${{ matrix.target }}-${{ github.sha }}
+          name: BuildingWands-${{ matrix.target.target }}-${{ matrix.target.loader }}-${{ github.sha }}
           path: |
-            ${{ matrix.target }}/*/build/libs/BuildingWands-*-MC*-*.jar
-            !**/common/**
+            ${{ matrix.target.target }}/${{ matrix.target.loader }}/build/libs/BuildingWands-*-MC*-*.jar
             !**/*-dev-shadow.jar
             !**/*-sources.jar
