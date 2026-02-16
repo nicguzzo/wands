@@ -402,7 +402,7 @@ public class Wand {
         if ((destroy || replace) && WandsMod.config.disable_destroy_replace) {
             destroy = false;
             replace = false;
-            WandProps.setAction(wand_stack, WandProps.Action.PLACE);
+            WandProps.forceAction(wand_stack, WandProps.Action.PLACE);
 
         }
         this.player = player;

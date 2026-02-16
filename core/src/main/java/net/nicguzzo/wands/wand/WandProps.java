@@ -337,198 +337,67 @@ public class WandProps {
     }
 
     public enum Flag {
-        INVERTED {
-            public String toString() {
-                return "inverted";
-            }
+        INVERTED("inverted", "invert", false),
+        CFILLED("cfill", "filled", false),
+        EVEN("circle_even", "even_size", false),
+        DIAGSPREAD("diag_spread", "orthogonal_only", false),
+        MATCHSTATE("match_state", "match_state", false),
+        INCSELBLOCK("inc_sel_block", "include_block", false),
+        STAIRSLAB("stair_slab", "slab_flip", false),
+        RFILLED("rfill", "filled", true),
+        TARGET_AIR("target_air", "target_air", false),
+        CLEAR_P1("clear_p1", "keep_start", true),
+        BOX_INVERTED("box_inverted", "box_invert", false);
 
-            public boolean get_default() {
-                return false;
-            }
+        private final String nbtKey;
+        public final String labelKey;
+        private final boolean defaultValue;
 
-            ;}, CFILLED {
-            public String toString() {
-                return "cfill";
-            }
+        Flag(String nbtKey, String labelKey, boolean defaultValue) {
+            this.nbtKey = nbtKey;
+            this.labelKey = labelKey;
+            this.defaultValue = defaultValue;
+        }
 
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, EVEN {
-            public String toString() {
-                return "circle_even";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, DIAGSPREAD {
-            public String toString() {
-                return "diag_spread";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, MATCHSTATE {
-            public String toString() {
-                return "match_state";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, INCSELBLOCK {
-            public String toString() {
-                return "inc_sel_block";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, STAIRSLAB {
-            public String toString() {
-                return "stair_slab";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;}, RFILLED {
-            public String toString() {
-                return "rfill";
-            }
-
-            public boolean get_default() {
-                return true;
-            }
-
-            ;}, TARGET_AIR {
-            public String toString() {
-                return "target_air";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;},
-        CLEAR_P1 {
-            public String toString() {
-                return "clear_p1";
-            }
-
-            public boolean get_default() {
-                return true;
-            }
-
-            ;},
-        BOX_INVERTED {
-            public String toString() {
-                return "box_inverted";
-            }
-
-            public boolean get_default() {
-                return false;
-            }
-
-            ;};
-
-        public abstract boolean get_default();
+        public String toString() { return nbtKey; }
+        public boolean get_default() { return defaultValue; }
     }
 
     public enum Value {
-        MULTIPLIER {
-            public String toString() {
-                return "multiplier";
-            }
-        }, ROWCOLLIM {
-            public String toString() {
-                return "row_col_limit";
-            }
-        }, AREALIM {
-            public String toString() {
-                return "area_limit";
-            }
-        }, BLASTRAD {
-            public String toString() {
-                return "blast_radius";
-            }
-        }, GRIDM {
-            public String toString() {
-                return "grid_m";
-            }
-        }, GRIDN {
-            public String toString() {
-                return "grid_n";
-            }
-        }, GRIDMS {
-            public String toString() {
-                return "grid_msp";
-            }
-        }, GRIDNS {
-            public String toString() {
-                return "grid_nsp";
-            }
-        }, GRIDMOFF {
-            public String toString() {
-                return "grid_moff";
-            }
-        }, GRIDNOFF {
-            public String toString() {
-                return "grid_noff";
-            }
-        }, MIRRORAXIS {
-            public String toString() {
-                return "mirror_axis";
-            }
-        }, SKIPBLOCK {
-            public String toString() {
-                return "skip_block";
-            }
-        }, BOX_W {
-            public String toString() {
-                return "box_w";
-            }
-        }, BOX_H {
-            public String toString() {
-                return "box_h";
-            }
-        }, BOX_OX {
-            public String toString() {
-                return "box_ox";
-            }
-        }, BOX_OY {
-            public String toString() {
-                return "box_oy";
-            }
-        }, BOX_DEPTH {
-            public String toString() {
-                return "box_d";
-            }
-        }, ROCK_RADIUS {
-            public String toString() {
-                return "rock_radius";
-            }
-        }, ROCK_NOISE {
-            public String toString() {
-                return "rock_noise";
-            }
-        }, REACH_DISTANCE {
-            public String toString() {
-                return "reach_distance";
-            }
-        };
+        MULTIPLIER("multiplier", "multiplier"),
+        ROWCOLLIM("row_col_limit", "limit"),
+        AREALIM("area_limit", "limit"),
+        BLASTRAD("blast_radius", "blast_radius"),
+        GRIDM("grid_m", "grid_m"),
+        GRIDN("grid_n", "grid_n"),
+        GRIDMS("grid_msp", "grid_m_skip"),
+        GRIDNS("grid_nsp", "grid_n_skip"),
+        GRIDMOFF("grid_moff", "grid_m_offset"),
+        GRIDNOFF("grid_noff", "grid_n_offset"),
+        MIRRORAXIS("mirror_axis", "mirror"),
+        SKIPBLOCK("skip_block", "skip_block"),
+        BOX_W("box_w", "box_width"),
+        BOX_H("box_h", "box_height"),
+        BOX_OX("box_ox", "box_offset_x"),
+        BOX_OY("box_oy", "box_offset_y"),
+        BOX_DEPTH("box_d", "box_depth"),
+        ROCK_RADIUS("rock_radius", "rock_radius"),
+        ROCK_NOISE("rock_noise", "rock_noise"),
+        REACH_DISTANCE("reach_distance", "reach_distance");
+
+        private final String nbtKey;
+        public final String labelKey;
         public int def = 0;
         public int min = 0;
         public int max = 2048;
         public Value coval = null;
+
+        Value(String nbtKey, String labelKey) {
+            this.nbtKey = nbtKey;
+            this.labelKey = labelKey;
+        }
+
+        public String toString() { return nbtKey; }
 
         static {
             MULTIPLIER.def = 1;
@@ -1014,7 +883,32 @@ public class WandProps {
         return Action.PLACE;
     }
 
+    /** Sets the current action and saves it as the user's preferred action. */
     static public void setAction(ItemStack stack, Action a) {
+        if (WandUtils.is_wand(stack)) {
+            CompoundTag tag = Compat.getTags(stack);
+            if (WandsMod.config.disable_destroy_replace && (a == Action.DESTROY || a == Action.REPLACE)) {
+                a = Action.PLACE;
+            }
+            tag.putInt("action", a.ordinal());
+            tag.putInt("preferred_action", a.ordinal());
+            Compat.saveCustomData(stack, tag);
+        }
+    }
+
+    static public Action getPreferredAction(ItemStack stack) {
+        if (WandUtils.is_wand(stack)) {
+            CompoundTag tag = Compat.getTags(stack);
+            if (tag.contains("preferred_action")) {
+                int m = Compat.getInt(tag, "preferred_action").orElse(0);
+                if (m >= 0 && m < actions.length) return actions[m];
+            }
+        }
+        return Action.PLACE;
+    }
+
+    /** Sets the current action without updating the preferred action. For internal/system use only (e.g. switchMode forcing DESTROY). */
+    static public void forceAction(ItemStack stack, Action a) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
             if (WandsMod.config.disable_destroy_replace && (a == Action.DESTROY || a == Action.REPLACE)) {
@@ -1033,6 +927,7 @@ public class WandProps {
                 a = Action.USE.ordinal();
             }
             tag.putInt("action", a);
+            tag.putInt("preferred_action", a);
             Compat.saveCustomData(stack, tag);
         }
     }
@@ -1048,6 +943,7 @@ public class WandProps {
                 a = Action.PLACE.ordinal();
             }
             tag.putInt("action", a);
+            tag.putInt("preferred_action", a);
             Compat.saveCustomData(stack, tag);
         }
     }
@@ -1063,6 +959,7 @@ public class WandProps {
                 a = (a + 1) % actions.length;
                 if (isActionValidForMode(actions[a], mode)) {
                     tag.putInt("action", a);
+                    tag.putInt("preferred_action", a);
                     Compat.saveCustomData(stack, tag);
                     return;
                 }
@@ -1081,6 +978,7 @@ public class WandProps {
                 if (a < 0) a = actions.length - 1;
                 if (isActionValidForMode(actions[a], mode)) {
                     tag.putInt("action", a);
+                    tag.putInt("preferred_action", a);
                     Compat.saveCustomData(stack, tag);
                     return;
                 }
@@ -1098,7 +996,7 @@ public class WandProps {
         // Find first valid action
         for (Action a : actions) {
             if (isActionValidForMode(a, mode)) {
-                setAction(stack, a);
+                forceAction(stack, a);
                 return;
             }
         }
@@ -1112,11 +1010,18 @@ public class WandProps {
     static public void switchMode(ItemStack stack, Mode newMode) {
         if (!WandUtils.is_wand(stack)) return;
         setMode(stack, newMode);
-        Action action=getAction(stack);
         if (newMode == Mode.BLAST || newMode == Mode.VEIN) {
-            setAction(stack, Action.DESTROY);
-        } else if (!isActionValidForMode(action,newMode)) {
-            setAction(stack, Action.PLACE);
+            forceAction(stack, Action.DESTROY);
+            return;
+        }
+        Action preferred = getPreferredAction(stack);
+        if (isActionValidForMode(preferred, newMode)) {
+            forceAction(stack, preferred);
+            return;
+        }
+        Action current = getAction(stack);
+        if (!isActionValidForMode(current, newMode)) {
+            forceAction(stack, Action.PLACE);
         }
     }
 

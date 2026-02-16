@@ -4,6 +4,7 @@ import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 #if MC_VERSION >= 12005
 import net.minecraft.core.HolderLookup;
@@ -155,23 +156,19 @@ public class MagicBagItem extends Item {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag){
 #endif
 #endif
-        //ItemStack i = MagicBagItem.getItem(stack,tooltipContext.registries());
-        ItemStack i = MagicBagItem.getItem(stack, Minecraft.getInstance().level);
         #if MC_VERSION >= 12111
-        if (i.isEmpty()) {
-            consumer.accept(Compat.literal("item: none"));
-        } else {
-            consumer.accept(Compat.literal("item: ").append(Component.translatable (i.getItem().getDescriptionId())));
-        }
-        consumer.accept(Compat.literal("total: " + MagicBagItem.getTotal(stack)));
+        Consumer<Component> addLine = consumer;
         #else
-        if (i.isEmpty()) {
-            list.add(Compat.literal("item: none"));
-        } else {
-            list.add(Compat.literal("item: ").append(Component.translatable (i.getItem().getDescriptionId())));
-        }
-        list.add(Compat.literal("total: " + MagicBagItem.getTotal(stack)));
+        Consumer<Component> addLine = list::add;
         #endif
+
+        ItemStack i = MagicBagItem.getItem(stack, Minecraft.getInstance().level);
+        if (i.isEmpty()) {
+            addLine.accept(Compat.literal("Item: None").withStyle(ChatFormatting.GRAY));
+        } else {
+            addLine.accept(Compat.literal("Item: ").append(Component.translatable(i.getItem().getDescriptionId())).withStyle(ChatFormatting.GRAY));
+        }
+        addLine.accept(Compat.literal("Total: " + MagicBagItem.getTotal(stack)).withStyle(ChatFormatting.GRAY));
     }
 
     @Override

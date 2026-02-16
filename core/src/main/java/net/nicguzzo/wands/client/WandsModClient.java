@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.HitResult;
 import net.nicguzzo.compat.MyIdExt;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
@@ -222,7 +223,9 @@ public class WandsModClient {
                         if (newAlt) {
                             // Alt pressed — freeze at crosshair if no toggle pin active
                             WandProps.Mode mode = WandProps.getMode(mainHand);
-                            ClientRender.wand.pin.freeze(client.hitResult, mainHand, mode);
+                            // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
+                            HitResult altHit = ClientRender.wand.lastHitResult != null ? ClientRender.wand.lastHitResult : client.hitResult;
+                            ClientRender.wand.pin.freeze(altHit, mainHand, mode);
                         } else {
                             // Alt released — release non-persistent freeze
                             ClientRender.wand.pin.release();
@@ -448,6 +451,10 @@ public class WandsModClient {
                     String pinKey = showPin ? getKeyName(WandsMod.WandKeys.PIN) : "";
                     String pinText = showPin ? "Pin [" + pinKey + "]" : "";
 
+                    // Settings line (always shown)
+                    String settingsKey = getKeyName(WandsMod.WandKeys.MENU);
+                    String settingsText = "Settings [" + settingsKey + "]";
+
                     int pad = WandScreen.SCREEN_MARGIN;
                     int lineSpacing = font.lineHeight + Section.VERTICAL_SPACING;
 
@@ -461,6 +468,7 @@ public class WandsModClient {
                     if (!infoText.isEmpty()) lineCount++;
                     if (showPin) lineCount++;
                     if (showUndo) lineCount += 2; // Undo + Redo
+                    lineCount++; // Settings
 
                     // Calculate max width across all lines
                     String modeText = modeStr + " [" + modeKey + ", hold " + modeKey + "]";
@@ -477,6 +485,7 @@ public class WandsModClient {
                         maxWidth = Math.max(maxWidth, font.width(undoText));
                         maxWidth = Math.max(maxWidth, font.width(redoText));
                     }
+                    maxWidth = Math.max(maxWidth, font.width(settingsText));
 
                     int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
@@ -615,7 +624,11 @@ public class WandsModClient {
                         drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
                         currentY += lineSpacing;
                         drawHudValueWithHint(gui, font, "Redo", "Shift+" + undoKey, hudX, currentY);
+                        currentY += lineSpacing;
                     }
+
+                    // Settings [Y]
+                    drawHudValueWithHint(gui, font, "Settings", settingsKey, hudX, currentY);
                 }
             }
         }
@@ -678,7 +691,9 @@ public class WandsModClient {
                 return true;
             }
             boolean wasSet = wand.pin.isSet();
-            wand.pin.toggle(client.hitResult, mainHand, mode);
+            // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
+            HitResult hitResult = wand.lastHitResult != null ? wand.lastHitResult : client.hitResult;
+            wand.pin.toggle(hitResult, mainHand, mode);
             if (client.player != null && !WandsMod.config.disable_info_messages) {
                 String msgKey = wasSet ? "wands.message.pin_cleared" : "wands.message.pin_set";
                 if (wand.pin.isSet() || wasSet) {

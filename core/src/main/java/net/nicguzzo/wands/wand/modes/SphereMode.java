@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.wand.modes;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 
@@ -22,9 +22,10 @@ public class SphereMode extends WandMode {
             int xc = wand.getP1().getX();
             int yc = wand.getP1().getY();
             int zc = wand.getP1().getZ();
-            int px = wand.pos.getX() - xc;
-            int py = wand.pos.getY() - yc;
-            int pz = wand.pos.getZ() - zc;
+            BlockPos radiusPos = (wand.getP2() != null) ? wand.getP2() : wand.getEffectiveEndPos();
+            int px = radiusPos.getX() - xc;
+            int py = radiusPos.getY() - yc;
+            int pz = radiusPos.getZ() - zc;
             // log("circle plane:"+plane+ " fill: "+fill);
             int r = (int) Math.sqrt(px * px + py * py + pz * pz);
             //int radius=r+1;

@@ -5,7 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -54,7 +54,6 @@ public class WandItem extends Item {
     public boolean unbreakable;
     public boolean removes_water;
     public boolean removes_lava;
-    //TODO: check ecnchantments!
 
     public WandItem(WandTier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, boolean can_blast, Properties properties) {
         super(properties);
@@ -268,41 +267,37 @@ public class WandItem extends Item {
 #endif
 #endif
     {
-        CompoundTag tag = Compat.getTags(stack);
-        //CompoundTag tag=stack.getOrCreateTag();
-        //TODO Complete translations
-        //TODO add tools info
-        Component l0=Compat.literal("mode: ").append(Compat.translatable(WandProps.getMode(stack).toString()));
-        Component l1=Compat.literal("limit: " + this.limit);
-        Component l2=Compat.literal("orientation: ").append(Compat.translatable(WandProps.orientations[Compat.getInt(tag,"orientation").orElse(0)].toString()));
-        int a = Compat.getInt(tag,"axis").orElse(0);
-        Component l3;
-        if (a < WandProps.axes.length) {
-            l3=Compat.literal("axis: " + WandProps.axes[a].toString());
-        }
-        else{
-            l3=Compat.literal("axis: none");
-        }
-        Component l4=Compat.literal("plane: " + WandProps.Plane.values()[Compat.getInt(tag,"plane").orElse(0)].toString());
-        Component l5=Compat.literal("fill circle: " + Compat.getBoolean(tag,"cfill").orElse(false));
-        Component l6=Compat.literal("rotation: " + Compat.getInt(tag,"rotation").orElse(0));
-
         #if MC_VERSION >= 12111
-        consumer.accept(l0);
-        consumer.accept(l1);
-        consumer.accept(l2);
-        consumer.accept(l3);
-        consumer.accept(l4);
-        consumer.accept(l5);
-        consumer.accept(l6);
+        Consumer<Component> addLine = consumer;
         #else
-        list.add(l0);
-        list.add(l1);
-        list.add(l2);
-        list.add(l3);
-        list.add(l4);
-        list.add(l5);
-        list.add(l6);
+        Consumer<Component> addLine = list::add;
         #endif
+
+        WandProps.Mode mode = WandProps.getMode(stack);
+        WandProps.Action action = WandProps.getAction(stack);
+
+        addLine.accept(Compat.translatable("key.wands.wand_mode").append(Compat.literal(": ")).append(Compat.translatable(mode.toString())).withStyle(ChatFormatting.GRAY));
+        addLine.accept(Compat.translatable("screen.wands.action_prefix").append(Compat.literal(": ")).append(Compat.translatable(action.toString())).withStyle(ChatFormatting.GRAY));
+
+        // Show flags relevant to this mode (only non-default values)
+        for (WandProps.Flag flag : WandProps.Flag.values()) {
+            if (WandProps.flagAppliesTo(flag, mode)) {
+                boolean val = WandProps.getFlag(stack, flag);
+                if (val != flag.get_default()) {
+                    String state = val ? "On" : "Off";
+                    addLine.accept(Compat.translatable("screen.wands." + flag.labelKey).append(Compat.literal(": " + state)).withStyle(ChatFormatting.GRAY));
+                }
+            }
+        }
+
+        // Show values relevant to this mode (only non-default values)
+        for (WandProps.Value value : WandProps.Value.values()) {
+            if (WandProps.valueAppliesTo(value, mode)) {
+                int val = WandProps.getVal(stack, value);
+                if (val != value.def) {
+                    addLine.accept(Compat.translatable("screen.wands." + value.labelKey).append(Compat.literal(": " + val)).withStyle(ChatFormatting.GRAY));
+                }
+            }
+        }
     }
 }
