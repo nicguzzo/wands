@@ -1014,6 +1014,9 @@ public class Wand {
         if (mode == Mode.PASTE)
             return st;
         Block blk = st.getBlock();
+        if (blk instanceof CropBlock) {
+            return creative ? st : blk.defaultBlockState();
+        }
         if (blk instanceof LeavesBlock) {
             return blk.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
         }
