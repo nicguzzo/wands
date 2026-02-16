@@ -448,6 +448,10 @@ public class WandsModClient {
                     String pinKey = showPin ? getKeyName(WandsMod.WandKeys.PIN) : "";
                     String pinText = showPin ? "Pin [" + pinKey + "]" : "";
 
+                    // Settings line (always shown)
+                    String settingsKey = getKeyName(WandsMod.WandKeys.MENU);
+                    String settingsText = "Settings [" + settingsKey + "]";
+
                     int pad = WandScreen.SCREEN_MARGIN;
                     int lineSpacing = font.lineHeight + Section.VERTICAL_SPACING;
 
@@ -461,6 +465,7 @@ public class WandsModClient {
                     if (!infoText.isEmpty()) lineCount++;
                     if (showPin) lineCount++;
                     if (showUndo) lineCount += 2; // Undo + Redo
+                    lineCount++; // Settings
 
                     // Calculate max width across all lines
                     String modeText = modeStr + " [" + modeKey + ", hold " + modeKey + "]";
@@ -477,6 +482,7 @@ public class WandsModClient {
                         maxWidth = Math.max(maxWidth, font.width(undoText));
                         maxWidth = Math.max(maxWidth, font.width(redoText));
                     }
+                    maxWidth = Math.max(maxWidth, font.width(settingsText));
 
                     int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
@@ -615,7 +621,11 @@ public class WandsModClient {
                         drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
                         currentY += lineSpacing;
                         drawHudValueWithHint(gui, font, "Redo", "Shift+" + undoKey, hudX, currentY);
+                        currentY += lineSpacing;
                     }
+
+                    // Settings [Y]
+                    drawHudValueWithHint(gui, font, "Settings", settingsKey, hudX, currentY);
                 }
             }
         }
