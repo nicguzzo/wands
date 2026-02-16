@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ender_pearl": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["minecraft:ender_pearl"]}]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "wands:magic_bag_1"
+      }
+    }
+  },
+  "requirements": [["has_ender_pearl", "has_the_recipe"]],
+  "rewards": {
+    "recipes": ["wands:magic_bag_1"]
+  }
+}

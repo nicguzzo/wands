@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_netherite_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["minecraft:netherite_ingot"]}]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "wands:netherite_wand"
+      }
+    }
+  },
+  "requirements": [["has_netherite_ingot", "has_the_recipe"]],
+  "rewards": {
+    "recipes": ["wands:netherite_wand"]
+  }
+}
