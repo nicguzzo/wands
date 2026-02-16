@@ -404,6 +404,17 @@ public class Compat {
             return Minecraft.getInstance().getWindow().getWindow();
         #endif
     }
+    static public float getPartialTick() {
+        #if MC_VERSION >= 12111
+            return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
+        #else
+        #if MC_VERSION >= 12100
+            return 1.0f;
+        #else
+            return Minecraft.getInstance().getFrameTime();
+        #endif
+        #endif
+    }
     private static final Map<KeyMapping, Integer> keyCodeMap = new HashMap<>();
     static public int getKeyCode(KeyMapping km) {
         return keyCodeMap.getOrDefault(km, -1);

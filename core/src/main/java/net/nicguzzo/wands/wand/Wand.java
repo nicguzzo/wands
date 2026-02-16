@@ -205,7 +205,7 @@ public class Wand {
     public boolean mine_to_inventory = true;
     public boolean stop_on_full_inventory = true;
     public boolean target_air = false;
-    public int target_air_distance = 0;
+    public int reach_distance = 0;
     public boolean unbreakable = false;
     public boolean removes_water = false;
     public boolean removes_lava = false;
@@ -431,7 +431,7 @@ public class Wand {
         send_sound = -1;
         random.setSeed(palette.seed);
         palette.random.setSeed(palette.seed);
-        target_air_distance = WandProps.getVal(wand_stack, WandProps.Value.AIR_TARGET_DISTANCE);
+        reach_distance = WandProps.getVal(wand_stack, WandProps.Value.REACH_DISTANCE);
 
         // Copy and Paste modes don't need block_state - Copy calculates bbox from positions,
         // Paste uses copy_paste_buffer for block states
@@ -1752,7 +1752,6 @@ public class Wand {
             return new BlockPos((int) hit.x, (int) hit.y, (int) hit.z);
         float r = player.getYRot();
         Vec3 eye = player.getEyePosition();
-        hit = hit.add(hit.subtract(eye).normalize().scale(target_air_distance));
         Direction dir = player.getDirection();
         int offx = 0;
         int offy = 0;

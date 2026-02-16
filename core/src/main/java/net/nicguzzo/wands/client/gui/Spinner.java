@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.nicguzzo.compat.Compat;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * A numeric spinner widget with +/- buttons and scroll wheel support.
@@ -37,6 +38,9 @@ public class Spinner extends Wdgt {
 
     // Callback for value changes
     private Consumer<Integer> onChangeCallback;
+
+    // Custom display formatter (default: just show the number)
+    private Function<Integer, String> valueFormatter = String::valueOf;
 
     // Sub-widgets for +/- buttons
     private Btn incrementButton;
@@ -86,6 +90,12 @@ public class Spinner extends Wdgt {
      */
     public Spinner withOnChange(Consumer<Integer> callback) {
         this.onChangeCallback = callback;
+        return this;
+    }
+
+    /** Set a custom formatter for the displayed value text */
+    public Spinner withValueFormatter(Function<Integer, String> formatter) {
+        this.valueFormatter = formatter;
         return this;
     }
 
@@ -143,7 +153,7 @@ public class Spinner extends Wdgt {
             gui.drawString(font, labelText, textX, textY, labelColor, drawShadow);
             textX += font.width(labelText);
         }
-        gui.drawString(font, String.valueOf(value), textX, textY, valueColor, drawShadow);
+        gui.drawString(font, valueFormatter.apply(value), textX, textY, valueColor, drawShadow);
 
         // Position and render +/- buttons at right edge
         // [+] on top, [-] on bottom

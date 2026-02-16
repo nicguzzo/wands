@@ -188,9 +188,14 @@ public class ClientRender {
                 t00 = System.currentTimeMillis();
                 force = true;
             }
-            HitResult hitResult = client.hitResult;
-
-
+            wand.reach_distance = WandProps.getVal(stack, WandProps.Value.REACH_DISTANCE);
+            HitResult hitResult;
+            if (wand.reach_distance > 0) {
+                double baseReach = Compat.is_creative(player) ? 5.0 : 4.5;
+                hitResult = player.pick(baseReach + wand.reach_distance, Compat.getPartialTick(), false);
+            } else {
+                hitResult = client.hitResult;
+            }
 
             wand.target_air=WandProps.getFlag(stack,WandProps.Flag.TARGET_AIR);
             wand.lastHitResult=hitResult;
