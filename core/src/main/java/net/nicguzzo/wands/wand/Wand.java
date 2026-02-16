@@ -744,7 +744,7 @@ public class Wand {
             }
             //System.out.println("placed " + placed);
             // Use action produced no results: check the clicked block for warnings
-            if (use && placed == 0 && !no_tool && !damaged_tool) {
+            if (use && placed == 0 && !no_tool && !damaged_tool && !creative) {
                 BlockState clickedState = level.getBlockState(pos);
                 if (!WandUtils.has_use_action(clickedState) && !can_shear(clickedState)) {
                     no_use_action = true;
@@ -1222,19 +1222,22 @@ public class Wand {
             }
         } else {
             if (creative && use) {
-                //can_destroy(st, true);
                 if (digger_item == null && !has_water_potion) {
                     if (!WandUtils.has_use_action(st) && !can_shear(st)) {
                         no_use_action = true;
                         return false;
                     }
-                    no_tool = true;
-                    needed_tool = (use || n_tools > 0) ? getNeededToolType(st) : "";
-                    return false;
+                    // Creative mode: synthesize the needed tool so useOn() works
+                    digger_item = getCreativeUseTool(st);
+                    if (digger_item == null) {
+                        no_tool = true;
+                        needed_tool = (use || n_tools > 0) ? getNeededToolType(st) : "";
+                        return false;
+                    }
                 }
             }
         }
-        if ((use) && has_shear && state.is(Blocks.PUMPKIN)) {
+        if ((use) && (has_shear || creative) && state.is(Blocks.PUMPKIN)) {
             BlockState originalState = level.getBlockState(block_pos);
             BlockState carved_pumpkin = Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, player.getDirection().getOpposite());
             level.setBlockAndUpdate(block_pos, carved_pumpkin);
@@ -1295,7 +1298,7 @@ public class Wand {
             }
         }
 
-        if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear)) {
+        if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear || creative)) {
             BlockState originalState = level.getBlockState(block_pos);
             BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
@@ -1303,7 +1306,7 @@ public class Wand {
                 BlockState afterState = level.getBlockState(block_pos);
                 recordUndo(block_pos, originalState, true, afterState);
                 // Vanilla useOn() excludes the acting player from sounds/particles, so send them directly
-                if (has_axe) {
+                if (has_axe || (creative && WandUtils.can_axe_use(originalState))) {
                     if (HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(originalState.getBlock())) {
                         ((ServerPlayer) player).connection.send(new ClientboundLevelEventPacket(3004, block_pos, 0, false));
                         send_sound = Sounds.AXE_WAX_OFF.ordinal();
@@ -1505,7 +1508,8 @@ public class Wand {
                     if(use){
                         // Area mode adds offset positions (above surface), so check the actual target block
                         BlockState useTarget = (mode == Mode.AREA) ? level.getBlockState(tmp_pos.set(x, y, z).move(side, -1)) : st;
-                        if(can_destroy_or_use(useTarget,false)) {
+                        if(can_destroy_or_use(useTarget,false) ||
+                           (creative && (WandUtils.has_use_action(useTarget) || can_shear(useTarget)))) {
                             return block_buffer.add(x, y, z, this, with_state);
                         // Set warning flags when block can't be used (mirrors place_block logic)
                         } else if (!WandUtils.has_use_action(useTarget) && !can_shear(useTarget)) {
@@ -1959,6 +1963,18 @@ public class Wand {
             return "shovel";
         }
         return "";
+    }
+    private ItemStack getCreativeUseTool(BlockState state) {
+        if (WandUtils.can_axe_use(state)) {
+            return Items.NETHERITE_AXE.getDefaultInstance();
+        } else if (WandUtils.is_flattenable(state)) {
+            return Items.NETHERITE_SHOVEL.getDefaultInstance();
+        } else if (WandUtils.is_tillable(state)) {
+            return Items.NETHERITE_HOE.getDefaultInstance();
+        } else if (can_shear(state)) {
+            return Items.SHEARS.getDefaultInstance();
+        }
+        return null;
     }
     /**
      * Check if any active block source (offhand or palette) contains a RotatedPillarBlock.
