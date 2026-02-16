@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.HitResult;
 import net.nicguzzo.compat.MyIdExt;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
@@ -222,7 +223,9 @@ public class WandsModClient {
                         if (newAlt) {
                             // Alt pressed — freeze at crosshair if no toggle pin active
                             WandProps.Mode mode = WandProps.getMode(mainHand);
-                            ClientRender.wand.pin.freeze(client.hitResult, mainHand, mode);
+                            // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
+                            HitResult altHit = ClientRender.wand.lastHitResult != null ? ClientRender.wand.lastHitResult : client.hitResult;
+                            ClientRender.wand.pin.freeze(altHit, mainHand, mode);
                         } else {
                             // Alt released — release non-persistent freeze
                             ClientRender.wand.pin.release();
@@ -688,7 +691,9 @@ public class WandsModClient {
                 return true;
             }
             boolean wasSet = wand.pin.isSet();
-            wand.pin.toggle(client.hitResult, mainHand, mode);
+            // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
+            HitResult hitResult = wand.lastHitResult != null ? wand.lastHitResult : client.hitResult;
+            wand.pin.toggle(hitResult, mainHand, mode);
             if (client.player != null && !WandsMod.config.disable_info_messages) {
                 String msgKey = wasSet ? "wands.message.pin_cleared" : "wands.message.pin_set";
                 if (wand.pin.isSet() || wasSet) {
