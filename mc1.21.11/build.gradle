@@ -27,27 +27,6 @@ subprojects {
         silentMojangMappingsLicense()
     }
 
-    // Load local dev settings if present (local.properties is gitignored)
-    def localPropsFile = rootProject.file('local.properties')
-    if (localPropsFile.exists()) {
-        def localProps = new Properties()
-        localProps.load(localPropsFile.newDataInputStream())
-        def world = localProps.getProperty('quickPlayWorld')
-        def width = localProps.getProperty('windowWidth')
-        def height = localProps.getProperty('windowHeight')
-
-        if (project.name == 'fabric' || project.name == 'neoforge') {
-            loom.runs.named('client') {
-                if (world) {
-                    programArgs "--quickPlaySingleplayer", world
-                }
-                if (width && height) {
-                    programArgs "--width", width, "--height", height
-                }
-            }
-        }
-    }
-
     dependencies {
         minecraft "net.minecraft:minecraft:$minecraft_version"
         mappings loom.officialMojangMappings()

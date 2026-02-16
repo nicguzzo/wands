@@ -1013,6 +1013,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             RenderSystem.outputColorTextureOverride=wandInventoryTexture;
             #else
             RenderSystem.setShaderTexture(0, INV_TEX.res);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             #endif
             int inventoryX = (width - imageWidth) / 2;
             int inventoryY = (height - imageHeight) / 2;
@@ -1122,10 +1123,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     #if MC_VERSION >= 12101
     @Override
     public void renderBackground(@NotNull GuiGraphics gui, int mouseX, int mouseY, float delta) {
-        // Only render darkened background when showing inventory, not for main wand screen
-        if (showInventory) {
-            super.renderBackground(gui, mouseX, mouseY, delta);
-        }
+        // Intentionally empty: MC 1.21.1 draws a dark overlay here that darkens
+        // the inventory texture. The wand screen handles its own background rendering.
     }
     #endif
     @Override
