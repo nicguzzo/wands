@@ -417,16 +417,29 @@ public class ClientRender {
         if(drawlines &&block_outlines)
         {
             // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-
+            if(wand.has_empty_bucket){
+                preview_shape = Blocks.STONE.defaultBlockState().getShape(client.level, last_pos);
+            };
             VertexConsumer consumer =getVertexConsumerDebugQuads(bufferSource);
-
+            BlockPos.MutableBlockPos fluid_pos=new BlockPos.MutableBlockPos();
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                 float x = wand.block_buffer.buffer_x[idx];
                 float y = wand.block_buffer.buffer_y[idx];
                 float z = wand.block_buffer.buffer_z[idx];
 
                 if (wand.block_buffer.state[idx] != null) {
-                    preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                    if(!wand.has_empty_bucket){
+                        preview_shape = wand.block_buffer.state[idx].getShape(client.level, last_pos);
+                    }else{
+                        fluid_pos.set(x,y,z);
+                        FluidState fluid_state=client.level.getFluidState(fluid_pos);
+                        if(!fluid_state.isSource()){
+                            continue;
+                        }
+                    }
+                    if(preview_shape==null){
+                        continue;
+                    }
                     List<AABB> list = preview_shape.toAabbs();
                     for (AABB aabb : list) {
                         if (fat_lines) {
@@ -1253,7 +1266,7 @@ public class ClientRender {
         if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
             random.setSeed(0);
             int block_buffer_length=wand.block_buffer.get_length();
-            if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use && !wand.has_empty_bucket) {
+            if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use ) {
                 BlockState st=null;
                 if (wand.has_water_bucket) {
                     st = Blocks.WATER.defaultBlockState();
