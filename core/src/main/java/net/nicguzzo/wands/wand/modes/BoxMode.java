@@ -2,6 +2,7 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -47,11 +48,14 @@ public class BoxMode extends WandMode {
                 tp1.set(b_pos.getX(),b_pos.getY()-toy,b_pos.getZ()+tox);
                 tp2.set(b_pos.getX()-(td-1) ,b_pos.getY()+(th-1)-toy ,b_pos.getZ()-(tw-1)+tox);
             }break;
-            case UP:
+            case UP: {
+                tp1.set(b_pos.getX() - tox, b_pos.getY() - toy, b_pos.getZ());
+                tp2.set(b_pos.getX() + (tw - 1) - tox, b_pos.getY() + (th - 1) - toy, b_pos.getZ() + (td - 1));
+            }break;
             case DOWN:{
-                wand.valid=false;
-                return;
-            }
+                tp1.set(b_pos.getX() - tox, b_pos.getY() - toy, b_pos.getZ());
+                tp2.set(b_pos.getX() + (tw - 1) - tox, b_pos.getY() - (th - 1) - toy, b_pos.getZ() + (td - 1));
+           }
         }
         wand.calc_pv_bbox(tp1, tp2);
         wand.fill(tp1, tp2,false,0,0,0);
