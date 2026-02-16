@@ -2,8 +2,8 @@ package net.nicguzzo.wands.items;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -73,6 +73,12 @@ public class PaletteItem extends Item {
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag){
 #endif
 #endif
+        #if MC_VERSION >= 12111
+        Consumer<Component> addLine = consumer;
+        #else
+        Consumer<Component> addLine = list::add;
+        #endif
+
         CompoundTag tag = Compat.getTags(stack);
         Optional<ListTag> inventory = Compat.getList(tag,"Palette");//10 COMPOUND
         if(inventory.isPresent()) {
@@ -81,36 +87,19 @@ public class PaletteItem extends Item {
                 ItemStack stack2 = ItemStack.EMPTY;
                 Optional<CompoundTag> block_ct=Compat.getCompound(tag,"Block");
                 if (level != null && block_ct.isPresent()) {
-                    //Optional<ItemStack> is2 = ItemStack.parse(level.registryAccess(), block_ct.get());
                     Optional<ItemStack> is2 = Compat.ItemStack_read(block_ct.get(),level);
                     if (is2.isPresent()) {
                         stack2 = is2.get();
                     }
                 }
                 if (!stack2.isEmpty()) {
-                    Component c=Component.translatable(stack2.getItem().getDescriptionId()).withStyle(ChatFormatting.GREEN);
-                    #if MC_VERSION >= 12111
-                    consumer.accept(c);
-                    #else
-                    list.add(c);
-                    #endif
+                    addLine.accept(Component.translatable(stack2.getItem().getDescriptionId()).withStyle(ChatFormatting.GREEN));
                 }
             }
         }
-        Component mode_val = Compat.literal("mode: " + getModeName(stack).getString());
-        if(mode_val!=null) {
-            #if MC_VERSION >= 12111
-            consumer.accept(mode_val);
-            #else
-            list.add(mode_val);
-            #endif
-        }
-        Component c=Compat.literal("rotate: " + (Compat.getBoolean(tag,"rotate").orElse(false) ? "on" : "off"));
-        #if MC_VERSION >= 12111
-        consumer.accept(c);
-        #else
-        list.add(c);
-        #endif
+        addLine.accept(Compat.translatable("key.wands.wand_mode").append(Compat.literal(": ")).append(getModeName(stack)).withStyle(ChatFormatting.GRAY));
+        boolean rotate = Compat.getBoolean(tag,"rotate").orElse(false);
+        addLine.accept(Compat.translatable("tooltip.wands.palette.rotate").append(Compat.literal(": " + (rotate ? "On" : "Off"))).withStyle(ChatFormatting.GRAY));
     }
 
     static public PaletteMode getMode(ItemStack stack) {
