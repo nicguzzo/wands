@@ -437,10 +437,11 @@ public class WandsModClient {
                         }
                     }
 
-                    // Undo line (creative only)
+                    // Undo/Redo line (creative only)
                     boolean showUndo = client.player.isCreative();
                     String undoKey = showUndo ? getKeyName(WandsMod.WandKeys.UNDO) : "";
                     String undoText = showUndo ? "Undo [" + undoKey + "]" : "";
+                    String redoText = showUndo ? "Redo [Shift+" + undoKey + "]" : "";
 
                     // Pin line (modes that support it)
                     boolean showPin = mode.supports_pin();
@@ -458,10 +459,11 @@ public class WandsModClient {
                     if (!p1Text.isEmpty()) lineCount++;
                     if (!p2Text.isEmpty()) lineCount++;
                     if (!infoText.isEmpty()) lineCount++;
-                    if (showUndo || showPin) lineCount++;
+                    if (showPin) lineCount++;
+                    if (showUndo) lineCount += 2; // Undo + Redo
 
                     // Calculate max width across all lines
-                    String modeText = modeStr + " [" + modeKey + "]";
+                    String modeText = modeStr + " [" + modeKey + ", hold " + modeKey + "]";
                     String actionText = showAction ? actionStr + " [" + actionKey + "]" : "";
                     int maxWidth = font.width(modeText);
                     if (showAction) maxWidth = Math.max(maxWidth, font.width(actionText));
@@ -470,12 +472,11 @@ public class WandsModClient {
                     if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (!infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
-                    // Undo and Pin share a line
-                    String undoPinLine = "";
-                    if (showUndo) undoPinLine += undoText;
-                    if (showUndo && showPin) undoPinLine += "  ";
-                    if (showPin) undoPinLine += pinText;
-                    if (!undoPinLine.isEmpty()) maxWidth = Math.max(maxWidth, font.width(undoPinLine));
+                    if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
+                    if (showUndo) {
+                        maxWidth = Math.max(maxWidth, font.width(undoText));
+                        maxWidth = Math.max(maxWidth, font.width(redoText));
+                    }
 
                     int contentHeight = lineCount * font.lineHeight + (lineCount - 1) * Section.VERTICAL_SPACING;
                     int contentWidth = maxWidth;
@@ -487,8 +488,8 @@ public class WandsModClient {
 
                     int currentY = hudY;
 
-                    // Mode [V]
-                    drawHudValueWithHint(gui, font, modeStr, modeKey, hudX, currentY);
+                    // Mode [V, hold V]
+                    drawHudValueWithHint(gui, font, modeStr, modeKey + ", hold " + modeKey, hudX, currentY);
                     currentY += lineSpacing;
 
                     // Action [H]
@@ -601,17 +602,19 @@ public class WandsModClient {
                         currentY += lineSpacing;
                     }
 
-                    // Undo [U] + Pin/Unpin [G] on same line
-                    if (showUndo || showPin) {
-                        int lineX = hudX;
-                        if (showUndo) {
-                            lineX += drawHudValueWithHint(gui, font, "Undo", undoKey, lineX, currentY);
-                        }
-                        if (showPin) {
-                            if (showUndo) lineX += font.width("  ");
-                            String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
-                            drawHudValueWithHint(gui, font, pinLabel, pinKey, lineX, currentY);
-                        }
+                    // Pin/Unpin [G]
+                    if (showPin) {
+                        String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
+                        drawHudValueWithHint(gui, font, pinLabel, pinKey, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+
+                    // Undo [U]
+                    // Redo [Shift+U]
+                    if (showUndo) {
+                        drawHudValueWithHint(gui, font, "Undo", undoKey, hudX, currentY);
+                        currentY += lineSpacing;
+                        drawHudValueWithHint(gui, font, "Redo", "Shift+" + undoKey, hudX, currentY);
                     }
                 }
             }
@@ -620,32 +623,32 @@ public class WandsModClient {
 
     /** Draw HUD text with label in white and value in gray */
     private static int drawHudLabelValue(GuiGraphics gui, Font font, String label, String value, int x, int y) {
-        gui.drawString(font, label, x, y, WandScreen.COLOR_TEXT_PRIMARY);
+        gui.drawString(font, label, x, y, ModeInstructionOverlay.TEXT_COLOR);
         int labelWidth = font.width(label);
-        gui.drawString(font, value, x + labelWidth, y, WandScreen.COLOR_WDGT_LABEL);
+        gui.drawString(font, value, x + labelWidth, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
         return labelWidth + font.width(value);
     }
 
     /** Draw HUD text - value only in white, returns width */
     private static int drawHudValue(GuiGraphics gui, Font font, String value, int x, int y) {
-        gui.drawString(font, value, x, y, WandScreen.COLOR_TEXT_PRIMARY);
+        gui.drawString(font, value, x, y, ModeInstructionOverlay.TEXT_COLOR);
         return font.width(value);
     }
 
     /** Draw a keybind hint like [V] in dim gray, returns total width */
     private static int drawHudKeybindHint(GuiGraphics gui, Font font, String keyName, int x, int y) {
         String hint = "[" + keyName + "]";
-        gui.drawString(font, hint, x, y, WandScreen.COLOR_WDGT_LABEL);
+        gui.drawString(font, hint, x, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
         return font.width(hint);
     }
 
     /** Draw value in white followed by keybind hint in gray with a space between, returns total width */
     private static int drawHudValueWithHint(GuiGraphics gui, Font font, String value, String keyName, int x, int y) {
         int w = 0;
-        gui.drawString(font, value, x, y, WandScreen.COLOR_TEXT_PRIMARY);
+        gui.drawString(font, value, x, y, ModeInstructionOverlay.TEXT_COLOR);
         w += font.width(value);
         String hint = " [" + keyName + "]";
-        gui.drawString(font, hint, x + w, y, WandScreen.COLOR_WDGT_LABEL);
+        gui.drawString(font, hint, x + w, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
         w += font.width(hint);
         return w;
     }

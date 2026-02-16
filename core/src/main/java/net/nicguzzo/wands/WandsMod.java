@@ -492,16 +492,11 @@ public class WandsMod {
                                 if (alt) {
                                     n = 10;
                                 }
+                                Level undoLevel = Compat.player_level(player);
                                 if (shift) {
-                                    wand.redo(n);
-                                    if (!WandsMod.config.disable_info_messages) {
-                                        player.displayClientMessage(Compat.literal("Redo"), true);
-                                    }
+                                    wand.undoManager.redo(n, undoLevel, player);
                                 } else {
-                                    wand.undo(n);
-                                    if (!WandsMod.config.disable_info_messages) {
-                                        player.displayClientMessage(Compat.literal("Undo"), true);
-                                    }
+                                    wand.undoManager.undo(n, undoLevel, player);
                                 }
                             }
                         }
