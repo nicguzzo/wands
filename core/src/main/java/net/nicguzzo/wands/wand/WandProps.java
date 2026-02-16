@@ -1014,7 +1014,32 @@ public class WandProps {
         return Action.PLACE;
     }
 
+    /** Sets the current action and saves it as the user's preferred action. */
     static public void setAction(ItemStack stack, Action a) {
+        if (WandUtils.is_wand(stack)) {
+            CompoundTag tag = Compat.getTags(stack);
+            if (WandsMod.config.disable_destroy_replace && (a == Action.DESTROY || a == Action.REPLACE)) {
+                a = Action.PLACE;
+            }
+            tag.putInt("action", a.ordinal());
+            tag.putInt("preferred_action", a.ordinal());
+            Compat.saveCustomData(stack, tag);
+        }
+    }
+
+    static public Action getPreferredAction(ItemStack stack) {
+        if (WandUtils.is_wand(stack)) {
+            CompoundTag tag = Compat.getTags(stack);
+            if (tag.contains("preferred_action")) {
+                int m = Compat.getInt(tag, "preferred_action").orElse(0);
+                if (m >= 0 && m < actions.length) return actions[m];
+            }
+        }
+        return Action.PLACE;
+    }
+
+    /** Sets the current action without updating the preferred action. For internal/system use only (e.g. switchMode forcing DESTROY). */
+    static public void forceAction(ItemStack stack, Action a) {
         if (WandUtils.is_wand(stack)) {
             CompoundTag tag = Compat.getTags(stack);
             if (WandsMod.config.disable_destroy_replace && (a == Action.DESTROY || a == Action.REPLACE)) {
@@ -1033,6 +1058,7 @@ public class WandProps {
                 a = Action.USE.ordinal();
             }
             tag.putInt("action", a);
+            tag.putInt("preferred_action", a);
             Compat.saveCustomData(stack, tag);
         }
     }
@@ -1048,6 +1074,7 @@ public class WandProps {
                 a = Action.PLACE.ordinal();
             }
             tag.putInt("action", a);
+            tag.putInt("preferred_action", a);
             Compat.saveCustomData(stack, tag);
         }
     }
@@ -1063,6 +1090,7 @@ public class WandProps {
                 a = (a + 1) % actions.length;
                 if (isActionValidForMode(actions[a], mode)) {
                     tag.putInt("action", a);
+                    tag.putInt("preferred_action", a);
                     Compat.saveCustomData(stack, tag);
                     return;
                 }
@@ -1081,6 +1109,7 @@ public class WandProps {
                 if (a < 0) a = actions.length - 1;
                 if (isActionValidForMode(actions[a], mode)) {
                     tag.putInt("action", a);
+                    tag.putInt("preferred_action", a);
                     Compat.saveCustomData(stack, tag);
                     return;
                 }
@@ -1098,7 +1127,7 @@ public class WandProps {
         // Find first valid action
         for (Action a : actions) {
             if (isActionValidForMode(a, mode)) {
-                setAction(stack, a);
+                forceAction(stack, a);
                 return;
             }
         }
@@ -1112,11 +1141,18 @@ public class WandProps {
     static public void switchMode(ItemStack stack, Mode newMode) {
         if (!WandUtils.is_wand(stack)) return;
         setMode(stack, newMode);
-        Action action=getAction(stack);
         if (newMode == Mode.BLAST || newMode == Mode.VEIN) {
-            setAction(stack, Action.DESTROY);
-        } else if (!isActionValidForMode(action,newMode)) {
-            setAction(stack, Action.PLACE);
+            forceAction(stack, Action.DESTROY);
+            return;
+        }
+        Action preferred = getPreferredAction(stack);
+        if (isActionValidForMode(preferred, newMode)) {
+            forceAction(stack, preferred);
+            return;
+        }
+        Action current = getAction(stack);
+        if (!isActionValidForMode(current, newMode)) {
+            forceAction(stack, Action.PLACE);
         }
     }
 
