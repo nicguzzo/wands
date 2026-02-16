@@ -26,7 +26,7 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.client.gui.CycleToggle;
-import net.nicguzzo.wands.client.gui.CycleSpinner;
+
 import net.nicguzzo.wands.client.gui.Section;
 import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.client.gui.Tabs;
@@ -120,7 +120,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     // Mode Options Section
     CycleToggle<WandProps.Action> actionCycle;
-    CycleSpinner targetAirSpinner;
+    CycleToggle<Boolean> targetAirToggle;
+    Spinner reachDistanceSpinner;
     CycleToggle<Boolean> mirrorLRToggle;
     CycleToggle<Boolean> mirrorFBToggle;
     CycleToggle<Rotation> rotationCycle;
@@ -517,14 +518,26 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             .withTooltips("tooltip.wands.action.place", "tooltip.wands.action.replace", "tooltip.wands.action.destroy", "tooltip.wands.action.use");
         actionCycle.width = layoutColWidth;
 
-        // Target Air - combined toggle + spinner
-        targetAirSpinner = new CycleSpinner(
-            this::getPlayerHeldWand,  // Supplier: always get current wand
-            this::syncWand,           // Consumer: sync wand to server
-            WandProps.Flag.TARGET_AIR, Value.AIR_TARGET_DISTANCE,
-            layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.target_air"));
-        targetAirSpinner.withTooltip(Compat.translatable("screen.wands.target_air"), Compat.translatable("tooltip.wands.target_air"));
-        targetAirSpinner.withOnChange(this::forceClientRedraw);
+        // Target Air toggle
+        targetAirToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.target_air"),
+            () -> WandProps.getFlag(getPlayerHeldWand(), WandProps.Flag.TARGET_AIR),
+            value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setFlag(actualWand, WandProps.Flag.TARGET_AIR, value);
+                syncWand(actualWand);
+            });
+        targetAirToggle.width = layoutColWidth;
+        targetAirToggle.withTooltip(Compat.translatable("screen.wands.target_air"), Compat.translatable("tooltip.wands.target_air"));
+
+        // Reach Distance spinner (all modes)
+        reachDistanceSpinner = new Spinner(WandProps.getVal(wandStack, Value.REACH_DISTANCE), Value.REACH_DISTANCE.min, Value.REACH_DISTANCE.max, layoutColWidth, spinnerHeight, Compat.translatable("screen.wands.reach_distance"))
+            .withOnChange(value -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.REACH_DISTANCE, value);
+                syncWand(actualWand);
+            })
+            .withValueFormatter(v -> v == 0 ? "Default" : "+" + v);
+        reachDistanceSpinner.withTooltip(Compat.translatable("screen.wands.reach_distance"), Compat.translatable("tooltip.wands.reach_distance"));
 
         // Rotation select (GRID and PASTE modes)
         Component[] rotationLabels = {
@@ -772,7 +785,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         section.add(blockFlipToggle);           // shown/hidden by stateModeCycle
         section.add(blockFacingCycle);        // shown/hidden by stateModeCycle
         section.add(blockAxisCycle);            // shown/hidden by stateModeCycle
-        section.add(targetAirSpinner);
+        section.add(targetAirToggle);
+        section.add(reachDistanceSpinner);
         section.add(rotationCycle);
         section.add(matchStateToggle);
         section.add(includeBlockToggle);
@@ -827,8 +841,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         registerModeWidgets(WandProps.STATE_MODE_MODES, stateModeCycle, blockFlipToggle,
             blockFacingCycle, blockAxisCycle);
 
-        // CycleSpinner (combined flag+value widget)
-        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.TARGET_AIR), targetAirSpinner);
+        // Target air toggle (air-capable modes only)
+        registerModeWidgets(WandProps.FLAG_MODES.get(WandProps.Flag.TARGET_AIR), targetAirToggle);
+
+        // Reach distance spinner (all modes)
+        registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.REACH_DISTANCE), reachDistanceSpinner);
 
         // Mirror toggles (manual, map to single Value with different values)
         registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.MIRRORAXIS), mirrorLRToggle, mirrorFBToggle);

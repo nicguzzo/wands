@@ -520,9 +520,9 @@ public class WandProps {
             public String toString() {
                 return "rock_noise";
             }
-        }, AIR_TARGET_DISTANCE {
+        }, REACH_DISTANCE {
             public String toString() {
-                return "air_target_distance";
+                return "reach_distance";
             }
         };
         public int def = 0;
@@ -557,9 +557,9 @@ public class WandProps {
             ROCK_NOISE.min=0;
             ROCK_NOISE.max=16;
             ROCK_NOISE.def=3;
-            AIR_TARGET_DISTANCE.def=0;
-            AIR_TARGET_DISTANCE.min=0;
-            AIR_TARGET_DISTANCE.max=10;
+            REACH_DISTANCE.def=0;
+            REACH_DISTANCE.min=0;
+            REACH_DISTANCE.max=100;
         }
     }
 
@@ -608,7 +608,7 @@ public class WandProps {
         Map.entry(Value.BOX_DEPTH, EnumSet.of(Mode.BOX)),
         Map.entry(Value.ROCK_RADIUS, EnumSet.of(Mode.ROCK)),
         Map.entry(Value.ROCK_NOISE, EnumSet.of(Mode.ROCK)),
-        Map.entry(Value.AIR_TARGET_DISTANCE, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.PASTE, Mode.BOX, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE))
+        Map.entry(Value.REACH_DISTANCE, EnumSet.allOf(Mode.class))
     );
 
     // Modes where state_mode (block state) applies

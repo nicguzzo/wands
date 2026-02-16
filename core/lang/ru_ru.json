@@ -155,7 +155,7 @@
   "screen.wands.state": "то же состояние",
   "screen.wands.target": "Использовать цель",
   "screen.wands.target_air": "Целевой воздух",
-  "screen.wands.target_air_distance": "Target air dist",
+  "screen.wands.reach_distance": "Reach",
   "screen.wands.tools": "Инструменты",
   "screen.wands.tunnel_depth": "Depth",
   "screen.wands.tunnel_eepth": "Глубина",
