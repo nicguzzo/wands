@@ -14,14 +14,11 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.compat.Compat;
-
-import java.util.Objects;
 
 public class PaletteMenu extends AbstractContainerMenu {
     private final int containerRows=6;
@@ -29,24 +26,8 @@ public class PaletteMenu extends AbstractContainerMenu {
     private final SimpleContainer inventory;
     public final Inventory playerInventory;
 
-    //public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-    //    this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-    //}
     public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        #if MC_VERSION < 12005
-        this(syncId, playerInventory, packetByteBuf.readItem());
-        #else
-            #if MC_VERSION < 12111
-                this( syncId,playerInventory,
-                        ItemStack.parse(
-                                ((Level) playerInventory.player.level()).registryAccess(),
-                                packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
-                        )
-                );
-            #else
-                this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-            #endif
-        #endif
+        this(syncId, playerInventory, Compat.readItemStackFromBuf(packetByteBuf, playerInventory));
     }
 
     public PaletteMenu(int syncId, Inventory playerInventory, ItemStack palette) {

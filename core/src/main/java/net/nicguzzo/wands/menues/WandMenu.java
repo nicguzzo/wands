@@ -14,7 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.networking.Networking;
@@ -23,7 +23,6 @@ import net.nicguzzo.wands.wand.Wand;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
@@ -33,24 +32,8 @@ public class WandMenu extends AbstractContainerMenu {
     public ItemStack wand;
     public final Inventory playerInventory;
 
-    //public WandMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
-    //    this( syncId,playerInventory,Objects.requireNonNull(buf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-    //}
     public WandMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        #if MC_VERSION < 12005
-        this(syncId, playerInventory, packetByteBuf.readItem());
-        #else
-            #if MC_VERSION < 12111
-                this( syncId,playerInventory,
-                        ItemStack.parse(
-                                ((Level) playerInventory.player.level()).registryAccess(),
-                                packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
-                        )
-                );
-            #else
-                this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-            #endif
-        #endif
+        this(syncId, playerInventory, Compat.readItemStackFromBuf(packetByteBuf, playerInventory));
     }
 
     public WandMenu(int syncId, Inventory playerInventory, ItemStack _wand) {

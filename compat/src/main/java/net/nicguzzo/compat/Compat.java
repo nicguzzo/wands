@@ -69,6 +69,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 #if MC_VERSION >= 12101
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -292,6 +293,21 @@ public class Compat {
     #endif
     }
 
+
+    static public ItemStack readItemStackFromBuf(FriendlyByteBuf buf, Inventory playerInventory) {
+        #if MC_VERSION < 12005
+        return buf.readItem();
+        #else
+            #if MC_VERSION < 12111
+            return ItemStack.parse(
+                ((Level) playerInventory.player.level()).registryAccess(),
+                buf.readNbt()
+            ).orElse(ItemStack.EMPTY);
+            #else
+            return Objects.requireNonNull(buf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY);
+            #endif
+        #endif
+    }
 
     static public void blit(GuiGraphics gui, MyIdExt tx, int x, int y, float u, float v, int w, int h, int tex_w, int tex_h) {
         #if MC_VERSION < 12000

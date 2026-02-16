@@ -3,7 +3,6 @@ package net.nicguzzo.wands.menues;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -18,31 +17,13 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.compat.Compat;
 
-import java.util.Objects;
-
 public class MagicBagMenu extends AbstractContainerMenu {
     public ItemStack bag;
     public final Inventory playerInventory;
     private final BagContainer bagcontainer;
 
-    //public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-    //    this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-    //}
     public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-        #if MC_VERSION < 12005
-        this(syncId, playerInventory, packetByteBuf.readItem());
-        #else
-            #if MC_VERSION < 12111
-                this( syncId,playerInventory,
-                        ItemStack.parse(
-                                ((Level) playerInventory.player.level()).registryAccess(),
-                                packetByteBuf.readNbt()).orElse(ItemStack.EMPTY
-                        )
-                );
-            #else
-                this( syncId,playerInventory, Objects.requireNonNull(packetByteBuf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY));
-            #endif
-        #endif
+        this(syncId, playerInventory, Compat.readItemStackFromBuf(packetByteBuf, playerInventory));
     }
 
     public MagicBagMenu(int syncId, Inventory playerInventory, ItemStack bag) {
