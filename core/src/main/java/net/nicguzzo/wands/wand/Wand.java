@@ -363,13 +363,19 @@ public class Wand {
         }
     }
 
+    /** Returns true if the wand has state that clearing would reset (P1, P2, or pin). */
+    public boolean hasClearableState() {
+        return getP1() != null || getP2() != null || (pin.isSet() && pin.isPersistent());
+    }
+
     public void clear(boolean force_clear_p1) {
         this.clear_p1 = WandProps.getFlag(wand_stack, WandProps.Flag.CLEAR_P1);
-        if (force_clear_p1 || clear_p1)
+        if (force_clear_p1 || clear_p1) {
             setP1(null);
+            p1_state = null;
+        }
         if (clear_p2)
             setP2(null);
-        p1_state = null;
         valid = false;
         block_height = 1.0f;
         y0 = 0.0f;
