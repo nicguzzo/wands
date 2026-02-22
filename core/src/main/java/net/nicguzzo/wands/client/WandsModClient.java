@@ -451,6 +451,11 @@ public class WandsModClient {
                     String pinKey = showPin ? getKeyName(WandsMod.WandKeys.PIN) : "";
                     String pinText = showPin ? "Pin [" + pinKey + "]" : "";
 
+                    // Clear line (shown when wand has state to clear)
+                    boolean showClear = wand != null && wand.hasClearableState();
+                    String clearKey = showClear ? getKeyName(WandsMod.WandKeys.CLEAR) : "";
+                    String clearText = showClear ? "Clear [" + clearKey + "]" : "";
+
                     // Settings line (always shown)
                     String settingsKey = getKeyName(WandsMod.WandKeys.MENU);
                     String settingsText = "Settings [" + settingsKey + "]";
@@ -467,6 +472,7 @@ public class WandsModClient {
                     if (!p2Text.isEmpty()) lineCount++;
                     if (!infoText.isEmpty()) lineCount++;
                     if (showPin) lineCount++;
+                    if (showClear) lineCount++;
                     if (showUndo) lineCount += 2; // Undo + Redo
                     lineCount++; // Settings
 
@@ -481,6 +487,7 @@ public class WandsModClient {
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (!infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
                     if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
+                    if (showClear) maxWidth = Math.max(maxWidth, font.width(clearText));
                     if (showUndo) {
                         maxWidth = Math.max(maxWidth, font.width(undoText));
                         maxWidth = Math.max(maxWidth, font.width(redoText));
@@ -615,6 +622,12 @@ public class WandsModClient {
                     if (showPin) {
                         String pinLabel = (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) ? "Unpin" : "Pin";
                         drawHudValueWithHint(gui, font, pinLabel, pinKey, hudX, currentY);
+                        currentY += lineSpacing;
+                    }
+
+                    // Clear [C]
+                    if (showClear) {
+                        drawHudValueWithHint(gui, font, "Clear", clearKey, hudX, currentY);
                         currentY += lineSpacing;
                     }
 

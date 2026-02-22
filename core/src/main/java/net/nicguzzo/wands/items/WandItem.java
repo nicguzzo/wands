@@ -127,7 +127,9 @@ public class WandItem extends Item {
             send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
-            ClientRender.wand.pin.clear();
+            if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                ClientRender.wand.pin.clear();
+            }
             if (mode != Mode.COPY) {
                 ClientRender.wand.clear(mode == Mode.PASTE  || mode==Mode.AREA || mode == Mode.VEIN);
             }
@@ -168,7 +170,9 @@ public class WandItem extends Item {
                     send_placement(side, pinPos, null, player.getEyePosition(), wand.palette.seed);
                     wand.palette.seed = System.currentTimeMillis();
                     wand.copy();
-                    wand.pin.clear();
+                    if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                        wand.pin.clear();
+                    }
                     wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
                 }
             } else if (mode.n_clicks() == 2 && wand.getP2() == null) {
@@ -176,7 +180,9 @@ public class WandItem extends Item {
                 send_placement(side, wand.getP1(), pinPos, player.getEyePosition(), wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 wand.copy();
-                wand.pin.clear();
+                if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                    wand.pin.clear();
+                }
                 wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
             }
             #if MC_VERSION>=12111
