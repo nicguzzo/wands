@@ -268,7 +268,14 @@ public class ClientRender {
                 if (wmode != null) {
                     wmode.redraw(wand);
                 }
-                has_target = false;
+                // When P1 is set for a 2-click mode, keep showing the preview
+                // even when the cursor moves beyond reach distance
+                if (mode.n_clicks() == 2 && wand.getP1() != null && wand.block_buffer.get_length() > 0) {
+                    has_target = true;
+                    preview_mode(wand.mode, matrixStack, bufferSource);
+                } else {
+                    has_target = false;
+                }
                 if(wand.target_air && mode.can_target_air() ) {
                     targeting_air=true;
                     if(hitResult==null){

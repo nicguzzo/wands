@@ -318,6 +318,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
     /** Create boolean toggle with auto-computed translations, add to section, and auto-register mode visibility */
     private CycleToggle<Boolean> makeFlagToggle(WandProps.Flag flag, int w, String key) {
+        return makeFlagToggle(flag, w, key, null);
+    }
+
+    /** Create boolean toggle with keybind hint in the tooltip */
+    private CycleToggle<Boolean> makeFlagToggle(WandProps.Flag flag, int w, String key, WandsMod.WandKeys wandKey) {
         Component label = Compat.translatable("screen.wands." + key);
         Component tooltip = Compat.translatable("tooltip.wands." + key);
         CycleToggle<Boolean> toggle = flagToggle(flag, w, label);
@@ -326,6 +331,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         EnumSet<WandProps.Mode> modes = WandProps.FLAG_MODES.get(flag);
         if (modes != null) {
             modeWidgets.put(toggle, modes);
+        }
+        if (wandKey != null) {
+            toggle.keybindHint = WandsModClient.getKeyName(wandKey);
         }
         return toggle;
     }
@@ -517,6 +525,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 (a != WandProps.Action.DESTROY && a != WandProps.Action.REPLACE))
             .withTooltips("tooltip.wands.action.place", "tooltip.wands.action.replace", "tooltip.wands.action.destroy", "tooltip.wands.action.use");
         actionCycle.width = layoutColWidth;
+        actionCycle.keybindHint = WandsModClient.getKeyName(WandsMod.WandKeys.ACTION);
 
         // Target Air toggle
         targetAirToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.target_air"),
@@ -556,12 +565,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             })
             .withTooltips("tooltip.wands.area_rot_0", "tooltip.wands.area_rot_90", "tooltip.wands.area_rot_180", "tooltip.wands.area_rot_270");
         rotationCycle.width = layoutColWidth;
+        rotationCycle.keybindHint = WandsModClient.getKeyName(WandsMod.WandKeys.ROTATE);
 
         // Match state (AREA, VEIN modes)
         matchStateToggle = makeFlagToggle(WandProps.Flag.MATCHSTATE, layoutColWidth, "match_state");
 
         // Include selected block in selection
-        includeBlockToggle = makeFlagToggle(WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block");
+        includeBlockToggle = makeFlagToggle(WandProps.Flag.INCSELBLOCK, layoutColWidth, "include_block", WandsMod.WandKeys.INC_SEL_BLK);
 
         // Keep start point (inverted: ON = don't clear P1, OFF = clear P1)
         keepStartToggle = makeInvertedFlagToggle(WandProps.Flag.CLEAR_P1, layoutColWidth, "keep_start");
@@ -577,6 +587,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             "Solid", "Hollow");
         boxFillToggle.width = layoutColWidth;
         boxFillToggle.withTooltip(Compat.translatable("screen.wands.filled"), Compat.translatable("tooltip.wands.filled"));
+        boxFillToggle.keybindHint = WandsModClient.getKeyName(WandsMod.WandKeys.FILL);
 
         // Area/Vein mode limit
         areaLimitSpinner = makeValSpinner(Value.AREALIM, layoutColWidth, spinnerHeight, "limit");
@@ -700,19 +711,20 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             })
             .withTooltips("tooltip.wands.orientation.row", "tooltip.wands.orientation.col");
         orientationCycle.width = layoutColWidth;
+        orientationCycle.keybindHint = WandsModClient.getKeyName(WandsMod.WandKeys.ORIENTATION);
 
         // Row/Col mode limit spinner
         rowColumnLimitSpinner = makeValSpinner(Value.ROWCOLLIM, layoutColWidth, spinnerHeight, "limit");
 
         // Direction mode
         multiplierSpinner = makeValSpinner(Value.MULTIPLIER, layoutColWidth, spinnerHeight, "multiplier");
-        invertToggle = makeFlagToggle(WandProps.Flag.INVERTED, layoutColWidth, "invert");
+        invertToggle = makeFlagToggle(WandProps.Flag.INVERTED, layoutColWidth, "invert", WandsMod.WandKeys.INVERT);
 
         // Box mode
-        boxInvertToggle = makeFlagToggle(WandProps.Flag.BOX_INVERTED, layoutColWidth, "box_invert");
+        boxInvertToggle = makeFlagToggle(WandProps.Flag.BOX_INVERTED, layoutColWidth, "box_invert", WandsMod.WandKeys.INVERT);
 
         // Area mode
-        diagonalSpreadToggle = makeFlagToggle(WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only");
+        diagonalSpreadToggle = makeFlagToggle(WandProps.Flag.DIAGSPREAD, layoutColWidth, "orthogonal_only", WandsMod.WandKeys.DIAGONAL_SPREAD);
         skipBlockSpinner = makeValSpinner(Value.SKIPBLOCK, layoutColWidth, spinnerHeight, "skip_block");
 
         // Circle mode - plane selection
@@ -731,8 +743,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             })
             .withTooltips("tooltip.wands.plane_xz", "tooltip.wands.plane_xy", "tooltip.wands.plane_yz");
         planeCycle.width = layoutColWidth;
+        planeCycle.keybindHint = WandsModClient.getKeyName(WandsMod.WandKeys.ORIENTATION);
 
-        circleFillToggle = makeFlagToggle(WandProps.Flag.CFILLED, layoutColWidth, "filled");
+        circleFillToggle = makeFlagToggle(WandProps.Flag.CFILLED, layoutColWidth, "filled", WandsMod.WandKeys.FILL);
         evenSizeToggle = makeFlagToggle(WandProps.Flag.EVEN, layoutColWidth, "even_size");
 
         // Grid mode spinners - M is rows/horizontal, N is columns/vertical

@@ -4,7 +4,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
+import net.nicguzzo.compat.Compat;
+import net.nicguzzo.compat.MyIdExt;
+import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.config.WandsConfig.HudMode;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.wand.Wand;
@@ -20,10 +25,15 @@ public class ModeInstructionOverlay {
     public static final int TEXT_COLOR = 0x99FFFFFF;
     public static final int TEXT_COLOR_DIM = 0x99AAAAAA;
 
+    private static final MyIdExt RIGHT_CLICK_TEX = new MyIdExt(WandsMod.MOD_ID, "textures/gui/right-click.png");
+    private static final int ICON_TEX_SIZE = 16;
+    private static final int ICON_DRAW_SIZE = 8;
+
     /**
      * Main render method called from HUD event.
      */
     public static void render(GuiGraphics gui) {
+        if (WandsMod.config.hud_mode == HudMode.OFF) return;
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
             return;
@@ -48,75 +58,107 @@ public class ModeInstructionOverlay {
         boolean hasFirstPoint = ClientRender.wand != null && ClientRender.wand.getP1() != null;
         boolean hasSecondPoint = ClientRender.wand != null && ClientRender.wand.getP2() != null;
 
-        // Get the instruction text
-        Component instruction = getInstructionText(mode, hasFirstPoint, hasSecondPoint);
+        // Get the instruction text and whether to show the right-click icon
+        Instruction instruction = getInstruction(mode, hasFirstPoint, hasSecondPoint);
         if (instruction == null) {
             return;
         }
 
-        // Calculate position: horizontally centered, 20px below vertical center
         Font font = client.font;
         int screenWidth = client.getWindow().getGuiScaledWidth();
         int screenHeight = client.getWindow().getGuiScaledHeight();
 
-        int textWidth = font.width(instruction);
-        int x = (screenWidth - textWidth) / 2;
+        int textWidth = font.width(instruction.text);
+        int totalWidth = textWidth;
+        if (instruction.showIcon) {
+            totalWidth += 1 + ICON_DRAW_SIZE; // 1px gap + icon
+        }
+
+        int x = (screenWidth - totalWidth) / 2;
         int y = (screenHeight / 2) + 40;
 
         // Draw the text with shadow for visibility
-        gui.drawString(font, instruction, x, y, TEXT_COLOR, true);
+        gui.drawString(font, instruction.text, x, y, TEXT_COLOR, true);
+
+        // Draw the right-click icon after the text at half size
+        if (instruction.showIcon) {
+            int iconX = x + textWidth + 1;
+            int iconY = y + (font.lineHeight - ICON_DRAW_SIZE) / 2;
+            #if MC_VERSION >= 12111
+            gui.pose().pushMatrix();
+            gui.pose().translate(iconX, iconY);
+            gui.pose().scale(0.5f, 0.5f);
+            #else
+            gui.pose().pushPose();
+            gui.pose().translate(iconX, iconY, 0);
+            gui.pose().scale(0.5f, 0.5f, 1.0f);
+            #endif
+            Compat.set_color(1.0f, 1.0f, 1.0f, 0.6f);
+            Compat.blit(gui, RIGHT_CLICK_TEX, 0, 0, 0, 0, ICON_TEX_SIZE, ICON_TEX_SIZE, ICON_TEX_SIZE, ICON_TEX_SIZE);
+            Compat.set_color(1.0f, 1.0f, 1.0f, 1.0f);
+            #if MC_VERSION >= 12111
+            gui.pose().popMatrix();
+            #else
+            gui.pose().popPose();
+            #endif
+        }
+    }
+
+    private static class Instruction {
+        final Component text;
+        final boolean showIcon;
+        Instruction(Component text, boolean showIcon) {
+            this.text = text;
+            this.showIcon = showIcon;
+        }
     }
 
     /**
-     * Returns the appropriate instruction Component based on mode and point state.
-     * @param mode The current wand mode
-     * @param hasFirstPoint Whether P1 has been set
-     * @param hasSecondPoint Whether P2 has been set
-     * @return The instruction Component, or null if no instruction should be shown
+     * Returns the appropriate instruction based on mode and point state.
      */
-    private static Component getInstructionText(WandProps.Mode mode, boolean hasFirstPoint, boolean hasSecondPoint) {
-        String keyName = getUseKeyName();
+    private static Instruction getInstruction(WandProps.Mode mode, boolean hasFirstPoint, boolean hasSecondPoint) {
+        String key = null;
 
         switch (mode) {
             case CIRCLE:
                 if (!hasFirstPoint) {
-                    return Component.translatable("wands.instruction.circle.set_center", keyName);
+                    key = "wands.instruction.circle.set_center";
                 } else if (!hasSecondPoint) {
-                    return Component.translatable("wands.instruction.circle.set_edge", keyName);
+                    key = "wands.instruction.circle.set_edge";
                 }
                 break;
 
             case SPHERE:
                 if (!hasFirstPoint) {
-                    return Component.translatable("wands.instruction.sphere.set_center", keyName);
+                    key = "wands.instruction.sphere.set_center";
                 } else if (!hasSecondPoint) {
-                    return Component.translatable("wands.instruction.sphere.set_edge", keyName);
+                    key = "wands.instruction.sphere.set_edge";
                 }
                 break;
 
             case FILL:
                 if (!hasFirstPoint) {
-                    return Component.translatable("wands.instruction.fill.set_first_corner", keyName);
+                    key = "wands.instruction.fill.set_first_corner";
                 } else if (!hasSecondPoint) {
-                    return Component.translatable("wands.instruction.fill.set_opposite_corner", keyName);
+                    key = "wands.instruction.fill.set_opposite_corner";
                 }
                 break;
 
             case COPY:
                 if (!hasFirstPoint) {
-                    return Component.translatable("wands.instruction.copy.set_first_corner", keyName);
+                    key = "wands.instruction.copy.set_first_corner";
                 } else if (!hasSecondPoint) {
-                    return Component.translatable("wands.instruction.copy.set_opposite_corner", keyName);
+                    key = "wands.instruction.copy.set_opposite_corner";
                 } else {
-                    // Copy mode shows "expand selection" after both points are set
-                    return Component.translatable("wands.instruction.copy.expand_selection", keyName);
+                    key = "wands.instruction.copy.expand_selection";
                 }
+                break;
 
             case LINE:
                 if (!hasFirstPoint) {
-                    return Component.translatable("wands.instruction.line.set_start", keyName);
+                    key = "wands.instruction.line.set_start";
                 } else if (!hasSecondPoint) {
-                    return Component.translatable("wands.instruction.line.set_end", keyName);
+                    key = "wands.instruction.line.set_end";
                 }
                 break;
 
@@ -124,25 +166,18 @@ public class ModeInstructionOverlay {
                 break;
         }
 
+        if (key != null) {
+            return new Instruction(Component.translatable(key), true);
+        }
+
         // Pin movement instructions (only when pin is actively set)
         Wand wand = ClientRender.wand;
         if (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) {
-            return Component.translatable("wands.instruction.pin.move");
+            MutableComponent text = Component.translatable("wands.instruction.pin.move")
+                    .append(Component.literal(" [←→↑↓, Shift+↑↓]").withStyle(s -> s.withColor(TEXT_COLOR_DIM)));
+            return new Instruction(text, false);
         }
 
         return null;
-    }
-
-    /**
-     * Gets the display name of the "use item" keybind.
-     * @return The localized key name (e.g., "Right Button")
-     */
-    private static String getUseKeyName() {
-        Minecraft client = Minecraft.getInstance();
-        String name = client.options.keyUse.getTranslatedKeyMessage().getString();
-        if (name.equals("Right Button")) {
-            return "Right mouse button";
-        }
-        return name;
     }
 }

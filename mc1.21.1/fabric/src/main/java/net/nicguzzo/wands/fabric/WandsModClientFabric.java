@@ -1,10 +1,12 @@
 package net.nicguzzo.wands.fabric;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
@@ -17,6 +19,7 @@ public class WandsModClientFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         WandsModClient.initialize();
+        TooltipComponentCallback.EVENT.register(PaletteClientTooltip::tryCreate);
 
         MenuScreens.register(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
         MenuScreens.register(WandsMod.WAND_CONTAINER.get(), WandScreen::new);

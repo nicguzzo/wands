@@ -15,10 +15,12 @@ import net.neoforged.neoforge.event.server.ServerAboutToStartEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandScreen;
+import net.nicguzzo.wands.items.PaletteTooltip;
 
 import java.util.function.Supplier;
 
@@ -26,6 +28,8 @@ import java.util.function.Supplier;
 class ModMenuTypes {
     public static void clientRegister(IEventBus eventBus) {
         eventBus.addListener(ModMenuTypes::registerScreens);
+        eventBus.addListener((net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent e) ->
+            e.register(PaletteTooltip.class, PaletteClientTooltip::new));
     }
 
     private static void registerScreens(RegisterMenuScreensEvent event) {

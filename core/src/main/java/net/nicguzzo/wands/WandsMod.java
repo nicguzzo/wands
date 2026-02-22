@@ -299,7 +299,7 @@ public class WandsMod {
                         if (WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode)) {
                             WandProps.toggleFlag(main_stack, WandProps.Flag.INCSELBLOCK);
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable("screen.wands.include_block").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.INCSELBLOCK))), true);
+                                player.displayClientMessage(Compat.translatable("screen.wands.include_block").append(Compat.literal(": " + (WandProps.getFlag(main_stack, WandProps.Flag.INCSELBLOCK) ? "On" : "Off"))), true);
                             }
                         }
                         break;
@@ -307,7 +307,7 @@ public class WandsMod {
                         if (WandProps.flagAppliesTo(WandProps.Flag.DIAGSPREAD, mode)) {
                             WandProps.toggleFlag(main_stack, WandProps.Flag.DIAGSPREAD);
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable("screen.wands.diagonal_spread").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.DIAGSPREAD))), true);
+                                player.displayClientMessage(Compat.translatable("screen.wands.diagonal_spread").append(Compat.literal(": " + (WandProps.getFlag(main_stack, WandProps.Flag.DIAGSPREAD) ? "On" : "Off"))), true);
                             }
                         }
                         break;
@@ -315,7 +315,7 @@ public class WandsMod {
                         WandProps.setStateMode(main_stack, WandProps.StateMode.APPLY);
                         WandProps.toggleFlag(main_stack, WandProps.Flag.STAIRSLAB);
                         if (!WandsMod.config.disable_info_messages) {
-                            player.displayClientMessage(Compat.translatable("screen.wands.slab_flip").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.STAIRSLAB))), true);
+                            player.displayClientMessage(Compat.translatable("screen.wands.slab_flip").append(Compat.literal(": " + (WandProps.getFlag(main_stack, WandProps.Flag.STAIRSLAB) ? "On" : "Off"))), true);
                         }
                         break;
                     case N_INC:
@@ -443,7 +443,7 @@ public class WandsMod {
                         if (WandProps.flagAppliesTo(invertFlag, mode)) {
                             WandProps.toggleFlag(main_stack, invertFlag);
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + WandProps.getFlag(main_stack, invertFlag))), true);
+                                player.displayClientMessage(Compat.translatable("screen.wands.invert").append(Compat.literal(": " + (WandProps.getFlag(main_stack, invertFlag) ? "On" : "Off"))), true);
                             }
                         }
                         break;
@@ -452,14 +452,14 @@ public class WandsMod {
                             case FILL: {
                                 WandProps.toggleFlag(main_stack, WandProps.Flag.RFILLED);
                                 if (!WandsMod.config.disable_info_messages) {
-                                    player.displayClientMessage(Compat.translatable("screen.wands.filled").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.RFILLED))), true);
+                                    player.displayClientMessage(Compat.translatable("screen.wands.filled").append(Compat.literal(": " + (WandProps.getFlag(main_stack, WandProps.Flag.RFILLED) ? "On" : "Off"))), true);
                                 }
                             }
                             break;
                             case CIRCLE: {
                                 WandProps.toggleFlag(main_stack, WandProps.Flag.CFILLED);
                                 if (!WandsMod.config.disable_info_messages) {
-                                    player.displayClientMessage(Compat.translatable("screen.wands.filled_circle").append(Compat.literal(": " + WandProps.getFlag(main_stack, WandProps.Flag.CFILLED))), true);
+                                    player.displayClientMessage(Compat.translatable("screen.wands.filled_circle").append(Compat.literal(": " + (WandProps.getFlag(main_stack, WandProps.Flag.CFILLED) ? "On" : "Off"))), true);
                                 }
                             }
                             break;

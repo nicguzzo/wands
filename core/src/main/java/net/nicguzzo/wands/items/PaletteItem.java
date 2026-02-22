@@ -32,6 +32,9 @@ import net.nicguzzo.wands.utils.WandUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -100,6 +103,23 @@ public class PaletteItem extends Item {
         addLine.accept(Compat.translatable("key.wands.wand_mode").append(Compat.literal(": ")).append(getModeName(stack)).withStyle(ChatFormatting.GRAY));
         boolean rotate = Compat.getBoolean(tag,"rotate").orElse(false);
         addLine.accept(Compat.translatable("tooltip.wands.palette.rotate").append(Compat.literal(": " + (rotate ? "On" : "Off"))).withStyle(ChatFormatting.GRAY));
+    }
+
+    @Environment(EnvType.CLIENT)
+    @Override
+    public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+        Level level = Minecraft.getInstance().level;
+        if (level == null) return Optional.empty();
+        SimpleContainer inv = getInventory(stack, level);
+        List<ItemStack> items = new ArrayList<>();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            ItemStack s = inv.getItem(i);
+            if (!s.isEmpty()) {
+                items.add(s);
+            }
+        }
+        if (items.isEmpty()) return Optional.empty();
+        return Optional.of(new PaletteTooltip(items));
     }
 
     static public PaletteMode getMode(ItemStack stack) {

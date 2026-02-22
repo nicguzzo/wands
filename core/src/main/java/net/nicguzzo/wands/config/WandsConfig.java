@@ -20,6 +20,15 @@ import java.util.List;
 
 public class WandsConfig {
 
+    public enum HudMode {
+        OFF, MINIMAL, FULL;
+
+        @Override
+        public String toString() {
+            return name().substring(0, 1) + name().substring(1).toLowerCase();
+        }
+    }
+
     public static class ExtraTool_def{
         String item;
         boolean can_break;
@@ -115,6 +124,7 @@ public class WandsConfig {
     public boolean lines = true;
     public boolean fat_lines = true;
     public boolean render_last = false;
+    public HudMode hud_mode = HudMode.MINIMAL;
     public boolean show_tools_info = true;
     public boolean toast_in_action_bar = false;
     public boolean disable_info_messages = false;

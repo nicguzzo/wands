@@ -30,8 +30,5 @@ public abstract class WandMode {
     public void redraw(Wand wand){
         last_pos=null;
         last_side=null;
-        if(wand!=null && wand.palette!=null){
-            wand.palette.last_version=-1;
-        }
     }
 }
