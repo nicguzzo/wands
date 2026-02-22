@@ -366,7 +366,7 @@ public class ModeSelectorScreen extends Screen {
         if (WandsMod.config.disable_info_messages || client.player == null) return;
         WandProps.Mode mode = WandProps.getMode(wand);
         if (WandProps.hasMultipleActions(mode)) {
-            client.player.displayClientMessage(Compat.translatable(mode.toString()).append(" - ").append(Compat.translatable(WandProps.getAction(wand).toString())), true);
+            client.player.displayClientMessage(Compat.translatable(WandProps.getAction(wand).toString()).append(" ").append(Compat.translatable(mode.toString())), true);
         } else {
             client.player.displayClientMessage(Compat.translatable(mode.toString()), true);
         }

@@ -398,7 +398,7 @@ public class WandsMod {
                                 WandProps.nextAction(main_stack, mode);
                             }
                             if (!WandsMod.config.disable_info_messages) {
-                                player.displayClientMessage(Compat.translatable(WandProps.getMode(main_stack).toString()).append(" - ").append(Compat.translatable(WandProps.getAction(main_stack).toString())), true);
+                                player.displayClientMessage(Compat.translatable(WandProps.getAction(main_stack).toString()).append(" ").append(Compat.translatable(WandProps.getMode(main_stack).toString())), true);
                             }
                         }
                         break;
@@ -414,7 +414,7 @@ public class WandsMod {
                         if (!WandsMod.config.disable_info_messages) {
                             WandProps.Mode newMode = WandProps.getMode(main_stack);
                             if (WandProps.hasMultipleActions(newMode)) {
-                                player.displayClientMessage(Compat.translatable(newMode.toString()).append(" - ").append(Compat.translatable(WandProps.getAction(main_stack).toString())), true);
+                                player.displayClientMessage(Compat.translatable(WandProps.getAction(main_stack).toString()).append(" ").append(Compat.translatable(newMode.toString())), true);
                             } else {
                                 player.displayClientMessage(Compat.translatable(newMode.toString()), true);
                             }
