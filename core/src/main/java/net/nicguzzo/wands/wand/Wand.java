@@ -530,7 +530,7 @@ public class Wand {
                 if (nbuckets < 2) {
                     has_water_potion = false;
                     if (!preview) {
-                        player.displayClientMessage(Compat.literal("You need 2 water buckets in the inventory."), false);
+                        player.displayClientMessage(Compat.translatable("wands.message.need_water_buckets").withStyle(ChatFormatting.RED), false);
                     }
                     return;
                 }
@@ -584,7 +584,7 @@ public class Wand {
         if (replace && (mode != Mode.PASTE) && !palette.has_palette && (Blocks.AIR == offhand_block || offhand_block == null)) {
             valid = false;
             if (!preview) {
-                player.displayClientMessage(Compat.literal("you need a block or palette in the left hand"), false);
+                player.displayClientMessage(Compat.translatable("wands.message.need_offhand_block").withStyle(ChatFormatting.RED), false);
             }
             return;
         }
@@ -618,7 +618,7 @@ public class Wand {
             undoManager.beginAction();
             //log(" using palette seed: " + palette_seed);
             if (limit_reached && (mode != Mode.VEIN)) {
-                player.displayClientMessage(Compat.literal("wand limit reached"), false);
+                player.displayClientMessage(Compat.translatable("wands.message.wand_limit_reached").withStyle(ChatFormatting.RED), false);
             }
             if (mode != Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
@@ -759,7 +759,7 @@ public class Wand {
                 }
             }
             if (no_use_action && placed == 0) {
-                player.displayClientMessage(Compat.translatable("wands.message.no_use_action"), true);
+                player.displayClientMessage(Compat.translatable("wands.message.no_use_action").withStyle(ChatFormatting.RED), true);
                 no_use_action = false;
             }
             if ((placed > 0) || (no_tool || damaged_tool)) {
@@ -1172,7 +1172,7 @@ public class Wand {
     boolean place_block(BlockPos block_pos, BlockState state) {
         boolean placed = false;
         if (!WandsExpectPlatform.claimCanInteract((ServerLevel) level, block_pos, player)) {
-            player.displayClientMessage(Compat.literal("can't use wand on claimed chunk"), false);
+            player.displayClientMessage(Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), false);
             return false;
         }
         if (state == null) {
@@ -1192,7 +1192,7 @@ public class Wand {
         }
         if (destroy && (mode != Mode.VEIN) && has_offhand && offhand_block != null && offhand_block != st.getBlock()) {
             // Action bar message: offhand block restricts destroy to matching blocks only
-            player.displayClientMessage(Compat.translatable("wands.message.offhand_restricts_destroy"), true);
+            player.displayClientMessage(Compat.translatable("wands.message.offhand_restricts_destroy").withStyle(ChatFormatting.RED), true);
             return false;
         }
 
@@ -1384,16 +1384,16 @@ public class Wand {
                     }
                     if (replace && !placed) {
                         if (digger_item.getItem() == Items.AIR)
-                            player.displayClientMessage(Compat.literal("incorrect tool"), false);
+                            player.displayClientMessage(Compat.translatable("wands.message.incorrect_tool").withStyle(ChatFormatting.RED), false);
                         stop = true;
                     }
                 } else {
                     if (BLOCKS_PER_XP != 0 && (xp - dec) < 0) {
-                        player.displayClientMessage(Compat.literal("not enough xp"), false);
+                        player.displayClientMessage(Compat.translatable("wands.message.not_enough_xp").withStyle(ChatFormatting.RED), false);
                         stop = true;
                     }
                     if (wand_durability == 1) {
-                        player.displayClientMessage(Compat.literal("wand damaged"), false);
+                        player.displayClientMessage(Compat.translatable("wands.message.wand_damaged").withStyle(ChatFormatting.RED), false);
                         if (this.allow_wand_to_break &&
                                 digger_item != null && digger_item.getItem() == Items.AIR
                         ) {
@@ -1496,7 +1496,7 @@ public class Wand {
         }
         if (stop) {
             if (!preview) {
-                player.displayClientMessage(Compat.literal("inventory full"), false);
+                player.displayClientMessage(Compat.translatable("wands.message.inventory_full").withStyle(ChatFormatting.RED), false);
             }
             return false;
         }

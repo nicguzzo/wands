@@ -2,6 +2,7 @@ package net.nicguzzo.wands.networking;
 
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.core.BlockPos;
@@ -691,13 +692,13 @@ public class Networking {
                 Player player = context.getPlayer();
                 String toolsKey = "Shift+" + WandsModClient.getKeyName(WandsMod.WandKeys.MENU);
                 if (no_tool) {
-                    player.displayClientMessage(Compat.translatable("wands.message.no_tool", toolsKey), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.no_tool", toolsKey).withStyle(ChatFormatting.RED), true);
                 }
                 if (damaged_tool) {
-                    player.displayClientMessage(Compat.translatable("wands.message.damaged_tool", toolsKey), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.damaged_tool", toolsKey).withStyle(ChatFormatting.RED), true);
                 }
                 if (!needed_tool.isEmpty()) {
-                    player.displayClientMessage(Compat.translatable("wands.message.wrong_tool", needed_tool, toolsKey), true);
+                    player.displayClientMessage(Compat.translatable("wands.message.wrong_tool", needed_tool, toolsKey).withStyle(ChatFormatting.RED), true);
                 }
 #if MC_VERSION < 12005
             });
