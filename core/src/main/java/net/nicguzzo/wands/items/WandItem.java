@@ -200,7 +200,7 @@ public class WandItem extends Item {
             boolean hasOffhand = offhandBlock != Blocks.AIR;
             if (!hasOffhand && !hasPalette && mode != Mode.PASTE && mode != Mode.COPY
                     && action != WandProps.Action.DESTROY && action != WandProps.Action.USE) {
-                player.displayClientMessage(Compat.translatable("wands.message.target_air_needs_offhand"), true);
+                player.displayClientMessage(Compat.translatable("wands.message.target_air_needs_offhand").withStyle(ChatFormatting.RED), true);
 #if MC_VERSION>=12111
                 return InteractionResult.FAIL;
 #else

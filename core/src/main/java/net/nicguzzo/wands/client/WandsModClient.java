@@ -735,7 +735,7 @@ public class WandsModClient {
             ClientRender.wand.clear(true);
             ClientRender.wand.pin.clear();
             if (ClientRender.wand.player != null && !WandsMod.config.disable_info_messages) {
-                ClientRender.wand.player.displayClientMessage(Compat.literal("Wand cleared"), true);
+                ClientRender.wand.player.displayClientMessage(Compat.translatable("wands.message.wand_cleared"), true);
             }
         }
     }

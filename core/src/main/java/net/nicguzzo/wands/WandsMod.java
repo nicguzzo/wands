@@ -502,7 +502,7 @@ public class WandsMod {
                         wand.clear(true);
 
                         if (player != null && !WandsMod.config.disable_info_messages) {
-                            player.displayClientMessage(Compat.literal("wand cleared"), true);
+                            player.displayClientMessage(Compat.translatable("wands.message.wand_cleared"), true);
                         }
                         break;
                     // PIN is handled client-side only — never sent to server
