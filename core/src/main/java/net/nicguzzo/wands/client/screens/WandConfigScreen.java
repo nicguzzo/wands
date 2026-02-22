@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.config.WandsConfig.HudMode;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 
@@ -248,6 +249,11 @@ public class WandConfigScreen {
                 .setSaveConsumer(newValue -> conf.paste_outlines = newValue)
                 .build());
 
+        preview.addEntry(entryBuilder.startEnumSelector(Compat.translatable("option.wands.hud_mode"), HudMode.class, conf.hud_mode)
+                .setDefaultValue(HudMode.MINIMAL)
+                .setTooltip(Compat.translatable("option.wands.hud_mode_tt"))
+                .setSaveConsumer(newValue -> conf.hud_mode = newValue)
+                .build());
         preview.addEntry(entryBuilder.startFloatField(Compat.translatable("option.wands.wand_mode_display_x_pos"), conf.wand_mode_display_x_pos)
                 .setDefaultValue(100.0f)
                 .setTooltip(Compat.translatable("option.wands.wand_mode_display_x_pos_tt"))

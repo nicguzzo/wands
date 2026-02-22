@@ -6,6 +6,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.nicguzzo.wands.client.screens.WandScreen;
 
@@ -46,6 +47,9 @@ public abstract class Wdgt {
     // Tooltip text (shown on hover)
     public Component tooltip = null;
     public Component tooltipTitle = null;
+
+    // Keybind hint shown as a gray line in the tooltip
+    public String keybindHint = null;
 
     /**
      * Render this widget.
@@ -140,7 +144,11 @@ public abstract class Wdgt {
     public List<Component> getTooltipLines() {
         List<Component> lines = new ArrayList<>();
         if (tooltipTitle != null) {
-            lines.add(tooltipTitle.copy().withStyle(ChatFormatting.WHITE));
+            MutableComponent title = tooltipTitle.copy().withStyle(ChatFormatting.WHITE);
+            if (keybindHint != null) {
+                title.append(Component.literal(" [" + keybindHint + "]").withStyle(ChatFormatting.GRAY));
+            }
+            lines.add(title);
         }
         if (tooltip != null) {
             String text = tooltip.getString();

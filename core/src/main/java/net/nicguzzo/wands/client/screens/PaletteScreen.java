@@ -23,7 +23,7 @@ import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.networking.Networking;
-import net.nicguzzo.wands.wand.Palette;
+
 import net.nicguzzo.wands.WandsMod;
 
 public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
@@ -54,7 +54,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         btn_rotate = new Btn(SMALL_BUTTON_TEX, 10, ROTATE_TEX, 6, (mouseX, mouseY) -> {
             if(this.menu.palette!=null){
                 PaletteItem.toggleRotate(palette_itemStack);
-                Palette.version++;
+
                 Networking.send_palette(false,true,-1);
             }
         });
@@ -80,7 +80,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             () -> PaletteItem.getMode(palette_itemStack),
             mode -> {
                 PaletteItem.setMode(palette_itemStack, mode);
-                Palette.version++;
+
                 Networking.send_palette(true, false, -1);
             }
         );
@@ -105,7 +105,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
         gradient_h = new Spinner(v, 1, 1000, 30, 12, null)
             .withOnChange(value -> {
                 PaletteItem.setGradientHeight(palette_itemStack, value);
-                Palette.version++;
+
                 Networking.send_palette(false, true, value);
             });
         gradient_h.showBackground = false;
@@ -206,15 +206,15 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
                     }else{
                         this.slotClicked(slot, slot.index, button, ClickType.PICKUP);
                     }
-                    Palette.version++;
+    
                 break;
                 case 1:
                     this.slotClicked(slot, slot.index, button, ClickType.PICKUP);
-                    Palette.version++;
+    
                 break;
                 case 2:
                     this.slotClicked(slot, slot.index, button, ClickType.CLONE);
-                    Palette.version++;
+    
                 break;
             }
         }
@@ -241,7 +241,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             ItemStack itemStack = Compat.get_carried(client.player,this.menu);
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
                 this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
-                Palette.version++;
+
             }
         }
         return true;

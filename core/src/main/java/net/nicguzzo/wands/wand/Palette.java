@@ -1,7 +1,5 @@
 package net.nicguzzo.wands.wand;
 
-import dev.architectury.platform.Platform;
-import dev.architectury.utils.Env;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -28,8 +26,6 @@ import net.minecraft.util.RandomSource;
 import net.nicguzzo.wands.utils.WandUtils;
 
 public class Palette {
-    static public long version=0;
-    static public long last_version=-1;
     public ItemStack item = null;
     public boolean has_palette = false;
     public int slot = 0;
@@ -56,11 +52,6 @@ public class Palette {
     }
 
     void update_palette(Map<Item, BlockAccounting> block_accounting, Level level){
-        if (Platform.getEnvironment() == Env.CLIENT) {
-            if (version == last_version)
-                return;
-            version = last_version;
-        }
 
         //WandsMod.log("update_palette",true);
         //if(mode!= Mode.DIRECTION)

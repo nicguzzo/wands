@@ -382,7 +382,6 @@ public class Wand {
         fill_nx = 0;
         fill_ny = 0;
         fill_nz = 0;
-        Palette.version++;
         //WandsMod.LOGGER.info("clear");
         /*if(player!=null)
             player.displayClientMessage(Compat.literal("wand cleared"),false);*/

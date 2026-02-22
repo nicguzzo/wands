@@ -16,10 +16,12 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandScreen;
+import net.nicguzzo.wands.items.PaletteTooltip;
 import net.minecraftforge.fml.ModList;
 @Mod(WandsMod.MOD_ID)
 
@@ -47,6 +49,8 @@ public class WandsModForge {
             }
         );
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(
+            (net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent e) -> e.register(PaletteTooltip.class, PaletteClientTooltip::new));
     }
 
     private void clientSetup(FMLClientSetupEvent event) {
