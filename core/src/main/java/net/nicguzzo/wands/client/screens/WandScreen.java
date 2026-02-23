@@ -113,6 +113,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     CycleToggle<Direction.Axis> blockAxisCycle;
 
     // Tools Section
+    CycleToggle<Integer> replaceModeCycle;
     CycleToggle<Boolean> dropPositionToggle;
     Btn showInventoryButton;
     boolean showInventory = false;
@@ -663,6 +664,24 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             .withTooltips("tooltip.wands.axis_x", "tooltip.wands.axis_y", "tooltip.wands.axis_z");
         blockAxisCycle.width = layoutColWidth;
 
+        // Replace mode cycle - only shown for PLACE action
+        Integer[] replaceModeValues = {0, 1, 2};
+        Component[] replaceModeLabels = {
+            Compat.literal("None"),
+            Compat.literal("Replaceable"),
+            Compat.literal("All")
+        };
+        replaceModeCycle = new CycleToggle<>(Compat.translatable("screen.wands.replace_blocks"),
+            replaceModeValues, replaceModeLabels,
+            () -> WandProps.getVal(getPlayerHeldWand(), Value.REPLACE_MODE),
+            (v) -> {
+                ItemStack actualWand = getPlayerHeldWand();
+                WandProps.setVal(actualWand, Value.REPLACE_MODE, v);
+                syncWand(actualWand);
+            })
+            .withTooltips("tooltip.wands.replace_blocks.none", "tooltip.wands.replace_blocks.replaceable", "tooltip.wands.replace_blocks.all");
+        replaceModeCycle.width = layoutColWidth;
+
         // Drop position toggle - only shown for DESTROY/REPLACE actions
         dropPositionToggle = CycleToggle.ofBoolean(Compat.translatable("screen.wands.drop_on"),
             () -> ClientRender.wand.drop_on_player,
@@ -793,7 +812,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
         // --- Shared options (used by 2+ modes) ---
         section.add(actionCycle);
-        section.add(dropPositionToggle);       // shown/hidden by actionCycle (DESTROY/REPLACE)
+        section.add(replaceModeCycle);          // shown/hidden by actionCycle (PLACE)
+        section.add(dropPositionToggle);       // shown/hidden by actionCycle (DESTROY/REPLACE or PLACE+All)
         section.add(stateModeCycle);            // shown/hidden by actionCycle (PLACE)
         section.add(blockFlipToggle);           // shown/hidden by stateModeCycle
         section.add(blockFacingCycle);        // shown/hidden by stateModeCycle
@@ -849,6 +869,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), orientationCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
+
+        // Replace mode cycle - visible for modes that support PLACE action
+        registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.REPLACE_MODE), replaceModeCycle);
 
         // Block state controls - visible for all state_mode-applicable modes
         registerModeWidgets(WandProps.STATE_MODE_MODES, stateModeCycle, blockFlipToggle,
@@ -1032,8 +1055,13 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             boolean isPillarBlock = ClientRender.wand != null && ClientRender.wand.hasPillarBlock();
             blockAxisCycle.visible = showStateControls && isAdjustMode && (isPillarBlock || isHollowFill);
 
-            // Drop position only relevant for Destroy/Replace actions
-            dropPositionToggle.visible = (currentAction == WandProps.Action.DESTROY || currentAction == WandProps.Action.REPLACE);
+            // Replace mode cycle only visible for PLACE action
+            replaceModeCycle.visible = replaceModeCycle.visible && (currentAction == WandProps.Action.PLACE);
+
+            // Drop position relevant for Destroy/Replace actions, or PLACE with replace_mode==All
+            int currentReplaceMode = WandProps.getVal(actualWand, Value.REPLACE_MODE);
+            dropPositionToggle.visible = (currentAction == WandProps.Action.DESTROY || currentAction == WandProps.Action.REPLACE)
+                || (currentAction == WandProps.Action.PLACE && currentReplaceMode == 2 && replaceModeCycle.visible);
         }
     }
     @Override
