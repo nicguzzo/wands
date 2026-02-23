@@ -183,6 +183,15 @@ public class WandItem extends Item {
                     wand.pin.clear();
                 }
                 wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+            } else if (mode.n_clicks() == 1) {
+                // keep_start + pin: P1 already set from previous placement, re-send
+                send_placement(side, wand.getP1(), null, player.getEyePosition(), wand.palette.seed);
+                wand.palette.seed = System.currentTimeMillis();
+                wand.copy();
+                if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                    wand.pin.clear();
+                }
+                wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
             }
             #if MC_VERSION>=12111
             return InteractionResult.SUCCESS;
