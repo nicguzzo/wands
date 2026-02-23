@@ -1110,6 +1110,11 @@ public class Wand {
         fill_nx = nx;
         fill_ny = ny;
         fill_nz = nz;
+        Direction.Axis axis=Direction.Axis.Y;
+        switch(this.plane){
+            case XY -> axis=Direction.Axis.Z;
+            case YZ -> axis=Direction.Axis.X;
+        }
         for (int z = zs, z0 = 0; z0 <= nz; z += oz, z0++) {
             if (zskip != 0 && (z0 % (zskip + 1)) != 0) {
                 continue;
@@ -1120,7 +1125,7 @@ public class Wand {
                 }
                 for (int x = xs, x0 = 0; x0 <= nx; x += ox, x0++) {
                     if (hollow) {
-                        switch (this.axis) {
+                        switch (axis) {
                             case X:
                                 //if (y > ys && y < ye && z > zs && z < ze)
                                 if (y != ys && y != ye && z != zs && z != ze)
