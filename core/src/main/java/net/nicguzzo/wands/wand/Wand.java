@@ -206,6 +206,7 @@ public class Wand {
     public boolean mine_to_inventory = true;
     public boolean stop_on_full_inventory = true;
     public boolean target_air = false;
+    public int replace_mode = 1;
     public int reach_distance = 0;
     public boolean unbreakable = false;
     public boolean removes_water = false;
@@ -403,6 +404,7 @@ public class Wand {
         this.replace = WandProps.getAction(wand_stack) == WandProps.Action.REPLACE;
         this.destroy = WandProps.getAction(wand_stack) == WandProps.Action.DESTROY;
         this.use = WandProps.getAction(wand_stack) == WandProps.Action.USE;
+        this.replace_mode = (!replace && !destroy && !use) ? WandProps.getVal(wand_stack, WandProps.Value.REPLACE_MODE) : 1;
         this.target_air = WandProps.getFlag(wand_stack, WandProps.Flag.TARGET_AIR);
         if ((destroy || replace) && WandsMod.config.disable_destroy_replace) {
             destroy = false;
@@ -623,7 +625,7 @@ public class Wand {
             if (mode != Mode.BLAST) {
                 if (palette.has_palette && !destroy && !use && !is_copy_paste) {
                     for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                        if (!replace && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
+                        if (!replace && replace_mode != 2 && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                             block_buffer.state[a] = null;
                             block_buffer.item[a] = null;
                             continue;
@@ -665,7 +667,7 @@ public class Wand {
                             if (has_empty_bucket || has_water_bucket || has_lava_bucket || has_powder_snow_bucket) {
                                 apply_bucket_accounting(pa, a);
                             } else {
-                                if (!replace && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
+                                if (!replace && replace_mode != 2 && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
                                     block_buffer.item[a] = null;
                                 } else {
@@ -679,7 +681,7 @@ public class Wand {
                     } else {
                         //copy paste
                         for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                            if (!replace && !destroy && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
+                            if (!replace && replace_mode != 2 && !destroy && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                 block_buffer.state[a] = null;
                                 block_buffer.item[a] = null;
                             } else {
@@ -1201,6 +1203,7 @@ public class Wand {
         int tool_durability = -1;
 
 
+        boolean needs_replace = (replace_mode == 2) && !st.isAir() && !replace_fluid(st);
         boolean _can_destroy = creative;
         no_tool = false;
         boolean _tool_would_break = false;
@@ -1210,7 +1213,7 @@ public class Wand {
                 damaged_tool = true;
                 return false;
             }
-            if (destroy || replace || (use && !has_water_potion)) {
+            if (destroy || replace || needs_replace || (use && !has_water_potion)) {
                 _can_destroy = can_destroy_or_use(st, true);
                 if (digger_item != null) {
                     _tool_would_break = tool_would_break(digger_item);
@@ -1284,7 +1287,7 @@ public class Wand {
             }
 
             //if(!replace && !blk.canSurvive(state, level, block_pos)){
-            if (!(replace) && !state.canSurvive(level, block_pos)) {
+            if (!(replace || needs_replace) && !state.canSurvive(level, block_pos)) {
                 return false;
             }
             if (blk instanceof SnowLayerBlock) {
@@ -1368,12 +1371,12 @@ public class Wand {
                     dec = (1.0f / BLOCKS_PER_XP);
                 }
                 if ((BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
-                    if (WandsMod.config.destroy_in_survival_drop && (destroy || replace)) {
+                    if (WandsMod.config.destroy_in_survival_drop && (destroy || replace || needs_replace)) {
                         if (_can_destroy) {
                             placed = destroyBlock(block_pos, true);
                         }
                     }
-                    if (!destroy || (replace && placed)) {
+                    if (!destroy || ((replace || needs_replace) && placed)) {
                         if (!use) {
                             state = state_for_placement(state, block_pos);
                             if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
@@ -1382,7 +1385,7 @@ public class Wand {
                             }
                         }
                     }
-                    if (replace && !placed) {
+                    if ((replace || needs_replace) && !placed) {
                         if (digger_item.getItem() == Items.AIR)
                             player.displayClientMessage(Compat.translatable("wands.message.incorrect_tool").withStyle(ChatFormatting.RED), false);
                         stop = true;
@@ -1405,7 +1408,7 @@ public class Wand {
                 }
 
                 if (placed) {
-                    if ((destroy || replace) && digger_item != null && !_tool_would_break) {
+                    if ((destroy || replace || needs_replace) && digger_item != null && !_tool_would_break) {
                         hurt_tool(digger_item, digger_item_slot);
                     }
                     if (!this.unbreakable && !_wand_would_break) {
@@ -1628,11 +1631,12 @@ public class Wand {
 
     public boolean can_destroy_or_use(BlockState state, boolean check_speed) {
         digger_item = null;
+        boolean _needs_replace = (replace_mode == 2) && !state.isAir() && !replace_fluid(state);
         //WandItem wand_item=(WandItem)this.wand_stack.getItem();
         for (int i = 0; i < tools.length; i++) {
             if (!tools[i].empty && tools[i] != null) {
                 if (!tool_would_break(tools[i].tool)) {
-                    if (((destroy || replace) && can_dig(state, check_speed, tools[i].tool)) ||
+                    if (((destroy || replace || _needs_replace) && can_dig(state, check_speed, tools[i].tool)) ||
                             ((use) && (
                                     (tools[i].tooltype == ToolType.HOE && WandUtils.is_tillable(state)) ||
                                     (tools[i].tooltype == ToolType.AXE && WandUtils.can_axe_use(state)) ||
@@ -1725,6 +1729,23 @@ public class Wand {
     }
 
     public boolean can_place(BlockState state, BlockPos p) {
+        if (replace_mode == 2) {
+            // All: replace any block
+            if (offhand_state != null && WandUtils.is_plant(offhand_state)) {
+                return offhand_state.canSurvive(level, p);
+            }
+            return true;
+        }
+        if (replace_mode == 0) {
+            // None: only air
+            if (offhand_state != null && WandUtils.is_plant(offhand_state)) {
+                return state.isAir() && offhand_state.canSurvive(level, p);
+            }
+            return state.isAir() ||
+                    (has_empty_bucket && state.getFluidState().is(FluidTags.WATER)) ||
+                    (has_empty_bucket && state.getFluidState().is(FluidTags.LAVA));
+        }
+        // Replaceable (default): air, fluids, plants, snow
         if (offhand_state != null && WandUtils.is_plant(offhand_state)) {
             return (state.isAir() || replace_fluid(state)) && offhand_state.canSurvive(level, p);
         } else {

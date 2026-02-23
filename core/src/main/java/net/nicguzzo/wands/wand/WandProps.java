@@ -383,7 +383,8 @@ public class WandProps {
         BOX_DEPTH("box_d", "box_depth"),
         ROCK_RADIUS("rock_radius", "rock_radius"),
         ROCK_NOISE("rock_noise", "rock_noise"),
-        REACH_DISTANCE("reach_distance", "reach_distance");
+        REACH_DISTANCE("reach_distance", "reach_distance"),
+        REPLACE_MODE("replace_mode", "replace_blocks");
 
         private final String nbtKey;
         public final String labelKey;
@@ -429,6 +430,9 @@ public class WandProps {
             REACH_DISTANCE.def=0;
             REACH_DISTANCE.min=0;
             REACH_DISTANCE.max=100;
+            REPLACE_MODE.def=1;
+            REPLACE_MODE.min=0;
+            REPLACE_MODE.max=2;
         }
     }
 
@@ -477,7 +481,9 @@ public class WandProps {
         Map.entry(Value.BOX_DEPTH, EnumSet.of(Mode.BOX)),
         Map.entry(Value.ROCK_RADIUS, EnumSet.of(Mode.ROCK)),
         Map.entry(Value.ROCK_NOISE, EnumSet.of(Mode.ROCK)),
-        Map.entry(Value.REACH_DISTANCE, EnumSet.allOf(Mode.class))
+        Map.entry(Value.REACH_DISTANCE, EnumSet.allOf(Mode.class)),
+        Map.entry(Value.REPLACE_MODE, EnumSet.of(Mode.DIRECTION, Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE,
+            Mode.CIRCLE, Mode.PASTE, Mode.BOX, Mode.SPHERE, Mode.ROCK))
     );
 
     // Modes where state_mode (block state) applies
