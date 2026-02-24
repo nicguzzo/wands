@@ -1,19 +1,12 @@
 package net.nicguzzo.wands.items;
 
-import dev.architectury.platform.Platform;
-import dev.architectury.utils.Env;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 #if MC_VERSION >= 12005
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.component.CustomData;
 #endif
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -30,8 +23,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.nicguzzo.compat.Compat;
+import net.nicguzzo.wands.client.ClientUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -143,14 +136,18 @@ public class MagicBagItem extends Item {
         return ItemStack.EMPTY;
     }
 
-    @Environment(EnvType.CLIENT)
+
 #if MC_VERSION >= 12111
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, TooltipDisplay tooltipDisplay, Consumer<Component> consumer, TooltipFlag tooltipFlag) {
+        Level level= ClientUtils.getClientLevelSafe();
+        if (level == null) return;
     #else
 #if MC_VERSION >= 12101
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
+        Level level= ClientUtils.getClientLevelSafe();
+        if (level == null) return;
 #else
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag){
@@ -162,7 +159,7 @@ public class MagicBagItem extends Item {
         Consumer<Component> addLine = list::add;
         #endif
 
-        ItemStack i = MagicBagItem.getItem(stack, Minecraft.getInstance().level);
+        ItemStack i = MagicBagItem.getItem(stack, level);
         if (i.isEmpty()) {
             addLine.accept(Compat.literal("Item: None").withStyle(ChatFormatting.GRAY));
         } else {
@@ -171,17 +168,16 @@ public class MagicBagItem extends Item {
         addLine.accept(Compat.literal("Total: " + MagicBagItem.getTotal(stack)).withStyle(ChatFormatting.GRAY));
     }
 
-    @Environment(EnvType.CLIENT)
     @Override
     public @NotNull Component getName(ItemStack itemStack) {
-        //if (Platform.getEnvironment() == Env.CLIENT) {
-            if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
-                ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level);
-                if (!item.isEmpty()) {
-                    return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier.ordinal() + 1));
-                }
+        Level level= ClientUtils.getClientLevelSafe();
+        if (level == null) return super.getName(itemStack);
+        if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
+            ItemStack item = MagicBagItem.getItem(itemStack, level);
+            if (!item.isEmpty()) {
+                return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier.ordinal() + 1));
             }
-        //}
+        }
         return super.getName(itemStack);
     }
 }

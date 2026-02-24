@@ -835,4 +835,28 @@ public class Networking {
        #endif
     }
 
+    static public void send_placement(Direction side, BlockPos p1, BlockPos p2, Vec3 hit, long seed) {
+        BlockPos _p1 = new BlockPos(0, 0, 0);
+        BlockPos _p2 = new BlockPos(0, 0, 0);
+        int has_p1_p2 = 0;
+        if (p1 != null && p2 != null) {
+            has_p1_p2 = 3;
+            _p1 = p1;
+            _p2 = p2;
+        } else {
+            if (p1 != null) {
+                has_p1_p2 = 1;
+                _p1 = p1;
+            } else {
+                if (p2 != null) {
+                    has_p1_p2 = 2;
+                    _p2 = p2;
+                }
+            }
+        }
+        //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
+        Networking.sendPosPacket(side,has_p1_p2,_p1,_p2,hit,seed);
+        //NetworkManager.sendToServer(new Networking.PosPacket(side.ordinal(), has_p1_p2, _p1, _p2, new Networking.Vec3d(hit.x, hit.y, hit.z), seed));
+    }
+
 }

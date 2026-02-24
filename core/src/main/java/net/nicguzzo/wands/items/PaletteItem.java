@@ -1,10 +1,6 @@
 package net.nicguzzo.wands.items;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -28,9 +24,8 @@ import net.minecraft.core.component.DataComponents;
 #endif
 import net.minecraft.world.level.Level;
 import net.nicguzzo.compat.Compat;
+import net.nicguzzo.wands.client.ClientUtils;
 import net.nicguzzo.wands.utils.WandUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
@@ -61,16 +56,18 @@ public class PaletteItem extends Item {
         super(properties);
     }
 
-    @Environment(EnvType.CLIENT)
+
     #if MC_VERSION >= 12111
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, TooltipDisplay tooltipDisplay, Consumer<Component> consumer, TooltipFlag tooltipFlag) {
-        Level level=Minecraft.getInstance().level;
+        Level level= ClientUtils.getClientLevelSafe();
+        if (level == null) return;
     #else
 #if MC_VERSION >= 12101
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag) {
-        Level level=Minecraft.getInstance().level;
+        Level level= ClientUtils.getClientLevelSafe();
+        if (level == null) return;
 #else
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag){
@@ -89,7 +86,7 @@ public class PaletteItem extends Item {
             for (int i = 0; i < s; i++) {
                 ItemStack stack2 = ItemStack.EMPTY;
                 Optional<CompoundTag> block_ct=Compat.getCompound(tag,"Block");
-                if (level != null && block_ct.isPresent()) {
+                if (block_ct.isPresent()) {
                     Optional<ItemStack> is2 = Compat.ItemStack_read(block_ct.get(),level);
                     if (is2.isPresent()) {
                         stack2 = is2.get();
@@ -105,10 +102,10 @@ public class PaletteItem extends Item {
         addLine.accept(Compat.translatable("tooltip.wands.palette.rotate").append(Compat.literal(": " + (rotate ? "On" : "Off"))).withStyle(ChatFormatting.GRAY));
     }
 
-    @Environment(EnvType.CLIENT)
+
     @Override
     public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
-        Level level = Minecraft.getInstance().level;
+        Level level= ClientUtils.getClientLevelSafe();
         if (level == null) return Optional.empty();
         SimpleContainer inv = getInventory(stack, level);
         List<ItemStack> items = new ArrayList<>();

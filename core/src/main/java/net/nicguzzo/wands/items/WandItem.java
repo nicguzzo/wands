@@ -1,6 +1,5 @@
 package net.nicguzzo.wands.items;
 
-import dev.architectury.networking.NetworkManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.core.BlockPos;
@@ -124,7 +123,7 @@ public class WandItem extends Item {
             }
         }
         if ((ClientRender.wand.getP1() != null && mode.n_clicks() == 1) || ((ClientRender.wand.getP1() != null && ClientRender.wand.getP2() != null && mode.n_clicks() == 2))) {
-            send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
+            Networking.send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
             if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
@@ -167,7 +166,7 @@ public class WandItem extends Item {
             if (wand.getP1() == null) {
                 wand.setP1(pinPos);
                 if (mode.n_clicks() == 1) {
-                    send_placement(side, pinPos, null, player.getEyePosition(), wand.palette.seed);
+                    Networking.send_placement(side, pinPos, null, player.getEyePosition(), wand.palette.seed);
                     wand.palette.seed = System.currentTimeMillis();
                     wand.copy();
                     if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
@@ -177,7 +176,7 @@ public class WandItem extends Item {
                 }
             } else if (mode.n_clicks() == 2 && wand.getP2() == null) {
                 wand.setP2(pinPos);
-                send_placement(side, wand.getP1(), pinPos, player.getEyePosition(), wand.palette.seed);
+                Networking.send_placement(side, wand.getP1(), pinPos, player.getEyePosition(), wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 wand.copy();
                 if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
@@ -218,7 +217,7 @@ public class WandItem extends Item {
                     wand.setP2(null);
                 }
 
-                send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(), wand.hit, wand.palette.seed);
+                Networking.send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(), wand.hit, wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 ClientRender.wand.copy();
                 ClientRender.wand.clear(mode==Mode.PASTE || wand.mode== WandProps.Mode.COPY || mode == Mode.VEIN);
@@ -234,32 +233,10 @@ public class WandItem extends Item {
         return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
 #endif
     }
-    @Environment(EnvType.CLIENT)
-    public void send_placement(Direction side, BlockPos p1, BlockPos p2, Vec3 hit, long seed) {
-        BlockPos _p1 = new BlockPos(0, 0, 0);
-        BlockPos _p2 = new BlockPos(0, 0, 0);
-        int has_p1_p2 = 0;
-        if (p1 != null && p2 != null) {
-            has_p1_p2 = 3;
-            _p1 = p1;
-            _p2 = p2;
-        } else {
-            if (p1 != null) {
-                has_p1_p2 = 1;
-                _p1 = p1;
-            } else {
-                if (p2 != null) {
-                    has_p1_p2 = 2;
-                    _p2 = p2;
-                }
-            }
-        }
-        //WandsMod.LOGGER.info("send_placement p1: "+p1+" p2: "+p2);
-        Networking.sendPosPacket(side,has_p1_p2,_p1,_p2,hit,seed);
-        //NetworkManager.sendToServer(new Networking.PosPacket(side.ordinal(), has_p1_p2, _p1, _p2, new Networking.Vec3d(hit.x, hit.y, hit.z), seed));
-    }
 
-    @Environment(EnvType.CLIENT)
+
+
+
 #if MC_VERSION >= 12111
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, TooltipDisplay tooltipDisplay, Consumer<Component> consumer, TooltipFlag tooltipFlag)
