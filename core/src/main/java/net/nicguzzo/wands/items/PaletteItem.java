@@ -28,6 +28,8 @@ import net.nicguzzo.wands.client.ClientUtils;
 import net.nicguzzo.wands.utils.WandUtils;
 
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;

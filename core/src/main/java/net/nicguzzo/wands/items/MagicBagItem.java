@@ -3,10 +3,10 @@ package net.nicguzzo.wands.items;
 import net.minecraft.ChatFormatting;
 #if MC_VERSION >= 12005
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.component.CustomData;
 #endif
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -25,6 +25,7 @@ import net.minecraft.world.level.Level;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.client.ClientUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
