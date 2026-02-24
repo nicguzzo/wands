@@ -18,7 +18,7 @@
 - **Fluid preview** — water and lava bucket placement now shows a ghost block preview
 - **Row/Col direction** — row or column direction is now based on the player's facing direction
 - **Rotate and flip controls** — block state split into independent rotate and flip settings
-
+- **Add "Replace blocks"** — tri-state setting for Place action
 ### Bug fixes
 - Fixed dark inventory screen on MC 1.21.1
 - Fixed Use mode showing wrong tool warning when block has no use action
@@ -28,3 +28,5 @@
 - Fixed hand-mineable blocks requiring a tool to break with wand
 - Fixed vein mode affected by clear position setting
 - Fixed empty bucket showing red outline on fluid source blocks
+- Fixed server side crashing on client code.
+- Fixed fill hollow mode axis, it now calculates axis from plane
