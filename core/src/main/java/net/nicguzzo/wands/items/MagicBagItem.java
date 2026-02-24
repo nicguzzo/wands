@@ -171,16 +171,17 @@ public class MagicBagItem extends Item {
         addLine.accept(Compat.literal("Total: " + MagicBagItem.getTotal(stack)).withStyle(ChatFormatting.GRAY));
     }
 
+    @Environment(EnvType.CLIENT)
     @Override
     public @NotNull Component getName(ItemStack itemStack) {
-        if (Platform.getEnvironment() == Env.CLIENT) {
+        //if (Platform.getEnvironment() == Env.CLIENT) {
             if (!itemStack.isEmpty() && itemStack.getItem() instanceof MagicBagItem) {
                 ItemStack item = MagicBagItem.getItem(itemStack, Minecraft.getInstance().level);
                 if (!item.isEmpty()) {
                     return Compat.literal("Bag of ").append(Component.translatable(item.getItem().getDescriptionId() )).append(" - Tier " + (tier.ordinal() + 1));
                 }
             }
-        }
+        //}
         return super.getName(itemStack);
     }
 }
