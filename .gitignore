@@ -20,7 +20,9 @@ classes/
 versions/mc*
 local.properties
 core-link/
+core-link
 compat-link/
+compat-link
 mc1.20.1/common/src/main/resources/assets/wands/textures
 mc1.20.1/common/src/main/resources/assets/wands/lang
 mc1.21.1/common/src/main/resources/assets/wands/textures
