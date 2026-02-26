@@ -457,7 +457,7 @@ public class WandProps {
         Map.entry(Flag.STAIRSLAB, EnumSet.allOf(Mode.class)),  // All modes
         Map.entry(Flag.RFILLED, EnumSet.of(Mode.FILL)),
         Map.entry(Flag.TARGET_AIR, EnumSet.of(Mode.ROW_COL, Mode.GRID, Mode.COPY, Mode.PASTE, Mode.BOX, Mode.ROCK, Mode.LINE, Mode.CIRCLE, Mode.FILL, Mode.SPHERE)),
-        Map.entry(Flag.CLEAR_P1, EnumSet.of(Mode.FILL, Mode.LINE, Mode.CIRCLE, Mode.COPY, Mode.SPHERE))  // Two-click modes only
+        Map.entry(Flag.CLEAR_P1, EnumSet.of(Mode.ROW_COL, Mode.FILL, Mode.AREA, Mode.GRID, Mode.LINE, Mode.CIRCLE, Mode.BOX, Mode.VEIN, Mode.SPHERE, Mode.ROCK, Mode.COPY, Mode.PASTE))  // All pin-capable modes
     );
 
     // Mode-specific value mappings: which values apply to which modes

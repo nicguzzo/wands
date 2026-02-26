@@ -386,8 +386,9 @@ public class WandsModClient {
                     String sizeLabel = Compat.translatable("wands.hud.size").getString();
                     String noiseLabel = Compat.translatable("screen.wands.rock_noise").getString();
 
-                    // FULL-only: rotation
-                    Rotation r = isFull ? WandProps.getRotation(stack) : null;
+                    // Rotation / Randomize hint
+                    boolean showRotation = WandProps.rotationAppliesTo(mode) || mode == WandProps.Mode.ROCK;
+                    Rotation r = (isFull && WandProps.rotationAppliesTo(mode)) ? WandProps.getRotation(stack) : null;
                     String rot = "";
                     if (r != null) {
                         switch (r) {
@@ -397,7 +398,9 @@ public class WandsModClient {
                             case COUNTERCLOCKWISE_90: rot = "270°"; break;
                         }
                     }
-                    boolean showRotation = isFull && WandProps.rotationAppliesTo(mode);
+                    String rotLabel = mode == WandProps.Mode.ROCK
+                        ? Compat.translatable("wands.hud.randomize").getString()
+                        : Compat.translatable("wands.hud.rotate").getString() + (rot.isEmpty() ? "" : " " + rot);
 
                     // FULL-only: orientation/plane
                     String orientKey = isFull ? getKeyName(WandsMod.WandKeys.ORIENTATION) : "";
@@ -405,6 +408,7 @@ public class WandsModClient {
                     if (isFull) {
                         switch (mode) {
                             case CIRCLE:
+                            case FILL:
                                 orientText = Compat.translatable("screen.wands.plane").getString() + " " + WandProps.getPlane(stack) + " [" + orientKey + "]";
                                 break;
                             case ROW_COL:
@@ -591,7 +595,7 @@ public class WandsModClient {
                         currentY += lineSpacing;
                     }
 
-                    // FULL: Rotation [R]
+                    // Rotation [R] / Randomize [R]
                     if (showRotation) {
                         drawHudValueWithHint(gui, font, rotationStr + " " + rot, getKeyName(WandsMod.WandKeys.ROTATE), hudX, currentY);
                         currentY += lineSpacing;

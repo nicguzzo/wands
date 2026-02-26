@@ -615,6 +615,17 @@ public class Wand {
         setup_bucket_block_state();
         override_buffer_for_bucket();
 
+        // Notify player when keep-start is active but mode and action have nothing to do
+        if (!preview && block_buffer.get_length() == 0
+                && !WandProps.getFlag(wand_stack, WandProps.Flag.CLEAR_P1)
+                && mode != Mode.COPY && mode != Mode.BLAST) {
+            player.displayClientMessage(
+                Compat.translatable("wands.message.shape_complete",
+                    Compat.translatable(WandProps.getAction(wand_stack).toString()),
+                    Compat.translatable(mode.toString())),
+                true);
+        }
+
         // Copy and Paste modes use global limit instead of wand limit
         int effectiveLimit = (mode == Mode.COPY || mode == Mode.PASTE) ? WandsConfig.max_limit : limit;
 

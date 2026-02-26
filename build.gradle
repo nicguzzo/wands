@@ -8,6 +8,19 @@ plugins {
 
 version = mod_version
 
+// Architectury Transformer has shared mutable state, so transformProduction* tasks
+// from different MC versions cannot run in parallel — mc1.20.1's forge transform
+// picks up mc1.21's mappings path when they race. Serialize them while keeping
+// everything else parallel.
+gradle.projectsEvaluated {
+    def transforms = allprojects.collectMany { p ->
+        p.tasks.matching { it.name.startsWith('transformProduction') }.toList()
+    }
+    for (int i = 1; i < transforms.size(); i++) {
+        transforms[i].mustRunAfter(transforms[i - 1])
+    }
+}
+
 subprojects {
 
 
