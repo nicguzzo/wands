@@ -185,7 +185,7 @@ public class WandItem extends Item {
                 wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
             } else if (mode.n_clicks() == 1) {
                 // keep_start + pin: P1 already set from previous placement, re-send
-                send_placement(side, wand.getP1(), null, player.getEyePosition(), wand.palette.seed);
+                Networking.send_placement(side, wand.getP1(), null, player.getEyePosition(), wand.palette.seed);
                 wand.palette.seed = System.currentTimeMillis();
                 wand.copy();
                 if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {

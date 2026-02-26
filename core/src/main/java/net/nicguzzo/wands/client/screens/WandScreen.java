@@ -866,7 +866,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
 
         // Cycle toggles not in FLAG_MODES/VALUE_MODES
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), orientationCycle);
-        registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE), planeCycle);
+        registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE, WandProps.Mode.FILL), planeCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
 
         // Replace mode cycle - visible for modes that support PLACE action

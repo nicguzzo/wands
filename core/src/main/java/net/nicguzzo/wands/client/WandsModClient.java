@@ -351,6 +351,7 @@ public class WandsModClient {
                     if (isFull) {
                         switch (mode) {
                             case CIRCLE:
+                            case FILL:
                                 orientText = Compat.translatable("screen.wands.plane").getString() + " " + WandProps.getPlane(stack) + " [" + orientKey + "]";
                                 break;
                             case ROW_COL:
