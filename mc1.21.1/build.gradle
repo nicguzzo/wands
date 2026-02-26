@@ -12,11 +12,11 @@ subprojects {
     apply plugin: 'maven-publish'
 
     architectury {
-        minecraft = minecraft_version
+        minecraft = project.minecraft_version
     }
 
     base {
-        archivesName = "$rootProject.archives_base_name-$project.name-MC$minecraft_version"
+        archivesName = "$rootProject.archives_base_name-$project.name-MC$project.minecraft_version"
     }
 
     repositories {
