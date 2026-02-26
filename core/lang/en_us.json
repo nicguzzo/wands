@@ -326,5 +326,6 @@
   "wands.hud.move_pin": "Move pin",
   "wands.hud.settings": "Settings",
   "wands.hud.rotate": "Rotate",
-  "wands.hud.randomize": "Randomize"
+  "wands.hud.randomize": "Randomize",
+  "wands.message.shape_complete": "%1$s %2$s complete"
 }
