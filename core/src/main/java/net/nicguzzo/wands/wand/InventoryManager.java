@@ -8,8 +8,10 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.level.material.Fluids;
 import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.items.MagicBagItem;
+import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.WandProps.Mode;
+import net.minecraft.world.InteractionHand;
 
 import java.util.*;
 
@@ -275,6 +277,110 @@ public class InventoryManager {
         if (modified) {
             Compat.set_shulker_contents(shulker, contents);
         }
+    }
+
+    /** Tracks where a palette lives in the player's inventory */
+    public static class PaletteLocation {
+        public int invSlot;     // player inventory slot (0-35)
+        public boolean inShulker; // true if inside a shulker at invSlot
+
+        PaletteLocation(int invSlot, boolean inShulker) {
+            this.invSlot = invSlot;
+            this.inShulker = inShulker;
+        }
+    }
+
+    /** Find all palette locations: shulkers first, then direct inventory.
+     *  One entry per palette (a shulker with 3 palettes yields 3 entries). */
+    public static List<PaletteLocation> findPalettes(Inventory inv) {
+        List<PaletteLocation> result = new ArrayList<>();
+        // Shulker palettes first
+        for (int s = 0; s < 36; s++) {
+            ItemStack stack = inv.getItem(s);
+            if (WandUtils.is_shulker(stack)) {
+                List<ItemStack> contents = Compat.get_shulker_contents(stack);
+                for (ItemStack item : contents) {
+                    if (item.getItem() instanceof PaletteItem) {
+                        result.add(new PaletteLocation(s, true));
+                    }
+                }
+            }
+        }
+        // Direct inventory palettes
+        for (int s = 0; s < 36; s++) {
+            if (inv.getItem(s).getItem() instanceof PaletteItem) {
+                result.add(new PaletteLocation(s, false));
+            }
+        }
+        return result;
+    }
+
+    /** Remove and return the first PaletteItem from a location. */
+    public static ItemStack takePaletteAt(Inventory inv, PaletteLocation loc) {
+        if (loc.inShulker) {
+            ItemStack shulker = inv.getItem(loc.invSlot);
+            List<ItemStack> contents = Compat.get_shulker_contents(shulker);
+            for (int i = 0; i < contents.size(); i++) {
+                if (contents.get(i).getItem() instanceof PaletteItem) {
+                    ItemStack palette = contents.remove(i);
+                    Compat.set_shulker_contents(shulker, contents);
+                    return palette;
+                }
+            }
+            return ItemStack.EMPTY;
+        } else {
+            ItemStack palette = inv.getItem(loc.invSlot);
+            if (!(palette.getItem() instanceof PaletteItem)) return ItemStack.EMPTY;
+            inv.setItem(loc.invSlot, ItemStack.EMPTY);
+            return palette;
+        }
+    }
+
+    /** Return a palette to a location (appends to shulker, or sets inventory slot). */
+    public static void returnPaletteTo(Inventory inv, int invSlot, boolean inShulker, ItemStack palette) {
+        if (inShulker) {
+            ItemStack shulker = inv.getItem(invSlot);
+            List<ItemStack> contents = Compat.get_shulker_contents(shulker);
+            contents.add(palette);
+            Compat.set_shulker_contents(shulker, contents);
+        } else {
+            inv.setItem(invSlot, palette);
+        }
+    }
+
+    /** Main cycle method — called from process_keys.
+     *  Stateless atomic swap: fresh-scan palettes each press, take next palette,
+     *  put current offhand into the vacated slot. No stale state between presses. */
+    public static void cyclePalette(net.minecraft.world.entity.player.Player player, Wand wand) {
+        Inventory inv = player.getInventory();
+        ItemStack offhand = player.getOffhandItem();
+
+        List<PaletteLocation> palettes = findPalettes(inv);
+        if (palettes.isEmpty()) {
+            wand.paletteCycleActive = false;
+            return;
+        }
+
+        int nextIdx = wand.paletteCycleActive
+            ? (wand.paletteCycleIndex + 1) % palettes.size()
+            : 0;
+
+        PaletteLocation nextLoc = palettes.get(nextIdx);
+        ItemStack nextPalette = takePaletteAt(inv, nextLoc);
+        if (nextPalette.isEmpty()) return; // palette moved between scan and take
+
+        // Swap: put current offhand into the slot we just took from
+        if (!offhand.isEmpty()) {
+            if (nextLoc.inShulker) {
+                returnPaletteTo(inv, nextLoc.invSlot, true, offhand.copy());
+            } else {
+                inv.setItem(nextLoc.invSlot, offhand.copy());
+            }
+        }
+
+        player.setItemInHand(InteractionHand.OFF_HAND, nextPalette);
+        wand.paletteCycleActive = true;
+        wand.paletteCycleIndex = nextIdx;
     }
 
     void remove_from_inventory(Wand wand, int placed) {

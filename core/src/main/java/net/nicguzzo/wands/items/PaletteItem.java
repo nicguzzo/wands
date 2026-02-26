@@ -197,40 +197,39 @@ public class PaletteItem extends Item {
         }
     }
 
+    /** Open the palette menu for the player, checking mainhand then offhand. Returns true if a palette was found. */
+    public static boolean openPaletteMenu(Player player) {
+        ItemStack main = player.getMainHandItem();
+        ItemStack off = player.getOffhandItem();
+        ItemStack palette = null;
+        if (main.getItem() instanceof PaletteItem) {
+            palette = main;
+        } else if (off.getItem() instanceof PaletteItem) {
+            palette = off;
+        }
+        if (palette != null && player instanceof ServerPlayer) {
+            Compat.open_menu((ServerPlayer) player, palette, 1);
+        }
+        return palette != null;
+    }
+
     @Override
 #if MC_VERSION>=12111
     public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
+        if (openPaletteMenu(player)) {
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.FAIL;
+    }
 #else
     public @NotNull InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
-#endif
-        ItemStack paletteItemStack = player.getItemInHand(interactionHand);
-        ItemStack wand = player.getItemInHand(InteractionHand.MAIN_HAND);
-        boolean is_wand=WandUtils.is_wand(wand);
-        //boolean has_target=false;
-        if(is_wand){
-
-            #if MC_VERSION>=12111
-               return InteractionResult.FAIL;
-            #else
-               return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
-            #endif
+        ItemStack stack = player.getItemInHand(interactionHand);
+        if (openPaletteMenu(player)) {
+            return InteractionResultHolder.success(stack);
         }
-        if (!world.isClientSide()) {
-            Compat.open_menu((ServerPlayer) player, paletteItemStack, 1);
-            #if MC_VERSION>=12111
-               return InteractionResult.SUCCESS;
-            #else
-                return InteractionResultHolder.success(player.getItemInHand(interactionHand));
-            #endif
-
-        }
-        #if MC_VERSION>=12111
-            return InteractionResult.FAIL;
-        #else
-            return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
-        #endif
-
+        return InteractionResultHolder.fail(stack);
     }
+#endif
 
     public static SimpleContainer getInventory(ItemStack stack,Level level) {
         SimpleContainer inventory = new SimpleContainer(27*2);
