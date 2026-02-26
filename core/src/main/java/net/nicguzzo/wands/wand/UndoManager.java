@@ -125,11 +125,11 @@ public class UndoManager {
             level.playSound(null, player.blockPosition(), soundRef.getSoundType().getPlaceSound(), net.minecraft.sounds.SoundSource.BLOCKS, 1.0f, 1.0f);
         }
         MutableComponent msg = Compat.literal(prefix + ": ");
-        if (modeName != null) {
-            msg.append(Compat.translatable(modeName));
-        }
         if (actionName != null) {
-            msg.append(" ").append(actionName);
+            msg.append(actionName);
+        }
+        if (modeName != null) {
+            msg.append(" ").append(Compat.translatable(modeName));
         }
         msg.append(" - " + totalBlocks + " blocks");
         player.displayClientMessage(msg, true);

@@ -177,7 +177,7 @@ public class WandsMod {
     public static final RegistrySupplier<MenuType<MagicBagMenu>> MAGIC_WAND_CONTANIER = MENUES.register("magic_bag_menu", () -> MenuRegistry.ofExtended(MagicBagMenu::new));
 
     public enum WandKeys {
-        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, PIN
+        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, PIN, CYCLE_PALETTE
     }
 
     public static boolean is_forge = false;
@@ -256,6 +256,15 @@ public class WandsMod {
     }
 
     public static void process_keys(Player player, int key, boolean shift, boolean alt) {
+        // Handle CYCLE_PALETTE regardless of mainhand item
+        if (key >= 0 && key < WandKeys.values().length && WandKeys.values()[key] == WandKeys.CYCLE_PALETTE) {
+            Wand wand = PlayerWand.get(player);
+            if (wand != null) {
+                net.nicguzzo.wands.wand.InventoryManager.cyclePalette(player, wand);
+            }
+            return;
+        }
+
         ItemStack main_stack = player.getMainHandItem();
         ItemStack offhand_stack = player.getOffhandItem();
         boolean is_wand = main_stack.getItem() instanceof WandItem;
@@ -265,14 +274,7 @@ public class WandsMod {
             if (key >= 0 && key < WandKeys.values().length) {
                 switch (WandKeys.values()[key]) {
                     case PALETTE_MENU: {
-                        if (offhand_stack.getItem() instanceof PaletteItem) {
-                            Compat.open_menu((ServerPlayer) player, offhand_stack, 1);
-                        } else {
-                            ItemStack mainhand_stack = player.getMainHandItem();
-                            if (mainhand_stack.getItem() instanceof PaletteItem) {
-                                Compat.open_menu((ServerPlayer) player, mainhand_stack, 1);
-                            }
-                        }
+                        PaletteItem.openPaletteMenu(player);
                     }
                     break;
                     case PALETTE_MODE: {

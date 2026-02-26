@@ -324,6 +324,10 @@ public class Wand {
 
     public final Pin pin = new Pin();
 
+    // Palette cycle state
+    public boolean paletteCycleActive = false;
+    public int paletteCycleIndex = 0;
+
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
     InventoryManager inventory;
     public int MAX_COPY_VOL = WandsConfig.max_limit;
