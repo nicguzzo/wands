@@ -8,6 +8,12 @@
 - 1.21.11 (Fabric, NeoForge)
 
 ### New features
+- **Palette cycling** — press N to quickly swap between palettes in your hotbar or shulker boxes into your offhand
+- **Keep building in all pin modes** — pin your position and keep placing in any pin-capable mode, including single-click modes like Box and Rock
+- **"Shape complete" notification** — shows an action bar message when a pinned shape has nothing left to place
+- **Plane setting in Fill mode** — the current plane is now visible in both the Fill mode settings screen and the full HUD
+- **Rotate/Randomize hints in HUD** — minimal and full HUD now show the Rotate keybind hint for Grid, Paste, and Rock modes (Rock shows "Randomize" instead)
+- **Translated HUD labels** — all HUD text is now translatable for localization support
 - **New wand settings screen** — redesigned settings UI with better organization and tooltips
 - **Quick mode switching** — hold V to open a mode selector grid, tap V to cycle through modes
 - **Pin position** — lock the wand's target position in place (replaces the old Alt-freeze and Anchor system)
@@ -28,5 +34,8 @@
 - Fixed hand-mineable blocks requiring a tool to break with wand
 - Fixed vein mode affected by clear position setting
 - Fixed empty bucket showing red outline on fluid source blocks
-- Fixed server side crashing on client code.
+- Fixed server side crashing on client code
 - Fixed fill hollow mode axis, it now calculates axis from plane
+- Fixed missing translation keys lost during merge (Randomize, shape complete, mode selector title, tooltips)
+- Fixed HUD showing generic "Rotation" label instead of contextual "Rotate 90°" or "Randomize"
+- Fixed Forge build crash
