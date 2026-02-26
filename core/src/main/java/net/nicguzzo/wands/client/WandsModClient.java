@@ -545,7 +545,7 @@ public class WandsModClient {
                     int maxWidth = font.width(modeText);
                     if (showAction) maxWidth = Math.max(maxWidth, font.width(actionText));
                     if (isFull && !orientText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(orientText));
-                    if (showRotation) maxWidth = Math.max(maxWidth, font.width(rotationStr + " " + rot + " [" + getKeyName(WandsMod.WandKeys.ROTATE) + "]"));
+                    if (showRotation) maxWidth = Math.max(maxWidth, font.width(rotLabel + " [" + getKeyName(WandsMod.WandKeys.ROTATE) + "]"));
                     if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
@@ -597,7 +597,7 @@ public class WandsModClient {
 
                     // Rotation [R] / Randomize [R]
                     if (showRotation) {
-                        drawHudValueWithHint(gui, font, rotationStr + " " + rot, getKeyName(WandsMod.WandKeys.ROTATE), hudX, currentY);
+                        drawHudValueWithHint(gui, font, rotLabel, getKeyName(WandsMod.WandKeys.ROTATE), hudX, currentY);
                         currentY += lineSpacing;
                     }
 
