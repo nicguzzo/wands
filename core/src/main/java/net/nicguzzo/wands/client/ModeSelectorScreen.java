@@ -253,7 +253,6 @@ public class ModeSelectorScreen extends Screen {
 
         // Title
         String title = Compat.translatable("wands.mode_selector.title").getString();
-        if (title.startsWith("wands.")) title = "Select Mode";
         int titleW = font.width(title);
         gui.drawString(font, title, panelX + (panelW - titleW) / 2, panelY + GRID_PADDING, WandScreen.COLOR_TEXT_PRIMARY);
 
