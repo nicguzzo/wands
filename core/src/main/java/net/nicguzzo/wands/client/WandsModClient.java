@@ -329,8 +329,9 @@ public class WandsModClient {
                     String movePinStr = Compat.translatable("wands.hud.move_pin").getString();
                     String settingsStr = Compat.translatable("wands.hud.settings").getString();
 
-                    // FULL-only: rotation
-                    Rotation r = isFull ? WandProps.getRotation(stack) : null;
+                    // Rotation / Randomize hint
+                    boolean showRotation = WandProps.rotationAppliesTo(mode) || mode == WandProps.Mode.ROCK;
+                    Rotation r = (isFull && WandProps.rotationAppliesTo(mode)) ? WandProps.getRotation(stack) : null;
                     String rot = "";
                     if (r != null) {
                         switch (r) {
@@ -340,7 +341,9 @@ public class WandsModClient {
                             case COUNTERCLOCKWISE_90: rot = "270°"; break;
                         }
                     }
-                    boolean showRotation = isFull && WandProps.rotationAppliesTo(mode);
+                    String rotLabel = mode == WandProps.Mode.ROCK
+                        ? Compat.translatable("wands.hud.randomize").getString()
+                        : Compat.translatable("wands.hud.rotate").getString() + (rot.isEmpty() ? "" : " " + rot);
 
                     // FULL-only: orientation/plane
                     String orientKey = isFull ? getKeyName(WandsMod.WandKeys.ORIENTATION) : "";
@@ -478,7 +481,7 @@ public class WandsModClient {
                     int maxWidth = font.width(modeText);
                     if (showAction) maxWidth = Math.max(maxWidth, font.width(actionText));
                     if (isFull && !orientText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(orientText));
-                    if (showRotation) maxWidth = Math.max(maxWidth, font.width("Rotation " + rot + " [" + getKeyName(WandsMod.WandKeys.ROTATE) + "]"));
+                    if (showRotation) maxWidth = Math.max(maxWidth, font.width(rotLabel + " [" + getKeyName(WandsMod.WandKeys.ROTATE) + "]"));
                     if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
                     if (isFull && !infoText.isEmpty()) maxWidth = Math.max(maxWidth, font.width(infoText));
@@ -526,9 +529,9 @@ public class WandsModClient {
                         currentY += lineSpacing;
                     }
 
-                    // FULL: Rotation [R]
+                    // Rotation [R] / Randomize [R]
                     if (showRotation) {
-                        drawHudValueWithHint(gui, font, "Rotation " + rot, getKeyName(WandsMod.WandKeys.ROTATE), hudX, currentY);
+                        drawHudValueWithHint(gui, font, rotLabel, getKeyName(WandsMod.WandKeys.ROTATE), hudX, currentY);
                         currentY += lineSpacing;
                     }
 

@@ -324,5 +324,7 @@
   "wands.hud.pin": "Pin",
   "wands.hud.unpin": "Unpin",
   "wands.hud.move_pin": "Move pin",
-  "wands.hud.settings": "Settings"
+  "wands.hud.settings": "Settings",
+  "wands.hud.rotate": "Rotate",
+  "wands.hud.randomize": "Randomize"
 }

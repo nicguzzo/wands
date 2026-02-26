@@ -93,7 +93,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     // EXPERIMENTAL: Extended divider that fills from tabs to right edge with widget background color
     private static final boolean USE_EXTENDED_DIVIDER = true;
 
-    Component rockMessage  = Compat.literal("rotate for new rock");
     private static final int SPINNER_HEIGHT = 14;
 
     Vector<Wdgt> wdgets = new Vector<>();
@@ -1124,10 +1123,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                 if (wdget.visible) {
                         wdget.render(gui, this.font, mouseX, mouseY);
                 }
-            }
-
-            if(WandProps.getMode(getPlayerHeldWand()) == WandProps.Mode.ROCK) {
-                gui.drawString(font, rockMessage, leftPos + 103, topPos + 62, 0x00ff0000, true);
             }
 
             // Render widget tooltips using vanilla tooltip rendering
