@@ -70,7 +70,7 @@ subprojects {
         def width = localProps.getProperty('windowWidth')
         def height = localProps.getProperty('windowHeight')
 
-        if (project.name == 'fabric' || project.name == 'neoforge') {
+        if (project.name in ["fabric", "neoforge", "forge"]) {
             loom.runs.named('client') {
                 if (world) {
                     programArgs "--quickPlaySingleplayer", world

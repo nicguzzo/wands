@@ -1,3 +1,6 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.LinkOption
 
 def coreSource = file("${project.rootDir}/core/src/main/java")
 def compatSource = file("${project.rootDir}/compat/src/main/java")
@@ -14,8 +17,12 @@ task createSharedLinks {
         linkedCore.getParentFile().mkdirs()
 
         def createLink = { File target, File source ->
-            if (target.exists()) return // Don't recreate if exists
-            
+            source.mkdirs()
+            if (Files.exists(target.toPath(), LinkOption.NOFOLLOW_LINKS)){
+                //println "Removing existing link: ${target.name}"
+                //Files.delete(target.toPath())
+                return;
+            }
             println "Creating link: $target -> $source"
             
             if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
@@ -47,32 +54,5 @@ sourceSets {
             srcDir linkedCore
             srcDir linkedCompat
         }
-        //resources {
-        //    srcDir linkedRes
-        //}
     }
 }
-//sourceSets {
-//    main {
-//        java {
-//            srcDir "${project.rootDir}/core/src/main/java"
-//            srcDir "${project.rootDir}/compat/src/main/java"
-//        }
-//        resources {
-//            srcDir "${project.rootDir}/core/src/main/resources"
-//        }
-//    }
-//}
-
-//subprojects {
-//    tasks.withType(JavaCompile).configureEach {
-//        it.options.compilerArgs += ['-Xplugin:Manifold']
-//    }
-//}
-
-//idea {
-//    module {
-//        sourceDirs += file("${project.rootDir}/core/src/main/java")
-//        sourceDirs += file("${project.rootDir}/compat/src/main/java")
-//    }
-//}
