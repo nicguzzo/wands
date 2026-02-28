@@ -1,0 +1,50 @@
+[
+  {
+    "name": "1.20.1-Fabric",
+    "game_version": "1.20.1",
+    "loader": "fabric",
+    "jar_dir": "./mc1.20.1/fabric/build/libs",
+    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "java_key": "java_17"
+  },
+  {
+    "name": "1.20.1-Forge",
+    "game_version": "1.20.1",
+    "loader": "forge",
+    "jar_dir": "./mc1.20.1/forge/build/libs",
+    "dependencies": ["architectury-api", "cloth-config"],
+    "java_key": "java_17"
+  },
+  {
+    "name": "1.21.1-Fabric",
+    "game_version": "1.21.1",
+    "loader": "fabric",
+    "jar_dir": "./mc1.21.1/fabric/build/libs",
+    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "java_key": "java_21"
+  },
+  {
+    "name": "1.21.1-NeoForge",
+    "game_version": "1.21.1",
+    "loader": "neoforge",
+    "jar_dir": "./mc1.21.1/neoforge/build/libs",
+    "dependencies": ["architectury-api", "cloth-config"],
+    "java_key": "java_21"
+  },
+  {
+    "name": "1.21.11-Fabric",
+    "game_version": "1.21.11",
+    "loader": "fabric",
+    "jar_dir": "./mc1.21.11/fabric/build/libs",
+    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "java_key": "java_21"
+  },
+  {
+    "name": "1.21.11-NeoForge",
+    "game_version": "1.21.11",
+    "loader": "neoforge",
+    "jar_dir": "./mc1.21.11/neoforge/build/libs",
+    "dependencies": ["architectury-api", "cloth-config"],
+    "java_key": "java_21"
+  }
+]
