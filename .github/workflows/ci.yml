@@ -59,7 +59,7 @@ jobs:
       - name: Build ${{ matrix.target.target }}/${{ matrix.target.loader }}
         run: |
           chmod +x ./gradlew
-          ./gradlew -Ptarget=${{ matrix.target.target }} :${{ matrix.target.target }}:${{ matrix.target.loader }}:build
+          ./gradlew -Ptarget=${{ matrix.target.target }} :${{ matrix.target.target }}:${{ matrix.target.loader }}:build -Pfabric.loom.disable_file_lock=true
 
       - name: Upload JARs
         uses: actions/upload-artifact@v4
