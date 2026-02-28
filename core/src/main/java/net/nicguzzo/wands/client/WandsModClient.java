@@ -297,7 +297,7 @@ public class WandsModClient {
         Networking.RegisterReceiversS2C();
     }
 
-    /** Get a short display name for a keybind (e.g. "V", "H", "Right") */
+    /** Get a short display name for a keybind (e.g. "V", "H", "→") */
     public static String getKeyName(WandsMod.WandKeys key) {
         KeyMapping km = reverseKeys.get(key);
         if (km == null) return "?";
@@ -308,10 +308,10 @@ public class WandsModClient {
         }
         // Map common long names to short forms
         switch (name) {
-            case "Right Arrow": return "Right";
-            case "Left Arrow": return "Left";
-            case "Up Arrow": return "Up";
-            case "Down Arrow": return "Down";
+            case "Right Arrow": return "\u2192";
+            case "Left Arrow": return "\u2190";
+            case "Up Arrow": return "\u2191";
+            case "Down Arrow": return "\u2193";
         }
         return name;
     }
@@ -539,7 +539,9 @@ public class WandsModClient {
                     String modeText = modeStr + " [" + modeKey + ", hold " + modeKey + "]";
                     String actionText = showAction ? actionStr + " [" + actionKey + "]" : "";
                     String pinText = showPin ? pinStr + " [" + pinKey + "]" : "";
-                    String movePinText = movePinStr + " [←→↑↓, Shift+↑↓]";
+                    String arrowKeys = getKeyName(WandsMod.WandKeys.M_DEC) + getKeyName(WandsMod.WandKeys.M_INC) + getKeyName(WandsMod.WandKeys.N_INC) + getKeyName(WandsMod.WandKeys.N_DEC);
+                    String vertKeys = "Shift+" + getKeyName(WandsMod.WandKeys.N_INC) + getKeyName(WandsMod.WandKeys.N_DEC);
+                    String movePinText = movePinStr + " [" + arrowKeys + ", " + vertKeys + "]";
                     String settingsText = settingsStr + " [" + settingsKey + "]";
 
                     int maxWidth = font.width(modeText);
@@ -696,9 +698,9 @@ public class WandsModClient {
                         currentY += lineSpacing;
                     }
 
-                    // Move pin [←→↑↓, Shift+↑↓]
+                    // Move pin [arrows, Shift+up/down]
                     if (pinIsActive) {
-                        drawHudValueWithHint(gui, font, movePinStr, "←→↑↓, Shift+↑↓", hudX, currentY);
+                        drawHudValueWithHint(gui, font, movePinStr, arrowKeys + ", " + vertKeys, hudX, currentY);
                         currentY += lineSpacing;
                     }
 
