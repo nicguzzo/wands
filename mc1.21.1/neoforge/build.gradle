@@ -22,6 +22,19 @@ configurations {
         canBeResolved = true
         canBeConsumed = false
     }
+
+    // Force ASM 9.8 everywhere — securejarhandler:3.0.8 transitively pulls ASM 9.5,
+    // but NeoForge 21.1.x needs 9.8. Without this, Loom puts 9.5 on the module path
+    // while the classpath has 9.8, causing a module conflict at runtime.
+    all {
+        resolutionStrategy {
+            force 'org.ow2.asm:asm:9.8',
+                  'org.ow2.asm:asm-commons:9.8',
+                  'org.ow2.asm:asm-tree:9.8',
+                  'org.ow2.asm:asm-analysis:9.8',
+                  'org.ow2.asm:asm-util:9.8'
+        }
+    }
 }
 
 repositories {
