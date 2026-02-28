@@ -10,7 +10,7 @@ import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
-import net.nicguzzo.wands.client.screens.WandScreen;
+import net.nicguzzo.wands.client.screens.WandToolScreen;
 
 import java.util.Optional;
 
@@ -22,7 +22,7 @@ public class WandsModClientFabric implements ClientModInitializer {
         TooltipComponentCallback.EVENT.register(PaletteClientTooltip::tryCreate);
 
         MenuScreens.register(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-        MenuScreens.register(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
+        MenuScreens.register(WandsMod.WAND_CONTAINER.get(), WandToolScreen::new);
         MenuScreens.register(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
 
         Optional<ModContainer> cont= FabricLoader.getInstance().getModContainer("optifabric");

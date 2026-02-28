@@ -57,7 +57,6 @@ public class WandsModClient {
     public static boolean has_optifine = false;
     public static boolean has_opac = false;
     public static KeyMapping wand_menu_km;
-    public static boolean openToolsTab = false;
     // Palette cycle pop animation: wait for server sync before applying popTime
     // Snapshots: [0-8] = hotbar, [9] = offhand
     private static boolean paletteCyclePending = false;
@@ -184,8 +183,10 @@ public class WandsModClient {
                         // New press detected
                         if (!any) any = true;
 
-                        if (key == WandsMod.WandKeys.MENU && Compat.hasShiftDown()) {
-                            openToolsTab = true;
+                        // MENU without shift: open wand settings client-side
+                        if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
+                            client.setScreen(new WandScreen(mainHand));
+                            continue;
                         }
 
                         // Try pin handling first — if consumed, don't send to server
@@ -238,8 +239,10 @@ public class WandsModClient {
                         // Skip keys consumed by ModeSelector
                         if (ModeSelectorScreen.consumesKey(key)) continue;
                         if (!any) any = true;
-                        if (key == WandsMod.WandKeys.MENU && Compat.hasShiftDown()) {
-                            openToolsTab = true;
+                        // MENU without shift: open wand settings client-side
+                        if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown() && holdingWand) {
+                            client.setScreen(new WandScreen(mainHand));
+                            continue;
                         }
                         if (key == WandsMod.WandKeys.CLEAR) {
                             cancel_wand();
