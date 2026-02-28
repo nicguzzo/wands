@@ -173,8 +173,10 @@ public class ModeInstructionOverlay {
         // Pin movement instructions (only when pin is actively set)
         Wand wand = ClientRender.wand;
         if (wand != null && wand.pin.isSet() && wand.pin.isPersistent()) {
+            String ak = WandsModClient.getKeyName(WandsMod.WandKeys.M_DEC) + WandsModClient.getKeyName(WandsMod.WandKeys.M_INC) + WandsModClient.getKeyName(WandsMod.WandKeys.N_INC) + WandsModClient.getKeyName(WandsMod.WandKeys.N_DEC);
+            String vk = "Shift+" + WandsModClient.getKeyName(WandsMod.WandKeys.N_INC) + WandsModClient.getKeyName(WandsMod.WandKeys.N_DEC);
             MutableComponent text = Component.translatable("wands.instruction.pin.move")
-                    .append(Component.literal(" [←→↑↓, Shift+↑↓]").withStyle(s -> s.withColor(TEXT_COLOR_DIM)));
+                    .append(Component.literal(" [" + ak + ", " + vk + "]").withStyle(s -> s.withColor(TEXT_COLOR_DIM)));
             return new Instruction(text, false);
         }
 

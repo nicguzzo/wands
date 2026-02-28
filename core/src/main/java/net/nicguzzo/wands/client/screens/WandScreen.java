@@ -1,25 +1,17 @@
 package net.nicguzzo.wands.client.screens;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 #if MC_VERSION >= 12111
-import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 #endif
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.client.gui.GuiGraphics;
 
-import net.nicguzzo.compat.MyIdExt;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.*;
 import net.nicguzzo.wands.WandsMod;
@@ -32,7 +24,6 @@ import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.client.gui.Tabs;
 import net.nicguzzo.wands.client.gui.Divider;
 import net.nicguzzo.wands.client.gui.Wdgt;
-import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -48,16 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-public class WandScreen extends AbstractContainerScreen<WandMenu> {
+public class WandScreen extends Screen {
     ItemStack wandStack=null;
     WandItem wandItem =null;
-    #if MC_VERSION >= 12111
-    int[] empty_tools= new int[0];
-    GpuTextureView wandInventoryTexture;
-    #endif
-    private static final MyIdExt INV_TEX = new MyIdExt(WandsMod.MOD_ID,"textures/gui/inventory.png");
-    static final int IMG_WIDTH = 256;
-    static final int IMG_HEIGHT = 256;
 
     // ===== Color Constants =====
     // Panel/Layout colors
@@ -114,8 +98,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     // Tools Section
     CycleToggle<Integer> replaceModeCycle;
     CycleToggle<Boolean> dropPositionToggle;
-    Btn showInventoryButton;
-    boolean showInventory = false;
+    Btn pickToolsButton;
     Btn configButton;
 
     // Mode Options Section
@@ -192,18 +175,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return false;
     }
 
-    private boolean isOverInventorySlot(int mx, int my) {
-        for (int i = 0; i < 36; i++) {
-            Slot slot = this.menu.slots.get(i);
-            int slotX = slot.x + this.leftPos;
-            int slotY = slot.y + this.topPos;
-            if (mx >= slotX && mx < slotX + 16 && my >= slotY && my < slotY + 16) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean isWidgetClickable(Wdgt widget, int mx, int my) {
         if (widget instanceof Section section) {
             for (Wdgt child : section.getChildren()) {
@@ -247,17 +218,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         return null;
     }
 
-    public WandScreen(WandMenu handler, Inventory inventory, Component title) {
-        super(handler, inventory, title);
-        #if MC_VERSION >= 12111
-        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-        wandInventoryTexture=textureManager.getTexture(INV_TEX.res).getTextureView();
-        #endif
-        if (WandsModClient.openToolsTab) {
-            isToolsTabSelected = true;
-            showInventory = true;
-            WandsModClient.openToolsTab = false;
-        }
+    public WandScreen(ItemStack wandStack) {
+        super(Component.empty());
+        this.wandStack = wandStack;
     }
     // Helper for creating a spinner bound to a WandProps.Value
     private Spinner valSpinner(Value val, int w, int h, Component label) {
@@ -479,12 +442,12 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     private Section createToolsSection() {
         Section section = new Section();
 
-        // Tools button (show inventory) - text button with "..."
-        showInventoryButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.pick_tools").copy().append("..."), (mouseX, mouseY) -> {
-            showInventory = !showInventory;
+        // Tools button - opens tool picker screen via server
+        pickToolsButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.pick_tools").copy().append("..."), (mouseX, mouseY) -> {
+            Networking.send_key(WandsMod.WandKeys.MENU.ordinal(), false, false);
         });
-        showInventoryButton.withTooltip(Compat.translatable("screen.wands.pick_tools"), Compat.translatable("tooltip.wands.pick_tools"));
-        section.add(showInventoryButton);
+        pickToolsButton.withTooltip(Compat.translatable("screen.wands.pick_tools"), Compat.translatable("tooltip.wands.pick_tools"));
+        section.add(pickToolsButton);
 
 #if USE_CLOTHCONFIG
         // Config button - text button with "..."
@@ -898,9 +861,8 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         super.init();
         wdgets.clear();  // Clear widgets on resize/reinit
 
-        // Prefer the player's actual held wand over the menu's copy
+        // Prefer the player's actual held wand
         // This ensures we read the current values, not stale ones
-        wandStack = null;
         if (Minecraft.getInstance().player != null) {
             ItemStack mainHand = Minecraft.getInstance().player.getMainHandItem();
             if (mainHand.getItem() instanceof WandItem) {
@@ -911,10 +873,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
                     wandStack = offHand;
                 }
             }
-        }
-        // Fallback to menu's copy if player's wand not found
-        if (wandStack == null) {
-            wandStack = this.menu.wand;
         }
 
         if(wandStack==null){
@@ -1065,93 +1023,42 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     }
     @Override
     public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
-        if(showInventory) {
-            #if MC_VERSION >= 12111
-            RenderSystem.outputColorTextureOverride=wandInventoryTexture;
-            #else
-            RenderSystem.setShaderTexture(0, INV_TEX.res);
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            #endif
-            int inventoryX = (width - imageWidth) / 2;
-            int inventoryY = (height - imageHeight) / 2;
-            //gui.blit(RenderPipelines.GUI_TEXTURED, INV_TEX, inventoryX, inventoryY, 0, 0, imageWidth, imageHeight, 256, 256);
-            Compat.blit(gui,INV_TEX, inventoryX, inventoryY, 0, 0, imageWidth, imageHeight, 256, 256);
-            super.render(gui, mouseX, mouseY, delta);
-            if(ClientRender.wand != null && ClientRender.wand.player_data != null){
-                #if MC_VERSION >= 12111
-                    int[] Tools= ClientRender.wand.player_data.getIntArray("Tools").orElse(empty_tools);
-                #else
-                    int[] Tools= ClientRender.wand.player_data.getIntArray("Tools");
-                #endif
+        // Draw semi-transparent background panel (extends to bottom with same margin as top/sides)
+        // Tabs have no left/right inner padding, section has INNER_PADDING
+        Section visibleContent = isToolsTabSelected ? toolsSection : modeOptionsSection;
+        int panelX = modeTabs.x - INNER_PADDING;
+        int panelY = modeTabs.y - INNER_PADDING;
+        int panelRight = visibleContent.x + visibleContent.width + INNER_PADDING;
+        int panelBottom = this.height - SCREEN_MARGIN;
+        gui.fill(panelX, panelY, panelRight, panelBottom, COLOR_PANEL_BACKGROUND);
 
-                for (int toolSlotIndex : Tools) {
-                    Slot slot = this.menu.slots.get(toolSlotIndex);
-                    int slotScreenX = slot.x + this.leftPos;
-                    int slotScreenY = slot.y + this.topPos;
-                    gui.fillGradient(slotScreenX, slotScreenY, slotScreenX + 16, slotScreenY + 16, 0x8800AA00, 0x1000AA00);
-                }
-            }
-            // Position 4px below title (titleLabelY=6, font height ~9, so y = 6 + 9 + 4 = 19)
-            int instructionY = topPos + titleLabelY + font.lineHeight + 16;
-            gui.drawString(font, "Click an inventory slot to have ", leftPos + titleLabelX, instructionY, COLOR_TEXT_DARK, false);
-            gui.drawString(font, "the wand use a tool in that slot", leftPos + titleLabelX, instructionY + font.lineHeight, COLOR_TEXT_DARK, false);
-
-        }else{
-            // Draw semi-transparent background panel (extends to bottom with same margin as top/sides)
-            // Tabs have no left/right inner padding, section has INNER_PADDING
-            Section visibleContent = isToolsTabSelected ? toolsSection : modeOptionsSection;
-            int panelX = modeTabs.x - INNER_PADDING;
-            int panelY = modeTabs.y - INNER_PADDING;
-            int panelRight = visibleContent.x + visibleContent.width + INNER_PADDING;
-            int panelBottom = this.height - SCREEN_MARGIN;
-            gui.fill(panelX, panelY, panelRight, panelBottom, COLOR_PANEL_BACKGROUND);
-
-            // Draw divider line between tabs and content
-            if (SHOW_TAB_DIVIDER) {
-                int lineX = modeTabs.x + modeTabs.width + INNER_PADDING;
-                if (USE_EXTENDED_DIVIDER) {
-                    // Extended divider: fills from lineX to right edge, full panel height
-                    // Slightly lighter gray (0x484848) with 30% opacity (0x4D)
-                    gui.fill(lineX, panelY, panelRight, panelBottom, 0x4D484848);
-                } else {
-                    gui.fill(lineX, modeTabs.y, lineX + DIVIDER_LINE_WIDTH, modeTabs.y + modeTabs.height, COLOR_TAB_DIVIDER);
-                }
-            }
-
-            update_selections();
-            for (Wdgt wdget : wdgets) {
-                if (wdget.visible) {
-                        wdget.render(gui, this.font, mouseX, mouseY);
-                }
-            }
-
-            // Render widget tooltips using vanilla tooltip rendering
-            Wdgt hoveredWidget = findHoveredWidget(mouseX, mouseY);
-            if (hoveredWidget != null) {
-                Compat.renderComponentTooltip(gui, font, hoveredWidget.getTooltipLines(), mouseX, mouseY);
+        // Draw divider line between tabs and content
+        if (SHOW_TAB_DIVIDER) {
+            int lineX = modeTabs.x + modeTabs.width + INNER_PADDING;
+            if (USE_EXTENDED_DIVIDER) {
+                // Extended divider: fills from lineX to right edge, full panel height
+                // Slightly lighter gray (0x484848) with 30% opacity (0x4D)
+                gui.fill(lineX, panelY, panelRight, panelBottom, 0x4D484848);
+            } else {
+                gui.fill(lineX, modeTabs.y, lineX + DIVIDER_LINE_WIDTH, modeTabs.y + modeTabs.height, COLOR_TAB_DIVIDER);
             }
         }
+
+        update_selections();
+        for (Wdgt wdget : wdgets) {
+            if (wdget.visible) {
+                    wdget.render(gui, this.font, mouseX, mouseY);
+            }
+        }
+
+        // Render widget tooltips using vanilla tooltip rendering
+        Wdgt hoveredWidget = findHoveredWidget(mouseX, mouseY);
+        if (hoveredWidget != null) {
+            Compat.renderComponentTooltip(gui, font, hoveredWidget.getTooltipLines(), mouseX, mouseY);
+        }
+
         // Update cursor based on hover
-        if (showInventory) {
-            // In tool selection menu, show hand cursor only over inventory slots
-            boolean shouldBeHand = isOverInventorySlot(mouseX, mouseY);
-            if (shouldBeHand != isHandCursor) {
-                isHandCursor = shouldBeHand;
-                long window = Compat.getWindow();
-                if (shouldBeHand) {
-                    if (handCursor == 0) {
-                        handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
-                    }
-                    GLFW.glfwSetCursor(window, handCursor);
-                } else {
-                    GLFW.glfwSetCursor(window, 0);
-                }
-            }
-        } else {
-            updateCursor(mouseX, mouseY);
-        }
-
-        this.renderTooltip(gui, mouseX, mouseY);
+        updateCursor(mouseX, mouseY);
     }
 
     @Override
@@ -1166,11 +1073,6 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
             handCursor = 0;
         }
         super.onClose();
-    }
-
-    @Override
-    protected void renderBg(@NotNull GuiGraphics gui, float delta, int mouseX, int mouseY) {
-
     }
 
     #if MC_VERSION >= 12101
@@ -1190,19 +1092,11 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         int mx = (int) mouseX;
         int my = (int) mouseY;
     #endif
-        if(!showInventory) {
-            // Stop propagation after first widget handles the click
-            for (Wdgt wdget : wdgets) {
-                if (wdget.visible && wdget.click(mx, my)) {
-                    return true;
-                }
+        // Stop propagation after first widget handles the click
+        for (Wdgt wdget : wdgets) {
+            if (wdget.visible && wdget.click(mx, my)) {
+                return true;
             }
-        }else{
-            #if MC_VERSION >= 12111
-            super.mouseClicked(mouseButtonEvent,bl);
-            #else
-            super.mouseClicked(mouseX, mouseY, button);
-            #endif
         }
 
         return true;
@@ -1211,12 +1105,9 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
     #if MC_VERSION >= 12111
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-
-        if (!showInventory) {
-            for (Wdgt wdget : wdgets) {
-                if (wdget.visible && wdget.scroll((int) mouseX, (int) mouseY, scrollY)) {
-                    return true;
-                }
+        for (Wdgt wdget : wdgets) {
+            if (wdget.visible && wdget.scroll((int) mouseX, (int) mouseY, scrollY)) {
+                return true;
             }
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -1236,11 +1127,7 @@ public class WandScreen extends AbstractContainerScreen<WandMenu> {
         #else
         if ((WandsModClient.wand_menu_km.matches(keysym,scancode) || scancode==256) ) {
         #endif
-            if(showInventory) {
-                showInventory = false;
-            }else{
-                onClose();
-            }
+            onClose();
             return true;
         }else {
             #if MC_VERSION >= 12111

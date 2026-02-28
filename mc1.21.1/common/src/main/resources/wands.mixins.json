@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "client": [
     "ItemRendererMixin",
+    "KeyMappingAccessor",
     "LevelRendererMixin"
   ],
   "mixins": [

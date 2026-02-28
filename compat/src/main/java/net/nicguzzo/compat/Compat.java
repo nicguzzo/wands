@@ -64,10 +64,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -415,21 +413,16 @@ public class Compat {
         #endif
         #endif
     }
-    private static final Map<KeyMapping, Integer> keyCodeMap = new HashMap<>();
     static public int getKeyCode(KeyMapping km) {
-        return keyCodeMap.getOrDefault(km, -1);
+        return ((net.nicguzzo.wands.mixin.KeyMappingAccessor) km).wands_getKey().getValue();
     }
 #if MC_VERSION >= 12111
     static public KeyMapping newKeyMapping(String name,int key,KeyMapping.Category tab) {
-        KeyMapping km = new KeyMapping(name,key,tab);
-        keyCodeMap.put(km, key);
-        return km;
+        return new KeyMapping(name,key,tab);
     }
 #else
     static public KeyMapping newKeyMapping(String name,int key,String tab) {
-        KeyMapping km = new KeyMapping(name, key,tab);
-        keyCodeMap.put(km, key);
-        return km;
+        return new KeyMapping(name, key,tab);
     }
 #endif
 

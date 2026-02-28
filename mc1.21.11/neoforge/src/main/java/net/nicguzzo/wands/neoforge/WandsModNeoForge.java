@@ -19,7 +19,7 @@ import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
-import net.nicguzzo.wands.client.screens.WandScreen;
+import net.nicguzzo.wands.client.screens.WandToolScreen;
 import net.nicguzzo.wands.items.PaletteTooltip;
 
 import java.util.function.Supplier;
@@ -34,7 +34,7 @@ class ModMenuTypes {
 
     private static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(WandsMod.PALETTE_CONTAINER.get(), PaletteScreen::new);
-        event.register(WandsMod.WAND_CONTAINER.get(), WandScreen::new);
+        event.register(WandsMod.WAND_CONTAINER.get(), WandToolScreen::new);
         event.register(WandsMod.MAGIC_WAND_CONTANIER.get(), MagicBagScreen::new);
     }
 }
