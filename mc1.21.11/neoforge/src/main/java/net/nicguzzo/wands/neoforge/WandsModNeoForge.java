@@ -8,6 +8,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -52,23 +53,26 @@ public class WandsModNeoForge {
     public WandsModNeoForge(IEventBus modEventBus) {
         WandsMod.is_neoforge = true;
 
-        WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
-        WandsMod.log("Has opac!! " + WandsMod.has_goml, true);
-
-        WandsMod.has_ftbchunks = ModList.get().isLoaded("ftbchunks");
-        WandsMod.log("Has ftbchunks!! " + WandsMod.has_goml, true);
-
-        WandsMod.has_flan = ModList.get().isLoaded("flan");
-        WandsMod.log("Has flan!! " + WandsMod.has_goml, true);
-
         WandsMod.init();
         NeoForge.EVENT_BUS.register(this);
         ATTACHMENT_TYPES.register(modEventBus);
 
+        modEventBus.addListener(this::onCommonSetup);
         ModMenuTypes.clientRegister(modEventBus);
         EnvExecutor.runInEnv(Env.CLIENT, () -> () -> {
             WandsModClient.initialize();
         });
+    }
+
+    private void onCommonSetup(FMLCommonSetupEvent event) {
+        WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
+        WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
+
+        WandsMod.has_ftbchunks = ModList.get().isLoaded("ftbchunks");
+        WandsMod.log("Has ftbchunks!! " + WandsMod.has_ftbchunks, true);
+
+        WandsMod.has_flan = ModList.get().isLoaded("flan");
+        WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
     @SubscribeEvent

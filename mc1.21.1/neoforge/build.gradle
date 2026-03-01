@@ -22,30 +22,25 @@ configurations {
         canBeResolved = true
         canBeConsumed = false
     }
+
+    // Force ASM 9.8 everywhere — securejarhandler:3.0.8 transitively pulls ASM 9.5,
+    // but NeoForge 21.1.x needs 9.8. Without this, Loom puts 9.5 on the module path
+    // while the classpath has 9.8, causing a module conflict at runtime.
+    all {
+        resolutionStrategy {
+            force 'org.ow2.asm:asm:9.8',
+                  'org.ow2.asm:asm-commons:9.8',
+                  'org.ow2.asm:asm-tree:9.8',
+                  'org.ow2.asm:asm-analysis:9.8',
+                  'org.ow2.asm:asm-util:9.8'
+        }
+    }
 }
 
 repositories {
 	maven {
         name = 'NeoForged'
         url = 'https://maven.neoforged.net/releases'
-    }
-    maven{
-        url "https://maven.terraformersmc.com/releases"
-    }
-    maven {
-        url "https://cursemaven.com"
-    }
-    maven {
-        url "https://maven.saps.dev/minecraft"
-        content {
-            includeGroup "dev.ftb.mods"
-        }
-    }
-    maven {
-        url = "https://maven.jamieswhiteshirt.com/libs-release/"
-        content {
-            includeGroup 'com.jamieswhiteshirt'
-        }
     }
 }
 
@@ -54,22 +49,6 @@ dependencies {
 	modImplementation "dev.architectury:architectury-neoforge:$project.architectury_version"
 
     modApi("me.shedaniel.cloth:cloth-config-neoforge:${project.cloth_config_version}")
-
-    if(project.rtree_version!=""){
-        modCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${project.rtree_version}")
-    }
-    if(project.opac_forge!=""){
-        modCompileOnly("${project.opac_forge}")        { transitive = false }
-    }
-    if(project.flan_forge!=""){
-        modCompileOnly("${project.flan_forge}")        { transitive = false }
-    }
-    if(project.ftb_chunks_forge!=""){
-        modCompileOnly("${project.ftb_chunks_forge}")   { transitive = false }
-    }
-    if(project.ftb_library_forge!=""){
-        modCompileOnly("${project.ftb_library_forge}")  { transitive = false }
-    }
 
     def commonPath = ":${project.parent.name}:common"
     common(project(path: commonPath, configuration: 'namedElements')) { transitive false }

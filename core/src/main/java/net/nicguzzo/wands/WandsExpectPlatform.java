@@ -4,9 +4,7 @@ import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.platform.Platform;
 import java.nio.file.Path;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.core.BlockPos;
 
 public class WandsExpectPlatform {
     /**
@@ -24,11 +22,6 @@ public class WandsExpectPlatform {
     public static Path getConfigDirectory() {
         // Just throw an error, the content should get replaced at runtime.
         throw new AssertionError();
-    }
-    @ExpectPlatform
-    public static boolean claimCanInteract(ServerLevel world, BlockPos pos, Player player){
-        throw new AssertionError();
-        //return true;
     }
     @ExpectPlatform
     public static CompoundTag getPlayerData(Player player){

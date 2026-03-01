@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Building Wands - Automated Test Environment Builder
-# Features: Modrinth API, PortableMC, Isolated Instances, API Caching
+# Features: Modrinth + CurseForge APIs, PortableMC, Isolated Instances, Caching
 # ==============================================================================
 
 if ! command -v jq &> /dev/null; then
@@ -18,21 +18,27 @@ fi
 # 0. Argument Parsing
 # ------------------------------------------------------------------------------
 FORCE_UPDATE_DEPS=false
+WITH_OPTIONAL=false
 for arg in "$@"; do
     if [ "$arg" == "--force-update-deps" ]; then
         FORCE_UPDATE_DEPS=true
         echo ">>> [FLAG] Force updating dependencies and clearing caches..."
-        break
+    fi
+    if [ "$arg" == "--with-optional" ]; then
+        WITH_OPTIONAL=true
+        echo ">>> [FLAG] Including optional/compat mods (JEI, OPAC, FTB Chunks, etc.)..."
     fi
 done
 
 TEST_ENV_DIR="./test-env"
 DEPS_CACHE_DIR="$TEST_ENV_DIR/modrinth-cache"
+CF_CACHE_DIR="$TEST_ENV_DIR/curseforge-cache"
 LOCAL_CONFIG_FILE="$TEST_ENV_DIR/test-env-config.json"
 INSTANCES_FILE="instances.json"
 
 mkdir -p "$TEST_ENV_DIR"
 mkdir -p "$DEPS_CACHE_DIR"
+mkdir -p "$CF_CACHE_DIR"
 
 # ------------------------------------------------------------------------------
 # 1. Configuration Validation
@@ -46,16 +52,20 @@ if [ ! -f "$LOCAL_CONFIG_FILE" ]; then
     echo ">>> Local configuration not found."
     read -p "Enter your player name for testing [default: Nico]: " INPUT_NAME
     INPUT_NAME=${INPUT_NAME:-Nico}
+    read -p "Enter guest player name for LAN testing [default: Guest]: " INPUT_GUEST
+    INPUT_GUEST=${INPUT_GUEST:-Guest}
 
     echo ">>> Generating $LOCAL_CONFIG_FILE..."
     cat <<EOF > "$LOCAL_CONFIG_FILE"
 {
-  "player_name": "$INPUT_NAME"
+  "player_name": "$INPUT_NAME",
+  "guest_name": "$INPUT_GUEST"
 }
 EOF
 fi
 
 PLAYER_NAME=$(jq -r '.player_name // "Nico"' "$LOCAL_CONFIG_FILE")
+GUEST_NAME=$(jq -r '.guest_name // "Guest"' "$LOCAL_CONFIG_FILE")
 
 # ------------------------------------------------------------------------------
 # 2. Launcher Verification & Downloader (PortableMC)
@@ -199,6 +209,78 @@ download_modrinth_dep() {
     fi
 }
 
+# ------------------------------------------------------------------------------
+# 4. CurseForge Downloader (Website API, no key required)
+# ------------------------------------------------------------------------------
+download_curseforge_dep() {
+    local PROJECT_ID=$1; local SLUG=$2; local GAME_VER=$3; local LOADER=$4; local DEST_DIR=$5
+
+    # Map loader name to CurseForge's capitalized format
+    local CF_LOADER
+    case "$LOADER" in
+        fabric)   CF_LOADER="Fabric" ;;
+        forge)    CF_LOADER="Forge" ;;
+        neoforge) CF_LOADER="NeoForge" ;;
+        *)        CF_LOADER="$LOADER" ;;
+    esac
+
+    local API_CACHE_FILE="${CF_CACHE_DIR}/api_${PROJECT_ID}_${GAME_VER}_${LOADER}.json"
+    local RESPONSE=""
+
+    # 1. Fetch JSON from API or read from local cache
+    if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$API_CACHE_FILE" ]; then
+        local API_URL="https://www.curseforge.com/api/v1/mods/${PROJECT_ID}/files?gameVersion=${GAME_VER}&pageSize=50"
+        RESPONSE=$(curl -s "$API_URL")
+        # Only cache if the response contains valid CurseForge data
+        if [[ "$RESPONSE" == *"data"* ]]; then
+            echo "$RESPONSE" > "$API_CACHE_FILE"
+        fi
+    else
+        RESPONSE=$(cat "$API_CACHE_FILE")
+    fi
+
+    # 2. Client-side filter: exact match on game version AND loader
+    #    Server-side gameVersion filter is unreliable (fuzzy matches).
+    #    Prefer releaseType 1 (Release); fall back to any type if none found.
+    local FILE_INFO=$(echo "$RESPONSE" | jq -r --arg ver "$GAME_VER" --arg loader "$CF_LOADER" '
+        [.data[] | select(
+            (.gameVersions | index($ver)) and
+            (.gameVersions | index($loader))
+        )] |
+        sort_by(.id) | reverse |
+        ((map(select(.releaseType == 1)) | first) // first) |
+        {id: .id, fileName: .fileName}
+    ')
+
+    local FILE_ID=$(echo "$FILE_INFO" | jq -r '.id // empty')
+    local FILENAME=$(echo "$FILE_INFO" | jq -r '.fileName // empty')
+
+    if [ -z "$FILE_ID" ] || [ "$FILE_ID" == "null" ]; then
+        echo "  -> ERROR: No CurseForge file found for $SLUG (project $PROJECT_ID) matching $GAME_VER + $CF_LOADER"
+        return
+    fi
+
+    # 3. Skip if already present in instance mods dir
+    if [ "$FORCE_UPDATE_DEPS" = false ] && [ -f "$DEST_DIR/$FILENAME" ]; then
+        echo "  -> Cached $SLUG ($FILENAME) already present in instance."
+        return
+    fi
+
+    local CACHED_FILE="${CF_CACHE_DIR}/${FILENAME}"
+
+    # 4. Download if not in global cache (follows 307 redirect to CDN)
+    if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$CACHED_FILE" ]; then
+        echo "  -> Downloading $SLUG ($FILENAME) from CurseForge..."
+        local DOWNLOAD_URL="https://www.curseforge.com/api/v1/mods/${PROJECT_ID}/files/${FILE_ID}/download"
+        curl -s -L -o "$CACHED_FILE" "$DOWNLOAD_URL"
+    else
+        echo "  -> Found $SLUG in global cache."
+    fi
+
+    # 5. Copy to instance folder
+    cp "$CACHED_FILE" "$DEST_DIR/"
+}
+
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
@@ -235,12 +317,39 @@ for (( i=0; i<$INSTANCE_COUNT; i++ )); do
         fi
     fi
 
-    # Download Modrinth Dependencies
+    # Download Modrinth Dependencies (Required)
     DEPS_LENGTH=$(jq ".[$i].dependencies | length" "$INSTANCES_FILE")
     for (( d=0; d<$DEPS_LENGTH; d++ )); do
         DEP_SLUG=$(jq -r ".[$i].dependencies[$d]" "$INSTANCES_FILE")
         download_modrinth_dep "$DEP_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
     done
+
+    # Download Modrinth Dependencies (Optional / Compat mods)
+    if [ "$WITH_OPTIONAL" = true ]; then
+        OPT_DEPS_LENGTH=$(jq ".[$i].optional_dependencies // [] | length" "$INSTANCES_FILE")
+        for (( d=0; d<$OPT_DEPS_LENGTH; d++ )); do
+            DEP_SLUG=$(jq -r ".[$i].optional_dependencies[$d]" "$INSTANCES_FILE")
+            download_modrinth_dep "$DEP_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
+        done
+    fi
+
+    # Download CurseForge Dependencies (Required)
+    CF_DEPS_LENGTH=$(jq ".[$i].curseforge_dependencies // [] | length" "$INSTANCES_FILE")
+    for (( d=0; d<$CF_DEPS_LENGTH; d++ )); do
+        CF_PROJECT_ID=$(jq -r ".[$i].curseforge_dependencies[$d].project_id" "$INSTANCES_FILE")
+        CF_SLUG=$(jq -r ".[$i].curseforge_dependencies[$d].slug" "$INSTANCES_FILE")
+        download_curseforge_dep "$CF_PROJECT_ID" "$CF_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
+    done
+
+    # Download CurseForge Dependencies (Optional / Compat mods)
+    if [ "$WITH_OPTIONAL" = true ]; then
+        OPT_CF_DEPS_LENGTH=$(jq ".[$i].optional_curseforge_dependencies // [] | length" "$INSTANCES_FILE")
+        for (( d=0; d<$OPT_CF_DEPS_LENGTH; d++ )); do
+            CF_PROJECT_ID=$(jq -r ".[$i].optional_curseforge_dependencies[$d].project_id" "$INSTANCES_FILE")
+            CF_SLUG=$(jq -r ".[$i].optional_curseforge_dependencies[$d].slug" "$INSTANCES_FILE")
+            download_curseforge_dep "$CF_PROJECT_ID" "$CF_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
+        done
+    fi
 
     if [[ "$CMD_LAUNCHER" == "$TEST_ENV_DIR/"* ]]; then
         LAUNCHER_CALL="\$SCRIPT_DIR/$(basename "$CMD_LAUNCHER")"
@@ -260,9 +369,32 @@ MAIN_DIR="\$SCRIPT_DIR/instances/$NAME/.minecraft"
 # Execute PortableMC
 $LAUNCHER_CALL --main-dir "\$MAIN_DIR" start "${LOADER}:${GAME_VER}" -u "$PLAYER_NAME"
 EOF
-    
+
     chmod +x "$LAUNCH_SCRIPT"
     echo "  -> Generated launch script: $(basename "$LAUNCH_SCRIPT")"
+
+    # Generate guest instance (separate game dir, same mods, different player)
+    GUEST_DIR="$TEST_ENV_DIR/instances/$NAME-guest/.minecraft"
+    GUEST_MODS_DIR="$GUEST_DIR/mods"
+    mkdir -p "$GUEST_MODS_DIR"
+
+    # Copy all mods from the main instance into the guest instance
+    cp -u "$MODS_DIR"/*.jar "$GUEST_MODS_DIR/" 2>/dev/null
+
+    GUEST_SCRIPT="$TEST_ENV_DIR/launch-$NAME-guest.sh"
+    cat <<EOF > "$GUEST_SCRIPT"
+#!/usr/bin/env bash
+echo "Starting $NAME Guest (${GUEST_NAME}) Test Environment..."
+
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+MAIN_DIR="\$SCRIPT_DIR/instances/$NAME-guest/.minecraft"
+
+# Execute PortableMC (different player, separate game dir for LAN testing)
+$LAUNCHER_CALL --main-dir "\$MAIN_DIR" start "${LOADER}:${GAME_VER}" -u "$GUEST_NAME"
+EOF
+
+    chmod +x "$GUEST_SCRIPT"
+    echo "  -> Generated guest launch script: $(basename "$GUEST_SCRIPT")"
 
 done
 

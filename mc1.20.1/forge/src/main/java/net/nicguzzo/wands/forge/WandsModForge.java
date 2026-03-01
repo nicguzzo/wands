@@ -23,6 +23,7 @@ import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
 import net.nicguzzo.wands.items.PaletteTooltip;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 @Mod(WandsMod.MOD_ID)
 
 public class WandsModForge {
@@ -33,16 +34,9 @@ public class WandsModForge {
         // Submit our event bus to let architectury register our content on the right time
         EventBuses.registerModEventBus(WandsMod.MOD_ID, FMLJavaModLoadingContext.get().getModEventBus());
 
-        WandsMod.has_opac=ModList.get().isLoaded("openpartiesandclaims");
-        WandsMod.log("Has opac!! "+WandsMod.has_goml,true);
-
-        WandsMod.has_ftbchunks=ModList.get().isLoaded("ftbchunks");
-        WandsMod.log("Has ftbchunks!! "+WandsMod.has_goml,true);
-
-        WandsMod.has_flan=ModList.get().isLoaded("flan");
-        WandsMod.log("Has flan!! "+WandsMod.has_goml,true);
-
         WandsMod.init();
+
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onCommonSetup);
         EnvExecutor.runInEnv(Env.CLIENT, () ->
             ()-> {
                 WandsModClient.initialize();
@@ -51,6 +45,17 @@ public class WandsModForge {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(
             (net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent e) -> e.register(PaletteTooltip.class, PaletteClientTooltip::new));
+    }
+
+    private void onCommonSetup(FMLCommonSetupEvent event) {
+        WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
+        WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
+
+        WandsMod.has_ftbchunks = ModList.get().isLoaded("ftbchunks");
+        WandsMod.log("Has ftbchunks!! " + WandsMod.has_ftbchunks, true);
+
+        WandsMod.has_flan = ModList.get().isLoaded("flan");
+        WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
     private void clientSetup(FMLClientSetupEvent event) {

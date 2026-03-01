@@ -103,11 +103,11 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build all targets
-        run: ./gradlew build
+        run: ./gradlew build -Pfabric.loom.disable_file_lock=true
 
       - name: Publish to CurseForge and Modrinth
         if: ${{ !inputs.dry_run }}
-        run: ./gradlew publishUnified
+        run: ./gradlew publishUnified -Pfabric.loom.disable_file_lock=true
         env:
           CF_TOKEN: ${{ secrets.CF_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}

@@ -192,3 +192,7 @@ The release workflow reads changelog entries from `CHANGELOG.md`. Each version g
 ```
 
 The heading must match exactly (e.g. `## 3.0`, not `## v3.0`). If a `changelog` input is provided in the dispatch form, it overrides the file.
+
+## Testing
+
+See [TESTING.md](TESTING.md) for instructions on setting up test environments and testing mod compatibility (claim mods, JEI, etc.).
