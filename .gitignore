@@ -31,3 +31,5 @@ mc1.21.11/common/src/main/resources/assets/wands/textures
 mc1.21.11/common/src/main/resources/assets/wands/lang
 .architectury-transformer/
 test-env
+/META-INF/
+/net/

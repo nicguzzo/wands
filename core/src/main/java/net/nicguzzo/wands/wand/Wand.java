@@ -71,6 +71,7 @@ import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.BlockBuffer;
 
 import net.nicguzzo.compat.Compat;
+import net.nicguzzo.compat.claims.ClaimDispatch;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 
@@ -1193,8 +1194,8 @@ public class Wand {
 
     boolean place_block(BlockPos block_pos, BlockState state) {
         boolean placed = false;
-        if (!WandsExpectPlatform.claimCanInteract((ServerLevel) level, block_pos, player)) {
-            player.displayClientMessage(Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), false);
+        if (!ClaimDispatch.claimCanInteract((ServerLevel) level, block_pos, player)) {
+            player.displayClientMessage(Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), true);
             return false;
         }
         if (state == null) {

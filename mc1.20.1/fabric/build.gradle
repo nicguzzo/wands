@@ -28,21 +28,6 @@ repositories {
     maven{
         url "https://maven.terraformersmc.com/releases"
     }
-    maven {
-        url "https://cursemaven.com"
-    }
-    maven {
-        url "https://maven.saps.dev/minecraft"
-        content {
-            includeGroup "dev.ftb.mods"
-        }
-    }
-    maven {
-        url = "https://maven.jamieswhiteshirt.com/libs-release/"
-        content {
-            includeGroup 'com.jamieswhiteshirt'
-        }
-    }
 }
 
 dependencies {
@@ -55,24 +40,6 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
-    if(rtree_version!=""){
-        modCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${rtree_version}")
-    }
-    if(opac_fabric!=""){
-        modCompileOnly("${opac_fabric}")   { transitive = false }
-    }    
-    if(goml_fabric!=""){
-        modCompileOnly("${goml_fabric}")       { transitive = false }
-    }
-    if(flan_fabric!=""){
-        modCompileOnly("${flan_fabric}")       { transitive = false }
-    }
-    if(ftb_chunks_fabric!=""){
-        modCompileOnly("${ftb_chunks_fabric}")  { transitive = false }
-    }
-    if(ftb_library_fabric!=""){
-        modCompileOnly("${ftb_library_fabric}") { transitive = false }
-    }
     def commonPath = ":${project.parent.name}:common"
     common(project(path: commonPath, configuration: 'namedElements')) { transitive false }
     shadowBundle project(path: commonPath, configuration: 'transformProductionFabric')

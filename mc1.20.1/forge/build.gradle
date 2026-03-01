@@ -24,41 +24,12 @@ configurations {
     }
 }
 
-repositories {
-    maven {
-        url "https://cursemaven.com"
-    }
-    maven {
-        url "https://maven.saps.dev/minecraft"
-        content {
-            includeGroup "dev.ftb.mods"
-        }
-    }
-    maven {
-        url = "https://maven.jamieswhiteshirt.com/libs-release/"
-        content {
-            includeGroup 'com.jamieswhiteshirt'
-        }
-    }
-}
 dependencies {
     forge "net.minecraftforge:forge:${forge_version}"
     // Remove the next line if you don't want to depend on the API
     modApi "dev.architectury:architectury-forge:${architectury_version}"
     modApi "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
     
-    if(opac_forge!=""){
-        modCompileOnly("${opac_forge}")  { transitive = false }
-    }
-    if(ftb_chunks_forge!=""){
-        modCompileOnly("${ftb_chunks_forge}") { transitive = false }
-    }
-    if(ftb_library_forge!=""){
-        modCompileOnly("${ftb_library_forge}") { transitive = false }
-    }
-    if(flan_forge!=""){
-        modCompileOnly("${flan_forge}") { transitive = false }
-    }
     def commonPath = ":${project.parent.name}:common"
     common(project(path: commonPath, configuration: 'namedElements')) { transitive false }
     shadowBundle project(path: commonPath, configuration: 'transformProductionForge')
