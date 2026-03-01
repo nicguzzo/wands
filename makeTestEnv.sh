@@ -378,6 +378,7 @@ EOF
     GUEST_MODS_DIR="$GUEST_DIR/mods"
     mkdir -p "$GUEST_MODS_DIR"
 
+    rm -f "$GUEST_MODS_DIR"/*.jar
     # Copy all mods from the main instance into the guest instance
     cp -u "$MODS_DIR"/*.jar "$GUEST_MODS_DIR/" 2>/dev/null
 
