@@ -19,6 +19,8 @@ fi
 # ------------------------------------------------------------------------------
 FORCE_UPDATE_DEPS=false
 WITH_OPTIONAL=false
+GENERATE_SERVERS=false
+
 for arg in "$@"; do
     if [ "$arg" == "--force-update-deps" ]; then
         FORCE_UPDATE_DEPS=true
@@ -27,6 +29,10 @@ for arg in "$@"; do
     if [ "$arg" == "--with-optional" ]; then
         WITH_OPTIONAL=true
         echo ">>> [FLAG] Including optional/compat mods (JEI, OPAC, FTB Chunks, etc.)..."
+    fi
+    if [ "$arg" == "--generate-servers" ]; then
+        GENERATE_SERVERS=true
+        echo ">>> [FLAG] Generating local test servers..."
     fi
 done
 
@@ -396,6 +402,81 @@ EOF
 
     chmod +x "$GUEST_SCRIPT"
     echo "  -> Generated guest launch script: $(basename "$GUEST_SCRIPT")"
+
+    # --------------------------------------------------------------------------
+    # SERVER GENERATION & SYNCING
+    # --------------------------------------------------------------------------
+    if [ "$GENERATE_SERVERS" = true ]; then
+        SERVER_INSTALLER_URL=$(jq -r ".[$i].server_installer_url // empty" "$INSTANCES_FILE")
+        
+        if [ -n "$SERVER_INSTALLER_URL" ]; then
+            SERVER_DIR="$TEST_ENV_DIR/servers/$NAME"
+            SERVER_MODS_DIR="$SERVER_DIR/mods"
+            mkdir -p "$SERVER_MODS_DIR"
+
+            INSTALLER_JAR="$DEPS_CACHE_DIR/installer-$NAME.jar"
+
+            if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$INSTALLER_JAR" ]; then
+                echo "  -> Downloading server installer..."
+                curl -s -L -o "$INSTALLER_JAR" "$SERVER_INSTALLER_URL"
+            fi
+
+            if [ ! -f "$SERVER_DIR/eula.txt" ]; then
+                echo "  -> Running server installer (this may take a moment)..."
+                if ! command -v java &> /dev/null; then
+                    echo "  -> WARNING: Global 'java' command not found. Cannot run server installer!"
+                else
+                    # Enter the server directory so files are generated in the correct place
+                    pushd "$SERVER_DIR" >/dev/null
+                    if [ "$LOADER" == "fabric" ]; then
+                        java -jar "../../modrinth-cache/installer-$NAME.jar" server -mcversion "$GAME_VER" -downloadMinecraft >/dev/null 2>&1
+                    else
+                        java -jar "../../modrinth-cache/installer-$NAME.jar" --installServer >/dev/null 2>&1
+                    fi
+                    echo "eula=true" > eula.txt
+                    popd >/dev/null
+                fi
+            fi
+
+            # Sync mods directly to the server folder
+            rm -f "$SERVER_MODS_DIR"/*.jar
+            cp -u "$MODS_DIR"/*.jar "$SERVER_MODS_DIR/" 2>/dev/null
+
+            SERVER_SCRIPT="$TEST_ENV_DIR/launch-$NAME-server.sh"
+            cat <<EOF > "$SERVER_SCRIPT"
+#!/usr/bin/env bash
+echo "Starting $NAME Server Environment..."
+
+cd "\$(dirname "\$0")/servers/$NAME" || exit 1
+
+# 1. Windows native Java requires ';' for classpaths. Forge's run.sh provides ':'.
+# In Git Bash on Windows, we must use cmd.exe to launch run.bat so it grabs win_args.txt!
+if [[ "\$OSTYPE" == "msys"* ]] || [[ "\$OSTYPE" == "cygwin"* ]]; then
+    if [ -f "run.bat" ]; then
+        cmd.exe //c run.bat nogui
+        exit \$?
+    fi
+fi
+
+# 2. Standard Unix Execution
+if [ -f "run.sh" ]; then
+    bash run.sh nogui
+elif [ -f "fabric-server-launch.jar" ]; then
+    java -Xmx2G -jar fabric-server-launch.jar nogui
+else
+    # Fallback if standard names are missing
+    SERVER_JAR=\$(ls *.jar 2>/dev/null | grep -Ev "installer" | head -n 1)
+    if [ -n "\$SERVER_JAR" ]; then
+        java -Xmx2G -jar "\$SERVER_JAR" nogui
+    else
+        echo "ERROR: Could not find a valid server executable or script in servers/$NAME"
+    fi
+fi
+EOF
+            chmod +x "$SERVER_SCRIPT"
+            echo "  -> Generated server launch script: $(basename "$SERVER_SCRIPT")"
+        fi
+    fi
 
 done
 

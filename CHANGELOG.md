@@ -1,5 +1,31 @@
 # Changelog
 
+## 3.0.2
+
+### Supported Minecraft versions
+- 1.20.1 (Fabric, Forge)
+- 1.21.1 (Fabric, NeoForge)
+- 1.21.11 (Fabric, NeoForge)
+
+### New features
+- Script to make a test environment using portablemc launcher
+- Update all modloaders and dependencies to latest versions
+- Consolidate claim mod integrations into shared compat layer; add CurseForge support to test env
+
+### Bug fixes
+- Keybinds now respect user remapping in Minecraft settings
+- Prevent JEI from attaching to wand settings screen
+
+## 3.0.1
+
+### Supported Minecraft versions
+- 1.20.1 (Fabric, Forge)
+- 1.21, 1.21.1 (Fabric, NeoForge)
+- 1.21.11 (Fabric, NeoForge)
+
+### Bug fixes
+- Fixed Forge crash
+
 ## 3.0
 
 ### Supported Minecraft versions
