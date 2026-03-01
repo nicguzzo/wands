@@ -40,3 +40,6 @@ mandatory = true
 ordering = "AFTER"
 versionRange = "[${cloth_config_version},)"
 
+[[mixins]]
+config = "wands.mixins.json"
+

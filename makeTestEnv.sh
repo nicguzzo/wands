@@ -18,11 +18,15 @@ fi
 # 0. Argument Parsing
 # ------------------------------------------------------------------------------
 FORCE_UPDATE_DEPS=false
+WITH_OPTIONAL=false
 for arg in "$@"; do
     if [ "$arg" == "--force-update-deps" ]; then
         FORCE_UPDATE_DEPS=true
         echo ">>> [FLAG] Force updating dependencies and clearing caches..."
-        break
+    fi
+    if [ "$arg" == "--with-optional" ]; then
+        WITH_OPTIONAL=true
+        echo ">>> [FLAG] Including optional/compat mods (JEI, OPAC, FTB Chunks, etc.)..."
     fi
 done
 
@@ -235,12 +239,21 @@ for (( i=0; i<$INSTANCE_COUNT; i++ )); do
         fi
     fi
 
-    # Download Modrinth Dependencies
+    # Download Modrinth Dependencies (Required)
     DEPS_LENGTH=$(jq ".[$i].dependencies | length" "$INSTANCES_FILE")
     for (( d=0; d<$DEPS_LENGTH; d++ )); do
         DEP_SLUG=$(jq -r ".[$i].dependencies[$d]" "$INSTANCES_FILE")
         download_modrinth_dep "$DEP_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
     done
+
+    # Download Modrinth Dependencies (Optional / Compat mods)
+    if [ "$WITH_OPTIONAL" = true ]; then
+        OPT_DEPS_LENGTH=$(jq ".[$i].optional_dependencies // [] | length" "$INSTANCES_FILE")
+        for (( d=0; d<$OPT_DEPS_LENGTH; d++ )); do
+            DEP_SLUG=$(jq -r ".[$i].optional_dependencies[$d]" "$INSTANCES_FILE")
+            download_modrinth_dep "$DEP_SLUG" "$GAME_VER" "$LOADER" "$MODS_DIR"
+        done
+    fi
 
     if [[ "$CMD_LAUNCHER" == "$TEST_ENV_DIR/"* ]]; then
         LAUNCHER_CALL="\$SCRIPT_DIR/$(basename "$CMD_LAUNCHER")"

@@ -5,6 +5,7 @@
     "loader": "fabric",
     "jar_dir": "./mc1.20.1/fabric/build/libs",
     "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "flan", "goml-reserved"],
     "java_key": "java_17"
   },
   {
@@ -13,6 +14,7 @@
     "loader": "forge",
     "jar_dir": "./mc1.20.1/forge/build/libs",
     "dependencies": ["architectury-api", "cloth-config"],
+    "optional_dependencies": ["jei", "open-parties-and-claims", "flan"],
     "java_key": "java_17"
   },
   {
@@ -21,6 +23,7 @@
     "loader": "fabric",
     "jar_dir": "./mc1.21.1/fabric/build/libs",
     "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "flan", "goml-reserved"],
     "java_key": "java_21"
   },
   {
@@ -29,6 +32,7 @@
     "loader": "neoforge",
     "jar_dir": "./mc1.21.1/neoforge/build/libs",
     "dependencies": ["architectury-api", "cloth-config"],
+    "optional_dependencies": ["jei", "open-parties-and-claims", "flan"],
     "java_key": "java_21"
   },
   {
@@ -37,6 +41,7 @@
     "loader": "fabric",
     "jar_dir": "./mc1.21.11/fabric/build/libs",
     "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
+    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "goml-reserved", "polymer"],
     "java_key": "java_21"
   },
   {
@@ -45,6 +50,7 @@
     "loader": "neoforge",
     "jar_dir": "./mc1.21.11/neoforge/build/libs",
     "dependencies": ["architectury-api", "cloth-config"],
+    "optional_dependencies": ["jei", "open-parties-and-claims"],
     "java_key": "java_21"
   }
 ]

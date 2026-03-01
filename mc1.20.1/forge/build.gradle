@@ -102,6 +102,9 @@ processResources {
 shadowJar {
     configurations = [project.configurations.shadowBundle]
     archiveClassifier = 'dev-shadow'
+    manifest {
+        attributes 'MixinConfigs': 'wands.mixins.json'
+    }
 }
 
 remapJar {
