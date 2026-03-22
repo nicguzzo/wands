@@ -1333,8 +1333,13 @@ public class Wand {
         if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear || creative)) {
             BlockState originalState = level.getBlockState(block_pos);
             BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
+
+            ItemStack tmp_item = player.getItemInHand(InteractionHand.OFF_HAND);
+            player.setItemInHand(InteractionHand.OFF_HAND,digger_item);
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
-            if (digger_item.useOn(ctx) != InteractionResult.PASS) {
+            InteractionResult interaction_result = digger_item.useOn(ctx);
+            player.setItemInHand(InteractionHand.OFF_HAND,tmp_item);
+            if ( interaction_result != InteractionResult.PASS) {
                 BlockState afterState = level.getBlockState(block_pos);
                 recordUndo(block_pos, originalState, true, afterState);
                 // Vanilla useOn() excludes the acting player from sounds/particles, so send them directly

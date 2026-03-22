@@ -342,7 +342,7 @@ public class WandProps {
         EVEN("circle_even", "even_size", false),
         DIAGSPREAD("diag_spread", "orthogonal_only", false),
         MATCHSTATE("match_state", "match_state", false),
-        INCSELBLOCK("inc_sel_block", "include_block", false),
+        INCSELBLOCK("inc_sel_block", "include_block", true),
         STAIRSLAB("stair_slab", "slab_flip", false),
         RFILLED("rfill", "filled", true),
         TARGET_AIR("target_air", "target_air", false),
