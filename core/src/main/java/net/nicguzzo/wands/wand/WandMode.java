@@ -9,23 +9,21 @@ public abstract class WandMode {
     public abstract void place_in_buffer(Wand wand);
     public boolean action(Wand wand){return true;}
     public void randomize(){};
-    public boolean need_update(Wand wand,boolean valid){
-        if(wand.preview && last_pos!=null && last_side!=null &&
-                ((last_pos.getX()==wand.pos.getX() &&
-                last_pos.getY()==wand.pos.getY() &&
-                last_pos.getZ()==wand.pos.getZ())
-                        ||
-                        last_side==wand.side
-                )
+    public boolean still_looking_at_same_pos(Wand wand, boolean valid){
+        if(wand.preview
+            && last_pos!=null
+            && last_side!=null
+            && last_pos==wand.pos
+            && last_side==wand.getSide()
         ){
             if(wand.block_buffer.get_length()>0) {
                 wand.valid = valid;
             }
-            return false;
+            return true;
         }
         last_pos=wand.pos;
-        last_side=wand.side;
-        return true;
+        last_side=wand.getSide();
+        return false;
     }
     public void redraw(Wand wand){
         last_pos=null;

@@ -40,7 +40,7 @@ public class RockMode extends WandMode {
             noise = new SimplexNoise(random);
             randomize();
         }
-        if(!need_update(wand,true)){
+        if(still_looking_at_same_pos(wand, true)){
             return;
         }
         //if(wand.preview && last_pos!=null && last_pos.getX()==wand.pos.getX() && last_pos.getY()==wand.pos.getY() && last_pos.getZ()==wand.pos.getZ()){

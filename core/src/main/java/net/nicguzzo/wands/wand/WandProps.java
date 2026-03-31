@@ -2,8 +2,6 @@ package net.nicguzzo.wands.wand;
 
 import net.minecraft.core.Direction;
 #if MC_VERSION >=12005
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.CustomData;
 #endif
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +21,7 @@ public class WandProps {
                 return "wands.modes.direction";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new DirectionMode();
             }
 
@@ -43,7 +41,7 @@ public class WandProps {
                 return "wands.modes.row_col";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new RowColMode();
             }
 
@@ -63,7 +61,7 @@ public class WandProps {
                 return "wands.modes.fill";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new FillMode();
             }
 
@@ -79,7 +77,7 @@ public class WandProps {
                 return "wands.modes.area";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new AreaMode();
             }
 
@@ -95,7 +93,7 @@ public class WandProps {
                 return "wands.modes.grid";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new GridMode();
             }
 
@@ -115,7 +113,7 @@ public class WandProps {
                 return "wands.modes.line";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new LineMode();
             }
 
@@ -131,7 +129,7 @@ public class WandProps {
                 return "wands.modes.circle";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new CircleMode();
             }
 
@@ -147,7 +145,7 @@ public class WandProps {
                 return "wands.modes.box";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new BoxMode();
             }
 
@@ -163,7 +161,7 @@ public class WandProps {
                 return "wands.modes.vein";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new VeinMode();
             }
 
@@ -179,7 +177,7 @@ public class WandProps {
                 return "wands.modes.blast";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new BlastMode();
             }
 
@@ -199,7 +197,7 @@ public class WandProps {
                 return "wands.modes.sphere";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new SphereMode();
             }
 
@@ -215,7 +213,7 @@ public class WandProps {
                 return "wands.modes.rock";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new RockMode();
             }
 
@@ -231,7 +229,7 @@ public class WandProps {
                 return "wands.modes.copy";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new CopyMode();
             }
 
@@ -247,7 +245,7 @@ public class WandProps {
                 return "wands.modes.paste";
             }
 
-            public WandMode get_mode() {
+            public WandMode new_mode() {
                 return new PasteMode();
             }
 
@@ -260,7 +258,7 @@ public class WandProps {
             }
         };
 
-        public abstract WandMode get_mode();
+        public abstract WandMode new_mode();
 
         public abstract boolean can_target_air();
 

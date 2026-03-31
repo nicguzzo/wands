@@ -18,14 +18,14 @@ public class RowColMode extends WandMode {
         Direction dir = Direction.EAST;
         // INCSELBLOCK flag does not apply to ROW_COL (not in FLAG_MODES), so
         // wand.pos is always the clicked block — offset to placement position here
-        BlockPos pos_m = wand.pos.relative(wand.side, 1);
+        Direction wand_side=wand.getSide();
+        BlockPos pos_m = wand.pos.relative(wand_side, 1);
         BlockState state = level.getBlockState(pos_m);
 
         int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.ROWCOLLIM);
         if(limit2<=0 || limit2 >wand.limit){
             limit2=wand.limit;
         }
-
         if (state.isAir() || wand.replace_fluid(state) || wand.destroy || wand.use) {
             BlockPos pos0 = wand.pos;
             BlockPos pos1 = pos_m;
@@ -35,7 +35,7 @@ public class RowColMode extends WandMode {
             int offy = 0;
             int offz = 0;
             Direction player_dir=wand.player.getDirection();
-            switch (wand.side) {
+            switch (wand.getSide()) {
                 case UP:
                 case DOWN:
                     switch (orientation) {
@@ -164,26 +164,26 @@ public class RowColMode extends WandMode {
                     }
                 }
             }else{
-                pos1=pos0.relative(wand.side);
+                pos1=pos0.relative(wand_side);
                 if(n==1) {
                     pos3 = pos1;
                 }else {
                     pos2=pos0;
                     for(int m=0;m<n-1;m++) {
                         pos2 = pos2.relative(dir);
-                        BlockState bs = level.getBlockState(pos2.relative(wand.side));
-                        if(wand.can_place(bs,pos2.relative(wand.side))){
+                        BlockState bs = level.getBlockState(pos2.relative(wand_side));
+                        if(wand.can_place(bs,pos2.relative(wand_side))){
                             pos3=pos2;
                         }else{
                             break;
                         }
                     }
-                    pos3 = pos3.relative(wand.side);
+                    pos3 = pos3.relative(wand_side);
                 }
             }
             if (wand.destroy || wand.replace ||wand.use) {
-                pos1 = pos1.relative(wand.side.getOpposite());
-                pos3 = pos3.relative(wand.side.getOpposite());
+                pos1 = pos1.relative(wand_side.getOpposite());
+                pos3 = pos3.relative(wand_side.getOpposite());
             }
             if (preview) {
                 wand.x1 = pos1.getX() - offx;

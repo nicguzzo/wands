@@ -5,22 +5,21 @@ import net.minecraft.world.entity.EquipmentSlot;
 #endif
 #if MC_VERSION >= 12005
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.advancements.AdvancementHolder;
 #endif
 #if MC_VERSION >= 12111
 import net.minecraft.world.level.gamerules.GameRules;
 #else
+import net.minecraft.advancements.Advancement;
 import net.minecraft.world.level.GameRules;
 #endif
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerAdvancements;
@@ -38,8 +37,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ExperienceOrb;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 
@@ -60,7 +57,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.compat.MyIdExt;
-import net.nicguzzo.wands.WandsExpectPlatform;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.items.MagicBagItem;
@@ -135,7 +131,7 @@ public class Wand {
     public BlockState offhand_state = null;
     Block offhand_block = null;
     public BlockPos pos;
-    public Direction side = Direction.NORTH;
+    private Direction side = Direction.NORTH;
     public Direction lastPlayerDirection = Direction.NORTH;
     public Vec3 hit;
     public ItemStack wand_stack;
@@ -233,6 +229,9 @@ public class Wand {
     public void setP2(BlockPos p2) {
         this.p2 = p2;
         //WandsMod.LOGGER.info("set p2 "+p2);
+    }
+    public Direction getSide(){
+        return this.side;
     }
 
     /**
@@ -352,7 +351,7 @@ public class Wand {
     public Wand() {
         modes = new WandMode[WandProps.modes.length];
         for (int i = 0; i < modes.length; i++) {
-            modes[i] = WandProps.modes[i].get_mode();
+            modes[i] = WandProps.modes[i].new_mode();
         }
         for (int i = 0; i < tools.length; i++) {
             tools[i] = new WandTool();
@@ -1059,9 +1058,9 @@ public class Wand {
                 if (blk instanceof SlabBlock) {
                     SlabType slab_type;
                     if (state_mode == WandProps.StateMode.APPLY) {
-                        slab_type = SlabType.BOTTOM;
-                    } else {
                         slab_type = SlabType.TOP;
+                    } else {
+                        slab_type = SlabType.BOTTOM;
                     }
                     return blk.defaultBlockState().setValue(SlabBlock.TYPE, slab_type);
 

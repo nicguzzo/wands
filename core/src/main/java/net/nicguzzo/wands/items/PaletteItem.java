@@ -216,7 +216,7 @@ public class PaletteItem extends Item {
     @Override
 #if MC_VERSION>=12111
     public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
-        if (openPaletteMenu(player)) {
+        if (interactionHand==InteractionHand.MAIN_HAND && openPaletteMenu(player)) {
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.FAIL;
@@ -224,7 +224,7 @@ public class PaletteItem extends Item {
 #else
     public @NotNull InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
         ItemStack stack = player.getItemInHand(interactionHand);
-        if (openPaletteMenu(player)) {
+        if (interactionHand==InteractionHand.MAIN_HAND && openPaletteMenu(player)) {
             return InteractionResultHolder.success(stack);
         }
         return InteractionResultHolder.fail(stack);

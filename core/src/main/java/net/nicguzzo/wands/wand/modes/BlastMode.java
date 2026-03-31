@@ -41,7 +41,7 @@ public class BlastMode extends WandMode {
             if (do_explode) {
                 float radius = (float) WandProps.getVal(wand.wand_stack, WandProps.Value.BLASTRAD);
                 float eo = 1.0625f;
-                if (wand.side == Direction.DOWN) {
+                if (wand.getSide() == Direction.DOWN) {
                     eo = 0.0625f;
                 }
                 //Explosion.BlockInteraction bi=(creative?Explosion.BlockInteraction.DESTROY: Explosion.BlockInteraction.BREAK);

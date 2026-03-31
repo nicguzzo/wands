@@ -27,11 +27,11 @@ public class GridMode extends WandMode {
             xskip=ns;
             zskip=ms;
         }
-
+        Direction wand_side=wand.getSide();
         wand.block_buffer.reset();
         Direction dir1=Direction.SOUTH;
         Direction dir2= Direction.EAST;
-        switch (wand.side) {
+        switch (wand_side) {
             case UP:
             case DOWN:
                 switch (wand.rotation) {
@@ -85,11 +85,11 @@ public class GridMode extends WandMode {
         BlockPos pos1;
         BlockPos pos2;
         if (wand.destroy || wand.replace ||wand.use) {
-            pos1=wand.pos.relative(wand.side, -1).relative(wand.side);
-            pos2=wand.pos.relative(wand.side, -1).relative(dir1,m).relative(dir2,n).relative(wand.side);
+            pos1=wand.pos.relative(wand_side, -1).relative(wand_side);
+            pos2=wand.pos.relative(wand_side, -1).relative(dir1,m).relative(dir2,n).relative(wand_side);
         }else{
-            pos1=wand.pos.relative(wand.side);
-            pos2=wand.pos.relative(dir1,m).relative(dir2,n).relative(wand.side);
+            pos1=wand.pos.relative(wand_side);
+            pos2=wand.pos.relative(dir1,m).relative(dir2,n).relative(wand_side);
         }
         if(moff>0||noff>0){
             pos1=pos1.relative(dir1,-moff).relative(dir2,-noff);

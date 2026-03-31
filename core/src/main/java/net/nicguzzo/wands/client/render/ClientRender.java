@@ -10,6 +10,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.RenderType;
 #endif
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
@@ -61,10 +62,9 @@ public class ClientRender {
     private static boolean prnt;
     //public static Vec3 c=new Vec3(0,0,0);
     public static BlockPos last_pos = null;
-    static Direction last_side = null;
+    public static Direction last_side = null;
     static Mode last_mode;
     static Rotation last_rot = Rotation.NONE;
-    static boolean targeting_air = false;
     //static int last_y=0;
     static int last_buffer_size = -1;
     static WandProps.Orientation last_orientation = null;
@@ -135,7 +135,6 @@ public class ClientRender {
 
     public static boolean has_target = false;
     static BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();
-    static boolean water = false;
     static int mirroraxis=0;
 
 
@@ -149,11 +148,9 @@ public class ClientRender {
         LocalPlayer player = client.player;
         if (player == null)
             return;
-
         if((wand.destroy||wand.replace) && WandsMod.config.disable_destroy_replace){
             return;
         }
-
         if (client.options.getCameraType() != CameraType.FIRST_PERSON) {
             return;
         }
@@ -162,7 +159,6 @@ public class ClientRender {
             WandsConfig.get_instance().parse_colors();
             ClientRender.update_colors();
         }
-
         drawlines = WandsMod.config.lines;
         block_outlines = WandsMod.config.block_outlines;
         fill_outlines = WandsMod.config.fill_outlines;
@@ -182,158 +178,98 @@ public class ClientRender {
             if (t1 - t0 > 1000) {
                 t0 = System.currentTimeMillis();
                 prnt = true;
-                //WandsMod.LOGGER.info("render");
-            }//else{
+            }
             if (t1 - t00 > 100) {
                 t00 = System.currentTimeMillis();
                 force = true;
             }
             wand.reach_distance = WandProps.getVal(stack, WandProps.Value.REACH_DISTANCE);
-            HitResult hitResult;
-            if (wand.reach_distance > 0) {
-                double baseReach = Compat.is_creative(player) ? 5.0 : 4.5;
-                hitResult = player.pick(baseReach + wand.reach_distance, Compat.getPartialTick(), false);
-            } else {
-                hitResult = client.hitResult;
-            }
-
             wand.target_air=WandProps.getFlag(stack,WandProps.Flag.TARGET_AIR);
-            wand.lastHitResult=hitResult;
             wand.lastPlayerDirection=player.getDirection();
-            Mode mode = WandProps.getMode(stack);
+
             mirroraxis=WandProps.getVal(player.getMainHandItem(), WandProps.Value.MIRRORAXIS);
-            //WandsMod.LOGGER.info("hit result "+hitResult.getLocation());
-            boolean hasBlockTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK && !wand.pin.isActive();
 
             boolean pinActive = wand.pin.isActive();
 
-            if (pinActive || hasBlockTarget) {
-                has_target = true;
-                targeting_air = false;
-
-                // Fork: where does the target come from?
-                BlockPos pos;
-                Direction side;
-                BlockState block_state;
-                Vec3 hitLoc;
-                if (pinActive) {
-                    pos = wand.pin.getPos();
-                    side = wand.pin.getEffectiveSide(hitResult, player.getDirection());
-                    block_state = client.level.getBlockState(pos);
-                    hitLoc = player.getEyePosition();
-                } else {
-                    BlockHitResult block_hit = (BlockHitResult) hitResult;
-                    side = block_hit.getDirection();
-                    pos = block_hit.getBlockPos();
-                    block_state = client.level.getBlockState(pos);
-                    hitLoc = block_hit.getLocation();
-                }
-
-                // === Everything below is identical for both paths ===
-                Vec3 eye = player.getEyePosition();
-                player_normal = eye.subtract(hitLoc);
-                if (wand != null) {
-                    WandMode wmode = wand.get_mode();
-                    if (wmode != null) {
-                        wmode.redraw(wand);
-                    }
-                }
-
-                Rotation rot = WandProps.getRotation(stack);
-                WandProps.Orientation orientation = WandProps.getOrientation(stack);
-
-                if (force) {
-                    wand.force_render = false;
-                    // Only apply INCSELBLOCK offset for modes that support it (skip for pin — already applied when set)
-                    if (!pinActive && WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode) && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
-                        pos = pos.relative(side, 1);
-                    }
-                    last_pos = pos;
-                    last_side = side;
-                    last_mode = mode;
-                    last_orientation = orientation;
-                    last_rot = rot;
-                    last_buffer_size = wand.block_buffer.get_length();
-
-                    wand.do_or_preview(player, Compat.player_level(player), block_state, pos, side, hitLoc, stack, (WandItem) stack.getItem(), prnt);
-                }
-                preview_shape = null;
-                if (last_pos != null) {
-                    preview_shape = block_state.getShape(client.level, last_pos);
-                }
-                preview_mode(wand.mode, matrixStack, bufferSource);
-
-            } else {
-                WandMode wmode = wand.get_mode();
-                if (wmode != null) {
-                    wmode.redraw(wand);
-                }
-                // When P1 is set for a 2-click mode, keep showing the preview
-                // even when the cursor moves beyond reach distance
-                if (mode.n_clicks() == 2 && wand.getP1() != null && wand.block_buffer.get_length() > 0) {
-                    has_target = true;
-                    preview_mode(wand.mode, matrixStack, bufferSource);
-                } else {
-                    has_target = false;
-                }
-                if(wand.target_air && mode.can_target_air() ) {
-                    targeting_air=true;
-                    if(hitResult==null){
-                        //WandsMod.LOGGER.info("hit result null");
-                        return;
-                    }
-                    Vec3 hit=hitResult.getLocation();
-
-                    BlockPos pos=wand.get_pos_from_air(hit);
-                    ItemStack offhand = player.getOffhandItem();
-                    Block offhand_block;
-                    BlockState block_state = null;
-                    offhand_block = Block.byItem(offhand.getItem());
-                    if (offhand_block != Blocks.AIR) {
-                        block_state=offhand_block.defaultBlockState();
-                    }
-                    boolean palette=wand.palette.has_palette && !wand.palette.palette_slots.isEmpty();
-                    if (block_state != null|| (palette) || mode==Mode.PASTE || mode==Mode.COPY){
-                        if(palette){
-                            block_state=Blocks.STONE.defaultBlockState();
-                        }
-                        if(mode==Mode.BOX||mode==Mode.ROW_COL||mode==Mode.ROCK||mode==Mode.GRID||mode==Mode.PASTE){
-                            wand.setP1(pos);
-                        }
-                        if (wand.getP1() != null) {
-                            last_pos = wand.getP1();
-                            has_target=true;
-                        }else{
-                            last_pos=pos;
-                        }
-                        /*if(prnt && wand.getP1() !=null) {
-                            WandsMod.LOGGER.info("preview p1: "+ wand.getP1() +" p2: "+ wand.getP2() +" pos:"+pos);
-                        }*/
-                        //Direction side=wand.side;
-                        Direction side=player.getDirection().getOpposite();
-                        wand.do_or_preview(player, Compat.player_level(player), block_state, pos, side,
-                                hit, stack, (WandItem) stack.getItem(), prnt);
-                        preview_mode(wand.mode, matrixStack,bufferSource);
-
-                        // Render outline for target air block in Copy mode (only before first click)
-                        if (mode == Mode.COPY && wand.getP1() == null && drawlines && copy_outlines) {
-                            render_air_target_outline(pos, matrixStack, bufferSource);
-                        }
-                    }
-                }else{
-                    if(mode!=Mode.ROCK) {
-                        wand.block_buffer.reset();
-                    }
-                    // Still show bbox when P1 is set even without a target
-                    if(mode.n_clicks() == 2 && wand.getP1() != null) {
-                        preview_mode(wand.mode, matrixStack, bufferSource);
-                    }
-                }
-                if (water) {
-                    water = false;
-                }
+            if (pinActive) {
+                preview_pinned(player,client.level,stack,matrixStack,bufferSource);
+            }else{
+                preview_interactive(player,client.level,stack,matrixStack,bufferSource);
             }
         }
+    }
+
+
+    static private void preview_pinned(LocalPlayer player,Level level, ItemStack stack,PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
+        if(last_pos != wand.pin.getPos()) {
+            last_pos = wand.pin.getPos();
+            last_side = wand.pin.getEffectiveSide(ClientRender.client.hitResult, player.getDirection());
+            BlockState block_state = level.getBlockState(last_pos);
+            Vec3 hitLoc = player.getEyePosition();
+            wand.do_or_preview(player, level, block_state, last_pos, last_side, hitLoc, stack, (WandItem) stack.getItem(), prnt);
+        }
+        preview_mode(wand.mode, matrixStack, bufferSource);
+    }
+
+    static private void preview_interactive(LocalPlayer player, Level level, ItemStack stack, PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
+        HitResult hitResult;
+        if (wand.reach_distance > 0) {
+            double baseReach = Compat.is_creative(player) ? 5.0 : 4.5;
+            hitResult = player.pick(baseReach + wand.reach_distance, Compat.getPartialTick(), false);
+        } else {
+            hitResult = client.hitResult;
+        }
+        wand.lastHitResult = hitResult;
+        boolean hasBlockTarget = hitResult != null && hitResult.getType() == HitResult.Type.BLOCK;
+        boolean missedTarget = hitResult != null && hitResult.getType() == HitResult.Type.MISS;
+        //if(!hasBlockTarget)
+        //    return;
+        Rotation rot = WandProps.getRotation(stack);
+        WandProps.Orientation orientation = WandProps.getOrientation(stack);
+        Mode mode = WandProps.getMode(stack);
+        Direction side=null;
+        BlockPos pos=null;
+        BlockState block_state=null;
+        Vec3 hitLoc=null;
+        if (hasBlockTarget){
+            BlockHitResult block_hit = (BlockHitResult) hitResult;
+            side = block_hit.getDirection();
+            pos = block_hit.getBlockPos();
+            block_state = level.getBlockState(pos);
+            hitLoc = block_hit.getLocation();
+        }else{
+            if(missedTarget && mode.can_target_air() && wand.target_air){
+                pos = wand.get_pos_from_air(hitResult.getLocation());
+                side = player.getDirection().getOpposite();
+                block_state = level.getBlockState(pos);
+                hitLoc = hitResult.getLocation();
+            }else{
+                wand.lastHitResult =null;
+                return;
+            }
+        }
+        if (force) {
+            wand.force_render = false;
+            // Only apply INCSELBLOCK offset for modes that support it (skip for pin — already applied when set)
+            if (WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode) && !WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK)) {
+                pos = pos.relative(side, 1);
+            }
+            last_pos = pos;
+            last_side = side;
+            last_mode = mode;
+            last_orientation = orientation;
+            last_rot = rot;
+            last_buffer_size = wand.block_buffer.get_length();
+            wand.do_or_preview(player, level, block_state, pos, side, hitLoc, stack, (WandItem) stack.getItem(), prnt);
+        }
+        preview_shape = null;
+        if (last_pos != null) {
+            preview_shape = block_state.getShape(level, last_pos);
+        }
+        //WandsMod.log("buffer "+wand.block_buffer.get_length(),prnt);
+        //WandsMod.log("last_pos "+last_pos,prnt);
+        //WandsMod.log("last_side "+last_side,prnt);
+        preview_mode(wand.mode, matrixStack, bufferSource);
     }
 
     /** Main preview entry point - routes to appropriate preview methods based on mode */
@@ -345,9 +281,6 @@ public class ClientRender {
         #else
         Vec3 _c = camera.getPosition();
         #endif
-        //cam.x=(float)_c.x;
-        //cam.y=(float)_c.y;
-        //cam.z=(float)_c.z;
         matrixStack.pushPose();
         matrixStack.translate(-(float)_c.x,-(float)_c.y,-(float)_c.z);
 
@@ -358,14 +291,6 @@ public class ClientRender {
             p1_y = p1.getY();
             p1_z = p1.getZ();
         }
-
-        //RenderSystem.depthMask(true);
-        //boolean fabulous_depth_buffer = WandsMod.config.render_last && Minecraft.useShaderTransparency();
-        //if (Screen.hasControlDown() || fabulous_depth_buffer) {
-            //RenderSystem.disableDepthTest();
-        //} else {
-            //RenderSystem.enableDepthTest();
-        //}
 
         if (camera.isInitialized() && last_pos != null) {
             float last_pos_x = last_pos.getX();
@@ -417,6 +342,9 @@ public class ClientRender {
     }
     /** Shared outline renderer: draws wireframe outlines from block_buffer */
     public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource){
+        if(client.level==null) {
+            return;
+        }
         Colorf mode_outline_color = bo_col;
         if(wand.destroy ||wand.has_empty_bucket)
         {
@@ -429,7 +357,7 @@ public class ClientRender {
         if(drawlines &&block_outlines)
         {
             // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-            if(wand.has_empty_bucket){
+            if(wand.has_empty_bucket ){
                 preview_shape = Blocks.STONE.defaultBlockState().getShape(client.level, last_pos);
             };
             VertexConsumer consumer =getVertexConsumerDebugQuads(bufferSource);
@@ -974,7 +902,7 @@ public class ClientRender {
                 matrixStack.pushPose();
                 //Compat.set_identity(matrixStack2);
                 if(wand.mode!=Mode.COPY ){
-                    Vec3i n=wand.side.getUnitVec3i();
+                    Vec3i n=wand.getSide().getUnitVec3i();
                     if(wand.replace) {
                         matrixStack.translate(
                             x+(0.5*(1.0-n.getX()))+n.getX(),
@@ -1042,7 +970,7 @@ public class ClientRender {
                 bakedModel = blockRenderer.getBlockModel(state);
                 matrixStack.pushPose();
                 if (wand.mode != Mode.COPY) {
-                    Vec3i n = wand.side.getNormal();
+                    Vec3i n = wand.getSide().getNormal();
                     if (wand.replace) {
                         matrixStack.translate(
                                 x + (0.5 * (1.0 - n.getX())) + n.getX(),
@@ -1101,7 +1029,7 @@ public class ClientRender {
             bakedModel = blockRenderer.getBlockModel(state);
             matrixStack.pushPose();
             if (wand.mode != Mode.COPY) {
-                Vec3i n = wand.side.getNormal();
+                Vec3i n = wand.getSide().getNormal();
                 if (wand.replace) {
                     matrixStack.translate(
                             x + (0.5 * (1.0 - n.getX())) + n.getX(),
@@ -1178,7 +1106,7 @@ public class ClientRender {
                     int overlay= OverlayTexture.NO_OVERLAY;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
-                            switch (wand.side) {
+                            switch (wand.getSide()) {
                                 case UP:
                                     x1 = pos_x + (float)aabb.minX;
                                     y1 = pos_y + (float)aabb.maxY + 0.02f;
@@ -1263,7 +1191,7 @@ public class ClientRender {
                     int vi = 0;
                     for (AABB aabb : list) {
                         if (vi == wand.grid_voxel_index) {
-                            grid(matrix, consumer, wand.side, pos_x, pos_y, pos_z, aabb);
+                            grid(matrix, consumer, wand.getSide(), pos_x, pos_y, pos_z, aabb);
                         }
                         vi++;
                     }
@@ -1275,7 +1203,8 @@ public class ClientRender {
 
     /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
     static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
-        if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
+        //if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
+        if (wand.has_empty_bucket || (wand.valid && wand.block_buffer != null)) {
             random.setSeed(0);
             int block_buffer_length=wand.block_buffer.get_length();
             if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use ) {

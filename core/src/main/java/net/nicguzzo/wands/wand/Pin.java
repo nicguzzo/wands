@@ -6,6 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.render.ClientRender;
 
 /**
  * Client-side pin that decouples wand preview/placement from the crosshair.
@@ -45,18 +46,26 @@ public class Pin {
             clear();
         } else if (!mode.supports_pin()) {
             return false;
-        } else if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
-            BlockHitResult blockHit = (BlockHitResult) hitResult;
-            BlockPos hitPos = blockHit.getBlockPos();
-            Direction hitSide = blockHit.getDirection();
-            boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
-            if (modeSupportsIncSel && !WandProps.getFlag(wand, WandProps.Flag.INCSELBLOCK)) {
-                hitPos = hitPos.relative(hitSide, 1);
+        } else {
+            if (hitResult == null) {
+                return false;
             }
-            set = true;
-            persistent = true;
-            pos = hitPos;
-            side = hitSide;
+            boolean hasBlockTarget = hitResult.getType() == HitResult.Type.BLOCK;
+            boolean missedTarget =  hitResult.getType() == HitResult.Type.MISS;
+            if(hasBlockTarget||(missedTarget && mode.can_target_air() && ClientRender.wand.target_air)){
+                //if (hitResult != null && hitResult.getType() == HitResult.Type.BLOCK) {
+                BlockHitResult blockHit = (BlockHitResult) hitResult;
+                BlockPos hitPos = blockHit.getBlockPos();
+                Direction hitSide = blockHit.getDirection();
+                boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
+                if (modeSupportsIncSel && !WandProps.getFlag(wand, WandProps.Flag.INCSELBLOCK)) {
+                    hitPos = hitPos.relative(hitSide, 1);
+                }
+                set = true;
+                persistent = true;
+                pos = hitPos;
+                side = hitSide;
+            }
         }
         return true;
     }

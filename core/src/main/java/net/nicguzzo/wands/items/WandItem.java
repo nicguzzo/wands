@@ -28,6 +28,7 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.compat.Compat;
+import net.nicguzzo.wands.wand.Interaction;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
@@ -66,8 +67,8 @@ public class WandItem extends Item {
 
     @Override
     public @NotNull InteractionResult useOn(UseOnContext context) {
-        Level world = context.getLevel();
-        if (!world.isClientSide()) {
+        Level level = context.getLevel();
+        if (!level.isClientSide()) {
             return InteractionResult.FAIL;
         }
         Player player = context.getPlayer();
@@ -78,13 +79,16 @@ public class WandItem extends Item {
         if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
             return InteractionResult.FAIL;
         }
-        //WandsMod.LOGGER.info("UseOn");
-        Mode mode = WandProps.getMode(stack);
+        if( Interaction.onClick(level, context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), stack) ){
+            return InteractionResult.SUCCESS;
+        }else{
+            return InteractionResult.FAIL;
+        }
+
+        /*Mode mode = WandProps.getMode(stack);
         BlockPos pos = context.getClickedPos();
         BlockState block_state = world.getBlockState(pos);
         Direction side = context.getClickedFace();
-        //WandsMod.LOGGER.info("UseOn p1 "+ClientRender.wand.getP1());
-        //WandsMod.LOGGER.info("UseOn pps "+pos);
         // Only apply INCSELBLOCK offset for modes that show the toggle
         boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
         boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
@@ -123,7 +127,16 @@ public class WandItem extends Item {
             }
         }
         if ((ClientRender.wand.getP1() != null && mode.n_clicks() == 1) || ((ClientRender.wand.getP1() != null && ClientRender.wand.getP2() != null && mode.n_clicks() == 2))) {
-            Networking.send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), context.getClickLocation(), ClientRender.wand.palette.seed);
+            Vec3 hit=null;
+            if(ClientRender.wand.reach_distance==0){
+                hit=context.getClickLocation();
+            }else {
+                hit=ClientRender.wand.hit;
+            }
+            if(hit==null){
+                return InteractionResult.FAIL;
+            }
+            Networking.send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), hit, ClientRender.wand.palette.seed);
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
             if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
@@ -134,6 +147,7 @@ public class WandItem extends Item {
             }
         }
         return InteractionResult.SUCCESS;
+        */
     }
 
     @Override
@@ -143,24 +157,22 @@ public class WandItem extends Item {
     public @NotNull InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
 #endif
         if (!world.isClientSide()) {
-            #if MC_VERSION>=12111
-               return InteractionResult.FAIL;
-            #else
-                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
-            #endif
+            return return_fail(player,interactionHand);
         }
         //WandsMod.LOGGER.info("use");
         ItemStack stack = player.getMainHandItem();
         if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
-            #if MC_VERSION>=12111
-               return InteractionResult.FAIL;
-            #else
-                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
-            #endif
+            return return_fail(player,interactionHand);
         }
-        Wand wand = ClientRender.wand;
+
+        if( Interaction.onAirClick(world, stack) ){
+            return return_success(player,interactionHand);
+        }
+
+        /*Wand wand = ClientRender.wand;
         Mode mode = WandProps.getMode(stack);
         if (wand.pin.isActive()) {
+            WandsMod.log("use 1",true);
             BlockPos pinPos = wand.pin.getPos();
             Direction side = wand.pin.getSide() != null ? wand.pin.getSide() : player.getDirection().getOpposite();
             if (wand.getP1() == null) {
@@ -193,27 +205,21 @@ public class WandItem extends Item {
                 }
                 wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
             }
-            #if MC_VERSION>=12111
-            return InteractionResult.SUCCESS;
-            #else
-            return InteractionResultHolder.success(player.getItemInHand(interactionHand));
-            #endif
+            return return_success(player,interactionHand);
         }
-        if (wand.target_air && mode.can_target_air()) {
+        if ((wand.target_air && mode.can_target_air())|| wand.reach_distance>0) {
+            WandsMod.log("use 2",true);
+            //WandsMod.LOGGER.info("reach_distance "+wand.reach_distance );
             // Check if player has something to place with (offhand block, palette, or copy/paste mode)
             // Destroy and Use actions don't need an offhand block
             WandProps.Action action = WandProps.getAction(stack);
             boolean hasPalette = wand.palette.has_palette && !wand.palette.palette_slots.isEmpty();
             Block offhandBlock = Block.byItem(player.getOffhandItem().getItem());
             boolean hasOffhand = offhandBlock != Blocks.AIR;
-            if (!hasOffhand && !hasPalette && mode != Mode.PASTE && mode != Mode.COPY
+            if (wand.target_air && !hasOffhand && !hasPalette && mode != Mode.PASTE && mode != Mode.COPY
                     && action != WandProps.Action.DESTROY && action != WandProps.Action.USE) {
                 player.displayClientMessage(Compat.translatable("wands.message.target_air_needs_offhand").withStyle(ChatFormatting.RED), true);
-#if MC_VERSION>=12111
-                return InteractionResult.FAIL;
-#else
-                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
-#endif
+                return return_fail(player,interactionHand);
             }
             if (wand.getP1() == null) {
                 wand.setP1(ClientRender.last_pos);
@@ -235,12 +241,8 @@ public class WandItem extends Item {
             //ClientRender.wand.clear();
             //if(player!=null)
             //player.displayClientMessage(Compat.literal("wand cleared"),false);
-        }
-#if MC_VERSION>=12111
-        return InteractionResult.PASS;
-#else
-        return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
-#endif
+        }*/
+        return return_pass(player,interactionHand);
     }
 
 
@@ -292,4 +294,26 @@ public class WandItem extends Item {
             }
         }
     }
+
+#if MC_VERSION>=12111
+    public InteractionResult return_fail(Player player, InteractionHand interactionHand) {
+        return InteractionResult.FAIL;
+    }
+    public InteractionResult return_pass(Player player, InteractionHand interactionHand) {
+        return InteractionResult.PASS;
+    }
+    public InteractionResult return_success(Player player, InteractionHand interactionHand) {
+        return InteractionResult.SUCCESS;
+    }
+#else
+    public @NotNull InteractionResultHolder<ItemStack> return_fail(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+    }
+    public @NotNull InteractionResultHolder<ItemStack> return_pass(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
+    }
+    public @NotNull InteractionResultHolder<ItemStack> return_success(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.success(player.getItemInHand(interactionHand));
+    }
+#endif
 }

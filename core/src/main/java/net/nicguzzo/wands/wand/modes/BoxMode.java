@@ -22,7 +22,7 @@ public class BoxMode extends WandMode {
         int toy = WandProps.getVal(wand.wand_stack, WandProps.Value.BOX_OY);
 
         // Use clicked face direction so the box is stable regardless of player angle
-        Direction depthDir = wand.side;
+        Direction depthDir = wand.getSide();
         if (WandProps.getFlag(wand.wand_stack, WandProps.Flag.BOX_INVERTED)) {
             depthDir = depthDir.getOpposite();
         }

@@ -3,7 +3,6 @@ package net.nicguzzo.wands.wand.modes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
@@ -14,7 +13,7 @@ public class AreaMode extends WandMode {
     @Override
     public void place_in_buffer(Wand wand) {
 
-        if(!need_update(wand,true)){
+        if(still_looking_at_same_pos(wand, true)){
             return;
         }
 
@@ -22,7 +21,7 @@ public class AreaMode extends WandMode {
         if(limit2<=0 || limit2 >wand.limit){
             limit2=wand.limit;
         }
-
+        Direction wand_side=wand.getSide();
         wand.block_buffer.reset();
         add_neighbour(wand.pos, wand.block_state,wand);
         int i = 0;
@@ -30,14 +29,14 @@ public class AreaMode extends WandMode {
         limit2-=1;
         while (i < limit2 && i < WandsConfig.max_limit && found <= limit2) {
             if (i < wand.block_buffer.get_length()) {
-                BlockPos p = wand.block_buffer.get(i).relative(wand.side, -1);
+                BlockPos p = wand.block_buffer.get(i).relative(wand_side, -1);
                 found += find_neighbours(p, wand.block_state,limit2,wand);
             }
             i++;
         }
         if (wand.destroy || wand.replace ||wand.use) {
             for (int a = 0; a < wand.block_buffer.get_length(); a++) {
-                wand.block_buffer.set(a, wand.block_buffer.get(a).relative(wand.side, -1));
+                wand.block_buffer.set(a, wand.block_buffer.get(a).relative(wand_side, -1));
             }
         }
         wand.skip();
@@ -46,7 +45,7 @@ public class AreaMode extends WandMode {
 
     int add_neighbour(BlockPos bpos, BlockState state,Wand wand) {
 
-        BlockPos pos2 = bpos.relative(wand.side);
+        BlockPos pos2 = bpos.relative(wand.getSide());
         if (!wand.block_buffer.in_buffer(pos2)) {
             BlockState bs1 = wand.level.getBlockState(bpos);
             BlockState bs2 = wand.level.getBlockState(pos2);
@@ -67,9 +66,10 @@ public class AreaMode extends WandMode {
     }
     int find_neighbours(BlockPos bpos, BlockState state, int limit,Wand wand) {
         int found=0;
+        Direction wand_side=wand.getSide();
         //boolean diag=WandProps.getAreaDiagonalSpread(wand_stack);
         boolean diag= WandProps.getFlag(wand.wand_stack, WandProps.Flag.DIAGSPREAD);
-        if (wand.side == Direction.UP || wand.side == Direction.DOWN) {
+        if (wand_side == Direction.UP || wand_side == Direction.DOWN) {
             BlockPos p0 = bpos.relative( Direction.EAST, 1);
             found+=add_neighbour(p0, state,wand);
             if(found>= limit)
@@ -116,7 +116,7 @@ public class AreaMode extends WandMode {
             }
 
         } else {
-            if (wand.side == Direction.EAST || wand.side == Direction.WEST) {
+            if (wand_side == Direction.EAST || wand_side == Direction.WEST) {
                 BlockPos p0 = bpos.relative( Direction.UP, 1);
                 found+=add_neighbour(p0, state,wand);
                 if(found>= limit)
@@ -163,7 +163,7 @@ public class AreaMode extends WandMode {
                         return found;
                 }
 
-            } else if (wand.side == Direction.NORTH || wand.side == Direction.SOUTH) {
+            } else if (wand_side == Direction.NORTH || wand_side == Direction.SOUTH) {
                 BlockPos p0 = bpos.relative( Direction.EAST, 1);
                 found+=add_neighbour(p0, state,wand);
                 if(found>= limit)
