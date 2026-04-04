@@ -21,7 +21,7 @@ public class InventoryManager {
     private int[] inv_aux = new int[36];
     private int inv_aux_last = 0;
     private int blocks_sent_to_inv = 0;
-
+    public int n_water_buckets_in_inventory = 0;
     public InventoryManager(Inventory playerInv) {
         this.player_inv = playerInv;
     }
@@ -189,8 +189,23 @@ public class InventoryManager {
         }
         return false;
     }
-
+    void detect_water_bucket(Wand wand){
+        n_water_buckets_in_inventory = 0;
+        if ( wand.has_water_bucket && (!wand.creative || wand.mode == Mode.BLAST) && !wand.destroy && !wand.use && wand.mode != Mode.COPY) {
+            ItemStack stack;
+            for (int i = 0; i < 36; ++i) {
+                stack = player_inv.getItem(i);
+                if (stack.getItem() == Items.WATER_BUCKET) {
+                    n_water_buckets_in_inventory++;
+                    if (n_water_buckets_in_inventory>=2) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
     void check_inventory(Wand wand) {
+
         if ((!wand.creative || wand.mode == Mode.BLAST) && !wand.destroy && !wand.use && !wand.has_water_bucket && wand.mode != Mode.COPY) {
             ItemStack stack;
             //now the player inventory

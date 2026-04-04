@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "misc",
+    "pattern": [
+        "###",
+        "#/#",
+        "###"
+    ],
+    "key": {
+        "#": "minecraft:item_frame",
+        "/": "minecraft:chest"
+    },
+    "result": {
+        "id": "wands:palette",
+        "count": 1
+    }
+}

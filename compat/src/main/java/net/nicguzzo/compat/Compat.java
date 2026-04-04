@@ -270,7 +270,7 @@ public class Compat {
             return tvo.buildResult();
         #else
              #if MC_VERSION >= 12005
-                return (CompoundTag) item.save(level.registryAccess());
+                return (CompoundTag) item.saveOptional(level.registryAccess());
             #else
                 return item.save(new CompoundTag());
             #endif

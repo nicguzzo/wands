@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_cobblestone": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["minecraft:cobblestone"]}]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "wands:stone_wand"
+      }
+    }
+  },
+  "requirements": [["has_cobblestone", "has_the_recipe"]],
+  "rewards": {
+    "recipes": ["wands:stone_wand"]
+  }
+}

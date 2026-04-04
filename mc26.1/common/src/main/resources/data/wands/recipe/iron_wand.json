@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "misc",
+    "pattern": [
+        "  /",
+        " / ",
+        "#  "
+    ],
+    "key": {
+        "#":"minecraft:iron_ingot",
+        "/":"minecraft:stick"
+    },
+    "result": {
+        "id": "wands:iron_wand",
+        "count": 1
+    }
+}

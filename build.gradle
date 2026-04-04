@@ -1,5 +1,5 @@
 plugins {
-    id 'dev.architectury.loom' version '1.13-SNAPSHOT' apply false
+    id 'dev.architectury.loom' version '1.14-SNAPSHOT' apply false
     id 'architectury-plugin' version '3.4-SNAPSHOT'
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
     id 'systems.manifold.manifold-gradle-plugin' version '0.0.2-alpha' apply false
@@ -36,7 +36,8 @@ subprojects {
     if (
         project.name == 'mc1.20.1' || 
         project.name == 'mc1.21.1' || 
-        project.name == 'mc1.21.11'
+        project.name == 'mc1.21.11' /*||
+        project.name == 'mc26.1'*/
     ) {
         return // Stop configuring these container/logic folders as mods
     }
@@ -49,8 +50,8 @@ subprojects {
     }
 
     dependencies {
-        annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
-        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.28'
+        annotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.31'
+        testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2025.1.31'
     }
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"

@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ender_eye": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [{"items": ["minecraft:ender_eye"]}]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "wands:magic_bag_2"
+      }
+    }
+  },
+  "requirements": [["has_ender_eye", "has_the_recipe"]],
+  "rewards": {
+    "recipes": ["wands:magic_bag_2"]
+  }
+}

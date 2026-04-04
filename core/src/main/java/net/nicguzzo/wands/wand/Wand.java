@@ -73,27 +73,17 @@ import net.nicguzzo.wands.wand.WandProps.Mode;
 
 import java.util.*;
 import java.util.function.Consumer;
-//import com.github.clevernucleus.opc.api.OfflinePlayerCacheAPI;
-//import com.github.clevernucleus.opc.api.claim.Claim;
 
-//TODO implement https://github.com/Patbox/common-protection-api for claimed chunks
+//TODO lava and powder snow bucket retreive when enough empty buckets and space in inv
 //TODO fix mirroring and rotation
 //TODO augmentation items, durability, range, damage?, planting?
 //TODO support other mods tools
 //TODO infinite (creative) wand recipe, optional
 //TODO drop items on wand merge craft
 //TODO fix plants place, force samestate, needs air bug
-//TODO fix box mode only on netherite, should be iron+
-//TODO stone wand no blast
 //TODO support tags in allow/deny list
 //TODO palette pattern mode
 //TODO banner placement not working on sides
-//DONE fix leaves default state
-//DONE bug, copy undoes last destroy
-//DONE place bamboo
-//DONE walls/fences state
-//DONE bug, mud with potion on survival
-//DONE bug shear pumpkins
 
 public class Wand {
     private static final int TOOL_DAMAGE_STOP = 5;
@@ -135,6 +125,7 @@ public class Wand {
     public Direction lastPlayerDirection = Direction.NORTH;
     public Vec3 hit;
     public ItemStack wand_stack;
+    private boolean restricted_destroy=false;
 
     enum ToolType {
         PICKAXE,
@@ -401,6 +392,7 @@ public class Wand {
         if (limit > WandsConfig.max_limit) {
             this.limit = WandsConfig.max_limit;
         }
+        this.restricted_destroy=false;
         this.unbreakable = wand_item.unbreakable;
         this.removes_water = wand_item.removes_water;
         this.removes_lava = wand_item.removes_lava;
@@ -525,15 +517,7 @@ public class Wand {
             this.has_water_potion=WandUtils.hasWaterPotion(offhand);
 
             if (!creative && has_water_potion) {
-                int nbuckets = 0;
-                for (int i = 0; i < 36; ++i) {
-                    ItemStack stack = inventory.getItem(i);
-                    boolean is_water_bucket = stack.getItem().equals(Fluids.WATER.getBucket());
-                    if (stack.getItem() instanceof BucketItem && is_water_bucket) {
-                        nbuckets++;
-                    }
-                }
-                if (nbuckets < 2) {
+                if (inventory.n_water_buckets_in_inventory < 2) {
                     has_water_potion = false;
                     if (!preview) {
                         player.displayClientMessage(Compat.translatable("wands.message.need_water_buckets").withStyle(ChatFormatting.RED), false);
@@ -553,23 +537,20 @@ public class Wand {
         if (offhand != null && !offhand.isEmpty() && !palette.has_palette && !has_bucket /*&& !destroy*/) {
 
         #if MC_VERSION >= 12005
-            if (offhand.get(DataComponents.CUSTOM_DATA) != null) {
+            if (offhand.get(DataComponents.CUSTOM_DATA) != null)
         #else
-            if (offhand.getTag() != null) {
+            if (offhand.getTag() != null)
         #endif
+            {
                 offhand = null;
                 has_offhand = false;
                 offhand_block = null;
                 //return;
             }
             if (offhand != null && !offhand.isStackable() && !has_water_potion) {
-                //if (!preview) {
-                //    player.displayClientMessage(Compat.literal("Wand offhand must be stackable! ").withStyle(ChatFormatting.RED), false);
-                //}
                 offhand = null;
                 has_offhand = false;
                 offhand_block = null;
-                //return;
             }
             if (destroy && has_torch) {
                 offhand = null;
@@ -578,7 +559,7 @@ public class Wand {
             }
         }
         block_accounting.clear();
-        if (palette.has_palette /*&& !destroy && !is_copy_paste*/) {
+        if (palette.has_palette) {
             palette.update_palette(block_accounting, level);
         }
 
@@ -594,19 +575,11 @@ public class Wand {
             }
             return;
         }
-        /*if(has_offhand && (destroy)&& offhand_block!=null && offhand_state!=block_state){
-            if (!preview) {
-                Component name=Compat.translatable(offhand.getDescriptionId());
-                player.displayClientMessage(Compat.literal("restricted to offand block: ").append(name), false);
-            }
-            return;
-        }*/
-
         inventory.update_inv_aux();
         inventory.resetBlocksSentToInv();
         //process the current mode
         int m = mode.ordinal();
-        if (m >= 0 && m < modes.length && modes[m] != null) {
+        if ( m < modes.length && modes[m] != null) {
             modes[m].place_in_buffer(this);
         }
 
@@ -676,12 +649,18 @@ public class Wand {
                         if (has_bucket) {
                             if (!validate_bucket_for_server()) return;
                         }
-
-                        BlockAccounting pa = new BlockAccounting();
-                        for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                            if (has_empty_bucket || has_water_bucket || has_lava_bucket || has_powder_snow_bucket) {
-                                apply_bucket_accounting(pa, a);
-                            } else {
+                        boolean buckets= has_empty_bucket || has_water_bucket || has_lava_bucket || has_powder_snow_bucket;
+                        if (buckets) {
+                            BlockAccounting lava_pa = new BlockAccounting();
+                            BlockAccounting snow_pa = new BlockAccounting();
+                            for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
+                                apply_bucket_accounting(lava_pa, snow_pa, a);
+                            }
+                            block_accounting.put(Items.LAVA_BUCKET, lava_pa);
+                            block_accounting.put(Items.POWDER_SNOW_BUCKET, snow_pa);
+                        } else {
+                            BlockAccounting pa = new BlockAccounting();
+                            for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
                                 if (!replace && replace_mode != 2 && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
                                     block_buffer.state[a] = null;
                                     block_buffer.item[a] = null;
@@ -689,9 +668,9 @@ public class Wand {
                                     pa.needed++;
                                 }
                             }
-                        }
-                        if (block_buffer.get_length() > 0 && pa.needed > 0) {
-                            block_accounting.put(block_buffer.item[0], pa);
+                            if (block_buffer.get_length() > 0 && pa.needed > 0) {
+                                block_accounting.put(block_buffer.item[0], pa);
+                            }
                         }
                     } else {
                         //copy paste
@@ -745,7 +724,8 @@ public class Wand {
                         if (item != null) {
                             pa = block_accounting.get(item);
                         }
-                        if ((destroy || use || creative || has_bucket ||
+                        if ((destroy || use || creative || has_empty_bucket ||
+                                (has_water_bucket && inventory.n_water_buckets_in_inventory>0) ||
                                 (pa != null && pa.placed < pa.in_player))//survival has blocks in inventory
                         ) {
                             if (place_block(tmp_pos, block_buffer.state[a])) {
@@ -757,6 +737,9 @@ public class Wand {
                         if (stop) {
                             break;
                         }
+                    }
+                    if (this.restricted_destroy){
+                        player.displayClientMessage(Compat.translatable("wands.message.offhand_restricts_destroy").withStyle(ChatFormatting.RED), true);
                     }
                 }
                 modes[m].action(this);
@@ -836,6 +819,7 @@ public class Wand {
                 this.use = false;
             }
         }
+        inventory.detect_water_bucket(this);
     }
 
     /** Maps bucket type to the corresponding block_state for preview and placement. */
@@ -859,6 +843,15 @@ public class Wand {
             int len = block_buffer.get_length();
             for (int a = 0; a < len; a++) {
                 block_buffer.state[a] = block_state;
+                if(has_water_bucket) {
+                    block_buffer.item[a]=Items.WATER_BUCKET;
+                }
+                if(has_lava_bucket) {
+                    block_buffer.item[a]=Items.LAVA_BUCKET;
+                }
+                if(has_powder_snow_bucket) {
+                    block_buffer.item[a]=Items.POWDER_SNOW_BUCKET;
+                }
             }
         }
     }
@@ -903,12 +896,22 @@ public class Wand {
     }
 
     /** Sets buffer state/item for a single bucket entry and increments accounting for lava/powder snow. */
-    private void apply_bucket_accounting(BlockAccounting pa, int a) {
-        block_buffer.state[a] = block_state;
-        if (has_lava_bucket || has_powder_snow_bucket) {
-            block_buffer.item[a] = bucket.getItem();
-            pa.needed++;
-        }
+    private void apply_bucket_accounting(BlockAccounting lava_pa,BlockAccounting snow_pa, int a) {
+        //if ( has_empty_bucket ) {
+
+            if(block_buffer.item[a]==Items.LAVA_BUCKET){
+                lava_pa.needed++;
+            } else if(block_buffer.item[a]==Items.POWDER_SNOW_BUCKET){
+                snow_pa.needed++;
+            }
+        //}else {
+        //       block_buffer.state[a] = block_state;
+//            if (has_lava_bucket || has_powder_snow_bucket) {
+//                block_buffer.item[a] = bucket.getItem();
+//                pa.needed++;
+//            }
+        //}
+
     }
 
     public void skip() {
@@ -1214,7 +1217,8 @@ public class Wand {
         }
         if (destroy && (mode != Mode.VEIN) && has_offhand && offhand_block != null && offhand_block != st.getBlock()) {
             // Action bar message: offhand block restricts destroy to matching blocks only
-            player.displayClientMessage(Compat.translatable("wands.message.offhand_restricts_destroy").withStyle(ChatFormatting.RED), true);
+            //TODO: set a flag an send messsage only once at the end
+            restricted_destroy=true;
             return false;
         }
 
@@ -1229,6 +1233,9 @@ public class Wand {
         boolean _tool_would_break = false;
         boolean _wand_would_break = wand_would_break();
         if (!creative) {
+            if (has_water_bucket && inventory.n_water_buckets_in_inventory < 1 ){
+                return false;
+            }
             if (_wand_would_break) {
                 damaged_tool = true;
                 return false;
@@ -1252,7 +1259,7 @@ public class Wand {
                 }
             }
         } else {
-            if (creative && use) {
+            if (use) {
                 if (digger_item == null && !has_water_potion) {
                     if (!WandUtils.has_use_action(st) && !can_shear(st)) {
                         no_use_action = true;
