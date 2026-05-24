@@ -20,6 +20,7 @@ import net.nicguzzo.wands.WandsMod;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,6 +30,9 @@ public class LevelRendererMixin {
     @Shadow
     RenderBuffers renderBuffers;
 
+    @Unique
+    PoseStack posestack = new PoseStack();
+
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
 #if MC_VERSION <12100
     public void renderLevel(PoseStack posestack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
@@ -36,10 +40,11 @@ public class LevelRendererMixin {
     #if MC_VERSION >=12111
         public void renderLevel(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci){
     #else
-        public void renderLevel(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+        public void renderLevelB(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
     #endif
-        PoseStack posestack = new PoseStack();
-            posestack.mulPose(matrix4f);
+        //PoseStack posestack = new PoseStack();
+        posestack.setIdentity();
+        posestack.mulPose(matrix4f);
 #endif
         ClientRender.render(posestack,renderBuffers.bufferSource());
     }

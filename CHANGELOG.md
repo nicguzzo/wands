@@ -1,8 +1,15 @@
 # Changelog
 
-## 3.0.2
+## 3.0.4
+- fix empty buckets bug
 
-### Supported Minecraft versions
+- v3.0.3
+- reworked interaction code
+- fix palette opening on extended reach
+- fix use tools on 1.20.1
+- include selected block true by default
+
+## 3.0.2
 - 1.20.1 (Fabric, Forge)
 - 1.21.1 (Fabric, NeoForge)
 - 1.21.11 (Fabric, NeoForge)

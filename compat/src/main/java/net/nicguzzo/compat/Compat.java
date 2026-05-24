@@ -2,6 +2,7 @@ package net.nicguzzo.compat;
 
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
@@ -539,6 +540,13 @@ public class Compat {
         } else {
             return ModelBakery.LAVA_FLOW.sprite();
         }
+        #endif
+    }
+    static public Vec3 getCameraPosition(Camera camera){
+        #if MC_VERSION>=12111
+            return camera.position();
+        #else
+            return camera.getPosition();
         #endif
     }
 

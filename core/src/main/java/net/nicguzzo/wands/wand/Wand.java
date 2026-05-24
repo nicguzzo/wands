@@ -74,6 +74,7 @@ import net.nicguzzo.wands.wand.WandProps.Mode;
 import java.util.*;
 import java.util.function.Consumer;
 
+//TODO more geometric shapes and curves
 //TODO lava and powder snow bucket retreive when enough empty buckets and space in inv
 //TODO fix mirroring and rotation
 //TODO augmentation items, durability, range, damage?, planting?
@@ -928,12 +929,12 @@ public class Wand {
     }
 
     public void calc_pv_bbox(BlockPos bp1, BlockPos bp2) {
-        x1 = bp1.getX();
-        y1 = bp1.getY();
-        z1 = bp1.getZ();
-        x2 = bp2.getX();
-        y2 = bp2.getY();
-        z2 = bp2.getZ();
+        x1 = bp1.getX() - pos.getX();
+        y1 = bp1.getY() - pos.getY();
+        z1 = bp1.getZ() - pos.getZ();
+        x2 = bp2.getX() - pos.getX();
+        y2 = bp2.getY() - pos.getY();
+        z2 = bp2.getZ() - pos.getZ();
         if (!bp1.equals(bp2)) {
             if (x1 >= x2) {
                 x1 += 1;

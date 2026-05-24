@@ -40,7 +40,6 @@ import net.nicguzzo.compat.Compat;
 import net.nicguzzo.wands.utils.Colorf;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.items.*;
-import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 import net.nicguzzo.wands.WandsMod;
@@ -87,14 +86,13 @@ public class ClientRender {
     static float z2 = 0;
     static float opacity = 0.8f;
     static boolean fancy = true;
-    static boolean fat_lines = true;
     static boolean drawlines = true;
     static boolean block_outlines = false;
     static boolean fill_outlines = false;
     static boolean copy_outlines = false;
     static boolean paste_outlines = false;
     //static PoseStack matrixStack2 = new PoseStack();
-    static float fat_lines_width = 0.05f;
+    static float lines_width = 0.05f;
     static Minecraft client;
     private static final MyIdExt GRID_TEXTURE = new MyIdExt(WandsMod.MOD_ID,"textures/blocks/grid.png");
     //private static final MyIdExt LINE_TEXTURE = new MyIdExt(WandsMod.MOD_ID,"textures/blocks/line.png");
@@ -166,9 +164,8 @@ public class ClientRender {
         paste_outlines = WandsMod.config.paste_outlines;
         opacity = WandsMod.config.preview_opacity;
         fancy = WandsConfig.get_instance().fancy_preview;
-        fat_lines = WandsConfig.get_instance().fat_lines;
         if (WandsConfig.get_instance().fat_lines_width > 0 && WandsConfig.get_instance().fat_lines_width < 0.5) {
-            fat_lines_width = WandsConfig.get_instance().fat_lines_width;
+            lines_width = WandsConfig.get_instance().fat_lines_width;
         }
         ItemStack stack = player.getMainHandItem();
         prnt = false;
@@ -273,37 +270,35 @@ public class ClientRender {
     }
 
     /** Main preview entry point - routes to appropriate preview methods based on mode */
-    private static void preview_mode(Mode mode, PoseStack matrixStack,MultiBufferSource.BufferSource bufferSource) {
+    private static void preview_mode(Mode mode, PoseStack poseStack,MultiBufferSource.BufferSource bufferSource) {
 
         Camera camera = client.gameRenderer.getMainCamera();
-        #if MC_VERSION>=12111
-        Vec3 _c = camera.position();
-        #else
-        Vec3 _c = camera.getPosition();
-        #endif
-        matrixStack.pushPose();
-        matrixStack.translate(-(float)_c.x,-(float)_c.y,-(float)_c.z);
-
-        float p1_x=0,p1_y=0,p1_z=0;
-        BlockPos p1=wand.getP1();
-        if(p1!=null) {
-            p1_x = p1.getX();
-            p1_y = p1.getY();
-            p1_z = p1.getZ();
-        }
 
         if (camera.isInitialized() && last_pos != null) {
-            float last_pos_x = last_pos.getX();
-            float last_pos_y = last_pos.getY();
-            float last_pos_z = last_pos.getZ();
+            poseStack.pushPose();
+            Vec3 cam = Compat.getCameraPosition(camera);
+            //Very important to subtract cam from last_pos first and then push a translate matrix to the stack
+            //this allows correct rendering at large distances, eliminating precision errors on floats
+            //then always subtract last_pos to the block about to be rendered
+            float last_pos_x = (float)(last_pos.getX() - cam.x);
+            float last_pos_y = (float)(last_pos.getY() - cam.y);
+            float last_pos_z = (float)(last_pos.getZ() - cam.z);
+            poseStack.translate(last_pos_x,last_pos_y, last_pos_z);
 
+            float p1_x=0,p1_y=0,p1_z=0;
+            BlockPos p1=wand.getP1();
+            if(p1!=null) {
+                p1_x = p1.getX()-last_pos.getX();
+                p1_y = p1.getY()-last_pos.getY();
+                p1_z = p1.getZ()-last_pos.getZ();
+            }
             float off2 = 0.05f;
             float off3 = off2/2;
 
             //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.8f);
             switch (mode) {
                 case DIRECTION:
-                    preview_direction_mode(bufferSource,matrixStack.last().pose(),last_pos_x,last_pos_y,last_pos_z);
+                    preview_direction_mode_grid(bufferSource,poseStack.last().pose(),0,0,0);
                 case ROW_COL:
                 case FILL:
                 case AREA:
@@ -316,32 +311,30 @@ public class ClientRender {
                 case ROCK:
                 case COPY:
                 case PASTE:
-                    preview_selected(mode,bufferSource,matrixStack,last_pos_x,last_pos_y,last_pos_z,off3);
+                    preview_selected(mode,bufferSource,poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ(),off3);
                     if (wand.valid || (mode.n_clicks() == 2 && wand.getP1() != null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.BOX));
                         if (drawlines && showBbox) {
-                            preview_bbox(bufferSource,matrixStack);
+                            preview_bbox(bufferSource,poseStack);
                             if (!block_outlines) {
-                                preview_bbox_faces(bufferSource, matrixStack);
+                                preview_bbox_faces(bufferSource, poseStack);
                             }
                         }
                         //actual block preview
-                        preview_block_buffer(bufferSource,matrixStack);
+                        preview_block_buffer(bufferSource,poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ());
                         if (drawlines && p1 != null  && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY)) {
-                           preview_line_circle(matrixStack.last().pose(),mode,bufferSource,p1_x,p1_y,p1_z,last_pos_x,last_pos_y,last_pos_z,off3,off2);
+                           preview_line_circle(poseStack.last().pose(),mode,bufferSource,p1_x,p1_y,p1_z,off3,off2);
                         }
                     }
                 break;
             }
+            poseStack.popPose();
         }
-
-        //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0f);
-        matrixStack.popPose();
     }
     /** Shared outline renderer: draws wireframe outlines from block_buffer */
-    public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource){
+    public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource,int pos_x,int pos_y,int pos_z){
         if(client.level==null) {
             return;
         }
@@ -363,9 +356,9 @@ public class ClientRender {
             VertexConsumer consumer =getVertexConsumerDebugQuads(bufferSource);
             BlockPos.MutableBlockPos fluid_pos=new BlockPos.MutableBlockPos();
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
-                float x = wand.block_buffer.buffer_x[idx];
-                float y = wand.block_buffer.buffer_y[idx];
-                float z = wand.block_buffer.buffer_z[idx];
+                float x = wand.block_buffer.buffer_x[idx]-pos_x;
+                float y = wand.block_buffer.buffer_y[idx]-pos_y;
+                float z = wand.block_buffer.buffer_z[idx]-pos_z;
 
                 if (wand.block_buffer.state[idx] != null) {
                     if(!wand.has_empty_bucket){
@@ -382,17 +375,10 @@ public class ClientRender {
                     }
                     List<AABB> list = preview_shape.toAabbs();
                     for (AABB aabb : list) {
-                        if (fat_lines) {
                             preview_block_fat(matrix,consumer,
-                                    x + (float) aabb.minX, y + (float) aabb.minY, z + (float) aabb.minZ,
-                                    x + (float) aabb.maxX, y + (float) aabb.maxY, z + (float) aabb.maxZ,
-                                    mode_outline_color,wand.destroy);
-                        } else {
-                            preview_block(matrix,consumer,
-                                    x + (float)aabb.minX, y + (float)aabb.minY, z + (float)aabb.minZ,
-                                    x + (float)aabb.maxX, y + (float)aabb.maxY, z + (float)aabb.maxZ,
-                                    mode_outline_color);
-                        }
+                            x + (float) aabb.minX, y + (float) aabb.minY, z + (float) aabb.minZ,
+                            x + (float) aabb.maxX, y + (float) aabb.maxY, z + (float) aabb.maxZ,
+                            mode_outline_color,wand.destroy);
                     }
                 }
             }
@@ -419,11 +405,7 @@ public class ClientRender {
         float y = pos.getY();
         float z = pos.getZ();
 
-        if (fat_lines) {
-            preview_block_fat(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col, false);
-        } else {
-            preview_block(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col);
-        }
+        preview_block_fat(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col, false);
 
         bufferSource.endLastBatch();
         matrixStack.popPose();
@@ -432,7 +414,7 @@ public class ClientRender {
     // Draws box outline using quads (works with debugQuads render type)
     static void preview_block(Matrix4f matrix, VertexConsumer consumer, float fx1, float fy1, float fz1, float fx2, float fy2, float fz2, Colorf c) {
         // Use thin quad lines when fat_lines is disabled
-        float w = fat_lines ? fat_lines_width : 0.01f;
+        float w = lines_width;
         float off = 0.005f;
         fx1 -= off;
         fy1 -= off;
@@ -484,7 +466,7 @@ public class ClientRender {
         fz2 += off;
         //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
         //Compat.set_texture(LINE_TEXTURE);
-        float w=fat_lines_width;
+        float w= lines_width;
         //north -z
         quad_line(matrix,consumer,  0, w,0, fx1,   fy1, fz1, fx2,   fy1, fz1,c);
         quad_line(matrix,consumer,  0,-w,0, fx2,   fy2, fz1, fx1,   fy2, fz1,c);
@@ -553,7 +535,7 @@ public class ClientRender {
         Compat.consumerAddVertexColor(consumer,matrix,   lx2,    ly2,    lz2,c);
     }
 
-    private static void player_facing_line(VertexConsumer consumer,float lx1, float ly1,float lz1,float lx2, float ly2,float lz2,Colorf c){
+    private static void player_facing_line(VertexConsumer consumer,Matrix4f matrix,float lx1, float ly1,float lz1,float lx2, float ly2,float lz2,Colorf c){
 
         float w=0.05f;
 
@@ -577,10 +559,10 @@ public class ClientRender {
         }
         //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
 
-        Compat.consumerAddVertexColor(consumer,lx1-nx, ly1-ny, lz1-nz,c);
-        Compat.consumerAddVertexColor(consumer,lx1+nx, ly1+ny, lz1+nz,c);
-        Compat.consumerAddVertexColor(consumer,lx2+nx, ly2+ny, lz2+nz,c);
-        Compat.consumerAddVertexColor(consumer,lx2-nx, ly2-ny, lz2-nz,c);
+        Compat.consumerAddVertexColor(consumer,matrix,lx1-nx, ly1-ny, lz1-nz,c);
+        Compat.consumerAddVertexColor(consumer,matrix,lx1+nx, ly1+ny, lz1+nz,c);
+        Compat.consumerAddVertexColor(consumer,matrix,lx2+nx, ly2+ny, lz2+nz,c);
+        Compat.consumerAddVertexColor(consumer,matrix,lx2-nx, ly2-ny, lz2-nz,c);
 
     }
     private static void set_grid_v(int i,float x, float y,float z){
@@ -598,7 +580,7 @@ public class ClientRender {
     }
     // Draws lines as quads (for use with debugQuads render type)
     private static void draw_lines(Matrix4f matrix, VertexConsumer consumer, int from, int to, float r, float g, float b, float a) {
-        float w = fat_lines ? fat_lines_width * 0.5f : 0.005f;
+        float w = lines_width * 0.5f;
         Colorf c = new Colorf(r, g, b, a);
         // Draw lines as pairs of vertices (from is start, every 2 vertices is a line)
         for (int i = from; i < to - 1 && i < grid_n - 1; i += 2) {
@@ -618,199 +600,7 @@ public class ClientRender {
             }
         }
     }
-    private static void grid(Matrix4f matrix, VertexConsumer consumer, Direction side, float x, float y, float z, AABB aabb) {
-        float w=1;
-        float h=1;
-        float w2=w*0.33333333f;
-        float w3=w*0.66666666f;
-        float h2=h*0.33333333f;
-        float h3=h*0.66666666f;
-        float o = 0.02f;
-        switch (side) {
-            case UP:
-            case DOWN: {
-                w=(float)aabb.getXsize();
-                h=(float)aabb.getZsize();
 
-                x+=(float)aabb.minX;
-                z+=(float)aabb.minZ;
-                if(side==Direction.UP){
-                    y += (float)aabb.maxY+o;
-                }else{
-                    y += (float)aabb.minY-o;
-                }
-
-                w2=w*0.33333333f;
-                w3=w*0.66666666f;
-                h2=h*0.33333333f;
-                h3=h*0.66666666f;
-                grid_i=0;
-                add_grid_line(x     ,y, z      ,x + w ,y, z      );
-                add_grid_line(x     ,y, z      ,x     ,y, z + h  );
-                add_grid_line(x + w ,y, z      ,x + w ,y, z + h  );
-                add_grid_line(x     ,y, z + h  ,x + w ,y, z + h  );
-                add_grid_line(x     ,y, z + h2 ,x + w ,y, z + h2 );
-                add_grid_line(x     ,y, z + h3 ,x + w ,y, z + h3 );
-                add_grid_line(x + w2,y, z      ,x + w2,y, z +  h );
-                add_grid_line(x + w3,y, z      ,x + w3,y, z +  h );
-
-                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
-
-                grid_i=0;
-
-                add_grid_line(x + w*0.40f, y, z + h*0.20f, x + w*0.50f, y, z + h*0.05f);
-                add_grid_line(x + w*0.60f, y, z + h*0.20f, x + w*0.50f, y, z + h*0.05f);
-                add_grid_line(x + w*0.40f, y, z + h*0.80f, x + w*0.50f, y, z + h*0.95f);
-                add_grid_line(x + w*0.60f, y, z + h*0.80f, x + w*0.50f, y, z + h*0.95f);
-                add_grid_line(x + w*0.20f, y, z + h*0.40f, x + w*0.05f, y, z + h*0.50f);
-                add_grid_line(x + w*0.20f, y, z + h*0.60f, x + w*0.05f, y, z + h*0.50f);
-                add_grid_line(x + w*0.80f, y, z + h*0.40f, x + w*0.95f, y, z + h*0.50f);
-                add_grid_line(x + w*0.80f, y, z + h*0.60f, x + w*0.95f, y, z + h*0.50f);
-                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x + w*0.40f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.40f);
-                add_grid_line(x + w*0.40f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.60f);
-                add_grid_line(x + w*0.60f, y, z + h*0.50f,x + w*0.50f, y, z + h*0.60f);
-                add_grid_line(x + w*0.50f, y, z + h*0.40f,x + w*0.60f, y, z + h*0.50f);
-                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x + w*0.10f, y, z + h*0.10f,x + w*0.20f, y, z + h*0.14f);
-                add_grid_line(x + w*0.10f, y, z + h*0.10f,x + w*0.14f, y, z + h*0.20f);
-                add_grid_line(x + w*0.90f, y, z + h*0.90f,x + w*0.80f, y, z + h*0.86f);
-                add_grid_line(x + w*0.90f, y, z + h*0.90f,x + w*0.86f, y, z + h*0.80f);
-                add_grid_line(x + w*0.90f, y, z + h*0.10f,x + w*0.80f, y, z + h*0.14f);
-                add_grid_line(x + w*0.90f, y, z + h*0.10f,x + w*0.86f, y, z + h*0.20f);
-                add_grid_line(x + w*0.10f, y, z + h*0.90f,x + w*0.20f, y, z + h*0.86f);
-                add_grid_line(x + w*0.10f, y, z + h*0.90f,x + w*0.14f, y, z + h*0.80f);
-                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
-
-            }
-            break;
-            case NORTH:
-            case SOUTH: {
-                w=(float)aabb.getXsize();
-                h=(float)aabb.getYsize();
-                //WandsMod.log(aabb.toString(),prnt);
-                x+= (float) aabb.minX;
-                y+= (float) aabb.minY;
-                if(side==Direction.SOUTH){
-                    z += (float)aabb.maxZ+o;
-                }else{
-                    z += (float) aabb.minZ-o;
-                }
-                w2=w*0.33333333f;
-                w3=w*0.66666666f;
-                h2=h*0.33333333f;
-                h3=h*0.66666666f;
-                grid_i=0;
-                add_grid_line(x     ,y        ,z,x + w , y      , z);
-                add_grid_line(x     , y      , z,x     , y + h  , z);
-                add_grid_line(x + w , y      , z,x + w , y + h  , z);
-                add_grid_line(x     , y + h  , z,x + w , y + h  , z);
-                add_grid_line(x     , y + h2 , z,x + w , y + h2 , z);
-                add_grid_line(x     , y + h3 , z,x + w , y + h3 , z);
-                add_grid_line(x + w2, y      , z,x + w2, y +  h , z);
-                add_grid_line(x + w3, y      , z,x + w3, y +  h , z);
-
-                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
-
-                grid_i=0;
-
-                add_grid_line(x + w*0.40f, y + h*0.20f, z, x + w*0.50f, y + h*0.05f,z);
-                add_grid_line(x + w*0.60f, y + h*0.20f, z, x + w*0.50f, y + h*0.05f,z);
-                add_grid_line(x + w*0.40f, y + h*0.80f, z, x + w*0.50f, y + h*0.95f,z);
-                add_grid_line(x + w*0.60f, y + h*0.80f, z, x + w*0.50f, y + h*0.95f,z);
-                add_grid_line(x + w*0.20f, y + h*0.40f, z, x + w*0.05f, y + h*0.50f,z);
-                add_grid_line(x + w*0.20f, y + h*0.60f, z, x + w*0.05f, y + h*0.50f,z);
-                add_grid_line(x + w*0.80f, y + h*0.40f, z, x + w*0.95f, y + h*0.50f,z);
-                add_grid_line(x + w*0.80f, y + h*0.60f, z, x + w*0.95f, y + h*0.50f,z);
-                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x + w*0.40f, y + h*0.50f,z, x + w*0.50f, y + h*0.40f, z);
-                add_grid_line(x + w*0.40f, y + h*0.50f,z, x + w*0.50f, y + h*0.60f, z);
-                add_grid_line(x + w*0.60f, y + h*0.50f,z, x + w*0.50f, y + h*0.60f, z);
-                add_grid_line(x + w*0.50f, y + h*0.40f,z, x + w*0.60f, y + h*0.50f, z);
-                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x + w*0.10f, y + h*0.10f,z, x + w*0.20f, y + h*0.14f , z);
-                add_grid_line(x + w*0.10f, y + h*0.10f,z, x + w*0.14f, y + h*0.20f , z);
-                add_grid_line(x + w*0.90f, y + h*0.90f,z, x + w*0.80f, y + h*0.86f , z);
-                add_grid_line(x + w*0.90f, y + h*0.90f,z, x + w*0.86f, y + h*0.80f , z);
-                add_grid_line(x + w*0.90f, y + h*0.10f,z, x + w*0.80f, y + h*0.14f , z);
-                add_grid_line(x + w*0.90f, y + h*0.10f,z, x + w*0.86f, y + h*0.20f , z);
-                add_grid_line(x + w*0.10f, y + h*0.90f,z, x + w*0.20f, y + h*0.86f , z);
-                add_grid_line(x + w*0.10f, y + h*0.90f,z, x + w*0.14f, y + h*0.80f , z);
-                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
-            }
-            break;
-            case EAST:
-            case WEST: {
-
-                y+=(float)aabb.minY;
-                z+=(float)aabb.minZ;
-                if(side==Direction.EAST){
-                    x += (float)aabb.maxX +o;
-                }else{
-                    x += (float)aabb.minX-o;
-                }
-                w=(float)aabb.getYsize();
-                h=(float)aabb.getZsize();
-                w2=w*0.33333333f;
-                w3=w*0.66666666f;
-                h2=h*0.33333333f;
-                h3=h*0.66666666f;
-                grid_i=0;
-                add_grid_line(x, y     , z      ,x, y + w , z      );
-                add_grid_line(x, y     , z      ,x, y     , z + h  );
-                add_grid_line(x, y + w , z      ,x, y + w , z + h  );
-                add_grid_line(x, y     , z + h  ,x, y + w , z + h  );
-                add_grid_line(x, y     , z + h2 ,x, y + w , z + h2 );
-                add_grid_line(x, y     , z + h3 ,x, y + w , z + h3 );
-                add_grid_line(x, y + w2, z      ,x, y + w2, z +  h );
-                add_grid_line(x, y + w3, z      ,x, y + w3, z +  h );
-
-                draw_lines(matrix,consumer,0,16,1.0f,1.0f,1.0f,1.0f);
-
-                grid_i=0;
-
-                add_grid_line(x, y + w*0.40f, z + h*0.20f, x, y + w*0.50f, z + h*0.05f);
-                add_grid_line(x, y + w*0.60f, z + h*0.20f, x, y + w*0.50f, z + h*0.05f);
-                add_grid_line(x, y + w*0.40f, z + h*0.80f, x, y + w*0.50f, z + h*0.95f);
-                add_grid_line(x, y + w*0.60f, z + h*0.80f, x, y + w*0.50f, z + h*0.95f);
-                add_grid_line(x, y + w*0.20f, z + h*0.40f, x, y + w*0.05f, z + h*0.50f);
-                add_grid_line(x, y + w*0.20f, z + h*0.60f, x, y + w*0.05f, z + h*0.50f);
-                add_grid_line(x, y + w*0.80f, z + h*0.40f, x, y + w*0.95f, z + h*0.50f);
-                add_grid_line(x, y + w*0.80f, z + h*0.60f, x, y + w*0.95f, z + h*0.50f);
-                draw_lines(matrix,consumer,0,16,0.7f,0,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x,y + w*0.40f, z + h*0.50f,x, y + w*0.50f, z + h*0.40f);
-                add_grid_line(x,y + w*0.40f, z + h*0.50f,x, y + w*0.50f, z + h*0.60f);
-                add_grid_line(x,y + w*0.60f, z + h*0.50f,x, y + w*0.50f, z + h*0.60f);
-                add_grid_line(x,y + w*0.50f, z + h*0.40f,x, y + w*0.60f, z + h*0.50f);
-                draw_lines(matrix,consumer,0,8,0,0.7f,0,1.0f);
-
-                grid_i=0;
-                add_grid_line(x, y + w*0.10f, z + h*0.10f,x, y + w*0.20f, z + h*0.14f);
-                add_grid_line(x, y + w*0.10f, z + h*0.10f,x, y + w*0.14f, z + h*0.20f);
-                add_grid_line(x, y + w*0.90f, z + h*0.90f,x, y + w*0.80f, z + h*0.86f);
-                add_grid_line(x, y + w*0.90f, z + h*0.90f,x, y + w*0.86f, z + h*0.80f);
-                add_grid_line(x, y + w*0.90f, z + h*0.10f,x, y + w*0.80f, z + h*0.14f);
-                add_grid_line(x, y + w*0.90f, z + h*0.10f,x, y + w*0.86f, z + h*0.20f);
-                add_grid_line(x, y + w*0.10f, z + h*0.90f,x, y + w*0.20f, z + h*0.86f);
-                add_grid_line(x, y + w*0.10f, z + h*0.90f,x, y + w*0.14f, z + h*0.80f);
-                draw_lines(matrix,consumer,0,16,0,0,0.7f,1.0f);
-
-            }
-            break;
-        }
-        //WandsMod.log("x: "+x+" y: "+y+" z: "+z,prnt);
-
-    }
     static void render_fluid(VertexConsumer consumer, Matrix4f matrix, float x, float y,float z,int color,float u1,float v1,float u0,float v0) {
 
             float h = 1.0f;
@@ -859,7 +649,7 @@ public class ClientRender {
         }
     }
 
-    static void preview_fluid_buffer(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack) {
+    static void preview_fluid_buffer(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack,int pos_x,int pos_y, int pos_z) {
         try {
             TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
             int color = get_fluid_color();
@@ -875,9 +665,9 @@ public class ClientRender {
                 bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
                 matrixStack.pushPose();
                 matrixStack.translate(
-                    wand.block_buffer.buffer_x[idx],
-                    wand.block_buffer.buffer_y[idx],
-                    wand.block_buffer.buffer_z[idx]);
+                    wand.block_buffer.buffer_x[idx]-pos_x,
+                    wand.block_buffer.buffer_y[idx]-pos_y,
+                    wand.block_buffer.buffer_z[idx]-pos_z);
                 render_fluid(consumer, matrixStack.last().pose(),
                     0, 0, 0,
                     color, u0, v1, u1, v0);
@@ -905,9 +695,9 @@ public class ClientRender {
                     Vec3i n=wand.getSide().getUnitVec3i();
                     if(wand.replace) {
                         matrixStack.translate(
-                            x+(0.5*(1.0-n.getX()))+n.getX(),
-                            y+(0.5*(1.0-n.getY()))+n.getY(),
-                            z+(0.5*(1.0-n.getZ()))+n.getZ()
+                            (0.5*(1.0-n.getX()))+n.getX(),
+                            (0.5*(1.0-n.getY()))+n.getY(),
+                            (0.5*(1.0-n.getZ()))+n.getZ()
                         );
                         matrixStack.scale(0.5f, 0.5f, 0.5f);
                         matrixStack.translate(-0.5f,-0.5f,-0.5f);
@@ -916,8 +706,6 @@ public class ClientRender {
                         matrixStack.scale(0.9f, 0.9f, 0.9f);
                         matrixStack.translate(-0.5f,-0.5f,-0.5f);
                     }
-                }else{
-                    matrixStack.translate(x, y, z);
                 }
                 for (BlockModelPart part: parts_list) {
                     for(Direction dir: dirs) {
@@ -973,9 +761,9 @@ public class ClientRender {
                     Vec3i n = wand.getSide().getNormal();
                     if (wand.replace) {
                         matrixStack.translate(
-                                x + (0.5 * (1.0 - n.getX())) + n.getX(),
-                                y + (0.5 * (1.0 - n.getY())) + n.getY(),
-                                z + (0.5 * (1.0 - n.getZ())) + n.getZ()
+                                 (0.5 * (1.0 - n.getX())) + n.getX(),
+                                 (0.5 * (1.0 - n.getY())) + n.getY(),
+                                 (0.5 * (1.0 - n.getZ())) + n.getZ()
                         );
                         matrixStack.scale(0.5f, 0.5f, 0.5f);
                         matrixStack.translate(-0.5f, -0.5f, -0.5f);
@@ -984,8 +772,6 @@ public class ClientRender {
                         matrixStack.scale(0.9f, 0.9f, 0.9f);
                         matrixStack.translate(-0.5f, -0.5f, -0.5f);
                     }
-                } else {
-                    matrixStack.translate(x, y, z);
                 }
                 for (Direction dir : dirs) {
                     List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
@@ -1032,9 +818,9 @@ public class ClientRender {
                 Vec3i n = wand.getSide().getNormal();
                 if (wand.replace) {
                     matrixStack.translate(
-                            x + (0.5 * (1.0 - n.getX())) + n.getX(),
-                            y + (0.5 * (1.0 - n.getY())) + n.getY(),
-                            z + (0.5 * (1.0 - n.getZ())) + n.getZ()
+                            (0.5 * (1.0 - n.getX())) + n.getX(),
+                            (0.5 * (1.0 - n.getY())) + n.getY(),
+                            (0.5 * (1.0 - n.getZ())) + n.getZ()
                     );
                     matrixStack.scale(0.5f, 0.5f, 0.5f);
                     matrixStack.translate(-0.5f, -0.5f, -0.5f);
@@ -1043,8 +829,6 @@ public class ClientRender {
                     matrixStack.scale(0.9f, 0.9f, 0.9f);
                     matrixStack.translate(-0.5f, -0.5f, -0.5f);
                 }
-            } else {
-                matrixStack.translate(x, y, z);
             }
 
             for (Direction dir : dirs) {
@@ -1094,119 +878,108 @@ public class ClientRender {
     }
 
     /** Renders the 3x3 grid overlay on block faces for DIRECTION mode */
-    static void preview_direction_mode(MultiBufferSource.BufferSource bufferSource,Matrix4f matrix, float pos_x,float pos_y,float pos_z){
+    static void preview_direction_mode_grid(MultiBufferSource.BufferSource bufferSource, Matrix4f matrix, float pos_x, float pos_y, float pos_z){
         if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
-                if (fancy) {
-                    VertexConsumer consumer=getVertexConsumerDirMode(bufferSource);
-                    int vi = 0;
-                    int color=0xffffffff;
-                    int light=LightTexture.FULL_BRIGHT;
-                    int overlay= OverlayTexture.NO_OVERLAY;
-                    for (AABB aabb : list) {
-                        if (vi == wand.grid_voxel_index) {
-                            switch (wand.getSide()) {
-                                case UP:
-                                    x1 = pos_x + (float)aabb.minX;
-                                    y1 = pos_y + (float)aabb.maxY + 0.02f;
-                                    z1 = pos_z + (float)aabb.minZ;
-                                    x2 = pos_x + (float)aabb.maxX;
-                                    z2 = pos_z + (float)aabb.maxZ;
+                VertexConsumer consumer=getVertexConsumerDirMode(bufferSource);
+                int vi = 0;
+                int color=0xffffffff;
+                int light=LightTexture.FULL_BRIGHT;
+                int overlay= OverlayTexture.NO_OVERLAY;
+                for (AABB aabb : list) {
+                    if (vi == wand.grid_voxel_index) {
+                        switch (wand.getSide()) {
+                            case UP:
+                                x1 = pos_x + (float)aabb.minX;
+                                y1 = pos_y + (float)aabb.maxY + 0.02f;
+                                z1 = pos_z + (float)aabb.minZ;
+                                x2 = pos_x + (float)aabb.maxX;
+                                z2 = pos_z + (float)aabb.maxZ;
 
-                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,1,0,light,overlay);
-                                    break;
-                                case DOWN:
-                                    x1 = pos_x + (float)aabb.minX;
-                                    y1 = pos_y + (float)aabb.minY - 0.02f;
-                                    z1 = pos_z + (float)aabb.minZ;
-                                    x2 = pos_x + (float)aabb.maxX;
-                                    z2 = pos_z + (float)aabb.maxZ;
-                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,-1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,-1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,-1,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,-1,0,light,overlay);
-                                    break;
-                                case SOUTH:
-                                    x1 = pos_x + (float)aabb.minX;
-                                    y1 = pos_y + (float)aabb.minY;
-                                    z1 = pos_z + (float)aabb.maxZ + 0.02f;
-                                    x2 = pos_x + (float)aabb.maxX;
-                                    y2 = pos_y + (float)aabb.maxY;
-                                    consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,0,1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,0,1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2,y2,z1,1.0f, 1.0f,color,0,0,1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1,y2,z1,0.0f, 1.0f,color,0,0,1,light,overlay);
-                                    break;
-                                case NORTH:
-                                    x1 = pos_x + (float)aabb.minX;
-                                    y1 = pos_y + (float)aabb.minY;
-                                    z1 = pos_z + (float)aabb.minZ - 0.02f;
-                                    x2 = pos_x + (float)aabb.maxX;
-                                    y2 = pos_y + (float)aabb.maxY;
-                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,0,0,-1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y2, z1,0.0f, 1.0f,color,0,0,-1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2, y2, z1,1.0f, 1.0f,color,0,0,-1,light,overlay);
-                                    consumerDirMode(consumer,matrix,x2, y1, z1,1.0f, 0.0f,color,0,0,-1,light,overlay);
-                                    break;
-                                case EAST:
-                                    x1 = pos_x + (float)aabb.maxX + 0.02f;
-                                    y1 = pos_y + (float)aabb.minY;
-                                    z1 = pos_z + (float)aabb.minZ;
-                                    y2 = pos_y + (float)aabb.maxY;
-                                    z2 = pos_z + (float)aabb.maxZ;
-                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,1,0,0,light,overlay);
-                                    break;
-                                case WEST:
-                                    x1 = pos_x + (float)aabb.minX - 0.02f;
-                                    y1 = pos_y + (float)aabb.minY;
-                                    z1 = pos_z + (float)aabb.minZ;
-                                    y2 = pos_y + (float)aabb.maxY;
-                                    z2 = pos_z + (float)aabb.maxZ;
-                                    consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,-1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,-1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,-1,0,0,light,overlay);
-                                    consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,-1,0,0,light,overlay);
-                                    break;
-                            }
+                                consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,1,0,light,overlay);
+                                break;
+                            case DOWN:
+                                x1 = pos_x + (float)aabb.minX;
+                                y1 = pos_y + (float)aabb.minY - 0.02f;
+                                z1 = pos_z + (float)aabb.minZ;
+                                x2 = pos_x + (float)aabb.maxX;
+                                z2 = pos_z + (float)aabb.maxZ;
+                                consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,-1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,-1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y1,z2,1.0f, 1.0f,color,0,-1,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1,y1,z2,0.0f, 1.0f,color,0,-1,0,light,overlay);
+                                break;
+                            case SOUTH:
+                                x1 = pos_x + (float)aabb.minX;
+                                y1 = pos_y + (float)aabb.minY;
+                                z1 = pos_z + (float)aabb.maxZ + 0.02f;
+                                x2 = pos_x + (float)aabb.maxX;
+                                y2 = pos_y + (float)aabb.maxY;
+                                consumerDirMode(consumer,matrix,x1,y1,z1,0.0f, 0.0f,color,0,0,1,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y1,z1,1.0f, 0.0f,color,0,0,1,light,overlay);
+                                consumerDirMode(consumer,matrix,x2,y2,z1,1.0f, 1.0f,color,0,0,1,light,overlay);
+                                consumerDirMode(consumer,matrix,x1,y2,z1,0.0f, 1.0f,color,0,0,1,light,overlay);
+                                break;
+                            case NORTH:
+                                x1 = pos_x + (float)aabb.minX;
+                                y1 = pos_y + (float)aabb.minY;
+                                z1 = pos_z + (float)aabb.minZ - 0.02f;
+                                x2 = pos_x + (float)aabb.maxX;
+                                y2 = pos_y + (float)aabb.maxY;
+                                consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,0,0,-1,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y2, z1,0.0f, 1.0f,color,0,0,-1,light,overlay);
+                                consumerDirMode(consumer,matrix,x2, y2, z1,1.0f, 1.0f,color,0,0,-1,light,overlay);
+                                consumerDirMode(consumer,matrix,x2, y1, z1,1.0f, 0.0f,color,0,0,-1,light,overlay);
+                                break;
+                            case EAST:
+                                x1 = pos_x + (float)aabb.maxX + 0.02f;
+                                y1 = pos_y + (float)aabb.minY;
+                                z1 = pos_z + (float)aabb.minZ;
+                                y2 = pos_y + (float)aabb.maxY;
+                                z2 = pos_z + (float)aabb.maxZ;
+                                consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,1,0,0,light,overlay);
+                                break;
+                            case WEST:
+                                x1 = pos_x + (float)aabb.minX - 0.02f;
+                                y1 = pos_y + (float)aabb.minY;
+                                z1 = pos_z + (float)aabb.minZ;
+                                y2 = pos_y + (float)aabb.maxY;
+                                z2 = pos_z + (float)aabb.maxZ;
+                                consumerDirMode(consumer,matrix,x1, y1, z1,0.0f, 0.0f,color,-1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y1, z2,0.0f, 1.0f,color,-1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y2, z2,1.0f, 1.0f,color,-1,0,0,light,overlay);
+                                consumerDirMode(consumer,matrix,x1, y2, z1,1.0f, 0.0f,color,-1,0,0,light,overlay);
+                                break;
                         }
-                        vi++;
                     }
-                    #if MC_VERSION<=12001
-                    Tesselator tesselator = Tesselator.getInstance();
-                    tesselator.end();
-                    #else
-                    bufferSource.endLastBatch();
-                    #endif
+                    vi++;
                 }
-                if (!fancy || !fat_lines) {
-                    // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-                    VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-                    int vi = 0;
-                    for (AABB aabb : list) {
-                        if (vi == wand.grid_voxel_index) {
-                            grid(matrix, consumer, wand.getSide(), pos_x, pos_y, pos_z, aabb);
-                        }
-                        vi++;
-                    }
-                    bufferSource.endLastBatch();
-                }
+                #if MC_VERSION<=12001
+                Tesselator tesselator = Tesselator.getInstance();
+                tesselator.end();
+                #else
+                bufferSource.endLastBatch();
+                #endif
             }
         }
     }
 
     /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
-    static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
+    static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack,int pos_x,int pos_y,int pos_z){
         //if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
         if (wand.has_empty_bucket || (wand.valid && wand.block_buffer != null)) {
             random.setSeed(0);
             int block_buffer_length=wand.block_buffer.get_length();
+            //int pos_x = last_pos.getX();
+            //int pos_y = last_pos.getY();
+            //int pos_z = last_pos.getZ();
             if (block_buffer_length >0 && fancy && !wand.destroy && !wand.use ) {
                 BlockState st=null;
                 if (wand.has_water_bucket) {
@@ -1217,8 +990,9 @@ public class ClientRender {
                     }
                 }
                 //st=Blocks.STONE.defaultBlockState();
+
                 if(st!=null) {
-                    preview_fluid_buffer(bufferSource, matrixStack);
+                    preview_fluid_buffer(bufferSource, matrixStack,pos_x,pos_y,pos_z);
                 }else {
                     //RenderType rt=RenderTypes.translucentMovingBlock();
                     //String sampler0=rt.pipeline().getSamplers().getFirst();
@@ -1227,30 +1001,31 @@ public class ClientRender {
                     VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
 
                     //WandsMod.log("block_buffer_length "+block_buffer_length ,prnt);
+
                      for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
                          //WandsMod.log("state "+wand.block_buffer.state[idx] ,prnt);
                          if (wand.block_buffer.state[idx] != null) {
                              st = wand.block_buffer.state[idx];
                             render_shape(matrixStack,consumer, st,
-                                    wand.block_buffer.buffer_x[idx],
-                                    wand.block_buffer.buffer_y[idx],
-                                    wand.block_buffer.buffer_z[idx]);
+                                    wand.block_buffer.buffer_x[idx]-pos_x,
+                                    wand.block_buffer.buffer_y[idx]-pos_y,
+                                    wand.block_buffer.buffer_z[idx]-pos_z);
 
                             //TODO: all double blocks!!
                             if (wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)) {
                                 render_shape(matrixStack,consumer,
                                         wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
-                                        wand.block_buffer.buffer_x[idx],
-                                        wand.block_buffer.buffer_y[idx] + 1,
-                                        wand.block_buffer.buffer_z[idx]);
+                                        wand.block_buffer.buffer_x[idx]-pos_x,
+                                        wand.block_buffer.buffer_y[idx]-pos_y + 1,
+                                        wand.block_buffer.buffer_z[idx]-pos_z);
                             } else {
                                 if (wand.block_buffer.state[idx].getBlock() instanceof DoorBlock) {
 
                                     render_shape(matrixStack,consumer,
                                             wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
-                                            wand.block_buffer.buffer_x[idx],
-                                            wand.block_buffer.buffer_y[idx] + 1,
-                                            wand.block_buffer.buffer_z[idx]);
+                                            wand.block_buffer.buffer_x[idx]-pos_x,
+                                            wand.block_buffer.buffer_y[idx]-pos_y + 1,
+                                            wand.block_buffer.buffer_z[idx]-pos_z);
                                 }
                             }
                          }
@@ -1259,7 +1034,7 @@ public class ClientRender {
                  }
             }
             if (block_buffer_length >0){
-                render_mode_outline(matrixStack.last().pose(), bufferSource);
+                render_mode_outline(matrixStack.last().pose(), bufferSource,pos_x,pos_y,pos_z);
             }
         }
     }
@@ -1276,25 +1051,15 @@ public class ClientRender {
         float bb2_z=wand.bb2_z;
         // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
         VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-        if (fat_lines) {
-            preview_block_fat(matrix,consumer,
-                    bb1_x - off2,
-                    bb1_y - off2,
-                    bb1_z - off2,
-                    bb2_x + off2,
-                    bb2_y + off2,
-                    bb2_z + off2,
-                    bbox_col,false);
-        } else {
-            preview_block(matrix,consumer,
-                    bb1_x - off2,
-                    bb1_y - off2,
-                    bb1_z - off2,
-                    bb2_x + off2,
-                    bb2_y + off2,
-                    bb2_z + off2,
-                    bbox_col);
-        }
+        preview_block_fat(matrix,consumer,
+                bb1_x - off2,
+                bb1_y - off2,
+                bb1_z - off2,
+                bb2_x + off2,
+                bb2_y + off2,
+                bb2_z + off2,
+                bbox_col,false);
+
         bufferSource.endLastBatch();
     }
     /** Renders animated translucent faces for bounding box when block_outlines is disabled */
@@ -1376,69 +1141,61 @@ public class ClientRender {
             mode == Mode.COPY ||
             mode == Mode.PASTE ||
             mode == Mode.ROW_COL||
-            mode == Mode.ROCK )){
-        if (fancy && mode != Mode.COPY){
-            if (wand.offhand_state!=null) {
-                random.setSeed(0);
-                VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
-                render_shape(matrixStack,consumer, wand.offhand_state,
-                                        pos_x,pos_y,pos_z);
-                bufferSource.endLastBatch();
-            } else if (wand.has_water_bucket || wand.has_lava_bucket) {
-                try {
-                    TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
-                    int color = get_fluid_color();
-                    VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
-                    matrixStack.pushPose();
-                    matrixStack.translate(pos_x, pos_y, pos_z);
-                    render_fluid(consumer, matrixStack.last().pose(),
-                        0, 0, 0, color,
-                        sprite.getU0(), sprite.getV1(), sprite.getU1(), sprite.getV0());
-                    matrixStack.popPose();
+            mode == Mode.ROCK ))
+        {
+
+            if (fancy && mode != Mode.COPY){
+                if (wand.offhand_state!=null) {
+                    random.setSeed(0);
+                    VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
+                    render_shape(matrixStack,consumer, wand.offhand_state,
+                                            pos_x,pos_y,pos_z);
                     bufferSource.endLastBatch();
-                } catch (Exception e) {
-                    WandsMod.log("preview_selected fluid exception: " + e.getMessage(), true);
+                } else if (wand.has_water_bucket || wand.has_lava_bucket) {
+                    //try {
+                    //    TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
+                    //    int color = get_fluid_color();
+                    //    VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
+                    //    matrixStack.pushPose();
+                    //    //matrixStack.translate(pos_x, pos_y, pos_z);
+                    //    render_fluid(consumer, matrixStack.last().pose(),
+                    //        0, 0, 0, color,
+                    //        sprite.getU0(), sprite.getV1(), sprite.getU1(), sprite.getV0());
+                    //    matrixStack.popPose();
+                    //    bufferSource.endLastBatch();
+                    //} catch (Exception e) {
+                    //    WandsMod.log("preview_selected fluid exception: " + e.getMessage(), true);
+                    //}
                 }
             }
-        }
-        // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-        VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-        if (fat_lines) {
+            // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
+            VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
             preview_block_fat(matrix,consumer,
-                    (pos_x  - off),
-                    (pos_y  - off),
-                    (pos_z  - off),
-                    (pos_x+1+ off),
-                    (pos_y+1+ off),
-                    (pos_z+1+ off),
-                    start_col,false);
-        } else {
-            preview_block(matrix,consumer,
-                    pos_x  - off, pos_y  - off, pos_z  - off,
-                    pos_x+1+ off, pos_y+1+ off, pos_z+1+ off,
-                    start_col);
+                        (0  - off),
+                        (0  - off),
+                        (0  - off),
+                        (1+ off),
+                        (1+ off),
+                        (1+ off),
+                        start_col,false);
+            bufferSource.endLastBatch();
         }
-        bufferSource.endLastBatch();
-    }
+
         // Draw P1 outline when P1 is set in 2-click modes
         if (drawlines && wand.getP1() != null && mode.n_clicks() == 2) {
-            float p1x = wand.getP1().getX();
-            float p1y = wand.getP1().getY();
-            float p1z = wand.getP1().getZ();
+            float p1x = wand.getP1().getX()-pos_x;
+            float p1y = wand.getP1().getY()-pos_y;
+            float p1z = wand.getP1().getZ()-pos_z;
             VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
-            if (fat_lines) {
-                preview_block_fat(matrix, consumer,
+
+            preview_block_fat(matrix, consumer,
                         p1x - off, p1y - off, p1z - off,
                         p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
                         start_col, false);
-            } else {
-                preview_block(matrix, consumer,
-                        p1x - off, p1y - off, p1z - off,
-                        p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
-                        start_col);
-            }
+
             bufferSource.endLastBatch();
         }
+
         // Draw pin outline at the position where blocks will appear
         if (drawlines && pinActive) {
             BlockPos pinDrawPos = wand.pin.getPos();
@@ -1449,21 +1206,16 @@ public class ClientRender {
                     pinDrawPos = pinDrawPos.relative(pinSide, 1);
                 }
             }
-            float ax = pinDrawPos.getX();
-            float ay = pinDrawPos.getY();
-            float az = pinDrawPos.getZ();
+            float ax = pinDrawPos.getX()-pos_x;
+            float ay = pinDrawPos.getY()-pos_y;
+            float az = pinDrawPos.getZ()-pos_z;
             VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
-            if (fat_lines) {
-                preview_block_fat(matrix, consumer,
-                        ax - off, ay - off, az - off,
-                        ax + 1 + off, ay + 1 + off, az + 1 + off,
-                        start_col, false);
-            } else {
-                preview_block(matrix, consumer,
-                        ax - off, ay - off, az - off,
-                        ax + 1 + off, ay + 1 + off, az + 1 + off,
-                        start_col);
-            }
+
+            preview_block_fat(matrix, consumer,
+                    ax - off, ay - off, az - off,
+                    ax + 1 + off, ay + 1 + off, az + 1 + off,
+                    start_col, false);
+
             bufferSource.endLastBatch();
         }
     }
@@ -1472,78 +1224,51 @@ public class ClientRender {
                                  float p1_x,
                                  float p1_y,
                                  float p1_z,
-                                 float p2_x,
-                                 float p2_y,
-                                 float p2_z,
                                  float off,
                                  float off2
     )
     {
-        if (fat_lines) {
-           boolean even = WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
+       boolean even = WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
+       {
+            VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
+            preview_block_fat(matrix,consumer,
+                    p1_x - off,
+                    p1_y - off,
+                    p1_z - off,
+                    p1_x + 1 + off,
+                    p1_y + 1 + off,
+                    p1_z + 1 + off,
+                    start_col, false
+            );
+            bufferSource.endLastBatch();
+        }
+       if (has_target) {
            {
                 VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
+                off = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
                 preview_block_fat(matrix,consumer,
-                        p1_x - off,
-                        p1_y - off,
-                        p1_z - off,
-                        p1_x + 1 + off,
-                        p1_y + 1 + off,
-                        p1_z + 1 + off,
-                        start_col, false
-                );
+                        0 - off + off,
+                        0 - off,
+                        0 - off + off,
+                        1 + off + off,
+                        1 + off,
+                        1 + off + off,
+                        end_col, false);
                 bufferSource.endLastBatch();
-            }
-           if (has_target) {
-               {
-                    VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-                    off = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
-                    preview_block_fat(matrix,consumer,
-                            p2_x - off + off,
-                            p2_y - off,
-                            p2_z - off + off,
-                            p2_x + 1 + off + off,
-                            p2_y + 1 + off,
-                            p2_z + 1 + off + off,
-                            end_col, false);
-                    bufferSource.endLastBatch();
-               }
-               if(mode!=Mode.FILL) {
-                   VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-                   off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
-                   player_facing_line(consumer,
-                            p1_x + off,
-                            p1_y + off + 0.5f,
-                            p1_z + off,
-                            p2_x + off,
-                            p2_y + off + 0.5f,
-                            p2_z + off,
-                            line_col);
-                    bufferSource.endLastBatch();
-               }
            }
-       } else {
-            // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-            VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-            // Draw line between points as a thin quad
-            float w = 0.01f;
-            quad_line(matrix, consumer, w, 0, 0,
-                    p2_x + 0.5F, p2_y + 0.5F, p2_z + 0.5F,
-                    wand.x1 + 0.5F, wand.y1 + 0.5F, wand.z1 + 0.5F,
-                    line_col);
-            preview_block(matrix,consumer,
-                    p1_x,p1_y,p1_z,
-                    p1_x + 1, p1_y + 1, p1_z + 1,
-                    start_col);
-            preview_block(matrix,consumer,
-                    p2_x - off2,
-                    p2_y - off2,
-                    p2_z - off2,
-                    p2_x + 1 + off2,
-                    p2_y + 1 + off2,
-                    p2_z + 1 + off2,
-                    end_col);
-            bufferSource.endLastBatch();
+           if(mode!=Mode.FILL) {
+               VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
+               off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
+               player_facing_line(consumer,matrix,
+                        p1_x + off,
+                        p1_y + off + 0.5f,
+                        p1_z + off,
+                        off,
+                        off + 0.5f,
+                        off,
+                        line_col);
+                bufferSource.endLastBatch();
+           }
        }
     }
     static private VertexConsumer getVertexConsumerDebugQuads(MultiBufferSource.BufferSource bufferSource){
