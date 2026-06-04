@@ -1,0 +1,327 @@
+package net.nicguzzo.wands.items;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+//? if < 1.21.11 {
+
+/*import net.minecraft.world.InteractionResultHolder;
+
+*///? }
+//? if >= 1.21.11 {
+import net.minecraft.world.item.component.TooltipDisplay;
+//? }
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.nicguzzo.wands.WandsMod;
+import net.nicguzzo.wands.client.render.ClientRender;
+import net.nicguzzo.wands.networking.Networking;
+import net.nicguzzo.wands.compat.Compat;
+import net.nicguzzo.wands.wand.Interaction;
+import net.nicguzzo.wands.wand.Wand;
+import net.nicguzzo.wands.wand.WandProps;
+import net.nicguzzo.wands.wand.WandProps.Mode;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
+public class WandItem extends Item {
+    public enum WandTier{
+        STONE_WAND,
+        COPPER_WAND,
+        IRON_WAND,
+        DIAMOND_WAND,
+        NETHERITE_WAND,
+        CREATIVE_WAND
+    }
+    public WandTier tier; //0 stone, 1 iron, 2 diamond, 3 netherite 4 creative
+    public int limit;
+    public boolean can_blast;
+    public boolean unbreakable;
+    public boolean removes_water;
+    public boolean removes_lava;
+
+    public WandItem(WandTier tier, int limit, boolean removes_water, boolean removes_lava, boolean unbreakable, boolean can_blast, Properties properties) {
+        super(properties);
+        this.tier = tier;
+        this.limit = limit;
+        this.removes_lava = removes_lava;
+        this.removes_water = removes_water;
+        this.unbreakable = unbreakable;
+        this.can_blast = can_blast;
+    }
+
+    @Override
+    public @NotNull InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        if (!level.isClientSide()) {
+            return InteractionResult.FAIL;
+        }
+        Player player = context.getPlayer();
+        if (player == null) {
+            return InteractionResult.FAIL;
+        }
+        ItemStack stack = player.getMainHandItem();
+        if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
+            return InteractionResult.FAIL;
+        }
+        if( Interaction.onClick(level, context.getClickedPos(), context.getClickedFace(), context.getClickLocation(), stack) ){
+            return InteractionResult.SUCCESS;
+        }else{
+            return InteractionResult.FAIL;
+        }
+
+        /*Mode mode = WandProps.getMode(stack);
+        BlockPos pos = context.getClickedPos();
+        BlockState block_state = world.getBlockState(pos);
+        Direction side = context.getClickedFace();
+        // Only apply INCSELBLOCK offset for modes that show the toggle
+        boolean inc_sel = WandProps.getFlag(stack, WandProps.Flag.INCSELBLOCK);
+        boolean modeSupportsIncSel = WandProps.flagAppliesTo(WandProps.Flag.INCSELBLOCK, mode);
+        boolean shouldOffset = modeSupportsIncSel && !inc_sel && !block_state.isAir();
+
+        // Pin: override target position (offset already applied when pin was set)
+        boolean pinActive = ClientRender.wand.pin.isActive();
+        if (pinActive) {
+            pos = ClientRender.wand.pin.getPos();
+            // Dynamic side: if clicking on the pin block, use clicked face
+            if (context.getClickedPos().equals(ClientRender.wand.pin.getPos())) {
+                side = context.getClickedFace();
+            } else {
+                side = ClientRender.wand.pin.getSide() != null ? ClientRender.wand.pin.getSide() : side;
+            }
+            block_state = world.getBlockState(pos);
+            shouldOffset = false;
+        }
+        if (ClientRender.wand.getP1() == null) {
+            if (shouldOffset) {
+                ClientRender.wand.setP1(pos.relative(side, 1));
+            } else {
+                ClientRender.wand.setP1(pos);
+            }
+            // Store P1's block state so client preview uses it in 2-click modes
+            ClientRender.wand.p1_state = block_state;
+        } else {
+            if (ClientRender.wand.getP2() == null && mode.n_clicks() == 2) {
+                ClientRender.wand.setP2(pos);
+                if (shouldOffset) {
+                    ClientRender.wand.setP2(ClientRender.wand.getP2().relative(side, 1));
+                }
+            } else if (mode == Mode.COPY) {
+                BlockPos clickedPos = shouldOffset ? pos.relative(side, 1) : pos;
+                ClientRender.wand.extendBbox(clickedPos);
+            }
+        }
+        if ((ClientRender.wand.getP1() != null && mode.n_clicks() == 1) || ((ClientRender.wand.getP1() != null && ClientRender.wand.getP2() != null && mode.n_clicks() == 2))) {
+            Vec3 hit=null;
+            if(ClientRender.wand.reach_distance==0){
+                hit=context.getClickLocation();
+            }else {
+                hit=ClientRender.wand.hit;
+            }
+            if(hit==null){
+                return InteractionResult.FAIL;
+            }
+            Networking.send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), hit, ClientRender.wand.palette.seed);
+            ClientRender.wand.palette.seed = System.currentTimeMillis();
+            ClientRender.wand.copy();
+            if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                ClientRender.wand.pin.clear();
+            }
+            if (mode != Mode.COPY) {
+                ClientRender.wand.clear(mode == Mode.PASTE  || mode==Mode.AREA || mode == Mode.VEIN);
+            }
+        }
+        return InteractionResult.SUCCESS;
+        */
+    }
+
+    @Override
+//? if >= 1.21.11 {
+    public InteractionResult use(Level world, Player player, InteractionHand interactionHand) {
+//? } else {
+
+    /*public @NotNull InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand interactionHand) {
+
+*///? }
+        if (!world.isClientSide()) {
+            return return_fail(player,interactionHand);
+        }
+        //WandsMod.LOGGER.info("use");
+        ItemStack stack = player.getMainHandItem();
+        if (!(!stack.isEmpty() && stack.getItem() instanceof WandItem)) {
+            return return_fail(player,interactionHand);
+        }
+
+        if( Interaction.onAirClick(world, stack) ){
+            return return_success(player,interactionHand);
+        }
+
+        /*Wand wand = ClientRender.wand;
+        Mode mode = WandProps.getMode(stack);
+        if (wand.pin.isActive()) {
+            WandsMod.log("use 1",true);
+            BlockPos pinPos = wand.pin.getPos();
+            Direction side = wand.pin.getSide() != null ? wand.pin.getSide() : player.getDirection().getOpposite();
+            if (wand.getP1() == null) {
+                wand.setP1(pinPos);
+                if (mode.n_clicks() == 1) {
+                    Networking.send_placement(side, pinPos, null, player.getEyePosition(), wand.palette.seed);
+                    wand.palette.seed = System.currentTimeMillis();
+                    wand.copy();
+                    if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                        wand.pin.clear();
+                    }
+                    wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+                }
+            } else if (mode.n_clicks() == 2 && wand.getP2() == null) {
+                wand.setP2(pinPos);
+                Networking.send_placement(side, wand.getP1(), pinPos, player.getEyePosition(), wand.palette.seed);
+                wand.palette.seed = System.currentTimeMillis();
+                wand.copy();
+                if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                    wand.pin.clear();
+                }
+                wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+            } else if (mode.n_clicks() == 1) {
+                // keep_start + pin: P1 already set from previous placement, re-send
+                Networking.send_placement(side, wand.getP1(), null, player.getEyePosition(), wand.palette.seed);
+                wand.palette.seed = System.currentTimeMillis();
+                wand.copy();
+                if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
+                    wand.pin.clear();
+                }
+                wand.clear(mode == Mode.PASTE || mode == Mode.AREA);
+            }
+            return return_success(player,interactionHand);
+        }
+        if ((wand.target_air && mode.can_target_air())|| wand.reach_distance>0) {
+            WandsMod.log("use 2",true);
+            //WandsMod.LOGGER.info("reach_distance "+wand.reach_distance );
+            // Check if player has something to place with (offhand block, palette, or copy/paste mode)
+            // Destroy and Use actions don't need an offhand block
+            WandProps.Action action = WandProps.getAction(stack);
+            boolean hasPalette = wand.palette.has_palette && !wand.palette.palette_slots.isEmpty();
+            Block offhandBlock = Block.byItem(player.getOffhandItem().getItem());
+            boolean hasOffhand = offhandBlock != Blocks.AIR;
+            if (wand.target_air && !hasOffhand && !hasPalette && mode != Mode.PASTE && mode != Mode.COPY
+                    && action != WandProps.Action.DESTROY && action != WandProps.Action.USE) {
+                Compat.displayClientMessage(player,Compat.translatable("wands.message.target_air_needs_offhand").withStyle(ChatFormatting.RED), true);
+                return return_fail(player,interactionHand);
+            }
+            if (wand.getP1() == null) {
+                wand.setP1(ClientRender.last_pos);
+                wand.setP2(null);
+                ClientRender.has_target = true;
+            } else {
+                if (mode.n_clicks() == 2) {
+                    wand.setP2(wand.get_pos_from_air(wand.hit));
+                } else {
+                    wand.setP2(null);
+                }
+
+                Networking.send_placement(ClientRender.wand.player.getDirection().getOpposite(), wand.getP1(), wand.getP2(), wand.hit, wand.palette.seed);
+                wand.palette.seed = System.currentTimeMillis();
+                ClientRender.wand.copy();
+                ClientRender.wand.clear(mode==Mode.PASTE || wand.mode== WandProps.Mode.COPY || mode == Mode.VEIN);
+            }
+        } else {
+            //ClientRender.wand.clear();
+            //if(player!=null)
+            //Compat.displayClientMessage(player,Compat.literal("wand cleared"),false);
+        }*/
+        return return_pass(player,interactionHand);
+    }
+
+
+
+
+//? if >= 1.21.11 {
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, TooltipDisplay tooltipDisplay, Consumer<Component> consumer, TooltipFlag tooltipFlag)
+    //? } else {
+    
+/*//? if >= 1.21.1 {
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext tooltipContext, List<Component> list, TooltipFlag tooltipFlag)
+//? } else {
+    /^@Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> list, TooltipFlag tooltipFlag)
+^///? }
+
+*///? }
+    {
+        //? if >= 1.21.11 {
+        Consumer<Component> addLine = consumer;
+        //? } else {
+        
+        /*Consumer<Component> addLine = list::add;
+        
+        *///? }
+
+        WandProps.Mode mode = WandProps.getMode(stack);
+        WandProps.Action action = WandProps.getAction(stack);
+
+        addLine.accept(Compat.translatable("key.wands.wand_mode").append(Compat.literal(": ")).append(Compat.translatable(mode.toString())).withStyle(ChatFormatting.GRAY));
+        addLine.accept(Compat.translatable("screen.wands.action_prefix").append(Compat.literal(": ")).append(Compat.translatable(action.toString())).withStyle(ChatFormatting.GRAY));
+
+        // Show flags relevant to this mode (only non-default values)
+        for (WandProps.Flag flag : WandProps.Flag.values()) {
+            if (WandProps.flagAppliesTo(flag, mode)) {
+                boolean val = WandProps.getFlag(stack, flag);
+                if (val != flag.get_default()) {
+                    String state = val ? "On" : "Off";
+                    addLine.accept(Compat.translatable("screen.wands." + flag.labelKey).append(Compat.literal(": " + state)).withStyle(ChatFormatting.GRAY));
+                }
+            }
+        }
+
+        // Show values relevant to this mode (only non-default values)
+        for (WandProps.Value value : WandProps.Value.values()) {
+            if (WandProps.valueAppliesTo(value, mode)) {
+                int val = WandProps.getVal(stack, value);
+                if (val != value.def) {
+                    addLine.accept(Compat.translatable("screen.wands." + value.labelKey).append(Compat.literal(": " + val)).withStyle(ChatFormatting.GRAY));
+                }
+            }
+        }
+    }
+
+//? if >= 1.21.11 {
+    public InteractionResult return_fail(Player player, InteractionHand interactionHand) {
+        return InteractionResult.FAIL;
+    }
+    public InteractionResult return_pass(Player player, InteractionHand interactionHand) {
+        return InteractionResult.PASS;
+    }
+    public InteractionResult return_success(Player player, InteractionHand interactionHand) {
+        return InteractionResult.SUCCESS;
+    }
+//? } else {
+
+    /*public @NotNull InteractionResultHolder<ItemStack> return_fail(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.fail(player.getItemInHand(interactionHand));
+    }
+    public @NotNull InteractionResultHolder<ItemStack> return_pass(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.pass(player.getItemInHand(interactionHand));
+    }
+    public @NotNull InteractionResultHolder<ItemStack> return_success(Player player, InteractionHand interactionHand) {
+                return InteractionResultHolder.success(player.getItemInHand(interactionHand));
+    }
+
+*///? }
+}

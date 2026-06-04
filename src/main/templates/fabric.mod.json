@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "name": "${mod_name}",
+  "version": "${mod_version}",
+  "description": "${mod_description}",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["net.nicguzzo.wands.loaders.fabric.FabricEntrypoint"],
+    "client": ["net.nicguzzo.wands.loader.fabric.WandsModClientFabric"],
+    "modmenu": ["net.nicguzzo.wands.fabric.ModMenu"]
+  }
+}
