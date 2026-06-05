@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 //?if >= 1.21.11{
 import net.minecraft.client.renderer.RenderPipelines;
 //?}
@@ -118,7 +118,7 @@ public class Btn extends Wdgt {
     }
 
     @Override
-    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
 
         // Determine background color based on state
@@ -174,7 +174,7 @@ public class Btn extends Wdgt {
                 textX = x + TEXT_PADDING;
             }
 
-            gui.drawString(font, labelText, textX, textY, COLOR_TEXT_NORMAL, true);
+            gui.text(font, labelText, textX, textY, COLOR_TEXT_NORMAL, true);
         }
     }
 
@@ -192,7 +192,7 @@ public class Btn extends Wdgt {
      * @param texW Source texture width
      * @param texH Source texture height
      */
-    private void blitNineSlice(GuiGraphics gui, RcId tex, int destX, int destY, int destW, int destH, int border, int texW, int texH) {
+    private void blitNineSlice(GuiGraphicsExtractor gui, RcId tex, int destX, int destY, int destW, int destH, int border, int texW, int texH) {
         int centerW = texW - border * 2;  // Source center width
         int centerH = texH - border * 2;  // Source center height
         int destCenterW = destW - border * 2;  // Destination center width
@@ -234,7 +234,7 @@ public class Btn extends Wdgt {
      * Blit a texture region with tiling (for 9-slice edges and center).
      * Tiles the source region to fill the destination area.
      */
-    private void blitStretched(GuiGraphics gui, RcId tex, int destX, int destY, int destW, int destH, int srcX, int srcY, int srcW, int srcH, int texW, int texH) {
+    private void blitStretched(GuiGraphicsExtractor gui, RcId tex, int destX, int destY, int destW, int destH, int srcX, int srcY, int srcW, int srcH, int texW, int texH) {
         // Tile the source region to fill the destination
         for (int tileY = 0; tileY < destH; tileY += srcH) {
             int drawH = Math.min(srcH, destH - tileY);

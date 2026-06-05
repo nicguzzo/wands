@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -53,21 +53,21 @@ public class PaletteClientTooltip implements ClientTooltipComponent {
     @Override
     //?if >= 1.21.11{
         //?if >= 26.1{
-        /*public void extractImage(Font font, int x, int y, int width, int height, GuiGraphics gui) {
-        *///?}else{
-        public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics gui) {
-        //?}
+        public void extractImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor gui) {
+        //?}else{
+        /*public void renderImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor gui) {
+        *///?}
             renderGrid(font, x, y, gui);
         }
     //?}else{
     
-    /*public void renderImage(Font font, int x, int y, GuiGraphics gui) {
+    /*public void renderImage(Font font, int x, int y, GuiGraphicsExtractor gui) {
         renderGrid(font, x, y, gui);
     }
     
     *///?}
 
-    private void renderGrid(Font font, int x, int y, GuiGraphics gui) {
+    private void renderGrid(Font font, int x, int y, GuiGraphicsExtractor gui) {
         if (items.isEmpty()) return;
 
         int cols = Math.min(items.size(), MAX_COLUMNS);
@@ -79,7 +79,7 @@ public class PaletteClientTooltip implements ClientTooltipComponent {
             int row = i / MAX_COLUMNS;
             int itemX = x + PADDING + col * SLOT_SIZE;
             int itemY = y + PADDING + row * SLOT_SIZE;
-            gui.renderItem(items.get(i), itemX, itemY);
+            gui.item(items.get(i), itemX, itemY);
         }
     }
 }

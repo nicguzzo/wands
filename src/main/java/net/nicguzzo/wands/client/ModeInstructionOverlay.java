@@ -2,7 +2,7 @@ package net.nicguzzo.wands.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
@@ -32,7 +32,7 @@ public class ModeInstructionOverlay {
     /**
      * Main render method called from HUD event.
      */
-    public static void render(GuiGraphics gui) {
+    public static void render(GuiGraphicsExtractor gui) {
         if (WandsMod.config.hud_mode == HudMode.OFF) return;
         Minecraft client = Minecraft.getInstance();
         if (client == null || client.player == null) {
@@ -78,7 +78,7 @@ public class ModeInstructionOverlay {
         int y = (screenHeight / 2) + 40;
 
         // Draw the text with shadow for visibility
-        gui.drawString(font, instruction.text, x, y, TEXT_COLOR, true);
+        gui.text(font, instruction.text, x, y, TEXT_COLOR, true);
 
         // Draw the right-click icon after the text at half size
         if (instruction.showIcon) {

@@ -4,7 +4,7 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -314,7 +314,7 @@ public class WandsModClient {
         return name;
     }
 
-    public static void render_wand_info(GuiGraphics gui) {
+    public static void render_wand_info(GuiGraphicsExtractor gui) {
         if (WandsMod.config.hud_mode == HudMode.OFF) return;
         boolean isFull = WandsMod.config.hud_mode == HudMode.FULL;
         Minecraft client = Minecraft.getInstance();
@@ -343,8 +343,8 @@ public class WandsModClient {
                     if (main) {
                         y_off = -font.lineHeight * 3;
                     }
-                    gui.drawString(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId()).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffffff);
-                    gui.drawString(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffffff);
+                    gui.text(font, "Item: " + Component.translatable(bgi.getItem().getDescriptionId()).getString(), (int) x, (int) y + y_off + font.lineHeight, 0xffffffff);
+                    gui.text(font, "Total: " + MagicBagItem.getTotal(s), (int) x, (int) y + y_off + font.lineHeight * 2, 0xffffffff);
                 }
                 List<ItemStack> paletteItems = getPaletteItems(paletteStack, client);
                 if (main) {
@@ -763,26 +763,26 @@ public class WandsModClient {
     }
 
     /** Draw "label: value" with label+colon in white and value in gray */
-    private static int drawHudLabelValue(GuiGraphics gui, Font font, String label, String value, int x, int y) {
+    private static int drawHudLabelValue(GuiGraphicsExtractor gui, Font font, String label, String value, int x, int y) {
         return drawHudLabelValue(gui, font, label, ": ", value, x, y);
     }
 
     /** Draw "label{sep}value" with label+sep in white and value in gray */
-    private static int drawHudLabelValue(GuiGraphics gui, Font font, String label, String sep, String value, int x, int y) {
+    private static int drawHudLabelValue(GuiGraphicsExtractor gui, Font font, String label, String sep, String value, int x, int y) {
         String labelWithSep = label + sep;
-        gui.drawString(font, labelWithSep, x, y, ModeInstructionOverlay.TEXT_COLOR);
+        gui.text(font, labelWithSep, x, y, ModeInstructionOverlay.TEXT_COLOR);
         int labelWidth = font.width(labelWithSep);
-        gui.drawString(font, value, x + labelWidth, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
+        gui.text(font, value, x + labelWidth, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
         return labelWidth + font.width(value);
     }
 
     /** Draw value in white followed by keybind hint in gray with a space between, returns total width */
-    private static int drawHudValueWithHint(GuiGraphics gui, Font font, String value, String keyName, int x, int y) {
+    private static int drawHudValueWithHint(GuiGraphicsExtractor gui, Font font, String value, String keyName, int x, int y) {
         int w = 0;
-        gui.drawString(font, value, x, y, ModeInstructionOverlay.TEXT_COLOR);
+        gui.text(font, value, x, y, ModeInstructionOverlay.TEXT_COLOR);
         w += font.width(value);
         String hint = " [" + keyName + "]";
-        gui.drawString(font, hint, x + w, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
+        gui.text(font, hint, x + w, y, ModeInstructionOverlay.TEXT_COLOR_DIM);
         w += font.width(hint);
         return w;
     }
@@ -816,13 +816,13 @@ public class WandsModClient {
     }
 
     /** Render palette item icons in a grid, capped to maxCols x 2 rows. Returns the Y advance (0 if empty). */
-    private static int renderPaletteGrid(GuiGraphics gui, List<ItemStack> items, int x, int y, int maxCols, int gridHeight) {
+    private static int renderPaletteGrid(GuiGraphicsExtractor gui, List<ItemStack> items, int x, int y, int maxCols, int gridHeight) {
         if (items.isEmpty()) return 0;
         int displayCount = Math.min(items.size(), maxCols * PALETTE_MAX_ROWS);
         for (int i = 0; i < displayCount; i++) {
             int col = i % maxCols;
             int row = i / maxCols;
-            gui.renderItem(items.get(i), x + col * PALETTE_SLOT_SIZE, y + row * PALETTE_SLOT_SIZE);
+            gui.item(items.get(i), x + col * PALETTE_SLOT_SIZE, y + row * PALETTE_SLOT_SIZE);
         }
         return gridHeight + Section.VERTICAL_SPACING;
     }

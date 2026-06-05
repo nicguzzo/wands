@@ -5,12 +5,12 @@ import com.mojang.logging.LogUtils;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
 //?if >26.1{
-/*import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
-*///?}else{
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
+//?}else{
+/*import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-//?}
+*///?}
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.api.ModInitializer;
 import java.nio.file.Path;
@@ -35,22 +35,22 @@ public class FabricEntrypoint implements ModInitializer {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     //?if >1.21{
-    public static final ExtendedScreenHandlerType<WandToolsMenu, WandToolsMenuData> WAND_TOOLS_MENU_TYPE =
-        new ExtendedScreenHandlerType<WandToolsMenu, WandToolsMenuData>(WandToolsMenu::new, WandToolsMenuData.STREAM_CODEC);
+    public static final ExtendedMenuType<WandToolsMenu, WandToolsMenuData> WAND_TOOLS_MENU_TYPE =
+        new ExtendedMenuType<WandToolsMenu, WandToolsMenuData>(WandToolsMenu::new, WandToolsMenuData.STREAM_CODEC);
 
-    public static final ExtendedScreenHandlerType<MagicBagMenu, MagicBagMenuData> MAGIC_BAG_MENU_TYPE =
-        new ExtendedScreenHandlerType<MagicBagMenu, MagicBagMenuData>(MagicBagMenu::new, MagicBagMenuData.STREAM_CODEC);
+    public static final ExtendedMenuType<MagicBagMenu, MagicBagMenuData> MAGIC_BAG_MENU_TYPE =
+        new ExtendedMenuType<MagicBagMenu, MagicBagMenuData>(MagicBagMenu::new, MagicBagMenuData.STREAM_CODEC);
 
-    public static final ExtendedScreenHandlerType<PaletteMenu, PaletteMenuData> PALETTE_MENU_TYPE =
-        new ExtendedScreenHandlerType<PaletteMenu,PaletteMenuData>(PaletteMenu::new, PaletteMenuData.STREAM_CODEC);
+    public static final ExtendedMenuType<PaletteMenu, PaletteMenuData> PALETTE_MENU_TYPE =
+        new ExtendedMenuType<PaletteMenu,PaletteMenuData>(PaletteMenu::new, PaletteMenuData.STREAM_CODEC);
 
     //?}else{
-    /*public static final ExtendedScreenHandlerType<WandToolsMenu> WAND_TOOLS_MENU_TYPE =
-        new ExtendedScreenHandlerType<>(WandToolsMenu::new);
-    public static final ExtendedScreenHandlerType<MagicBagMenu> MAGIC_BAG_MENU_TYPE =
-        new ExtendedScreenHandlerType<>(MagicBagMenu::new);
-    public static final ExtendedScreenHandlerType<PaletteMenu> PALETTE_MENU_TYPE =
-        new ExtendedScreenHandlerType<>(PaletteMenu::new);
+    /*public static final ExtendedMenuType<WandToolsMenu> WAND_TOOLS_MENU_TYPE =
+        new ExtendedMenuType<>(WandToolsMenu::new);
+    public static final ExtendedMenuType<MagicBagMenu> MAGIC_BAG_MENU_TYPE =
+        new ExtendedMenuType<>(MagicBagMenu::new);
+    public static final ExtendedMenuType<PaletteMenu> PALETTE_MENU_TYPE =
+        new ExtendedMenuType<>(PaletteMenu::new);
     *///?}
 
     public static final ResourceKey<CreativeModeTab> CUSTOM_ITEM_GROUP_KEY = ResourceKey.create(BuiltInRegistries.CREATIVE_MODE_TAB.key(), RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "wands_tab").id());

@@ -1,12 +1,12 @@
 package net.nicguzzo.wands.client.screens;
 
 //?if >= 12.11.1 {
-/*import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-*///?}
+//?}
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
@@ -26,14 +26,14 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
     MagicBagItem.MagicBagItemTier tier= MagicBagItem.MagicBagItemTier.MAGIC_BAG_TIER_1;
     List<Component> help;
     //?if >= 12.11.1 {
-    /*GpuTexture magicbag_Texture;
-    *///?}
+    GpuTexture magicbag_Texture;
+    //?}
     public MagicBagScreen(MagicBagMenu abstractContainerMenu, Inventory inventory, Component component) {
         super(abstractContainerMenu, inventory, component);
         //?if >= 12.11.1 {
-        /*TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+        TextureManager textureManager = Minecraft.getInstance().getTextureManager();
         magicbag_Texture = textureManager.getTexture(TEXTURE.id()).getTexture();
-        *///?}
+        //?}
     }
     @Override
     public void init() {
@@ -51,12 +51,12 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         );
     }
     //?if >=26.1 {
-    /*protected void extractBackground(GuiGraphics gui, float f, int i, int j) {
-    *///?}else{
+    protected void extractBackground(GuiGraphicsExtractor gui, float f, int i, int j) {
+    //?}else{
 
-    @Override
-    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
-    //?}
+    /*@Override
+    protected void renderBg(GuiGraphicsExtractor gui, float f, int i, int j) {
+    *///?}
 
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
@@ -66,12 +66,12 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         //gui.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, x+100, y+33, 256-16, 16*tier.ordinal(), 16, 16, 256, 256);
     }
     //?if >=26.1 {
-    /*public void extractContents(GuiGraphics gui, int mouseX, int mouseY, float delta){
+    public void extractContents(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
         super.extractContents(gui, mouseX, mouseY, delta);
-    *///?}else{
-    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
+    //?}else{
+    /*public void render(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
         super.render(gui, mouseX, mouseY, delta);
-    //?}
+    *///?}
         Minecraft client=Minecraft.getInstance();
         int text_color=0xffffffff;
         //RenderSystem.disableDepthTest();
@@ -79,24 +79,24 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         if(!item.isEmpty()) {
             Component text = Component.translatable(item.getItem().getDescriptionId());
             int w = font.width(text);
-            gui.drawString(client.font, text.getString(), (width / 2) - w / 2, (height / 2) - 20, text_color,false);
+            gui.text(client.font, text.getString(), (width / 2) - w / 2, (height / 2) - 20, text_color,false);
             //gui.renderFakeItem(item,(width / 2) - w / 2, (height / 2) - 20);
         }
         Component text2=Compat.literal(""+MagicBagItem.getTotal(bag_stack));
         int w2=font.width(text2);
-        gui.drawString(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
+        gui.text(client.font, text2, (width / 2) - w2 / 2, (height / 2) - 32, text_color,false);
 
 
         Component text3=Compat.literal("help");
         int w3=font.width(text3);
         int x3=(width / 2)-w3/2;
         int y3= (height / 2) - 65;
-        gui.drawString(client.font, text3, x3, y3, text_color,false);
+        gui.text(client.font, text3, x3, y3, text_color,false);
 
         if(mouseX>=x3 && mouseX<x3+w3 && mouseY>=y3 && mouseY<y3+10) {
             Compat.renderComponentTooltip(gui,font,help,mouseX,mouseY);
         }
         //?if <26.1
-        this.renderTooltip(gui, mouseX,mouseY);
+        //this.renderTooltip(gui, mouseX,mouseY);
     }
 }

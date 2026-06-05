@@ -3,7 +3,7 @@ package net.nicguzzo.wands.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 //?if >=1.21.11 {
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 //?}
@@ -15,8 +15,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 /*import net.minecraft.client.resources.model.BakedModel;
 *///?}
 //?if < 26.1 {
-import net.minecraft.client.renderer.entity.ItemRenderer;
-//?}
+/*import net.minecraft.client.renderer.entity.ItemRenderer;
+*///?}
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -72,7 +72,7 @@ public abstract class ItemRendererMixin {
 
 //?if >= 1.21 && <1.21.11 {
 
-/*@Mixin(GuiGraphics.class)
+/*@Mixin(GuiGraphicsExtractor.class)
 
 public abstract class ItemRendererMixin {
     @Final
@@ -102,22 +102,22 @@ public abstract class ItemRendererMixin {
  
 *///?}
 //?if >=1.21.11 {
-@Mixin(GuiGraphics.class)
+@Mixin(GuiGraphicsExtractor.class)
 public abstract class ItemRendererMixin {
     @Final
     @Shadow
     private Matrix3x2fStack pose;
     @Shadow
     //?if >=26.1 {
-    /*protected abstract void item(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k);
-    *///?}else{
-    protected abstract void renderItem(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k);
-    //?}
+    protected abstract void item(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k);
+    //?}else{
+    /*protected abstract void renderItem(LivingEntity livingEntity, Level level, ItemStack itemStack, int i, int j, int k);
+    *///?}
     //?if >=26.1 {
-    /*@Inject(method = "item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At(value = "TAIL"))
-    *///?}else{
-    @Inject(method = "renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At(value = "TAIL"))
-    //?}
+    @Inject(method = "item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At(value = "TAIL"))
+    //?}else{
+    /*@Inject(method = "renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V", at = @At(value = "TAIL"))
+    *///?}
     public void renderItem(LivingEntity livingEntity,Level level, ItemStack itemStack, int i, int j, int k, CallbackInfo cb){
         //System.out.println("renderItem");
         if (level !=null && WandUtils.is_magicbag(itemStack)) {
@@ -130,10 +130,10 @@ public abstract class ItemRendererMixin {
                     pose.translate(0.0f, -0.3f);
                     pose.translate(-(float)(i + 8), -(float)(j + 8));
                     //?if >=26.1 {
-                        /*this.item(livingEntity,level,item_in_bag,i,j+5,k);
-                    *///?}else{
-                        this.renderItem(livingEntity,level,item_in_bag,i,j+5,k);
-                    //?}
+                        this.item(livingEntity,level,item_in_bag,i,j+5,k);
+                    //?}else{
+                        /*this.renderItem(livingEntity,level,item_in_bag,i,j+5,k);
+                    *///?}
                     pose.popMatrix();
 
                 }

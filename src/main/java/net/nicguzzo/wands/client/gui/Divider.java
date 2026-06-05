@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.nicguzzo.wands.client.screens.WandScreen;
 
 /**
@@ -18,7 +18,7 @@ public class Divider extends Wdgt {
     }
 
     @Override
-    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
+    public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         int lineY = y + VERTICAL_PADDING;
         gui.fill(x, lineY, x + width, lineY + LINE_HEIGHT, WandScreen.COLOR_TAB_DIVIDER);

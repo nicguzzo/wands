@@ -2,7 +2,7 @@
 package net.nicguzzo.wands.loaders.fabric;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.ClientTooltipComponentCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -25,7 +25,7 @@ public class WandsModClientFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         WandsModClient.initialize();
-        TooltipComponentCallback.EVENT.register(PaletteClientTooltip::tryCreate);
+        ClientTooltipComponentCallback.EVENT.register(PaletteClientTooltip::tryCreate);
 
 
         Optional<ModContainer> cont= FabricLoader.getInstance().getModContainer("optifabric");
