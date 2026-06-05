@@ -4,8 +4,8 @@ package net.nicguzzo.wands.compat;
 //?}
 
 //?if>26.1{
-import net.minecraft.world.item.ItemStackTemplate;
-//?}
+/*import net.minecraft.world.item.ItemStackTemplate;
+*///?}
 //?if >1.20.5{
 
 import net.minecraft.core.component.DataComponents;
@@ -14,11 +14,11 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
     //?if>1.21.1{
         //?if<26.1{
-        /*import net.minecraft.client.resources.model.AtlasManager;
+        import net.minecraft.client.resources.model.AtlasManager;
 
-        *///?}else{
-        import net.minecraft.client.resources.model.sprite.AtlasManager;
-        //?}
+        //?}else{
+        /*import net.minecraft.client.resources.model.sprite.AtlasManager;
+        *///?}
     import net.minecraft.client.renderer.texture.TextureAtlas;
     import net.minecraft.util.ProblemReporter;
     import net.minecraft.world.level.storage.TagValueInput;
@@ -35,7 +35,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
 import org.joml.Matrix4f;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.*;
@@ -281,7 +281,7 @@ public class Compat {
         //? }
     }
 
-    static public void blit(GuiGraphicsExtractor gui, RcId tx, int x, int y, float u, float v, int w, int h, int tex_w, int tex_h) {
+    static public void blit(GuiGraphics gui, RcId tx, int x, int y, float u, float v, int w, int h, int tex_w, int tex_h) {
         //? if < 1.20 {
         /*
             blit(poseStack, x, y, 0, 0, imageWidth, imageHeight);
@@ -302,7 +302,7 @@ public class Compat {
             *///? }
         //? }
     }
-    static public void renderComponentTooltip(GuiGraphicsExtractor gui, Font font, List<Component> lines, int mouseX, int mouseY) {
+    static public void renderComponentTooltip(GuiGraphics gui, Font font, List<Component> lines, int mouseX, int mouseY) {
         //? if >= 1.21.11 {
         gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
         //? } else {
@@ -460,16 +460,16 @@ public class Compat {
             ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
             List<ItemStack> list = new ArrayList<>();
             //? if >= 26.1 {
-            Iterator<ItemStackTemplate> it = contents.nonEmptyItems().iterator();
-            //? } else {
-            /*Iterator<ItemStack> it = contents.nonEmptyItems().iterator();
-            *///?}
+            /*Iterator<ItemStackTemplate> it = contents.nonEmptyItems().iterator();
+            *///? } else {
+            Iterator<ItemStack> it = contents.nonEmptyItems().iterator();
+            //?}
             while (it.hasNext()) {
                 //? if >= 26.1 {
-                list.add(it.next().create());
-                //? } else {
-                /*list.add(it.next());
-                *///?}
+                /*list.add(it.next().create());
+                *///? } else {
+                list.add(it.next());
+                //?}
             }
             return list;
         //? } else {
@@ -559,7 +559,7 @@ public class Compat {
         TextureAtlas atlas = am.getAtlasOrThrow(atlasId.id());
 
         //? if >= 26.1 {
-            if (isWater) {
+            /*if (isWater) {
                 if(water_sprite==null)
                     water_sprite=RcId.withDefaultNamespace("block/water_flow");
                 return atlas.getSprite(water_sprite.id());
@@ -568,13 +568,13 @@ public class Compat {
                     lava_sprite=RcId.withDefaultNamespace("block/lava_flow");
                 return atlas.getSprite(lava_sprite.id());
             }
-            //? } else {
-            /*if (isWater) {
+            *///? } else {
+            if (isWater) {
                 return atlas.getSprite(ModelBakery.WATER_FLOW.texture());
             } else {
                 return atlas.getSprite(ModelBakery.LAVA_FLOW.texture());
             }
-        *///?}
+        //?}
         //? } else {
         
         /*if (isWater) {
@@ -597,16 +597,16 @@ public class Compat {
 
     static public void displayClientMessage(Player player,Component component,boolean overlay){
         //? if >= 26.1 {
-            if(overlay){
+            /*if(overlay){
                 player.sendOverlayMessage(component);
             }else{
                 player.sendSystemMessage(component);
             }
-        //? } else {
+        *///? } else {
         
-            /*player.displayClientMessage(component, overlay);
+            player.displayClientMessage(component, overlay);
         
-        *///? }
+        //? }
     }
 
     public final class NbtType {

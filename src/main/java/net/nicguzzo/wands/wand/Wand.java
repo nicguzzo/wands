@@ -1984,6 +1984,9 @@ public class Wand {
         WandItem wand_item = (WandItem) this.wand_stack.getItem();
         if (dmg <= 1) {
             switch (wand_item.tier) {
+                case WOODEN_WAND:
+                    this.allow_wand_to_break = WandsMod.config.allow_wooden_wand_to_break;
+                    return !this.allow_wand_to_break;
                 case STONE_WAND:
                     this.allow_wand_to_break = WandsMod.config.allow_stone_wand_to_break;
                     return !this.allow_wand_to_break;

@@ -8,11 +8,11 @@ import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import net.minecraft.client.DeltaTracker;
 //?}
 //?if <26.1{
-/*import net.minecraft.client.renderer.LightTexture;
-*///?}else{
-import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.LightTexture;
+//?}else{
+/*import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-//?}
+*///?}
 
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -44,24 +44,24 @@ public class LevelRendererMixin {
     @Inject(method = "renderLevel", at = @At(value = "TAIL"))
 
     //?if >=26.1{
-        public void renderLevel(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci){
+        /*public void renderLevel(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci){
             posestack.setIdentity();
             posestack.mulPose(modelViewMatrix);
-    //?}else{
-        /*//?if >=1.21.11{
+    *///?}else{
+        //?if >=1.21.11{
           public void renderLevel(GraphicsResourceAllocator graphicsResourceAllocator, DeltaTracker deltaTracker, boolean bl, Camera camera, Matrix4f matrix4f, Matrix4f matrix4f2, Matrix4f matrix4f3, GpuBufferSlice gpuBufferSlice, Vector4f vector4f, boolean bl2, CallbackInfo ci){
               posestack.setIdentity();
               posestack.mulPose(matrix4f);
         //?}else{
-            /^//?if >=1.21{
+            /*//?if >=1.21{
             public void renderLevel(DeltaTracker deltaTracker, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
                 posestack.setIdentity();
                 posestack.mulPose(matrix4f);
             //?}else{
-                /^¹public void renderLevel(PoseStack posestack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
-            ¹^///?}
-        ^///?}
-    *///?}
+                /^public void renderLevel(PoseStack posestack, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
+            ^///?}
+        *///?}
+    //?}
         ClientRender.render(posestack,renderBuffers.bufferSource());
     }
 }

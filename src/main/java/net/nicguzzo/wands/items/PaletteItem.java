@@ -25,6 +25,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.core.component.DataComponents;
 //? }
 import net.minecraft.world.level.Level;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 
@@ -59,6 +60,12 @@ public class PaletteItem extends Item {
         super(properties);
     }
 
+    public static PaletteItem create(){
+        return new PaletteItem(new Item.Properties().stacksTo(1)
+                //?if >=1.21.11
+                .setId(WandsMod.palette_key)
+        );
+    }
 
     //? if >= 1.21.11 {
     @Override

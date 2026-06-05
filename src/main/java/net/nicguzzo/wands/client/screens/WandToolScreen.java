@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
@@ -46,11 +46,11 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
     }
 
     //?if >=26.1 {
-    protected void extractBackground(GuiGraphicsExtractor gui, float delta, int mouseXi, int mouseY) {
-    //?}else{
-    /*@Override
-    protected void renderBg(@NotNull GuiGraphicsExtractor gui, float delta, int mouseX, int mouseY) {
-    *///?}
+    /*protected void extractBackground(GuiGraphics gui, float delta, int mouseXi, int mouseY) {
+    *///?}else{
+    @Override
+    protected void renderBg(@NotNull GuiGraphics gui, float delta, int mouseX, int mouseY) {
+    //?}
 
     //?if >= 1.21.11{
         RenderSystem.outputColorTextureOverride = wandInventoryTexture;
@@ -66,12 +66,12 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
 
     @Override
     //?if >=26.1 {
-    public void extractContents(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    /*public void extractContents(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.extractContents(gui, mouseX, mouseY, delta);
-    //?}else{
-    /*public void render(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    *///?}else{
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.render(gui, mouseX, mouseY, delta);
-    *///?}
+    //?}
 
         // Draw green highlights on tool slots
         if (ClientRender.wand != null && ClientRender.wand.player_data != null) {
@@ -91,8 +91,8 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
 
         // Instruction text below title
         int instructionY = topPos + titleLabelY + font.lineHeight + 16;
-        gui.text(font, "Click an inventory slot to have ", leftPos + titleLabelX, instructionY, Compat.DARK_GRAY, false);
-        gui.text(font, "the wand use a tool in that slot", leftPos + titleLabelX, instructionY + font.lineHeight, Compat.DARK_GRAY, false);
+        gui.drawString(font, "Click an inventory slot to have ", leftPos + titleLabelX, instructionY, Compat.DARK_GRAY, false);
+        gui.drawString(font, "the wand use a tool in that slot", leftPos + titleLabelX, instructionY + font.lineHeight, Compat.DARK_GRAY, false);
 
         // Hand cursor over inventory slots
         boolean shouldBeHand = isOverInventorySlot(mouseX, mouseY);
@@ -109,7 +109,7 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
             }
         }
         //?if <26.1
-        //this.renderTooltip(gui, mouseX, mouseY);
+        this.renderTooltip(gui, mouseX, mouseY);
     }
 
     private boolean isOverInventorySlot(int mx, int my) {

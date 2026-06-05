@@ -10,7 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.*;
@@ -1021,12 +1021,12 @@ public class WandScreen extends Screen {
     }
     @Override
     //?if >=26.1 {
-    public void extractBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    /*public void extractBackground(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.extractBackground(gui, mouseX, mouseY, delta);
-    //?}else{
-    /*public void render(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    *///?}else{
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.render(gui, mouseX, mouseY, delta);
-    *///?}
+    //?}
         // Draw semi-transparent background panel (extends to bottom with same margin as top/sides)
         // Tabs have no left/right inner padding, section has INNER_PADDING
         Section visibleContent = isToolsTabSelected ? toolsSection : modeOptionsSection;
@@ -1080,12 +1080,12 @@ public class WandScreen extends Screen {
     }
 
     //?if >= 1.21.1 < 26.1{
-    /*@Override
-    public void renderBackground(@NotNull GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics gui, int mouseX, int mouseY, float delta) {
         // Intentionally empty: MC 1.21.1 draws a dark overlay here that darkens
         // the inventory texture. The wand screen handles its own background rendering.
     }
-    *///?}
+    //?}
     @Override
     //?if >= 1.21.11 {
     public boolean mouseClicked(MouseButtonEvent mouseButtonEvent, boolean bl){

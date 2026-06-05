@@ -3,7 +3,7 @@ package net.nicguzzo.wands.client.gui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -58,7 +58,7 @@ public abstract class Wdgt {
      * @param mouseX Current mouse X position in screen pixels
      * @param mouseY Current mouse Y position in screen pixels
      */
-    public abstract void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY);
+    public abstract void render(GuiGraphics gui, Font font, int mouseX, int mouseY);
 
     /**
      * Handle a left mouse click. Checks visibility first, then delegates to handleClick().
@@ -166,7 +166,7 @@ public abstract class Wdgt {
     /**
      * Draw standard widget background (highlighted on hover).
      */
-    protected void drawBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY) {
+    protected void drawBackground(GuiGraphics gui, int mouseX, int mouseY) {
         if (!showBackground) return;
         int backgroundColor = inside(mouseX, mouseY) ? WandScreen.COLOR_WDGT_HOVER : Btn.COLOR_NORMAL;
         gui.fill(x, y, x + width, y + height, backgroundColor);

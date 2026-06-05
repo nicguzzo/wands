@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.nicguzzo.wands.compat.Compat;
 
@@ -227,7 +227,7 @@ public class CycleToggle<T> extends Wdgt {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
+    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         drawBackground(gui, mouseX, mouseY);
 
@@ -237,13 +237,13 @@ public class CycleToggle<T> extends Wdgt {
 
         if (label != null) {
             String labelText = label.getString() + " ";
-            gui.text(font, labelText, textX, textY, labelColor, drawShadow);
+            gui.drawString(font, labelText, textX, textY, labelColor, drawShadow);
             textX += font.width(labelText);
         }
 
         Component[] labels = useAlternateLabels ? alternateLabels : optionLabels;
         Component valueText = labels[index];
-        gui.text(font, valueText.getString(), textX, textY, valueColor, drawShadow);
+        gui.drawString(font, valueText.getString(), textX, textY, valueColor, drawShadow);
 
         // Update tooltip to match current option
         // Use widget label as title, or current option label if no widget label

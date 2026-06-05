@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public class Section extends Wdgt {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
+    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         layout();
 

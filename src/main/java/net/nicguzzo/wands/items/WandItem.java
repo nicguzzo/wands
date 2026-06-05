@@ -41,9 +41,11 @@ import java.util.function.Consumer;
 
 public class WandItem extends Item {
     public enum WandTier{
+        WOODEN_WAND,
         STONE_WAND,
         COPPER_WAND,
         IRON_WAND,
+        GOLD_WAND,
         DIAMOND_WAND,
         NETHERITE_WAND,
         CREATIVE_WAND
@@ -63,6 +65,116 @@ public class WandItem extends Item {
         this.removes_water = removes_water;
         this.unbreakable = unbreakable;
         this.can_blast = can_blast;
+    }
+    public static WandItem wooden_Wand(){
+        return new WandItem(
+                    WandItem.WandTier.WOODEN_WAND,
+                    WandsMod.config.wooden_wand_limit,
+                    false,
+                    false,
+                    false,
+                    false,
+                    new Item.Properties().stacksTo(1).durability(WandsMod.config.wooden_wand_durability)
+                    //?if >=1.21.11
+                    .setId(WandsMod.wooden_wand_key)
+        );
+    }
+    public static WandItem stone_Wand() {
+        return new WandItem(
+                WandItem.WandTier.STONE_WAND,
+                WandsMod.config.stone_wand_limit,
+                false,
+                false,
+                false,
+                false,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.stone_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.stone_wand_key)
+        );
+    }
+
+    public static WandItem copper_Wand() {
+        return new WandItem(
+                WandTier.COPPER_WAND,
+                WandsMod.config.stone_wand_limit,
+                false,
+                false,
+                false,
+                false,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.copper_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.copper_wand_key)
+        );
+    }
+
+    public static WandItem gold_Wand() {
+        return new WandItem(
+                WandTier.GOLD_WAND,
+                WandsMod.config.gold_wand_limit,
+                true,
+                false,
+                false,
+                true,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.gold_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.gold_wand_key)
+        );
+    }
+
+    public static WandItem iron_Wand() {
+        return new WandItem(
+                WandTier.IRON_WAND,
+                WandsMod.config.iron_wand_limit,
+                false,
+                false,
+                false,
+                false,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.iron_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.iron_wand_key)
+        );
+    }
+
+    public static WandItem diamond_Wand() {
+        return new WandItem(
+                WandTier.DIAMOND_WAND,
+                WandsMod.config.diamond_wand_limit,
+                true,
+                false,
+                false,
+                false,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.diamond_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.diamond_wand_key)
+        );
+    }
+
+    public static WandItem netherite_Wand() {
+        return new WandItem(
+                WandTier.NETHERITE_WAND,
+                WandsMod.config.netherite_wand_limit,
+                true,
+                true,
+                false,
+                true,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.netherite_wand_durability)
+                //?if >=1.21.11
+                .setId(WandsMod.netherite_wand_key)
+        );
+    }
+
+    public static WandItem creative_Wand() {
+        return new WandItem(
+                WandTier.CREATIVE_WAND,
+                WandsMod.config.creative_wand_limit,
+                true,
+                true,
+                true,
+                true,
+                new Item.Properties().stacksTo(1).durability(WandsMod.config.creative_wand_limit)
+                //?if >=1.21.11
+                .setId(WandsMod.creative_wand_key)
+        );
     }
 
     @Override
@@ -265,12 +377,12 @@ public class WandItem extends Item {
 
 *///? }
     {
+        //list.add(Component.literal("lalalal"));
+        //return;
         //? if >= 1.21.11 {
         Consumer<Component> addLine = consumer;
         //? } else {
-        
         /*Consumer<Component> addLine = list::add;
-        
         *///? }
 
         WandProps.Mode mode = WandProps.getMode(stack);

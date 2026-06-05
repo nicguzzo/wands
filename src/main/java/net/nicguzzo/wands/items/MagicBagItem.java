@@ -24,6 +24,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.compat.Compat;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,27 @@ public class MagicBagItem extends Item {
         if (limit > 0) {
             this.limit = limit;
         }
+    }
+
+    public static MagicBagItem create_tier_1(){
+        return new MagicBagItem(MagicBagItemTier.MAGIC_BAG_TIER_1, WandsMod.config.magic_bag_1_limit,new Item.Properties().stacksTo(1)
+                //?if >=1.21.11
+                .setId(WandsMod.magic_bag_1_key)
+        );
+    }
+
+    public static MagicBagItem create_tier_2(){
+        return new MagicBagItem(MagicBagItemTier.MAGIC_BAG_TIER_2, WandsMod.config.magic_bag_2_limit,new Item.Properties().stacksTo(1)
+                //?if >=1.21.11
+                .setId(WandsMod.magic_bag_2_key)
+        );
+    }
+
+    public static MagicBagItem create_tier_3(){
+        return new MagicBagItem(MagicBagItemTier.MAGIC_BAG_TIER_3, 0,new Item.Properties().stacksTo(1)
+                //?if >=1.21.11
+                .setId(WandsMod.magic_bag_3_key)
+        );
     }
 
     @Override

@@ -10,7 +10,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -43,8 +43,8 @@ public class PaletteMenu extends AbstractContainerMenu {
     private static final int CUSTOM_SLOT_COUNT = 27;
 
 //?if neoforge{
-        /*
-    public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+        
+    /*public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
             super(PALETTE_MENU_TYPE.get(), containerId);
             this.palette=Compat.readItemStackFromBuf(extraData, playerInventory);
 *///?}else{
@@ -134,18 +134,18 @@ public class PaletteMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public void clicked(int slotIndex, int button, ContainerInput actionType, Player player) {
+    public void clicked(int slotIndex, int button, ClickType actionType, Player player) {
         //System.out.println("clicked "+button+" index "+slotIndex +" action: "+actionType);
         //return;
         try {
 
-            if (actionType != ContainerInput.QUICK_CRAFT && button == 1) {
+            if (actionType != ClickType.QUICK_CRAFT && button == 1) {
                 Compat.set_carried(player, this, ItemStack.EMPTY);
             }
 
             if (slotIndex >= 0 && slotIndex < 90) {
                 Slot slot = this.slots.get(slotIndex);
-                if (actionType == ContainerInput.QUICK_CRAFT) {
+                if (actionType == ClickType.QUICK_CRAFT) {
                     if (slotIndex < this.inventory.getContainerSize()) {
                         ItemStack itemStack = Compat.get_carried(player, this);
                         slot.set(itemStack);
@@ -156,7 +156,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                 }
                 if (slot != null) {
                     //slot.hasStack()
-                    if (actionType == ContainerInput.CLONE) {
+                    if (actionType == ClickType.CLONE) {
                         ItemStack itemStack = slot.getItem();
                         ItemStack itemStack2 = itemStack.copy();
                         if (can_pickup(itemStack2)) {
@@ -167,7 +167,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                     //System.out.println("itemStack2: "+itemStack);
                     if (button == 1) {
                         if (slotIndex < 54) {
-                            if (actionType == ContainerInput.PICKUP) {
+                            if (actionType == ClickType.PICKUP) {
                                 ItemStack itemStack = slot.getItem();
                                 if (!itemStack.isEmpty()) {
                                     //System.out.println("empty");
@@ -181,7 +181,7 @@ public class PaletteMenu extends AbstractContainerMenu {
                     }
                     if (button == 0) {
                         if (slotIndex < 54) {
-                            if (actionType == ContainerInput.PICKUP || actionType == ContainerInput.QUICK_CRAFT) {
+                            if (actionType == ClickType.PICKUP || actionType == ClickType.QUICK_CRAFT) {
 
                                 ItemStack itemStack = slot.getItem();
                                 if (!itemStack.isEmpty()) {
@@ -203,12 +203,12 @@ public class PaletteMenu extends AbstractContainerMenu {
                                 slot.setChanged();
                             }
                         } else {
-                            if (actionType == ContainerInput.PICKUP || actionType == ContainerInput.QUICK_MOVE) {
+                            if (actionType == ClickType.PICKUP || actionType == ClickType.QUICK_MOVE) {
                                 ItemStack itemStack = slot.getItem();
                                 ItemStack itemStack2 = itemStack.copy();
                                 if (can_pickup(itemStack2)) {
                                     itemStack2.setCount(1);
-                                    if (actionType == ContainerInput.PICKUP) {
+                                    if (actionType == ClickType.PICKUP) {
                                         Compat.set_carried(player, this, itemStack2);
                                     } else {
                                         insert(itemStack2);

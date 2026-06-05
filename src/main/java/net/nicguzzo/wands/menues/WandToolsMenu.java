@@ -7,7 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -122,13 +122,13 @@ public class WandToolsMenu extends AbstractContainerMenu {
     }
 
     @Override
-    public void clicked(int slotIndex, int button, ContainerInput actionType, Player player)
+    public void clicked(int slotIndex, int button, ClickType actionType, Player player)
     {
         try {
             if(player.level().isClientSide()) {
                 return;
             }
-            if(actionType == ContainerInput.PICKUP && slotIndex>=0 && slotIndex<36 && this.wand!=null){
+            if(actionType == ClickType.PICKUP && slotIndex>=0 && slotIndex<36 && this.wand!=null){
                 Wand wnd= PlayerWand.get(player);
                 if(wnd!=null && wnd.player_data!=null){
                     if(button==0) {

@@ -2,7 +2,7 @@ package net.nicguzzo.wands.client.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.compat.Compat;
@@ -182,7 +182,7 @@ public class CycleSpinner extends Wdgt {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
+    public void render(GuiGraphics gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         drawBackground(gui, mouseX, mouseY);
 
@@ -192,12 +192,12 @@ public class CycleSpinner extends Wdgt {
 
         if (label != null) {
             String labelText = label.getString() + " ";
-            gui.text(font, labelText, textX, textY, labelColor, true);
+            gui.drawString(font, labelText, textX, textY, labelColor, true);
             textX += font.width(labelText);
         }
 
         String value = isEnabled() ? String.valueOf(getValue()) : "Off";
-        gui.text(font, value, textX, textY, valueColor, true);
+        gui.drawString(font, value, textX, textY, valueColor, true);
 
         // Only show +/- buttons when enabled
         if (isEnabled()) {

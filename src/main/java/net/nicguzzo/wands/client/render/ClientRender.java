@@ -2,18 +2,18 @@ package net.nicguzzo.wands.client.render;
 
 //? if>=26.1 {
     
-    import net.minecraft.client.renderer.block.BlockAndTintGetter;
+    /*import net.minecraft.client.renderer.block.BlockAndTintGetter;
     import com.mojang.blaze3d.textures.GpuTextureView;
     import net.minecraft.client.renderer.rendertype.RenderTypes;
-//?}
+*///?}
 
 //? if>=1.21.11 <26.1{
-    /*import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+    import net.minecraft.client.renderer.block.BlockRenderDispatcher;
     import net.minecraft.client.renderer.block.model.BakedQuad;
     import net.minecraft.client.renderer.block.model.BlockModelPart;
     import net.minecraft.client.renderer.block.model.BlockStateModel;
     import net.minecraft.client.renderer.rendertype.RenderTypes;
-*///?}
+//?}
 //?if >1.21 <1.21.11{
 /*import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -112,9 +112,9 @@ public class ClientRender {
     private static final RcId GRID_TEXTURE = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "textures/blocks/grid.png");
     //private static final Identifier LINE_TEXTURE = Identifier.fromNamespaceAndPath(WandsMod.MOD_ID,"textures/blocks/line.png");
     //?if > 1.21.11 {
-    private static GpuTextureView water_texture=null;
+    /*private static GpuTextureView water_texture=null;
     private static GpuTextureView lava_texture=null;
-    //?}
+    *///?}
     //private static GpuTexture grid_texture=null;
     static public RandomSource random = RandomSource.create();
     static Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null};
@@ -169,7 +169,7 @@ public class ClientRender {
         }
         if (update_colors) {
             update_colors = false;
-            WandsConfig.get_instance().parse_colors();
+            WandsMod.config.parse_colors();
             ClientRender.update_colors();
         }
         drawlines = WandsMod.config.lines;
@@ -659,7 +659,7 @@ public class ClientRender {
         if (wand.has_water_bucket) {
             return BiomeColors.getAverageWaterColor(
             //? if>=26.1
-            (BlockAndTintGetter)
+            //(BlockAndTintGetter)
             wand.level,
             wand.pos) | alpha;
         } else {
@@ -697,12 +697,12 @@ public class ClientRender {
         }
     }
 //? if>=26.1 {
-    static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z) {
+    /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z) {
     }
-//?}
+*///?}
 
 //? if>=1.21.11 <26.1{
-    /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
+    static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
         BlockStateModel bakedModel;
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
         try {
@@ -768,7 +768,7 @@ public class ClientRender {
             //WandsMod.log("couldn't get model, blacklisting block...", true);
         }
     }
-*///?}
+//?}
 //?if >1.21 <1.21.11{
     /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
             BakedModel bakedModel;

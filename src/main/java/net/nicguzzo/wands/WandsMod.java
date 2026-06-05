@@ -40,27 +40,47 @@ public class WandsMod {
     public static boolean has_flan = false;
     public static boolean has_goml = false;
 
-    static RcId stone_wand = RcId.fromNamespaceAndPath(MOD_ID,"stone_wand");
-    static RcId iron_wand = RcId.fromNamespaceAndPath(MOD_ID,"iron_wand");
-    static RcId copper_wand = RcId.fromNamespaceAndPath(MOD_ID,"copper_wand");
-    static RcId diamond_wand = RcId.fromNamespaceAndPath(MOD_ID,"diamond_wand");
-    static RcId netherite_wand = RcId.fromNamespaceAndPath(MOD_ID,"netherite_wand");
-    static RcId creative_wand = RcId.fromNamespaceAndPath(MOD_ID,"creative_wand");
-    static RcId palette = RcId.fromNamespaceAndPath(MOD_ID,"palette");
-    static RcId magic_bag_1 = RcId.fromNamespaceAndPath(MOD_ID,"magic_bag_1");
-    static RcId magic_bag_2 = RcId.fromNamespaceAndPath(MOD_ID,"magic_bag_2");
-    static RcId magic_bag_3 = RcId.fromNamespaceAndPath(MOD_ID,"magic_bag_3");
+    static public String wooden_wand_str = "wooden_wand";
+    static public String stone_wand_str = "stone_wand";
+    static public String iron_wand_str = "iron_wand";
+    static public String copper_wand_str = "copper_wand";
+    static public String gold_wand_str = "gold_wand";
+    static public String diamond_wand_str = "diamond_wand";
+    static public String netherite_wand_str = "netherite_wand";
+    static public String creative_wand_str = "creative_wand";
+    static public String palette_str = "palette";
+    static public String magic_bag_1_str = "magic_bag_1";
+    static public String magic_bag_2_str = "magic_bag_2";
+    static public String magic_bag_3_str = "magic_bag_3";
 
-    static ResourceKey<Item> stone_wand_key = ResourceKey.create(Registries.ITEM, stone_wand.id());
-    static ResourceKey<Item> copper_wand_key = ResourceKey.create(Registries.ITEM, copper_wand.id());
-    static ResourceKey<Item> iron_wand_key = ResourceKey.create(Registries.ITEM, iron_wand.id());
-    static ResourceKey<Item> diamond_wand_key = ResourceKey.create(Registries.ITEM, diamond_wand.id());
-    static ResourceKey<Item> netherite_wand_key = ResourceKey.create(Registries.ITEM, netherite_wand.id());
-    static ResourceKey<Item> creative_wand_key = ResourceKey.create(Registries.ITEM, creative_wand.id());
-    static ResourceKey<Item> palette_key = ResourceKey.create(Registries.ITEM, palette.id());
-    static ResourceKey<Item> magic_bag_1_key = ResourceKey.create(Registries.ITEM, magic_bag_1.id());
-    static ResourceKey<Item> magic_bag_2_key = ResourceKey.create(Registries.ITEM, magic_bag_2.id());
-    static ResourceKey<Item> magic_bag_3_key = ResourceKey.create(Registries.ITEM, magic_bag_3.id());
+    //?if fabric || >= 1.21.11{
+    static public RcId wooden_wand_id = RcId.fromNamespaceAndPath(MOD_ID,wooden_wand_str);
+    static public RcId stone_wand_id = RcId.fromNamespaceAndPath(MOD_ID,stone_wand_str);
+    static public RcId iron_wand_id = RcId.fromNamespaceAndPath(MOD_ID,iron_wand_str);
+    static public RcId copper_wand_id = RcId.fromNamespaceAndPath(MOD_ID,copper_wand_str);
+    static public RcId gold_wand_id = RcId.fromNamespaceAndPath(MOD_ID,gold_wand_str);
+    static public RcId diamond_wand_id = RcId.fromNamespaceAndPath(MOD_ID,diamond_wand_str);
+    static public RcId netherite_wand_id = RcId.fromNamespaceAndPath(MOD_ID,netherite_wand_str);
+    static public RcId creative_wand_id = RcId.fromNamespaceAndPath(MOD_ID,creative_wand_str);
+    static public RcId palette_id = RcId.fromNamespaceAndPath(MOD_ID,palette_str);
+    static public RcId magic_bag_1_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_1_str);
+    static public RcId magic_bag_2_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_2_str);
+    static public RcId magic_bag_3_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_3_str);
+    //?}
+    //?if >= 1.21.11{
+    static public ResourceKey<Item> wooden_wand_key = ResourceKey.create(Registries.ITEM, wooden_wand_id.id());
+    static public ResourceKey<Item> stone_wand_key = ResourceKey.create(Registries.ITEM, stone_wand_id.id());
+    static public ResourceKey<Item> copper_wand_key = ResourceKey.create(Registries.ITEM, copper_wand_id.id());
+    static public ResourceKey<Item> iron_wand_key = ResourceKey.create(Registries.ITEM, iron_wand_id.id());
+    static public ResourceKey<Item> gold_wand_key = ResourceKey.create(Registries.ITEM, gold_wand_id.id());
+    static public ResourceKey<Item> diamond_wand_key = ResourceKey.create(Registries.ITEM, diamond_wand_id.id());
+    static public ResourceKey<Item> netherite_wand_key = ResourceKey.create(Registries.ITEM, netherite_wand_id.id());
+    static public ResourceKey<Item> creative_wand_key = ResourceKey.create(Registries.ITEM, creative_wand_id.id());
+    static public ResourceKey<Item> palette_key = ResourceKey.create(Registries.ITEM, palette_id.id());
+    static public ResourceKey<Item> magic_bag_1_key = ResourceKey.create(Registries.ITEM, magic_bag_1_id.id());
+    static public ResourceKey<Item> magic_bag_2_key = ResourceKey.create(Registries.ITEM, magic_bag_2_id.id());
+    static public ResourceKey<Item> magic_bag_3_key = ResourceKey.create(Registries.ITEM, magic_bag_3_id.id());
+    //?}
 
     public enum WandKeys {
         MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, PIN, CYCLE_PALETTE

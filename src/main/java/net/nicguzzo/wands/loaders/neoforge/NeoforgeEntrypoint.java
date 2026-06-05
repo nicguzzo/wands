@@ -3,7 +3,10 @@
 /*package net.nicguzzo.wands.loaders.neoforge;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import java.nio.file.Path;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -28,20 +31,83 @@ import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
 import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.items.MagicBagItem;
+import net.nicguzzo.wands.items.PaletteItem;
+import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandToolsMenu;
 
 import java.util.function.Supplier;
 
-@Mod("wands")
+@Mod(WandsMod.MOD_ID)
 public class NeoforgeEntrypoint {
 
+    private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, WandsMod.MOD_ID);
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(WandsMod.MOD_ID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, WandsMod.MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, "wands");
     public static final Supplier<MenuType<WandToolsMenu>> WAND_TOOLS_MENU_TYPE = MENUS.register("wand_tools_menu", () -> IMenuTypeExtension.create(WandToolsMenu::new));
     public static final Supplier<MenuType<MagicBagMenu>> MAGIC_BAG_MENU_TYPE = MENUS.register("magic_bag_menu", () -> IMenuTypeExtension.create(MagicBagMenu::new));
     public static final Supplier<MenuType<PaletteMenu>> PALETTE_MENU_TYPE = MENUS.register("palette_menu", () -> IMenuTypeExtension.create(PaletteMenu::new));
-    private static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, WandsMod.MOD_ID);
+
+
+     public static final Supplier<WandItem> WOODEN_WAND_ITEM = ITEMS.register(WandsMod.wooden_wand_str,
+             WandItem::wooden_Wand);
+
+    public static final Supplier<WandItem> STONE_WAND_ITEM = ITEMS.register(WandsMod.stone_wand_str,
+            WandItem::stone_Wand);
+
+    public static final Supplier<WandItem> COPPER_WAND_ITEM = ITEMS.register(WandsMod.copper_wand_str,
+            WandItem::copper_Wand);
+
+    public static final Supplier<WandItem> GOLD_WAND_ITEM = ITEMS.register(WandsMod.gold_wand_str,
+            WandItem::gold_Wand);
+
+    public static final Supplier<WandItem> IRON_WAND_ITEM = ITEMS.register(WandsMod.iron_wand_str,
+            WandItem::iron_Wand);
+
+    public static final Supplier<WandItem> DIAMOND_WAND_ITEM = ITEMS.register(WandsMod.diamond_wand_str,
+            WandItem::diamond_Wand);
+
+    public static final Supplier<WandItem> NETHERITE_WAND_ITEM = ITEMS.register(WandsMod.netherite_wand_str,
+            WandItem::netherite_Wand);
+
+    public static final Supplier<WandItem> CREATIVE_WAND_ITEM = ITEMS.register(WandsMod.creative_wand_str,
+            WandItem::creative_Wand);
+
+    public static final Supplier<MagicBagItem> MAGIC_BAG_TIER1_ITEM = ITEMS.register(WandsMod.magic_bag_1_str,
+            MagicBagItem::create_tier_1);
+
+    public static final Supplier<MagicBagItem> MAGIC_BAG_TIER2_ITEM = ITEMS.register(WandsMod.magic_bag_2_str,
+            MagicBagItem::create_tier_2);
+
+    public static final Supplier<MagicBagItem> MAGIC_BAG_TIER3_ITEM = ITEMS.register(WandsMod.magic_bag_3_str,
+            MagicBagItem::create_tier_3);
+
+    public static final Supplier<PaletteItem> PALETTE_ITEM = ITEMS.register(WandsMod.palette_str,
+            PaletteItem::create
+    );
+
+    public static final Supplier<CreativeModeTab> WANDS_TAB = CREATIVE_MODE_TABS.register("wands_tab", () -> CreativeModeTab.builder()
+    .title(Component.translatable("itemGroup.wands.wands_tab"))
+    .icon(() -> new ItemStack(DIAMOND_WAND_ITEM.get()))
+    .displayItems((params, output) -> {
+        output.accept(WOODEN_WAND_ITEM.get());
+        output.accept(STONE_WAND_ITEM.get());
+        output.accept(COPPER_WAND_ITEM.get());
+        output.accept(GOLD_WAND_ITEM.get());
+        output.accept(IRON_WAND_ITEM.get());
+        output.accept(DIAMOND_WAND_ITEM.get());
+        output.accept(NETHERITE_WAND_ITEM.get());
+        output.accept(CREATIVE_WAND_ITEM.get());
+        output.accept(MAGIC_BAG_TIER1_ITEM.get());
+        output.accept(MAGIC_BAG_TIER2_ITEM.get());
+        output.accept(MAGIC_BAG_TIER3_ITEM.get());
+        output.accept(PALETTE_ITEM.get());
+    })
+    .build()
+    );
 
 //?if >= 1.21.11 {
     /^public static final Supplier<AttachmentType<CompoundTag>> PLAYER_DATA = ATTACHMENT_TYPES.register(
@@ -56,9 +122,12 @@ public class NeoforgeEntrypoint {
         WandsConfig.configDir=configDir.toString();
         NeoForge.EVENT_BUS.register(this);
         MENUS.register(modBus);
+        ITEMS.register(modBus);
+        CREATIVE_MODE_TABS.register(modBus);
         modBus.addListener(this::registerScreens);
         modBus.addListener(this::onClientSetup);
         modBus.addListener(this::onCommonSetup);
+        WandsMod.init();
     }
 
     @SubscribeEvent

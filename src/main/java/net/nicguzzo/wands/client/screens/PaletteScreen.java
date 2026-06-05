@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.client.screens;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 //?if >= 1.21.11{
 import net.minecraft.client.input.MouseButtonEvent;
@@ -9,7 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.client.WandsModClient;
@@ -115,12 +115,12 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
 
     @Override
     //?if >=26.1 {
-    public void extractContents(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    /*public void extractContents(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.extractContents(gui, mouseX, mouseY, delta);
-    //?}else{
-    /*public void render(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta){
+    *///?}else{
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta){
         super.render(gui, mouseX, mouseY, delta);
-    *///?}
+    //?}
         if(this.menu.palette!=null){
             PaletteMode mode = PaletteItem.getMode(this.menu.palette);
 
@@ -153,16 +153,16 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             }
         }
         //?if <26.1
-        //this.renderTooltip(gui, mouseX, mouseY);
+        this.renderTooltip(gui, mouseX, mouseY);
     }
 
     //?if >=26.1 {
-    protected void extractBackground(GuiGraphicsExtractor gui, float f, int i, int j) {
-    //?}else{
+    /*protected void extractBackground(GuiGraphics gui, float f, int i, int j) {
+    *///?}else{
     
-    /*@Override
-    protected void renderBg(GuiGraphicsExtractor gui, float f, int i, int j) {
-    *///?}
+    @Override
+    protected void renderBg(GuiGraphics gui, float f, int i, int j) {
+    //?}
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
@@ -213,18 +213,18 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             switch(button){
                 case 0:
                     if (hasShiftDown) {
-                        this.slotClicked(slot, slot.index, button, ContainerInput.QUICK_MOVE);
+                        this.slotClicked(slot, slot.index, button, ClickType.QUICK_MOVE);
                     }else{
-                        this.slotClicked(slot, slot.index, button, ContainerInput.PICKUP);
+                        this.slotClicked(slot, slot.index, button, ClickType.PICKUP);
                     }
 
                 break;
                 case 1:
-                    this.slotClicked(slot, slot.index, button, ContainerInput.PICKUP);
+                    this.slotClicked(slot, slot.index, button, ClickType.PICKUP);
 
                 break;
                 case 2:
-                    this.slotClicked(slot, slot.index, button, ContainerInput.CLONE);
+                    this.slotClicked(slot, slot.index, button, ClickType.CLONE);
 
                 break;
             }
@@ -251,7 +251,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             Minecraft client=Minecraft.getInstance();
             ItemStack itemStack = Compat.get_carried(client.player,this.menu);
             if(itemStack != ItemStack.EMPTY && slot.getItem() == ItemStack.EMPTY){
-                this.slotClicked(slot, slot.index, button, ContainerInput.QUICK_CRAFT);
+                this.slotClicked(slot, slot.index, button, ClickType.QUICK_CRAFT);
 
             }
         }

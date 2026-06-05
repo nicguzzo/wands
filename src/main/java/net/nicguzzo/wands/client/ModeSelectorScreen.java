@@ -2,7 +2,7 @@ package net.nicguzzo.wands.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -227,10 +227,10 @@ public class ModeSelectorScreen extends Screen {
 
     @Override
     //?if >=26.1{
-    public void extractBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta) {
-    //?}else{
-    /*public void render(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta) {
-    *///?}
+    /*public void extractBackground(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+    *///?}else{
+    public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+    //?}
         Font font = this.font;
         WandProps.Mode currentMode = WandProps.getMode(wand);
         int screenW = this.width;
@@ -258,7 +258,7 @@ public class ModeSelectorScreen extends Screen {
         // Title
         String title = Compat.translatable("wands.mode_selector.title").getString();
         int titleW = font.width(title);
-        gui.text(font, title, panelX + (panelW - titleW) / 2, panelY + GRID_PADDING, WandScreen.COLOR_TEXT_PRIMARY);
+        gui.drawString(font, title, panelX + (panelW - titleW) / 2, panelY + GRID_PADDING, WandScreen.COLOR_TEXT_PRIMARY);
 
         // Tiles
         for (int i = 0; i < GRID_SLOTS.length; i++) {
@@ -300,7 +300,7 @@ public class ModeSelectorScreen extends Screen {
             int labelX = tileX + (TILE_SIZE - labelW) / 2;
             int labelY = tileY + TILE_SIZE - font.lineHeight - 1;
             int labelColor = isDisabled ? 0xFF666666 : WandScreen.COLOR_WDGT_LABEL;
-            gui.text(font, label, labelX, labelY, labelColor);
+            gui.drawString(font, label, labelX, labelY, labelColor);
 
             if (isHighlighted) {
                 List<Component> tooltipLines = new ArrayList<>();
@@ -319,18 +319,18 @@ public class ModeSelectorScreen extends Screen {
         String hint = "Release [" + modeKeyName + "] to select";
         int hintW = font.width(hint);
         int hintY = gridY + gridH + (panelY + panelH - gridY - gridH - font.lineHeight) / 2;
-        gui.text(font, hint, panelX + (panelW - hintW) / 2, hintY, COLOR_HINT_TEXT);
+        gui.drawString(font, hint, panelX + (panelW - hintW) / 2, hintY, COLOR_HINT_TEXT);
 
         // Finger cursor only over enabled tiles
         GLFW.glfwSetCursor(Compat.getWindow(), highlightedSlot >= 0 ? pointingHandCursor : 0);
     }
 
     //?if >= 1.21.1 && <26.1 {
-    /*@Override
-    public void renderBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta) {
+    @Override
+    public void renderBackground(GuiGraphics gui, int mouseX, int mouseY, float delta) {
         // Don't render default background — we draw our own scrim
     }
-    *///?}
+    //?}
 
     @Override
     public void onClose() {
@@ -440,7 +440,7 @@ public class ModeSelectorScreen extends Screen {
         return "Mode disabled";
     }
 
-    private static void drawBorder(GuiGraphicsExtractor gui, int x, int y, int w, int h, int color) {
+    private static void drawBorder(GuiGraphics gui, int x, int y, int w, int h, int color) {
         gui.fill(x, y, x + w, y + 1, color);
         gui.fill(x, y + h - 1, x + w, y + h, color);
         gui.fill(x, y, x + 1, y + h, color);
