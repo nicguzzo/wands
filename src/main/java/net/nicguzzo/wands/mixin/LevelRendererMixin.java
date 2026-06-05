@@ -8,8 +8,8 @@ import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import net.minecraft.client.DeltaTracker;
 //?}
 //?if <26.1{
-/*import net.minecraft.client.renderer.LightTexture;*/
-//?}else{
+/*import net.minecraft.client.renderer.LightTexture;
+*///?}else{
 import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 //?}

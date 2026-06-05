@@ -6,5 +6,5 @@
     "defaultRequire": 1
   },
   "compatibilityLevel": "JAVA_17",
-  "mixins": ["PlayerMixinFabric"]
+  "mixins": ["PlayerMixin"]
 }

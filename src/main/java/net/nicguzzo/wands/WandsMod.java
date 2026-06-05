@@ -3,16 +3,11 @@ package net.nicguzzo.wands;
 import net.nicguzzo.wands.compat.RcId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 //? if >= 1.20.5 {
@@ -20,30 +15,23 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.core.component.DataComponents;
 //?}
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.config.WandsConfig;
-import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
-import net.nicguzzo.wands.menues.WandMenu;
+import net.nicguzzo.wands.menues.WandToolsMenu;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.compat.Compat;
-import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
-import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
-import net.nicguzzo.wands.wand.modes.RockMode;
-import net.nicguzzo.wands.WandsMod;
 
 import java.util.Objects;
 
 public class WandsMod {
     public static int platform = -1; // 0=forge; 1=fabric; 2=quilt
-    public static final WandsConfig config = null;//WandsConfig.get_instance();
+    public static WandsConfig config = null;
     public static final String MOD_ID = "wands";
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -82,12 +70,8 @@ public class WandsMod {
     public static boolean is_neoforge = false;
     public static boolean is_fabric = false;
 
-    public static MenuType<WandMenu>         WAND_MENU_TYPE;
-    public static MenuType<MagicBagMenu> MAGICBAG_MENU_TYPE;
-    public static MenuType<PaletteMenu>   PALETTE_MENU_TYPE;
-
     public static void init() {
-
+        config=WandsConfig.get_instance();
         //if (Platform.getEnvironment() == Env.SERVER) {
         //    Networking.RegisterS2C();
         //}

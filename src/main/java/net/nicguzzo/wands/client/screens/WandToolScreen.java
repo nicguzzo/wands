@@ -2,13 +2,14 @@ package net.nicguzzo.wands.client.screens;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 //?if >= 1.21.11{
 import com.mojang.blaze3d.textures.GpuTextureView;
 import net.minecraft.client.input.KeyEvent;
-//?}
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureManager;
+//?}
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -18,13 +19,13 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.compat.RcId;
-import net.nicguzzo.wands.menues.WandMenu;
+import net.nicguzzo.wands.menues.WandToolsMenu;
 import net.nicguzzo.wands.compat.Compat;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
-public class WandToolScreen extends AbstractContainerScreen<WandMenu> {
+public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
 
     //?if >= 1.21.11{
     int[] empty_tools = new int[0];
@@ -36,7 +37,7 @@ public class WandToolScreen extends AbstractContainerScreen<WandMenu> {
     private static long handCursor = 0;
     private boolean isHandCursor = false;
 
-    public WandToolScreen(WandMenu handler, Inventory inventory, Component title) {
+    public WandToolScreen(WandToolsMenu handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
     //?if >= 1.21.11{
         TextureManager textureManager = Minecraft.getInstance().getTextureManager();

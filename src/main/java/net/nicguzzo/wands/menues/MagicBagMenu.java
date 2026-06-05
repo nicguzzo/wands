@@ -11,13 +11,19 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.Container;
 
 import net.minecraft.world.level.Level;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.compat.Compat;
+//?if fabric{
+import net.nicguzzo.wands.loaders.fabric.FabricEntrypoint;
+//?}
+//?if neoforge{
+/*import static net.nicguzzo.wands.loaders.neoforge.NeoforgeEntrypoint.MAGIC_BAG_MENU_TYPE;
+*///?}
+//?if forge{
+/*import static net.nicguzzo.wands.loaders.forge.ForgeEntrypoint.MAGIC_BAG_MENU_TYPE;
+*///?}
 
 public class MagicBagMenu extends AbstractContainerMenu {
     public ItemStack bag;
@@ -25,12 +31,34 @@ public class MagicBagMenu extends AbstractContainerMenu {
     //private final BagContainer bagcontainer;
     private static final int CUSTOM_SLOT_COUNT = 1;
 
-    public MagicBagMenu(int syncId, Inventory playerInventory) {
-        this(syncId, playerInventory, new SimpleContainer(CUSTOM_SLOT_COUNT));
+//?if neoforge{
+    /*public MagicBagMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+        super(MAGIC_BAG_MENU_TYPE.get(), containerId);
+        this.bag=Compat.readItemStackFromBuf(extraData, playerInventory);
+*///?}else{
+    //?if forge{
+    /*public MagicBagMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
+        this(containerId, playerInventory, buf.readItem());
     }
-
-    public MagicBagMenu(int syncId, Inventory playerInventory, Container container) {
-        super(WandsMod.MAGICBAG_MENU_TYPE, syncId);
+    public MagicBagMenu(int containerId, Inventory playerInventory, ItemStack _bag) {
+        super(MAGIC_BAG_MENU_TYPE.get(), containerId);
+        this.bag=_bag;
+    *///?}else{
+        //?if> 1.21{
+        public MagicBagMenu(int containerId,Inventory playerInventory, MagicBagMenuData extraData) {
+            super(FabricEntrypoint.MAGIC_BAG_MENU_TYPE,containerId);
+            this.bag= extraData.item();
+        
+        //?}else{
+            /*public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
+                this(syncId, playerInventory, buf.readItem());
+            }
+            public MagicBagMenu(int syncId, Inventory playerInventory, ItemStack _bag) {
+                super(FabricEntrypoint.MAGIC_BAG_MENU_TYPE, syncId);
+                this.bag=_bag;
+        *///?}
+    //?}
+//?}
         this.playerInventory=playerInventory;
         int o;
         int n;

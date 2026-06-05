@@ -5,19 +5,18 @@ import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.ContainerInput;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.Container;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.items.WandItem;
-import net.nicguzzo.wands.WandsMod;
+
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
@@ -27,19 +26,54 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
+//?if neoforge{
+/*import static net.nicguzzo.wands.loaders.neoforge.NeoforgeEntrypoint.WAND_TOOLS_MENU_TYPE;
+*///?}
+//?if forge{
+/*import static net.nicguzzo.wands.loaders.forge.ForgeEntrypoint.WAND_TOOLS_MENU_TYPE;
+*///?}
+//?if fabric{
+import net.nicguzzo.wands.loaders.fabric.FabricEntrypoint;
+//?}
+//?if fabric && > 1.21{
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+//?}
+// In MyMenuExtra, an AbstractContainerMenu subclass
 
-public class WandMenu extends AbstractContainerMenu {
+public class WandToolsMenu extends AbstractContainerMenu {
     private static final int CUSTOM_SLOT_COUNT = 1;
     public ItemStack wand;
     public final Inventory playerInventory;
 
-    public WandMenu(int syncId, Inventory playerInventory) {
-        this(syncId, playerInventory, new SimpleContainer(CUSTOM_SLOT_COUNT));
+//?if neoforge{
+        /*public WandToolsMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+        super(WAND_TOOLS_MENU_TYPE.get(), containerId);
+        this.wand= Compat.readItemStackFromBuf(extraData, playerInventory);
+ *///?}else{
+    //?if forge{
+    /*public WandToolsMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
+        this(containerId, playerInventory, buf.readItem());
     }
+    public WandToolsMenu(int containerId, Inventory playerInventory, ItemStack _wand) {
+        super(WAND_TOOLS_MENU_TYPE.get(), containerId);
+        this.wand=_wand;
 
-    public WandMenu(int syncId, Inventory playerInventory, Container container) {
-        super(WandsMod.WAND_MENU_TYPE, syncId);
-
+    *///?}else{
+        //?if> 1.21{
+        public WandToolsMenu(int containerId,Inventory playerInventory, WandToolsMenuData extraData) {
+            super(FabricEntrypoint.WAND_TOOLS_MENU_TYPE, containerId);
+            this.wand = extraData.item();
+        //?}else{
+        /*public WandToolsMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
+            this(syncId, playerInventory, buf.readItem());
+        }
+        public WandToolsMenu(int syncId, Inventory playerInventory, ItemStack _wand) {
+            super(FabricEntrypoint.WAND_TOOLS_MENU_TYPE, syncId);
+            this.wand=_wand;
+        *///?}
+    //?}
+//?}
         this.playerInventory=playerInventory;
 
         int o;

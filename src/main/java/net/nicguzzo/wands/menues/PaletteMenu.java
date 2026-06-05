@@ -11,14 +11,29 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.compat.Compat;
+//?if fabric{
+import net.nicguzzo.wands.loaders.fabric.FabricEntrypoint;
+//?}
+//?if neoforge{
+/*import static net.nicguzzo.wands.loaders.neoforge.NeoforgeEntrypoint.PALETTE_MENU_TYPE;
+*///?}
+//?if forge{
+/*import static net.nicguzzo.wands.loaders.forge.ForgeEntrypoint.PALETTE_MENU_TYPE;
+*///?}
+
+//?if fabric && > 1.21{
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+//?}
+
 
 public class PaletteMenu extends AbstractContainerMenu {
     private final int containerRows=6;
@@ -27,30 +42,46 @@ public class PaletteMenu extends AbstractContainerMenu {
     public final Inventory playerInventory;
     private static final int CUSTOM_SLOT_COUNT = 27;
 
-    //public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
-//        this(syncId, playerInventory, Compat.readItemStackFromBuf(packetByteBuf, playerInventory));
+//?if neoforge{
+        /*
+    public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+            super(PALETTE_MENU_TYPE.get(), containerId);
+            this.palette=Compat.readItemStackFromBuf(extraData, playerInventory);
+*///?}else{
 
-    //}
-    public PaletteMenu(int syncId, Inventory playerInventory) {
-        this(syncId, playerInventory, new SimpleContainer(CUSTOM_SLOT_COUNT));
-    }
-
-    public PaletteMenu(int syncId, Inventory playerInventory, Container container) {
-        super(WandsMod.PALETTE_MENU_TYPE, syncId);
-    /*public PaletteMenu(int syncId, Inventory playerInventory, ItemStack palette) {
-        super(WandsMod.PALETTE_CONTAINER.get(), syncId);*/
+    //?if> 1.21{
+    public PaletteMenu(int containerId,Inventory playerInventory, PaletteMenuData extraData) {
+        super(FabricEntrypoint.PALETTE_MENU_TYPE,containerId);
+        this.palette= extraData.item();
+    //?}else{
+        /*//?if forge{
+        /^public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
+            this(containerId, playerInventory, buf.readItem());
+        }
+        public PaletteMenu(int containerId, Inventory playerInventory, ItemStack _wand) {
+            super(PALETTE_MENU_TYPE.get(), containerId);
+            this.palette=_wand;
+        ^///?}else{
+            public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
+                this(syncId, playerInventory, buf.readItem());
+            }
+            public PaletteMenu(int syncId, Inventory playerInventory, ItemStack _palette) {
+            super(FabricEntrypoint.PALETTE_MENU_TYPE, syncId);
+            this.palette=_palette;
+        //?}
+    *///?}
+//?}
         this.playerInventory = playerInventory;
-        //this.palette = palette;
         this.inventory = PaletteItem.getInventory(palette,playerInventory.player.level());
-//        if (palette.getItem() instanceof PaletteItem) {
-//            int k = 18;
-//            this.addPaletteGrid(inventory, 8, k);
-//            int l = k + this.containerRows * k + 13;
-//            this.addStandardInventorySlots(playerInventory, 8, l);
-//        } else {
-//            Player player = playerInventory.player;
-//            this.removed(player);
-//        }
+        if (palette.getItem() instanceof PaletteItem) {
+            int k = 18;
+            this.addPaletteGrid(inventory, 8, k);
+            int l = k + this.containerRows * k + 13;
+            this.addStandardInventorySlots(playerInventory, 8, l);
+        } else {
+            Player player = playerInventory.player;
+            this.removed(player);
+        }
     }
 
     private void addPaletteGrid(Container container, int i, int j) {

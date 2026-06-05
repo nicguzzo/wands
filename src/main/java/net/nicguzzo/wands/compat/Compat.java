@@ -1,22 +1,25 @@
 package net.nicguzzo.wands.compat;
 
 //?if<1.21.11{
-/*import net.minecraft.resources.ResourceLocation;
-*///?}
+//?}
 
 //?if>26.1{
 import net.minecraft.world.item.ItemStackTemplate;
 //?}
 //?if >1.20.5{
+
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemContainerContents;
     //?if>1.21.1{
         //?if<26.1{
         /*import net.minecraft.client.resources.model.AtlasManager;
+
         *///?}else{
         import net.minecraft.client.resources.model.sprite.AtlasManager;
         //?}
+    import net.minecraft.client.renderer.texture.TextureAtlas;
     import net.minecraft.util.ProblemReporter;
     import net.minecraft.world.level.storage.TagValueInput;
     import net.minecraft.world.level.storage.TagValueOutput;
@@ -28,7 +31,6 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
 import org.joml.Matrix4f;
@@ -44,9 +46,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.phys.Vec3;
@@ -55,22 +55,9 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.core.registries.Registries;
-import net.nicguzzo.wands.menues.MagicBagMenu;
-import net.nicguzzo.wands.menues.PaletteMenu;
-import net.nicguzzo.wands.menues.WandMenu;
 import net.nicguzzo.wands.utils.Colorf;
-import org.jetbrains.annotations.NotNull;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 
-import org.joml.Matrix4f;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 public class Compat {

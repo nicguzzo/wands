@@ -32,9 +32,7 @@ dependencies {
     modstitch.loom {
         modstitchModImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric-api")}")
         modstitchModImplementation("com.terraformersmc:modmenu:${property("modmenu_version")}")
-        //modApi("me.shedaniel.cloth:cloth-config-fabric:${property("cloth_config_version")}") {
-        //    exclude(group= "net.fabricmc.fabric-api")
-        //}
+
     }
     val loaderSuffix = when {
         modstitch.isLoom -> "fabric"
@@ -122,7 +120,11 @@ modstitch {
 
         // Configure loom like normal in this block.
         configureLoom {
-
+            runs {
+                all {
+                    programArgs("--width", "1920", "--height", "1080")
+                }
+            }
         }
     }
 
@@ -152,7 +154,7 @@ modstitch {
         // you can configure MDG like normal from here
         //configureNeoforge {
         //    runs.all {
-        //        disableIdeRun()
+        //        programArgs("--width", "1024", "--height", "768")
         //    }
         //}
     }
@@ -162,13 +164,13 @@ modstitch {
         // true, it will automatically be generated.
         addMixinsToModManifest = true
 
-        configs.register("deepslateinstamine")
+        configs.register("wands")
 
         // Most of the time you wont ever need loader specific mixins.
         // If you do, simply make the mixin file and add it like so for the respective loader:
-        if (isLoom) configs.register("deepslateinstamine-fabric")
-        if (isModDevGradleRegular) configs.register("deepslateinstamine-neoforge")
-        if (isModDevGradleLegacy) configs.register("deepslateinstamine-forge")
+        if (isLoom) configs.register("wands-fabric")
+        if (isModDevGradleRegular) configs.register("wands-neoforge")
+        if (isModDevGradleLegacy) configs.register("wands-forge")
     }
 }
 
@@ -204,6 +206,7 @@ stonecutter {
             replace("TooltipComponentCallback", "ClientTooltipComponentCallback")
             replace("gui.drawString(", "gui.text(")
             replace("gui.renderItem(", "gui.item(")
+            replace("ExtendedScreenHandlerType<","ExtendedMenuType<")
         }
 
         //string {

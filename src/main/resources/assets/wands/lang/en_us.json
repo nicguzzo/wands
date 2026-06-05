@@ -1,4 +1,7 @@
 {
+  "modmenu.nameTranslation.wands": "Building Wands",
+  "modmenu.descriptionTranslation.wands": "Building Wands with different modes to aid construction",
+  "modmenu.summaryTranslation.wands":"Building Wands with different modes to aid construction",
   "category.wands.general": "General",
   "category.wands.preview": "Preview",
   "item.wands.copper_wand": "Copper Wand",

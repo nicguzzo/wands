@@ -7,7 +7,15 @@
   "environment": "*",
   "entrypoints": {
     "main": ["net.nicguzzo.wands.loaders.fabric.FabricEntrypoint"],
-    "client": ["net.nicguzzo.wands.loader.fabric.WandsModClientFabric"],
-    "modmenu": ["net.nicguzzo.wands.fabric.ModMenu"]
+    "client": ["net.nicguzzo.wands.loaders.fabric.WandsModClientFabric"],
+    "modmenu": ["net.nicguzzo.wands.loaders.fabric.ModMenu"]
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/AUzfg9k2"
+      },
+      "update_checker": true
+    }
   }
 }

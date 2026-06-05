@@ -9,7 +9,7 @@ public class WandsCommon {
     public static void onServerStarted(MinecraftServer server) {
         // The server is fully initialized and the worlds are loaded.
         // Run your post-initialization code here!
-        WandsMod.init();
+        WandsMod.log("onServerStarted",true);
     }
     public static CompoundTag getPlayerData(Player player){
         throw new AssertionError();
