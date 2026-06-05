@@ -65,8 +65,8 @@ gradle.beforeProject {
                 """
                 #!/bin/bash
                 
-                vcs_version=$(ggrep -oP 'vcsVersion\s*=\s*"\K[^"]+' settings.gradle.kts)
-                active_version=$(ggrep -oP 'stonecutter\s+active\s+"\K[^"]+' stonecutter.gradle.kts)
+                vcs_version=$(grep -oP 'vcsVersion\s*=\s*"\K[^"]+' settings.gradle.kts)
+                active_version=$(grep -oP 'stonecutter\s+active\s+"\K[^"]+' stonecutter.gradle.kts)
                 
                 echo "Detected vcsVersion: ${'$'}vcs_version"
                 echo "Detected active version: ${'$'}active_version"
