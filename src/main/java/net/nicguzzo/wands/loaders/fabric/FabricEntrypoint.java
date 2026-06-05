@@ -2,10 +2,12 @@
 package net.nicguzzo.wands.loaders.fabric;
 
 import com.mojang.logging.LogUtils;
+
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
-//?if >26.1{
+//?if >=26.1{
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 //?}else{
 /*import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -99,13 +101,33 @@ public class FabricEntrypoint implements ModInitializer {
         Item MAGIC_BAG_TIER3_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.magic_bag_3_id.id(), MagicBagItem.create_tier_3());
         Item PALETTE_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.palette_id.id(), PaletteItem.create());
 
+        //?if >=26.1{
+        CUSTOM_ITEM_GROUP=FabricCreativeModeTab.builder()
+        .icon(() -> new ItemStack(DIAMOND_WAND_ITEM))
+		.title(Compat.translatable("itemGroup.wands.wands_tab"))
+        .displayItems((params, output) -> {
+            output.accept(WOODEN_WAND_ITEM);
+            output.accept(STONE_WAND_ITEM);
+            output.accept(COPPER_WAND_ITEM);
+            output.accept(GOLD_WAND_ITEM);
+            output.accept(IRON_WAND_ITEM);
+            output.accept(DIAMOND_WAND_ITEM);
+            output.accept(NETHERITE_WAND_ITEM);
+            output.accept(CREATIVE_WAND_ITEM);
+            output.accept(MAGIC_BAG_TIER1_ITEM);
+            output.accept(MAGIC_BAG_TIER2_ITEM);
+            output.accept(MAGIC_BAG_TIER3_ITEM);
+            output.accept(PALETTE_ITEM);
+        })
+		.build();
+        //?}else{
+        /*CUSTOM_ITEM_GROUP=FabricItemGroup.builder()
 
-        CUSTOM_ITEM_GROUP=FabricItemGroup.builder()
 		.icon(() -> new ItemStack(DIAMOND_WAND_ITEM))
 		.title(Compat.translatable("itemGroup.wands.wands_tab"))
 		.build();
 
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CUSTOM_ITEM_GROUP_KEY, CUSTOM_ITEM_GROUP);
+
 
         ItemGroupEvents.modifyEntriesEvent(CUSTOM_ITEM_GROUP_KEY).register(itemGroup -> {
             itemGroup.accept(WOODEN_WAND_ITEM);
@@ -121,6 +143,8 @@ public class FabricEntrypoint implements ModInitializer {
             itemGroup.accept(MAGIC_BAG_TIER3_ITEM);
             itemGroup.accept(PALETTE_ITEM);
         });
+        *///?}
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CUSTOM_ITEM_GROUP_KEY, CUSTOM_ITEM_GROUP);
     }
 }
 //?}
