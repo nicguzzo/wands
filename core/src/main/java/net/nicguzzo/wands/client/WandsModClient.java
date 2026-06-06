@@ -126,6 +126,19 @@ public class WandsModClient {
             Minecraft client = Minecraft.getInstance();
             if (client.player == null) return;
 
+            ItemStack mainHand = client.player.getMainHandItem();
+            boolean holdingWand = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
+            boolean holdingPalette = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
+
+            if(!holdingWand && !holdingPalette)
+                return;
+
+            boolean holdingOffhandPalette = false;
+            ItemStack offHand = client.player.getOffhandItem();
+            if (offHand != null && !offHand.isEmpty() && offHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem) {
+                holdingOffhandPalette = true;
+            }
+
             // Tick the mode selector grid (handles hold/tap/release for MODE key)
             ModeSelectorScreen.clientTick();
 
@@ -152,14 +165,8 @@ public class WandsModClient {
                 }
             }
 
-            ItemStack mainHand = client.player.getMainHandItem();
-            boolean holdingWand = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
-            boolean holdingPalette = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
-            boolean holdingOffhandPalette = false;
-            ItemStack offHand = client.player.getOffhandItem();
-            if (offHand != null && !offHand.isEmpty() && offHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem) {
-                holdingOffhandPalette = true;
-            }
+
+
             boolean useRawInput = holdingWand || holdingPalette || holdingOffhandPalette;
 
             boolean any = false;
@@ -184,7 +191,7 @@ public class WandsModClient {
                         if (!any) any = true;
 
                         // MENU without shift: open wand settings client-side
-                        if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
+                        if (holdingWand && key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
                             client.setScreen(new WandScreen(mainHand));
                             continue;
                         }
