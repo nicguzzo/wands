@@ -29,6 +29,7 @@ import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
+import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
@@ -127,6 +128,15 @@ public class NeoforgeEntrypoint {
         modBus.addListener(this::registerScreens);
         modBus.addListener(this::onClientSetup);
         modBus.addListener(this::onCommonSetup);
+        //? if >= 1.20.5 {
+        modBus.addListener((net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) -> {
+            final net.neoforged.neoforge.network.registration.PayloadRegistrar registrar = event.registrar(WandsMod.MOD_ID);
+            net.nicguzzo.wands.networking.Networking.RegisterNeoForgeC2S(registrar);
+            if (Compat.getEnv()==Compat.Env.CLIENT) {
+                net.nicguzzo.wands.networking.Networking.RegisterNeoForgeS2C(registrar);
+            }
+        });
+        //?}
         WandsMod.init();
     }
 

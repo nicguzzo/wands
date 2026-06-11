@@ -100,6 +100,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.KbPacket(key, shift, alt));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.KbPacket(key, shift, alt));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.KbPacket(key, shift, alt));
+            ^///?}
+            *///?}
         //?}else{
         /*Minecraft client = Minecraft.getInstance();
         if (client.getConnection() != null) {
@@ -122,6 +129,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.PosPacket(side.ordinal(),p2!=null,p1,(p2!=null?p2:new BlockPos(0,0,0)),new Networking.Vec3d(hit.x, hit.y, hit.z),seed));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.PosPacket(side.ordinal(),p2!=null,p1,(p2!=null?p2:new BlockPos(0,0,0)),new Networking.Vec3d(hit.x, hit.y, hit.z),seed));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.PosPacket(side.ordinal(),p2!=null,p1,(p2!=null?p2:new BlockPos(0,0,0)),new Networking.Vec3d(hit.x, hit.y, hit.z),seed));
+            ^///?}
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(side.ordinal());
@@ -153,6 +167,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.GlobalSettingsPacket(drop_pos));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.GlobalSettingsPacket(drop_pos));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.GlobalSettingsPacket(drop_pos));
+            ^///?}
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(drop_pos);
@@ -169,6 +190,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.PalettePacket(next_mode,toggle_rotate,grad_h));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.PalettePacket(next_mode,toggle_rotate,grad_h));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.PalettePacket(next_mode,toggle_rotate,grad_h));
+            ^///?}
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(next_mode);
@@ -187,6 +215,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.WandPacket(item));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.WandPacket(item));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.WandPacket(item));
+            ^///?}
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeItem(item);
@@ -203,6 +238,13 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send( new Networking.SyncRockPacket(x,y,z));
             //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.SyncRockPacket(x,y,z));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.SyncRockPacket(x,y,z));
+            ^///?}
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(x);

@@ -314,6 +314,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player,new Networking.StatePacket(mode,slot,xp,levels,prog));
             //?}
+            //?if neoforge {
+            /*net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,new Networking.StatePacket(mode,slot,xp,levels,prog));
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(mode);
@@ -335,6 +338,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player,new Networking.ConfPacket(blocks_per_xp,destroy_in_survival_drop,survival_unenchanted_drops,mend_tools));
             //?}
+            //?if neoforge {
+            /*net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,new Networking.ConfPacket(blocks_per_xp,destroy_in_survival_drop,survival_unenchanted_drops,mend_tools));
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeFloat(blocks_per_xp);
@@ -355,6 +361,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player,new Networking.PlayerDataPacket(player_data));
             //?}
+            //?if neoforge {
+            /*net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,new Networking.PlayerDataPacket(player_data));
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeNbt(player_data);
@@ -372,6 +381,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player,new Networking.SndPacket(pos,destroy,is,send_sound));
             //?}
+            //?if neoforge {
+            /*net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,new Networking.SndPacket(pos,destroy,is,send_sound));
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBlockPos(pos);
@@ -392,6 +404,9 @@ public class Networking {
             //? if fabric {
                 ServerPlayNetworking.send(player,new Networking.ToastPacket(no_tool,damaged_tool,needed_tool));
             //?}
+            //?if neoforge {
+            /*net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,new Networking.ToastPacket(no_tool,damaged_tool,needed_tool));
+            *///?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(no_tool);
@@ -552,6 +567,7 @@ public class Networking {
                     });
                 });
             //?}
+
         //?}
         //? if >= 1.20.5 {
         //?}else{
@@ -617,6 +633,86 @@ public class Networking {
             ^///?}
         *///?}
     }
+    //? if neoforge {
+        /*public static void RegisterNeoForgeC2S(net.neoforged.neoforge.network.registration.PayloadRegistrar registrar) {
+            registrar.playToServer(Networking.SyncRockPacket.TYPE, Networking.SyncRockPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    Networking.ReceiveSyncRockPacket((net.minecraft.server.level.ServerPlayer)context.player(), payload.rx(), payload.ry(), payload.rz());
+                });
+            });
+            registrar.playToServer(Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    Networking.ReceivePalette(context.player(), payload.mode(),payload.rotate(),payload.grad_h);
+                });
+            });
+            registrar.playToServer(Networking.PosPacket.TYPE, Networking.PosPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    Direction side = Direction.values()[payload.dir()];
+                    Vec3 hit = new Vec3(payload.hit().x, payload.hit().y, payload.hit().z);
+                    Networking.ReceivePosPacket((net.minecraft.server.level.ServerPlayer)context.player(), side,payload.p1()!=null,payload.has_p2(),payload.p1(),payload.p2(),hit,payload.seed());
+                });
+            });
+            registrar.playToServer(Networking.KbPacket.TYPE, Networking.KbPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    WandsMod.process_keys((net.minecraft.server.level.ServerPlayer)context.player(), payload.key(),payload.shift(),payload.alt());
+                });
+            });
+            registrar.playToServer(Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    ItemStack wand_stack = context.player().getMainHandItem();
+                    var custom_data=payload.item_stack().get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+                    if(custom_data!=null) {
+                        CompoundTag tag = custom_data.copyTag();
+                        net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, wand_stack, tag);
+                    }
+                });
+            });
+        }
+
+        public static void RegisterNeoForgeS2C(net.neoforged.neoforge.network.registration.PayloadRegistrar registrar) {
+            registrar.playToClient(Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceiveConfPacket(
+                            payload.blocks_per_xp(),
+                            payload.destroy_in_survival_drop(),
+                            payload.survival_unenchanted_drops(),
+                            payload.mend_tools());
+                });
+            });
+            registrar.playToClient(Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceiveStatePacket(
+                            context.player(),
+                            payload.mode(),
+                            payload.slot(),
+                            payload.xp(),
+                            payload.levels(),
+                            payload.prog()
+                    );
+                });
+            });
+            registrar.playToClient(Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceivePlayerData(payload.tag());
+                });
+            });
+            registrar.playToClient(Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceiveSndPacket(context.player(), payload.pos(), payload.destroy(), payload.item_stack(), payload.i_sound());
+                });
+            });
+            registrar.playToClient(Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceiveToastPacket(context.player(), payload.no_tool(), payload.damaged_tool(), payload.needed_tool());
+                });
+            });
+            registrar.playToClient(Networking.GlobalSettingsPacket.TYPE, Networking.GlobalSettingsPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(() -> {
+                    net.nicguzzo.wands.networking.ClientNetworking.ReceiveGlobalSettings(context.player(), payload.drop_pos());
+                });
+            });
+        }
+        *///?}
 
     //Client
 

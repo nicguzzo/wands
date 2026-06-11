@@ -747,8 +747,20 @@ public class Compat {
         }
         //?}
 
-        //?if forge || neoforge{
+        //?if forge {
         /*if (FMLEnvironment.dist == Dist.CLIENT) {
+            return Env.CLIENT;
+        }
+        *///?}
+
+        //?if  neoforge && < 1.21.11{
+        /*if (FMLEnvironment.dist == Dist.CLIENT) {
+            return Env.CLIENT;
+        }
+        *///?}
+
+        //?if neoforge && >= 1.21.11 {
+        /*if (FMLEnvironment.getDist() == Dist.CLIENT) {
             return Env.CLIENT;
         }
         *///?}
