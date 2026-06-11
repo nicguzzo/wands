@@ -1,26 +1,22 @@
 package net.nicguzzo.wands;
 
+//?if >= 1.21.11{
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+//?}
 import net.nicguzzo.wands.compat.RcId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 //? if >= 1.20.5 {
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.core.component.DataComponents;
 //?}
 import net.minecraft.world.level.Level;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
-import net.nicguzzo.wands.menues.MagicBagMenu;
-import net.nicguzzo.wands.menues.PaletteMenu;
-import net.nicguzzo.wands.menues.WandToolsMenu;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.wand.PlayerWand;
@@ -92,28 +88,26 @@ public class WandsMod {
 
     public static void init() {
         config=WandsConfig.get_instance();
-        //if (Platform.getEnvironment() == Env.SERVER) {
-        //    Networking.RegisterS2C();
-        //}
-        //Networking.RegisterReceivers();
-        //PlayerEvent.PLAYER_JOIN.register((player) -> {
-        //    Wand wand = null;
-        //    wand = PlayerWand.get(player);
-        //    if (wand == null) {
-        //        PlayerWand.add_player(player);
-        //        wand = PlayerWand.get(player);
-        //    }
-        //    if (!Compat.player_level(player).isClientSide()) {
-        //        if (WandsMod.config != null) {
-        //            Networking.SendConfPacket(player,WandsMod.config.blocks_per_xp, WandsMod.config.destroy_in_survival_drop, WandsMod.config.survival_unenchanted_drops, WandsMod.config.mend_tools);
-        //        }
-        //        Networking.SendPlayerData(player,wand.player_data);
-        //    }
-        //});
-        //PlayerEvent.PLAYER_QUIT.register((player) -> {
-        //    PlayerWand.remove_player(player);
-        //});
 
+        Networking.RegisterC2S();
+
+    }
+    static public void onPlayerJoin(ServerPlayer player){
+        Wand wand = null;
+        wand = PlayerWand.get(player);
+        if (wand == null) {
+            PlayerWand.add_player(player);
+            wand = PlayerWand.get(player);
+        }
+        if (!Compat.player_level(player).isClientSide()) {
+            if (WandsMod.config != null) {
+                Networking.SendConfPacket(player,WandsMod.config.blocks_per_xp, WandsMod.config.destroy_in_survival_drop, WandsMod.config.survival_unenchanted_drops, WandsMod.config.mend_tools);
+            }
+            Networking.SendPlayerData(player,wand.player_data);
+        }
+    }
+    static public void onPlayerQuit(ServerPlayer player) {
+        PlayerWand.remove_player(player);
     }
 
     public static void send_state(ServerPlayer player, Wand wand) {

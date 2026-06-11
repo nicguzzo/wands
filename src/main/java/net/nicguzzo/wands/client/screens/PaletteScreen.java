@@ -12,7 +12,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.gui.Btn;
 import net.nicguzzo.wands.client.gui.CycleToggle;
 import net.nicguzzo.wands.client.gui.Spinner;
@@ -22,6 +21,7 @@ import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.PaletteItem.PaletteMode;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.compat.Compat;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.networking.Networking;
 
 import net.nicguzzo.wands.WandsMod;
@@ -42,6 +42,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     public PaletteScreen(PaletteMenu handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
         this.containerRows = 6;
+        //?if <26.1
         //this.imageHeight = 114 + this.containerRows * 18;
 		this.inventoryLabelY = this.imageHeight - 94;
     }
@@ -55,7 +56,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             if(this.menu.palette!=null){
                 PaletteItem.toggleRotate(palette_itemStack);
 
-                Networking.send_palette(false,true,-1);
+                ClientNetworking.SendPalette(false,true,-1);
             }
         });
         btn_rotate.backgroundTextureSelected = SMALL_BUTTON_PRESSED_TEX;
@@ -81,7 +82,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             mode -> {
                 PaletteItem.setMode(palette_itemStack, mode);
 
-                Networking.send_palette(true, false, -1);
+                ClientNetworking.SendPalette(true, false, -1);
             }
         );
         modeToggle.width = 54;
@@ -106,7 +107,7 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
             .withOnChange(value -> {
                 PaletteItem.setGradientHeight(palette_itemStack, value);
 
-                Networking.send_palette(false, true, value);
+                ClientNetworking.SendPalette(false, true, value);
             });
         gradient_h.showBackground = false;
         gradient_h.drawShadow = false;

@@ -207,6 +207,7 @@ stonecutter {
             replace("gui.drawString(", "gui.text(")
             replace("gui.renderItem(", "gui.item(")
             replace("ExtendedScreenHandlerType<","ExtendedMenuType<")
+            replace("playS2C()","clientboundPlay()")
         }
 
         //string {

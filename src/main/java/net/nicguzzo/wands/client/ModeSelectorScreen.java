@@ -11,6 +11,7 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.screens.WandScreen;
 import net.nicguzzo.wands.compat.RcId;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.WandProps;
 import org.lwjgl.glfw.GLFW;
@@ -355,13 +356,13 @@ public class ModeSelectorScreen extends Screen {
     private static void tapToggle(Minecraft client, ItemStack wand) {
         boolean canBlast = wand.getItem() instanceof WandItem && ((WandItem) wand.getItem()).can_blast;
         WandProps.nextMode(wand, canBlast);
-        Networking.send_wand(wand);
+        ClientNetworking.SendWand(wand);
         showModeMessage(client, wand);
     }
 
     private static void commitMode(ItemStack wand, WandProps.Mode mode) {
         WandProps.switchMode(wand, mode);
-        Networking.send_wand(wand);
+        ClientNetworking.SendWand(wand);
         showModeMessage(Minecraft.getInstance(), wand);
     }
 

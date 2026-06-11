@@ -778,11 +778,11 @@ public class Wand {
                     }
                 }
                 if (!is.isEmpty()) {
-                    Networking.sendSndPacket((ServerPlayer) player,pos, destroy, is, send_sound);
+                    Networking.SendSndPacket((ServerPlayer) player,pos, destroy, is, send_sound);
 
                 }
                 if (no_tool || damaged_tool) {
-                    Networking.sendToastPacket((ServerPlayer) player,no_tool, damaged_tool, needed_tool);
+                    Networking.SendToastPacket((ServerPlayer) player,no_tool, damaged_tool, needed_tool);
                 }
                 no_tool = false;
                 damaged_tool = false;

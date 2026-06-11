@@ -1,22 +1,17 @@
 package net.nicguzzo.wands.client;
 
-import io.netty.buffer.Unpooled;
+//?if >=1.21.1{
+import net.minecraft.client.DeltaTracker;
+//?}
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.HitResult;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.compat.RcId;
@@ -25,7 +20,7 @@ import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
-import net.nicguzzo.wands.networking.Networking;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.Wand;
@@ -39,7 +34,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -116,185 +110,187 @@ public class WandsModClient {
 
         // Build reverse lookup: WandKeys -> KeyMapping
         keys.forEach((km, v) -> reverseKeys.put((WandsMod.WandKeys) v, (KeyMapping) km));
-        /*
-        ClientTickEvent.CLIENT_POST.register(e -> {
-            Minecraft client = Minecraft.getInstance();
-            if (client.player == null) return;
 
-            // Tick the mode selector grid (handles hold/tap/release for MODE key)
-            ModeSelectorScreen.clientTick();
+    }
 
-            // Apply pop animation to hotbar/offhand slots that changed after palette cycle
-            if (paletteCyclePending) {
-                paletteCycleTicks--;
-                if (paletteCycleTicks <= 0) {
-                    paletteCyclePending = false;
-                } else {
-                    boolean synced = false;
-                    for (int i = 0; i < 9; i++) {
-                        ItemStack slot = client.player.getInventory().getItem(i);
-                        if (slot != paletteCycleSnapshots[i] && !slot.isEmpty() && slot.getItem() instanceof PaletteItem) {
-                            slot.setPopTime(5);
-                            synced = true;
-                        }
-                    }
-                    ItemStack oh = client.player.getOffhandItem();
-                    if (oh != paletteCycleSnapshots[9] && !oh.isEmpty() && oh.getItem() instanceof PaletteItem) {
-                        oh.setPopTime(5);
+    static public void render_hud(GuiGraphicsExtractor gui){
+        WandsModClient.render_wand_info(gui);
+        ModeInstructionOverlay.render(gui);
+    }
+
+    public static void client_tick(Minecraft client) {
+        if (client.player == null) return;
+
+        ItemStack mainHand = client.player.getMainHandItem();
+        boolean holdingWand =  !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
+        boolean holdingPalette = !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
+
+        if(!holdingWand && !holdingPalette)
+            return;
+        // Tick the mode selector grid (handles hold/tap/release for MODE key)
+        ModeSelectorScreen.clientTick();
+
+        // Apply pop animation to hotbar/offhand slots that changed after palette cycle
+        if (paletteCyclePending) {
+            paletteCycleTicks--;
+            if (paletteCycleTicks <= 0) {
+                paletteCyclePending = false;
+            } else {
+                boolean synced = false;
+                for (int i = 0; i < 9; i++) {
+                    ItemStack slot = client.player.getInventory().getItem(i);
+                    if (slot != paletteCycleSnapshots[i] && !slot.isEmpty() && slot.getItem() instanceof PaletteItem) {
+                        slot.setPopTime(5);
                         synced = true;
                     }
-                    if (synced) paletteCyclePending = false;
                 }
+                ItemStack oh = client.player.getOffhandItem();
+                if (oh != paletteCycleSnapshots[9] && !oh.isEmpty() && oh.getItem() instanceof PaletteItem) {
+                    oh.setPopTime(5);
+                    synced = true;
+                }
+                if (synced) paletteCyclePending = false;
             }
+        }
 
-            ItemStack mainHand = client.player.getMainHandItem();
-            boolean holdingWand = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof WandItem;
-            boolean holdingPalette = mainHand != null && !mainHand.isEmpty() && mainHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem;
-            boolean holdingOffhandPalette = false;
-            ItemStack offHand = client.player.getOffhandItem();
-            if (offHand != null && !offHand.isEmpty() && offHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem) {
-                holdingOffhandPalette = true;
-            }
-            boolean useRawInput = holdingWand || holdingPalette || holdingOffhandPalette;
 
-            boolean any = false;
+        boolean holdingOffhandPalette = false;
+        ItemStack offHand = client.player.getOffhandItem();
+        if (!offHand.isEmpty() && offHand.getItem() instanceof net.nicguzzo.wands.items.PaletteItem) {
+            holdingOffhandPalette = true;
+        }
+        boolean useRawInput = holdingWand || holdingPalette || holdingOffhandPalette;
 
-            if (useRawInput && client.screen == null) {
-                // Bypass KeyMapping conflicts: poll GLFW directly for wand keys
-                long window = Compat.getWindow();
-                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
-                    KeyMapping km = me.getKey();
-                    WandsMod.WandKeys key = me.getValue();
-                    int keyCode = Compat.getKeyCode(km);
-                    if (keyCode <= 0) continue; // Unbound
+        boolean any = false;
 
-                    boolean pressed = GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS;
-                    boolean wasPressed = prevKeyState.contains(keyCode);
+        if (useRawInput && client.screen == null) {
+            // Bypass KeyMapping conflicts: poll GLFW directly for wand keys
+            long window = Compat.getWindow();
+            for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                KeyMapping km = me.getKey();
+                WandsMod.WandKeys key = me.getValue();
+                int keyCode = Compat.getKeyCode(km);
+                if (keyCode <= 0) continue; // Unbound
 
-                    if (pressed && !wasPressed) {
-                        // Skip keys consumed by ModeSelector (MODE key, arrow keys while grid is open)
-                        if (ModeSelectorScreen.consumesKey(key)) continue;
+                boolean pressed = GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS;
+                boolean wasPressed = prevKeyState.contains(keyCode);
 
-                        // New press detected
-                        if (!any) any = true;
+                if (pressed && !wasPressed) {
+                    // Skip keys consumed by ModeSelector (MODE key, arrow keys while grid is open)
+                    if (ModeSelectorScreen.consumesKey(key)) continue;
 
-                        // MENU without shift: open wand settings client-side
-                        if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
-                            client.setScreen(new WandScreen(mainHand));
-                            continue;
-                        }
+                    // New press detected
+                    if (!any) any = true;
 
-                        // Try pin handling first — if consumed, don't send to server
-                        boolean consumed = false;
-                        if (holdingWand && ClientRender.wand != null) {
-                            consumed = handlePinKey(client, mainHand, key, Compat.hasShiftDown());
-                        }
-
-                        if (!consumed) {
-                            if (key == WandsMod.WandKeys.CLEAR) {
-                                cancel_wand();
-                            } else {
-                                Networking.send_key(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
-                            }
-                        }
-                        if (key == WandsMod.WandKeys.CYCLE_PALETTE) {
-                            paletteCyclePending = true;
-                            for (int i = 0; i < 9; i++) paletteCycleSnapshots[i] = client.player.getInventory().getItem(i);
-                            paletteCycleSnapshots[9] = client.player.getOffhandItem();
-                            paletteCycleTicks = 20;
-                        }
-                        if (key == WandsMod.WandKeys.ROTATE) {
-                            if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
-                                ClientRender.wand.get_mode().randomize();
-                            }
-                        }
+                    // MENU without shift: open wand settings client-side
+                    if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
+                        client.setScreen(new WandScreen(mainHand));
+                        continue;
                     }
-                }
 
-                // Update key state tracking
-                prevKeyState.clear();
-                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
-                    int keyCode = Compat.getKeyCode(me.getKey());
-                    if (keyCode > 0 && GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS) {
-                        prevKeyState.add(keyCode);
+                    // Try pin handling first — if consumed, don't send to server
+                    boolean consumed = false;
+                    if (holdingWand && ClientRender.wand != null) {
+                        consumed = handlePinKey(client, mainHand, key, Compat.hasShiftDown());
                     }
-                }
 
-                // Drain any pending clicks so conflicting bindings don't also fire
-                for (KeyMapping km : keys.keySet()) {
-                    while (km.consumeClick()) {}
-                }
-            } else {
-                // Normal KeyMapping path when not holding wand
-                prevKeyState.clear();
-                for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
-                    KeyMapping km = me.getKey();
-                    WandsMod.WandKeys key = me.getValue();
-                    if (km.consumeClick()) {
-                        // Skip keys consumed by ModeSelector
-                        if (ModeSelectorScreen.consumesKey(key)) continue;
-                        if (!any) any = true;
-                        // MENU without shift: open wand settings client-side
-                        if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown() && holdingWand) {
-                            client.setScreen(new WandScreen(mainHand));
-                            continue;
-                        }
+                    if (!consumed) {
                         if (key == WandsMod.WandKeys.CLEAR) {
                             cancel_wand();
                         } else {
-                            Networking.send_key(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
+                            ClientNetworking.SendKbPacket(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
                         }
-                        if (key == WandsMod.WandKeys.CYCLE_PALETTE) {
-                            paletteCyclePending = true;
-                            for (int i = 0; i < 9; i++) paletteCycleSnapshots[i] = client.player.getInventory().getItem(i);
-                            paletteCycleSnapshots[9] = client.player.getOffhandItem();
-                            paletteCycleTicks = 20;
-                        }
-                        if (key == WandsMod.WandKeys.ROTATE) {
-                            if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
-                                ClientRender.wand.get_mode().randomize();
-                            }
+                    }
+                    if (key == WandsMod.WandKeys.CYCLE_PALETTE) {
+                        paletteCyclePending = true;
+                        for (int i = 0; i < 9; i++) paletteCycleSnapshots[i] = client.player.getInventory().getItem(i);
+                        paletteCycleSnapshots[9] = client.player.getOffhandItem();
+                        paletteCycleTicks = 20;
+                    }
+                    if (key == WandsMod.WandKeys.ROTATE) {
+                        if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
+                            ClientRender.wand.get_mode().randomize();
                         }
                     }
                 }
             }
 
-            if (!any) {
-                boolean newAlt = Compat.hasAltDown();
-                boolean newShift = Compat.hasShiftDown();
-                if (alt != newAlt || shift != newShift) {
-                    // Handle alt freeze/release via pin system
-                    if (alt != newAlt && holdingWand && ClientRender.wand != null) {
-                        if (newAlt) {
-                            // Alt pressed — freeze at crosshair if no toggle pin active
-                            WandProps.Mode mode = WandProps.getMode(mainHand);
-                            // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
-                            HitResult altHit = ClientRender.wand.lastHitResult != null ? ClientRender.wand.lastHitResult : client.hitResult;
-                            ClientRender.wand.pin.freeze(altHit, mainHand, mode);
-                        } else {
-                            // Alt released — release non-persistent freeze
-                            ClientRender.wand.pin.release();
-                        }
-                    }
-                    alt = newAlt;
-                    shift = newShift;
-                    if (ClientRender.wand != null) {
-                        ClientRender.wand.is_shift_pressed = shift;
-                    }
-                    boolean frozen = ClientRender.wand != null && ClientRender.wand.pin.isActive();
-                    Networking.send_key(-1, shift, frozen);
+            // Update key state tracking
+            prevKeyState.clear();
+            for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                int keyCode = Compat.getKeyCode(me.getKey());
+                if (keyCode > 0 && GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS) {
+                    prevKeyState.add(keyCode);
                 }
             }
-        });
-        */
-        //Compat.render_info();
-        //ClientGuiEvent.RENDER_HUD.register((e, d) -> {
-        //    WandsModClient.render_wand_info(e);
-        //    ModeInstructionOverlay.render(e);
-        //});
-        Networking.RegisterReceiversS2C();
+
+            // Drain any pending clicks so conflicting bindings don't also fire
+            for (KeyMapping km : keys.keySet()) {
+                while (km.consumeClick()) {}
+            }
+        } else {
+            // Normal KeyMapping path when not holding wand
+            prevKeyState.clear();
+            for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
+                KeyMapping km = me.getKey();
+                WandsMod.WandKeys key = me.getValue();
+                if (km.consumeClick()) {
+                    // Skip keys consumed by ModeSelector
+                    if (ModeSelectorScreen.consumesKey(key)) continue;
+                    if (!any) any = true;
+                    // MENU without shift: open wand settings client-side
+                    if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown() && holdingWand) {
+                        client.setScreen(new WandScreen(mainHand));
+                        continue;
+                    }
+                    if (key == WandsMod.WandKeys.CLEAR) {
+                        cancel_wand();
+                    } else {
+                        ClientNetworking.SendKbPacket(key.ordinal(), Compat.hasShiftDown(), Compat.hasAltDown());
+                    }
+                    if (key == WandsMod.WandKeys.CYCLE_PALETTE) {
+                        paletteCyclePending = true;
+                        for (int i = 0; i < 9; i++) paletteCycleSnapshots[i] = client.player.getInventory().getItem(i);
+                        paletteCycleSnapshots[9] = client.player.getOffhandItem();
+                        paletteCycleTicks = 20;
+                    }
+                    if (key == WandsMod.WandKeys.ROTATE) {
+                        if (ClientRender.wand != null && ClientRender.wand.mode == WandProps.Mode.ROCK) {
+                            ClientRender.wand.get_mode().randomize();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!any) {
+            boolean newAlt = Compat.hasAltDown();
+            boolean newShift = Compat.hasShiftDown();
+            if (alt != newAlt || shift != newShift) {
+                // Handle alt freeze/release via pin system
+                if (alt != newAlt && holdingWand && ClientRender.wand != null) {
+                    if (newAlt) {
+                        // Alt pressed — freeze at crosshair if no toggle pin active
+                        WandProps.Mode mode = WandProps.getMode(mainHand);
+                        // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
+                        HitResult altHit = ClientRender.wand.lastHitResult != null ? ClientRender.wand.lastHitResult : client.hitResult;
+                        ClientRender.wand.pin.freeze(altHit, mainHand, mode);
+                    } else {
+                        // Alt released — release non-persistent freeze
+                        ClientRender.wand.pin.release();
+                    }
+                }
+                alt = newAlt;
+                shift = newShift;
+                if (ClientRender.wand != null) {
+                    ClientRender.wand.is_shift_pressed = shift;
+                }
+                boolean frozen = ClientRender.wand != null && ClientRender.wand.pin.isActive();
+                ClientNetworking.SendKbPacket(-1, shift, frozen);
+            }
+        }
+
     }
-
     /** Get a short display name for a keybind (e.g. "V", "H", "→") */
     public static String getKeyName(WandsMod.WandKeys key) {
         KeyMapping km = reverseKeys.get(key);
@@ -313,6 +309,7 @@ public class WandsModClient {
         }
         return name;
     }
+
 
     public static void render_wand_info(GuiGraphicsExtractor gui) {
         if (WandsMod.config.hud_mode == HudMode.OFF) return;

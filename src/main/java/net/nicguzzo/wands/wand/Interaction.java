@@ -7,9 +7,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.nicguzzo.wands.compat.Compat;
-import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.render.ClientRender;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.networking.Networking;
 
 public class Interaction {
@@ -59,7 +58,7 @@ public class Interaction {
             if(hit==null){
                 return false;
             }
-            Networking.send_placement(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), hit, ClientRender.wand.palette.seed);
+            ClientNetworking.SendPosPacket(side, ClientRender.wand.getP1(), ClientRender.wand.getP2(), hit, ClientRender.wand.palette.seed);
             WandMode wand_mode = ClientRender.wand.get_mode();
             if(wand_mode!=null){
                 wand_mode.redraw(ClientRender.wand);

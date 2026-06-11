@@ -58,9 +58,9 @@ public class PaletteMenu extends AbstractContainerMenu {
         /^public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
             this(containerId, playerInventory, buf.readItem());
         }
-        public PaletteMenu(int containerId, Inventory playerInventory, ItemStack _wand) {
+        public PaletteMenu(int containerId, Inventory playerInventory, ItemStack _palette) {
             super(PALETTE_MENU_TYPE.get(), containerId);
-            this.palette=_wand;
+            this.palette=_palette;
         ^///?}else{
             public PaletteMenu(int syncId, Inventory playerInventory, FriendlyByteBuf buf) {
                 this(syncId, playerInventory, buf.readItem());

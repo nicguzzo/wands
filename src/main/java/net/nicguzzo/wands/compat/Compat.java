@@ -30,9 +30,11 @@ import net.minecraft.world.item.component.ItemContainerContents;
 
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
+
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
+import net.nicguzzo.wands.menues.*;
 import org.joml.Matrix4f;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -59,6 +61,25 @@ import net.nicguzzo.wands.utils.Colorf;
 
 import java.util.*;
 
+//?if forge {
+/*
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.api.distmarker.Dist;
+*///?}
+//?if neoforge {
+/*
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.api.distmarker.Dist;
+*///?}
+
+//?if fabric {
+    //?if <26.1{
+    /*import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+    *///?}
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.api.EnvType;
+//?}
 
 public class Compat {
 
@@ -151,6 +172,91 @@ public class Compat {
 
     static public void open_menu(ServerPlayer player, ItemStack item, int m){
 
+         //?if forge{
+            /*SimpleMenuProvider provider = new SimpleMenuProvider(
+                (containerId, playerInventory, serverPlayerInstance) -> {
+                    switch(m){
+                        case 0:
+                            return new WandToolsMenu(containerId, playerInventory, item);
+                        case 1:
+                            return new PaletteMenu(containerId, playerInventory, item);
+                        case 2:
+                            return new MagicBagMenu(containerId, playerInventory, item);
+                    }
+                    return null;
+                },
+                Component.literal("Palette Menu")
+            );
+            NetworkHooks.openScreen(player, provider, buf -> {
+                buf.writeItemStack(item,false);
+            });
+        */
+        //?}
+
+        //?if fabric && < 1.21{
+            /*ExtendedScreenHandlerFactory factory = new ExtendedScreenHandlerFactory() {
+                @Override
+                public Component getDisplayName() {
+                    return Component.literal("Palette Menu");
+                }
+                @Override
+                public void writeScreenOpeningData(ServerPlayer player, FriendlyByteBuf buf) {
+                    buf.writeItem(item);
+                }
+
+                @Override
+                public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+
+                    switch(m){
+                        case 0: {return new WandToolsMenu(containerId, playerInventory, item);
+                        }
+                        case 1: {
+                            return new PaletteMenu(containerId, playerInventory, item);
+                        }
+                        case 2: {
+                            return new MagicBagMenu(containerId, playerInventory, item);
+                        }
+                    }
+
+                    return null;
+                }
+            };
+            player.openMenu(factory);
+        *///?}
+        //?if fabric && >= 1.21{
+            ExtendedScreenHandlerFactory<ItemStack> factory = new ExtendedScreenHandlerFactory<>() {
+
+                @Override
+                public ItemStack getScreenOpeningData(ServerPlayer player) {
+                    return item;
+                }
+
+                @Override
+                public Component getDisplayName() {
+                    return Component.literal("Palette Menu");
+                }
+                @Override
+                public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+
+                    switch(m){
+                        case 0: {
+                            WandToolsMenuData data = new WandToolsMenuData(item);
+                            return new WandToolsMenu(containerId, playerInventory, data);
+                        }
+                        case 1: {
+                            PaletteMenuData data = new PaletteMenuData(item);
+                            return new PaletteMenu(containerId, playerInventory, data);
+                        }
+                        case 2: {
+                            MagicBagMenuData data = new MagicBagMenuData(item);
+                            return new MagicBagMenu(containerId, playerInventory, data);
+                        }
+                    }
+                    return null;
+                }
+            };
+            player.openMenu(factory);
+        //?}
     }
 
     static public void set_carried(Player player, AbstractContainerMenu menu, ItemStack itemStack){
@@ -607,6 +713,25 @@ public class Compat {
             /*player.displayClientMessage(component, overlay);
         
         *///? }
+    }
+    public enum Env{
+        SERVER,
+        CLIENT
+    }
+    public static Env getEnv() {
+        //?if fabric{
+        if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
+            return Env.CLIENT;
+        }
+        //?}
+
+        //?if forge || neoforge{
+        /*if (FMLEnvironment.dist == Dist.CLIENT) {
+            return Env.CLIENT;
+        }
+        *///?}
+
+        return Env.SERVER;
     }
 
     public final class NbtType {

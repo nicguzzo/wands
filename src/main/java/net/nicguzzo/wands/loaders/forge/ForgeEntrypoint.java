@@ -124,13 +124,15 @@ public class ForgeEntrypoint {
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
         MinecraftForge.EVENT_BUS.register(this);
+        modBus.addListener(this::onClientSetup);
+        modBus.addListener(this::onCommonSetup);
         WandsMod.init();
     }
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         WandsCommon.onServerStarted(event.getServer());
     }
-    @SubscribeEvent
+
     public void onCommonSetup(FMLCommonSetupEvent event) {
         WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
         WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
@@ -141,8 +143,8 @@ public class ForgeEntrypoint {
         WandsMod.has_flan = ModList.get().isLoaded("flan");
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
-    @SubscribeEvent
-    public void clientSetup(FMLClientSetupEvent event) {
+
+    public void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             MenuScreens.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
             MenuScreens.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);

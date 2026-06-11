@@ -13,6 +13,8 @@ import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 *///?}
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.api.ModInitializer;
 import java.nio.file.Path;
@@ -28,6 +30,7 @@ import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.menues.*;
+import net.nicguzzo.wands.networking.Networking;
 import org.slf4j.Logger;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.WandsCommon;
@@ -127,8 +130,6 @@ public class FabricEntrypoint implements ModInitializer {
 		.title(Compat.translatable("itemGroup.wands.wands_tab"))
 		.build();
 
-
-
         ItemGroupEvents.modifyEntriesEvent(CUSTOM_ITEM_GROUP_KEY).register(itemGroup -> {
             itemGroup.accept(WOODEN_WAND_ITEM);
             itemGroup.accept(STONE_WAND_ITEM);
@@ -145,6 +146,13 @@ public class FabricEntrypoint implements ModInitializer {
         });
         *///?}
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CUSTOM_ITEM_GROUP_KEY, CUSTOM_ITEM_GROUP);
+
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            WandsMod.onPlayerJoin(handler.player);
+        });
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, sender) -> {
+            WandsMod.onPlayerQuit(handler.player);
+        });
     }
 }
 //?}

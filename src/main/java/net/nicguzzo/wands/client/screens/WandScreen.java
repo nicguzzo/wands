@@ -24,6 +24,7 @@ import net.nicguzzo.wands.client.gui.Spinner;
 import net.nicguzzo.wands.client.gui.Tabs;
 import net.nicguzzo.wands.client.gui.Divider;
 import net.nicguzzo.wands.client.gui.Wdgt;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
@@ -262,7 +263,7 @@ public class WandScreen extends Screen {
 
     /** Sync wand to server and force client redraw */
     private void syncWand(ItemStack wand) {
-        Networking.send_wand(wand);
+        ClientNetworking.SendWand(wand);
         forceClientRedraw();
     }
 
@@ -346,7 +347,7 @@ public class WandScreen extends Screen {
             isToolsTabSelected = false;
             ItemStack actualWand = getPlayerHeldWand();
             WandProps.switchMode(actualWand, mode);
-            Networking.send_wand(actualWand);
+            ClientNetworking.SendWand(actualWand);
         });
         btn.withTooltip(Compat.translatable(titleKey), Compat.translatable(descKey));
         return btn;
@@ -444,7 +445,7 @@ public class WandScreen extends Screen {
 
         // Tools button - opens tool picker screen via server
         pickToolsButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.pick_tools").copy().append("..."), (mouseX, mouseY) -> {
-            Networking.send_key(WandsMod.WandKeys.MENU.ordinal(), false, false);
+            ClientNetworking.SendKbPacket(WandsMod.WandKeys.MENU.ordinal(), false, false);
         });
         pickToolsButton.withTooltip(Compat.translatable("screen.wands.pick_tools"), Compat.translatable("tooltip.wands.pick_tools"));
         section.add(pickToolsButton);
@@ -647,7 +648,7 @@ public class WandScreen extends Screen {
             () -> ClientRender.wand.drop_on_player,
             value -> {
                 ClientRender.wand.drop_on_player = value;
-                Networking.SendGlobalSettings(value);
+                ClientNetworking.SendGlobalSettings(value);
             },
             "player", "block");
         dropPositionToggle.width = layoutColWidth;

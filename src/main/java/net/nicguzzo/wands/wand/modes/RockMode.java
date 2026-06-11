@@ -2,6 +2,8 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
+import net.nicguzzo.wands.compat.Compat;
+import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
@@ -16,13 +18,13 @@ public class RockMode extends WandMode {
     @Override
     public void randomize(){
         //TODO: fix randomize rocks
-        //if (Platform.getEnvironment() == Env.CLIENT) {
-        //    rx = random.nextInt(-1000000, 1000000);
-        //    ry = random.nextInt(-1000000, 1000000);
-        //    rz = random.nextInt(-1000000, 1000000);
-        //    last_pos=null;
-        //    Networking.sendSyncRockPacket(rx,ry,rz);
-        //}
+        if (Compat.getEnv() == Compat.Env.CLIENT) {
+            rx = random.nextInt(-1000000, 1000000);
+            ry = random.nextInt(-1000000, 1000000);
+            rz = random.nextInt(-1000000, 1000000);
+            last_pos=null;
+            ClientNetworking.SendSyncRockPacket(rx,ry,rz);
+        }
     }
 
     public void set_random_pos(int _rx,int _ry, int _rz){
