@@ -4,6 +4,7 @@ package net.nicguzzo.wands.client.render;
     
     import net.minecraft.client.renderer.block.BlockAndTintGetter;
     import com.mojang.blaze3d.textures.GpuTextureView;
+    import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
     import net.minecraft.client.renderer.rendertype.RenderTypes;
 //?}
 
@@ -698,6 +699,70 @@ public class ClientRender {
     }
 //? if>=26.1 {
     static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z) {
+        net.minecraft.client.renderer.block.dispatch.BlockStateModel bakedModel;
+        try {
+            bakedModel = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
+            java.util.List<net.minecraft.client.renderer.block.dispatch.BlockStateModelPart> parts_list = new java.util.ArrayList<>();
+            bakedModel.collectParts(random, parts_list);
+
+            if (!parts_list.isEmpty() ) {
+                matrixStack.pushPose();
+                if(wand.mode!=Mode.COPY ){
+                    Vec3i n=wand.getSide().getUnitVec3i();
+                    if(wand.replace) {
+                        matrixStack.translate(
+                            (0.5*(1.0-n.getX()))+n.getX(),
+                            (0.5*(1.0-n.getY()))+n.getY(),
+                            (0.5*(1.0-n.getZ()))+n.getZ()
+                        );
+                        matrixStack.scale(0.5f, 0.5f, 0.5f);
+                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
+                    }else {
+                        matrixStack.translate(x+0.5f,y+0.5f,z+0.5f);
+                        matrixStack.scale(0.9f, 0.9f, 0.9f);
+                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
+                    }
+                }
+                for (net.minecraft.client.renderer.block.dispatch.BlockStateModelPart part: parts_list) {
+                    for(Direction dir: dirs) {
+                        List<net.minecraft.client.resources.model.geometry.BakedQuad> bake_list = part.getQuads(dir);
+                        for (net.minecraft.client.resources.model.geometry.BakedQuad quad : bake_list) {
+                            int kk = -1;
+                            if (quad.materialInfo().isTinted()) {
+                                net.minecraft.client.color.block.BlockTintSource tintSource = client.getBlockColors().getTintSource(state, quad.materialInfo().tintIndex());
+                                if (tintSource != null) {
+                                    kk = tintSource.color(state);
+                                }
+                            }
+                            float ff = (float) (kk >> 16 & 0xFF) / 255.0F;
+                            float gg = (float) (kk >> 8 & 0xFF) / 255.0F;
+                            float hh = (float) (kk & 0xFF) / 255.0F;
+                            float k = 1.0F;
+                            float l = 1.0F;
+                            float m = 1.0F;
+                            if (kk != -1) {
+                                k = Mth.clamp(ff, 0.0F, 1.0F);
+                                l = Mth.clamp(gg, 0.0F, 1.0F);
+                                m = Mth.clamp(hh, 0.0F, 1.0F);
+                            }
+                            com.mojang.blaze3d.vertex.QuadInstance qinst = new com.mojang.blaze3d.vertex.QuadInstance();
+                            int a = (int)(opacity * 255.0F);
+                            int r = (int)(k * 255.0F);
+                            int g = (int)(l * 255.0F);
+                            int b = (int)(m * 255.0F);
+                            int color = (a << 24) | (r << 16) | (g << 8) | b;
+                            qinst.setColor(color);
+                            qinst.setLightCoords(15728880);
+                            qinst.setOverlayCoords(OverlayTexture.NO_OVERLAY);
+                            consumer.putBakedQuad(matrixStack.last(), quad, qinst);
+                        }
+                    }
+                }
+                matrixStack.popPose();
+            }
+        } catch (Exception e) {
+            WandsMod.log("render_shape error "+e.toString(),prnt);
+        }
     }
 //?}
 
