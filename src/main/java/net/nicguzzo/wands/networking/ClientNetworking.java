@@ -110,6 +110,9 @@ public class ClientNetworking {
             //? if fabric {
             ClientPlayNetworking.send(Networking.KB_PACKET.id(), packet);
             //?}
+            //? if forge {
+            /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.KB_PACKET.id(), packet));
+            ^///?}
         }
         *///?}
     }
@@ -140,6 +143,9 @@ public class ClientNetworking {
         //? if fabric {
         ClientPlayNetworking.send(Networking.POS_PACKET.id(), packet);
         //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.POS_PACKET.id(), packet));
+        ^///?}
         *///?}
     }
     static public void SendGlobalSettings(boolean drop_pos) {
@@ -153,6 +159,9 @@ public class ClientNetworking {
         //? if fabric {
         ClientPlayNetworking.send(Networking.GLOBAL_SETTINGS_PACKET.id(), packet);
         //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.GLOBAL_SETTINGS_PACKET.id(), packet));
+        ^///?}
         *///?}
     }
     public static void SendPalette(boolean next_mode, boolean toggle_rotate, int grad_h) {
@@ -168,6 +177,9 @@ public class ClientNetworking {
         //? if fabric {
         ClientPlayNetworking.send(Networking.PALETTE_PACKET.id(), packet);
         //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.PALETTE_PACKET.id(), packet));
+        ^///?}
         *///?}
     }
     public static void SendWand(ItemStack item) {
@@ -181,6 +193,9 @@ public class ClientNetworking {
         //? if fabric {
         ClientPlayNetworking.send(Networking.WAND_PACKET.id(), packet);
         //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.WAND_PACKET.id(), packet));
+        ^///?}
         *///?}
     }
     public static void SendSyncRockPacket(int x,int y,int z) {
@@ -196,6 +211,9 @@ public class ClientNetworking {
         //? if fabric {
         ClientPlayNetworking.send(Networking.SYNC_ROCK_PACKET.id(), packet);
         //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.SYNC_ROCK_PACKET.id(), packet));
+        ^///?}
         *///?}
     }
 }

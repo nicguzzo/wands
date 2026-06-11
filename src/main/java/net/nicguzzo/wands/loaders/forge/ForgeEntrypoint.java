@@ -134,6 +134,13 @@ public class ForgeEntrypoint {
     }
 
     public void onCommonSetup(FMLCommonSetupEvent event) {
+        //? if < 1.20.5 {
+        
+        /^event.enqueueWork(() -> {
+            net.nicguzzo.wands.networking.Networking.init();
+        });
+        
+        ^///?}
         WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
         WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
 

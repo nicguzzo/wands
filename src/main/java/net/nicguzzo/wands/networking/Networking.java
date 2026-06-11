@@ -324,6 +324,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player, STATE_PACKET.id(), packet);
             //?}
+            //?if forge {
+            /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.STATE_PACKET.id(), packet));
+            ^///?}
         *///? }
     }
 
@@ -341,6 +344,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player, CONF_PACKET.id(), packet);
             //?}
+            //?if forge {
+            /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.CONF_PACKET.id(), packet));
+            ^///?}
         *///? }
     }
 
@@ -355,6 +361,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send(player, PLAYER_DATA_PACKET.id(), packet);
             //? }
+            //?if forge {
+            /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.PLAYER_DATA_PACKET.id(), packet));
+            ^///?}
         *///? }
     }
 
@@ -372,6 +381,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send( player, Networking.SND_PACKET.id(), packet);
             //?}
+            //?if forge {
+            /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.SND_PACKET.id(), packet));
+            ^///?}
         *///? }
     }
 
@@ -388,6 +400,9 @@ public class Networking {
             //?if fabric {
             ServerPlayNetworking.send( player, Networking.TOAST_PACKET.id(), packet);
             //?}
+            //?if forge {
+            /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.TOAST_PACKET.id(), packet));
+            ^///?}
         *///? }
     }
 
@@ -604,5 +619,119 @@ public class Networking {
     }
 
     //Client
+
+//? if forge && < 1.20.5 {
+
+    /*public static class WandsPacket {
+        public net.minecraft.resources.ResourceLocation id;
+        public FriendlyByteBuf buf;
+        public WandsPacket(net.minecraft.resources.ResourceLocation id, FriendlyByteBuf buf) {
+            this.id = id;
+            this.buf = buf;
+        }
+        public WandsPacket(FriendlyByteBuf buffer) {
+            id = buffer.readResourceLocation();
+            int len = buffer.readableBytes();
+            buf = new FriendlyByteBuf(buffer.readBytes(len));
+        }
+        public void encode(FriendlyByteBuf buffer) {
+            buffer.writeResourceLocation(id);
+            buffer.writeBytes(buf);
+        }
+    }
+    public static final String PROTOCOL_VERSION = "1";
+    public static final net.minecraftforge.network.simple.SimpleChannel CHANNEL = net.minecraftforge.network.NetworkRegistry.newSimpleChannel(
+        new net.minecraft.resources.ResourceLocation(net.nicguzzo.wands.WandsMod.MOD_ID, "main"),
+        () -> PROTOCOL_VERSION,
+        PROTOCOL_VERSION::equals,
+        PROTOCOL_VERSION::equals
+    );
+    public static void init() {
+        int id = 0;
+        CHANNEL.registerMessage(id++, WandsPacket.class, WandsPacket::encode, WandsPacket::new, (packet, ctx) -> {
+            ctx.get().enqueueWork(() -> {
+                net.minecraft.resources.ResourceLocation pid = packet.id;
+                FriendlyByteBuf buf = packet.buf;
+                ServerPlayer player = ctx.get().getSender();
+                if (player != null) {
+                    if (pid.equals(Networking.SYNC_ROCK_PACKET.id())) {
+                        int x = buf.readInt();
+                        int y = buf.readInt();
+                        int z = buf.readInt();
+                        Networking.ReceiveSyncRockPacket(player, x, y, z);
+                    } else if (pid.equals(Networking.PALETTE_PACKET.id())) {
+                        boolean mode = buf.readBoolean();
+                        boolean rotate = buf.readBoolean();
+                        int grad_h = buf.readInt();
+                        Networking.ReceivePalette(player, mode, rotate, grad_h);
+                    } else if (pid.equals(Networking.POS_PACKET.id())) {
+                        int d = buf.readInt();
+                        boolean has_p1 = buf.readBoolean();
+                        boolean has_p2 = buf.readBoolean();
+                        BlockPos p1 = buf.readBlockPos();
+                        BlockPos p2 = buf.readBlockPos();
+                        double hit_x = buf.readDouble();
+                        double hit_y = buf.readDouble();
+                        double hit_z = buf.readDouble();
+                        Vec3 hit = new Vec3(hit_x, hit_y, hit_z);
+                        Direction side = Direction.values()[d];
+                        long seed = buf.readLong();
+                        Networking.ReceivePosPacket(player, side, has_p1, has_p2, p1, p2, hit, seed);
+                    } else if (pid.equals(Networking.KB_PACKET.id())) {
+                        int key = buf.readInt();
+                        boolean shift = buf.readBoolean();
+                        boolean alt = buf.readBoolean();
+                        WandsMod.process_keys(player, key, shift, alt);
+                    } else if (pid.equals(Networking.WAND_PACKET.id())) {
+                        ItemStack item = buf.readItem();
+                        ItemStack wand_stack = player.getMainHandItem();
+                        CompoundTag tag = item.getTag();
+                        if (tag != null) {
+                            wand_stack.setTag(tag);
+                        }
+                    }
+                } else {
+                    if (pid.equals(Networking.CONF_PACKET.id())) {
+                        float blocks_per_xp = buf.readFloat();
+                        boolean destroy_in_survival_drop = buf.readBoolean();
+                        boolean survival_unenchanted_drops = buf.readBoolean();
+                        boolean mend_tools = buf.readBoolean();
+                        ClientNetworking.ReceiveConfPacket(blocks_per_xp, destroy_in_survival_drop, survival_unenchanted_drops, mend_tools);
+                    } else if (pid.equals(Networking.STATE_PACKET.id())) {
+                        int mode = buf.readInt();
+                        int slot = buf.readInt();
+                        boolean xp = buf.readBoolean();
+                        int levels = buf.readInt();
+                        float prog = buf.readFloat();
+                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+                        ClientNetworking.ReceiveStatePacket(client.player, mode, slot, xp, levels, prog);
+                    } else if (pid.equals(Networking.GLOBAL_SETTINGS_PACKET.id())) {
+                        boolean drop_pos = buf.readBoolean();
+                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+                        ClientNetworking.ReceiveGlobalSettings(client.player, drop_pos);
+                    } else if (pid.equals(Networking.SND_PACKET.id())) {
+                        BlockPos pos = buf.readBlockPos();
+                        boolean destroy = buf.readBoolean();
+                        ItemStack is = buf.readItem();
+                        int send_sound = buf.readInt();
+                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+                        ClientNetworking.ReceiveSndPacket(client.player, pos, destroy, is, send_sound);
+                    } else if (pid.equals(Networking.TOAST_PACKET.id())) {
+                        boolean no_tool = buf.readBoolean();
+                        boolean damaged_tool = buf.readBoolean();
+                        String needed_tool = buf.readUtf();
+                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+                        ClientNetworking.ReceiveToastPacket(client.player, no_tool, damaged_tool, needed_tool);
+                    } else if (pid.equals(Networking.PLAYER_DATA_PACKET.id())) {
+                        CompoundTag player_data = buf.readNbt();
+                        ClientNetworking.ReceivePlayerData(player_data);
+                    }
+                }
+            });
+            ctx.get().setPacketHandled(true);
+        });
+    }
+
+*///?}
 
 }
