@@ -37,14 +37,14 @@ for arg in "$@"; do
 done
 
 TEST_ENV_DIR="./test-env"
-DEPS_CACHE_DIR="$TEST_ENV_DIR/modrinth-cache"
-CF_CACHE_DIR="$TEST_ENV_DIR/curseforge-cache"
+CACHE_DIR="$TEST_ENV_DIR/cache"
+INSTALLERS_CACHE="$CACHE_DIR/installers"
 LOCAL_CONFIG_FILE="$TEST_ENV_DIR/test-env-config.json"
 INSTANCES_FILE="instances.json"
 
 mkdir -p "$TEST_ENV_DIR"
-mkdir -p "$DEPS_CACHE_DIR"
-mkdir -p "$CF_CACHE_DIR"
+mkdir -p "$CACHE_DIR"
+mkdir -p "$INSTALLERS_CACHE"
 
 # ------------------------------------------------------------------------------
 # 1. Configuration Validation
@@ -163,8 +163,11 @@ download_modrinth_dep() {
     local VERSIONS_ENC="%5B%22${GAME_VER}%22%5D"
     local API_URL="https://api.modrinth.com/v2/project/${SLUG}/version?loaders=${LOADERS_ENC}&game_versions=${VERSIONS_ENC}"
     
+    local LOADER_CACHE="${CACHE_DIR}/modrinth/${LOADER}"
+    mkdir -p "$LOADER_CACHE"
+
     # Define a unique cache file for this specific API request
-    local API_CACHE_FILE="${DEPS_CACHE_DIR}/api_${SLUG}_${GAME_VER}_${LOADER}.json"
+    local API_CACHE_FILE="${LOADER_CACHE}/api_${SLUG}_${GAME_VER}.json"
     local RESPONSE=""
 
     # 1. Fetch JSON from API or read from local cache
@@ -189,7 +192,7 @@ download_modrinth_dep() {
             return
         fi
 
-        local CACHED_FILE="${DEPS_CACHE_DIR}/${FILENAME}"
+        local CACHED_FILE="${LOADER_CACHE}/${FILENAME}"
         
         # 3. Download the actual Jar file if missing from the global cache
         if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$CACHED_FILE" ]; then
@@ -221,7 +224,10 @@ download_curseforge_dep() {
         *)        CF_LOADER="$LOADER" ;;
     esac
 
-    local API_CACHE_FILE="${CF_CACHE_DIR}/api_${PROJECT_ID}_${GAME_VER}_${LOADER}.json"
+    local LOADER_CACHE="${CACHE_DIR}/curseforge/${LOADER}"
+    mkdir -p "$LOADER_CACHE"
+
+    local API_CACHE_FILE="${LOADER_CACHE}/api_${PROJECT_ID}_${GAME_VER}.json"
     local RESPONSE=""
 
     # 1. Fetch JSON from API or read from local cache
@@ -263,7 +269,7 @@ download_curseforge_dep() {
         return
     fi
 
-    local CACHED_FILE="${CF_CACHE_DIR}/${FILENAME}"
+    local CACHED_FILE="${LOADER_CACHE}/${FILENAME}"
 
     # 4. Download if not in global cache (follows 307 redirect to CDN)
     if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$CACHED_FILE" ]; then
@@ -405,7 +411,7 @@ EOF
             SERVER_MODS_DIR="$SERVER_DIR/mods"
             mkdir -p "$SERVER_MODS_DIR"
 
-            INSTALLER_JAR="$DEPS_CACHE_DIR/installer-$NAME.jar"
+            INSTALLER_JAR="$INSTALLERS_CACHE/installer-$NAME.jar"
 
             if [ "$FORCE_UPDATE_DEPS" = true ] || [ ! -f "$INSTALLER_JAR" ]; then
                 echo "  -> Downloading server installer..."
@@ -420,9 +426,9 @@ EOF
                     # Enter the server directory so files are generated in the correct place
                     pushd "$SERVER_DIR" >/dev/null
                     if [ "$LOADER" == "fabric" ]; then
-                        java -jar "../../modrinth-cache/installer-$NAME.jar" server -mcversion "$GAME_VER" -downloadMinecraft >/dev/null 2>&1
+                        java -jar "../../cache/installers/installer-$NAME.jar" server -mcversion "$GAME_VER" -downloadMinecraft >/dev/null 2>&1
                     else
-                        java -jar "../../modrinth-cache/installer-$NAME.jar" --installServer >/dev/null 2>&1
+                        java -jar "../../cache/installers/installer-$NAME.jar" --installServer >/dev/null 2>&1
                     fi
                     echo "eula=true" > eula.txt
                     popd >/dev/null
