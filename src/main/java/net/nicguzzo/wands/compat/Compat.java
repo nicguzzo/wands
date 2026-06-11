@@ -4,6 +4,7 @@ package net.nicguzzo.wands.compat;
 //?}
 
 //?if>26.1{
+import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.world.item.ItemStackTemplate;
 //?}
 //?if >1.20.5{
@@ -34,6 +35,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBakery;
+
 import net.nicguzzo.wands.menues.*;
 import org.joml.Matrix4f;
 import net.minecraft.client.gui.Font;
@@ -62,14 +64,14 @@ import net.nicguzzo.wands.utils.Colorf;
 import java.util.*;
 
 //?if forge {
-/*
+/*import net.minecraft.world.SimpleMenuProvider;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.api.distmarker.Dist;
 *///?}
 //?if neoforge {
-/*
-import net.neoforged.fml.loading.FMLEnvironment;
+
+/*import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.api.distmarker.Dist;
 *///?}
 
@@ -192,8 +194,8 @@ public class Compat {
             NetworkHooks.openScreen(player, provider, buf -> {
                 buf.writeItemStack(item,false);
             });
-        */
-        //?}
+        
+        *///?}
 
         //?if fabric && < 1.21{
             /*ExtendedScreenHandlerFactory factory = new ExtendedScreenHandlerFactory() {
@@ -225,10 +227,10 @@ public class Compat {
             };
             player.openMenu(factory);
         *///?}
-        //?if fabric && >= 1.21{
+        //?if fabric && >= 1.21 {
             switch(m) {
                 case 0:
-                    player.openMenu(new ExtendedScreenHandlerFactory<WandToolsMenuData>() {
+                    player.openMenu(new ExtendedMenuProvider<WandToolsMenuData>() {
                         @Override
                         public WandToolsMenuData getScreenOpeningData(ServerPlayer player) {
                             return new WandToolsMenuData(item);
@@ -244,7 +246,7 @@ public class Compat {
                     });
                     break;
                 case 1:
-                    player.openMenu(new ExtendedScreenHandlerFactory<PaletteMenuData>() {
+                    player.openMenu(new ExtendedMenuProvider<PaletteMenuData>() {
                         @Override
                         public PaletteMenuData getScreenOpeningData(ServerPlayer player) {
                             return new PaletteMenuData(item);
@@ -260,7 +262,7 @@ public class Compat {
                     });
                     break;
                 case 2:
-                    player.openMenu(new ExtendedScreenHandlerFactory<MagicBagMenuData>() {
+                    player.openMenu(new ExtendedMenuProvider<MagicBagMenuData>() {
                         @Override
                         public MagicBagMenuData getScreenOpeningData(ServerPlayer player) {
                             return new MagicBagMenuData(item);

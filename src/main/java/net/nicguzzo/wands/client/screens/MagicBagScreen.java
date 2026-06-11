@@ -51,7 +51,7 @@ public class MagicBagScreen extends AbstractContainerScreen<MagicBagMenu> {
         );
     }
     //?if >=26.1 {
-    protected void extractBackground(GuiGraphicsExtractor gui, float f, int i, int j) {
+    public void extractBackground(GuiGraphicsExtractor gui, int i, int j, float f) {
     //?}else{
 
     /*@Override

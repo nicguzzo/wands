@@ -208,6 +208,9 @@ stonecutter {
             replace("gui.renderItem(", "gui.item(")
             replace("ExtendedScreenHandlerType<","ExtendedMenuType<")
             replace("playS2C()","clientboundPlay()")
+            replace("playC2S()","serverboundPlay()")
+            replace("ExtendedScreenHandlerFactory<","ExtendedMenuProvider<")
+
         }
 
         //string {

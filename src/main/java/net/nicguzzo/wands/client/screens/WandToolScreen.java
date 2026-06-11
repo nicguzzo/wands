@@ -46,16 +46,17 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
     }
 
     //?if >=26.1 {
-    protected void extractBackground(GuiGraphicsExtractor gui, float delta, int mouseXi, int mouseY) {
+    public void extractBackground(GuiGraphicsExtractor gui, int mouseX, int mouseY, float delta) {
+        super.extractBackground(gui, mouseX, mouseY, delta);
     //?}else{
     /*@Override
     protected void renderBg(@NotNull GuiGraphicsExtractor gui, float delta, int mouseX, int mouseY) {
     *///?}
 
     //?if >= 1.21.11{
-        RenderSystem.outputColorTextureOverride = wandInventoryTexture;
+        //?if <26.1
+        //RenderSystem.outputColorTextureOverride = wandInventoryTexture;
     //?}else{
-        
         /*RenderSystem.setShaderTexture(0, INV_TEX.id());
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     *///?}

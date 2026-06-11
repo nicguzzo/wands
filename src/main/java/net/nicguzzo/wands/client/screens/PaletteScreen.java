@@ -36,12 +36,15 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
 
     private Btn btn_rotate;
     private CycleToggle<PaletteMode> modeToggle;
-    private final int containerRows;
+    private static final int containerRows=6;
     Spinner gradient_h;
 
     public PaletteScreen(PaletteMenu handler, Inventory inventory, Component title) {
-        super(handler, inventory, title);
-        this.containerRows = 6;
+        super(handler, inventory, title
+                //?if >=26.1{
+                ,176,114 + containerRows * 18
+                //?}
+        );
         //?if <26.1
         //this.imageHeight = 114 + this.containerRows * 18;
 		this.inventoryLabelY = this.imageHeight - 94;
@@ -158,7 +161,9 @@ public class PaletteScreen extends AbstractContainerScreen<PaletteMenu> {
     }
 
     //?if >=26.1 {
-    protected void extractBackground(GuiGraphicsExtractor gui, float f, int i, int j) {
+    @Override
+    public void extractBackground(GuiGraphicsExtractor gui, int i, int j, float f) {
+        super.extractBackground(gui, i, j, f);
     //?}else{
     
     /*@Override

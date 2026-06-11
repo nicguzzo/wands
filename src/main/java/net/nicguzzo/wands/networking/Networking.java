@@ -1,7 +1,7 @@
 package net.nicguzzo.wands.networking;
 
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 
@@ -9,7 +9,9 @@ import net.minecraft.nbt.CompoundTag;
 
 import net.minecraft.server.level.ServerPlayer;
 //? if >= 1.20.5 {
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+    //?if fabric {
+    import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+    //?}
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -37,10 +39,9 @@ import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.wand.modes.RockMode;
-
-//?if fabric {
-
 import org.jetbrains.annotations.NotNull;
+//?if fabric {
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 //?}
 
 public class Networking {
@@ -310,7 +311,9 @@ public class Networking {
 
     static public void SendStatePacket(ServerPlayer player, int mode, int slot, boolean xp, int levels, float prog) {
         //? if >= 1.20.5 {
-        ServerPlayNetworking.send(player,new Networking.StatePacket(mode,slot,xp,levels,prog));
+            //?if fabric {
+            ServerPlayNetworking.send(player,new Networking.StatePacket(mode,slot,xp,levels,prog));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(mode);
@@ -318,54 +321,73 @@ public class Networking {
         packet.writeBoolean(xp);
         packet.writeInt(levels);
         packet.writeFloat(prog);
-        ServerPlayNetworking.send(player, STATE_PACKET.id(), packet);
+            //?if fabric {
+            ServerPlayNetworking.send(player, STATE_PACKET.id(), packet);
+            //?}
         *///? }
     }
 
     static public void SendConfPacket(ServerPlayer player,float blocks_per_xp, boolean destroy_in_survival_drop, boolean survival_unenchanted_drops, boolean mend_tools) {
         //? if >= 1.20.5 {
-        ServerPlayNetworking.send(player,new Networking.ConfPacket(blocks_per_xp,destroy_in_survival_drop,survival_unenchanted_drops,mend_tools));
+            //?if fabric {
+            ServerPlayNetworking.send(player,new Networking.ConfPacket(blocks_per_xp,destroy_in_survival_drop,survival_unenchanted_drops,mend_tools));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeFloat(blocks_per_xp);
         packet.writeBoolean(destroy_in_survival_drop);
         packet.writeBoolean(survival_unenchanted_drops);
         packet.writeBoolean(mend_tools);
-        ServerPlayNetworking.send(player, CONF_PACKET.id(), packet);
+            //?if fabric {
+            ServerPlayNetworking.send(player, CONF_PACKET.id(), packet);
+            //?}
         *///? }
     }
 
     static public void SendPlayerData(ServerPlayer player,CompoundTag player_data) {
         //? if >= 1.20.5 {
-        ServerPlayNetworking.send(player,new Networking.PlayerDataPacket(player_data));
+            //?if fabric {
+            ServerPlayNetworking.send(player,new Networking.PlayerDataPacket(player_data));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeNbt(player_data);
-        ServerPlayNetworking.send(player, PLAYER_DATA_PACKET.id(), packet);
+            //?if fabric {
+            ServerPlayNetworking.send(player, PLAYER_DATA_PACKET.id(), packet);
+            //? }
         *///? }
     }
 
     static public void SendSndPacket(ServerPlayer player, BlockPos pos, boolean destroy, ItemStack is, int send_sound ) {
         //? if >= 1.20.5 {
-        ServerPlayNetworking.send(player,new Networking.SndPacket(pos,destroy,is,send_sound));
+            //?if fabric {
+            ServerPlayNetworking.send(player,new Networking.SndPacket(pos,destroy,is,send_sound));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBlockPos(pos);
         packet.writeBoolean(destroy);
         packet.writeItem(is);
         packet.writeInt(send_sound);
-        ServerPlayNetworking.send( player, Networking.SND_PACKET.id(), packet);
+            //?if fabric {
+            ServerPlayNetworking.send( player, Networking.SND_PACKET.id(), packet);
+            //?}
         *///? }
     }
 
     static public void SendToastPacket(ServerPlayer player, boolean no_tool, boolean damaged_tool, String needed_tool ) {
         //? if >= 1.20.5 {
-        ServerPlayNetworking.send(player,new Networking.ToastPacket(no_tool,damaged_tool,needed_tool));
+            //? if fabric {
+                ServerPlayNetworking.send(player,new Networking.ToastPacket(no_tool,damaged_tool,needed_tool));
+            //?}
+        //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(no_tool);
         packet.writeBoolean(damaged_tool);
         packet.writeUtf(needed_tool);
-        ServerPlayNetworking.send( player, Networking.TOAST_PACKET.id(), packet);
+            //?if fabric {
+            ServerPlayNetworking.send( player, Networking.TOAST_PACKET.id(), packet);
+            //?}
         *///? }
     }
 
@@ -461,119 +483,123 @@ public class Networking {
 
     public static void RegisterS2C() {
         //?if >= 1.20.5 {
+            //?if fabric {
             PayloadTypeRegistry.clientboundPlay().register(Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC);
+            //?}
         //?}else{
 
         //?}
     }
     public static void RegisterC2S(){
         //?if >= 1.20.5 {
+            //?if fabric {
+                PayloadTypeRegistry.serverboundPlay().register(Networking.SyncRockPacket.TYPE, Networking.SyncRockPacket.STREAM_CODEC);
+                PayloadTypeRegistry.serverboundPlay().register(Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC);
+                PayloadTypeRegistry.serverboundPlay().register(Networking.PosPacket.TYPE, Networking.PosPacket.STREAM_CODEC);
+                PayloadTypeRegistry.serverboundPlay().register(Networking.KbPacket.TYPE, Networking.KbPacket.STREAM_CODEC);
+                PayloadTypeRegistry.serverboundPlay().register(Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC);
 
-        PayloadTypeRegistry.playC2S().register(Networking.SyncRockPacket.TYPE, Networking.SyncRockPacket.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(Networking.PalettePacket.TYPE, Networking.PalettePacket.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(Networking.PosPacket.TYPE, Networking.PosPacket.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(Networking.KbPacket.TYPE, Networking.KbPacket.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC);
+                ServerPlayNetworking.registerGlobalReceiver(Networking.SyncRockPacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        Networking.ReceiveSyncRockPacket(context.player(), payload.rx(), payload.ry(), payload.rz());
+                    });
+                });
+                ServerPlayNetworking.registerGlobalReceiver(Networking.PalettePacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        Networking.ReceivePalette(context.player(), payload.mode(),payload.rotate(),payload.grad_h);
+                    });
+                });
+                ServerPlayNetworking.registerGlobalReceiver(Networking.PosPacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        Direction side = Direction.values()[payload.dir()];
+                        Vec3 hit = new Vec3(payload.hit().x, payload.hit().y, payload.hit().z);
 
-        ServerPlayNetworking.registerGlobalReceiver(Networking.SyncRockPacket.TYPE,(payload, context) -> {
-            context.server().execute(()->{
-                Networking.ReceiveSyncRockPacket(context.player(), payload.rx(), payload.ry(), payload.rz());
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(Networking.PalettePacket.TYPE,(payload, context) -> {
-            context.server().execute(()->{
-                Networking.ReceivePalette(context.player(), payload.mode(),payload.rotate(),payload.grad_h);
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(Networking.PosPacket.TYPE,(payload, context) -> {
-            context.server().execute(()->{
-                Direction side = Direction.values()[payload.dir()];
-                Vec3 hit = new Vec3(payload.hit().x, payload.hit().y, payload.hit().z);
-
-                Networking.ReceivePosPacket(context.player(), side,payload.p1()!=null,payload.has_p2(),payload.p1(),payload.p2(),hit,payload.seed());
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(Networking.KbPacket.TYPE,(payload, context) -> {
-            context.server().execute(()->{
-                WandsMod.process_keys(context.player(), payload.key(),payload.shift(),payload.alt());
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(Networking.WandPacket.TYPE,(payload, context) -> {
-            context.server().execute(()->{
-                ItemStack wand_stack = context.player().getMainHandItem();
-                var custom_data=payload.item_stack().get(DataComponents.CUSTOM_DATA);
-                if(custom_data!=null) {
-                    CompoundTag tag = custom_data.copyTag();
-                    CustomData.set(DataComponents.CUSTOM_DATA, wand_stack, tag);
-                }
-            });
-        });
-
+                        Networking.ReceivePosPacket(context.player(), side,payload.p1()!=null,payload.has_p2(),payload.p1(),payload.p2(),hit,payload.seed());
+                    });
+                });
+                ServerPlayNetworking.registerGlobalReceiver(Networking.KbPacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        WandsMod.process_keys(context.player(), payload.key(),payload.shift(),payload.alt());
+                    });
+                });
+                ServerPlayNetworking.registerGlobalReceiver(Networking.WandPacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        ItemStack wand_stack = context.player().getMainHandItem();
+                        var custom_data=payload.item_stack().get(DataComponents.CUSTOM_DATA);
+                        if(custom_data!=null) {
+                            CompoundTag tag = custom_data.copyTag();
+                            CustomData.set(DataComponents.CUSTOM_DATA, wand_stack, tag);
+                        }
+                    });
+                });
+            //?}
         //?}
         //? if >= 1.20.5 {
         //?}else{
-        /*ServerPlayNetworking.registerGlobalReceiver(Networking.SYNC_ROCK_PACKET.id(), (server,player, handler, buf, responseSender) -> {
-            int x=buf.readInt();
-            int y=buf.readInt();
-            int z=buf.readInt();
-            server.execute(() -> {
-                Networking.ReceiveSyncRockPacket(player,x,y,z);
+            /*//?if fabric {
+            ServerPlayNetworking.registerGlobalReceiver(Networking.SYNC_ROCK_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+                int x=buf.readInt();
+                int y=buf.readInt();
+                int z=buf.readInt();
+                server.execute(() -> {
+                    Networking.ReceiveSyncRockPacket(player,x,y,z);
+                });
             });
-        });
 
-        ServerPlayNetworking.registerGlobalReceiver(Networking.PALETTE_PACKET.id(), (server,player, handler, buf, responseSender) -> {
-            boolean mode=buf.readBoolean();
-            boolean rotate=buf.readBoolean();
-            int grad_h=buf.readInt();
-            server.execute(() -> {
-                Networking.ReceivePalette(player,mode,rotate,grad_h);
+            ServerPlayNetworking.registerGlobalReceiver(Networking.PALETTE_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+                boolean mode=buf.readBoolean();
+                boolean rotate=buf.readBoolean();
+                int grad_h=buf.readInt();
+                server.execute(() -> {
+                    Networking.ReceivePalette(player,mode,rotate,grad_h);
+                });
             });
-        });
 
-        ServerPlayNetworking.registerGlobalReceiver(Networking.POS_PACKET.id(), (server,player, handler, buf, responseSender) -> {
-            int d=buf.readInt();
-            boolean has_p1 =buf.readBoolean();
-            boolean has_p2 =buf.readBoolean();
-            BlockPos p1 = buf.readBlockPos();
-            BlockPos p2 = buf.readBlockPos();
-            double hit_x = buf.readDouble();
-            double hit_y = buf.readDouble();
-            double hit_z = buf.readDouble();
-            Vec3 hit = new Vec3(hit_x, hit_y, hit_z);
-            Direction side = Direction.values()[d];
-            long seed = buf.readLong();
+            ServerPlayNetworking.registerGlobalReceiver(Networking.POS_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+                int d=buf.readInt();
+                boolean has_p1 =buf.readBoolean();
+                boolean has_p2 =buf.readBoolean();
+                BlockPos p1 = buf.readBlockPos();
+                BlockPos p2 = buf.readBlockPos();
+                double hit_x = buf.readDouble();
+                double hit_y = buf.readDouble();
+                double hit_z = buf.readDouble();
+                Vec3 hit = new Vec3(hit_x, hit_y, hit_z);
+                Direction side = Direction.values()[d];
+                long seed = buf.readLong();
 
-            if (!has_p1) {
-                //WandsMod.LOGGER.info("needs at least 1 position");
-                return;
-            }
-            server.execute(() -> {
-                Networking.ReceivePosPacket(player,side,has_p1,has_p2,p1,p2,hit,seed);
-            });
-        });
-        ServerPlayNetworking.registerGlobalReceiver(Networking.KB_PACKET.id(), (server,player, handler, buf, responseSender) -> {
-            int key=buf.readInt();
-            boolean shift=buf.readBoolean();
-            boolean alt=buf.readBoolean();
-            server.execute(() -> {
-                WandsMod.process_keys(player, key,shift,alt);
-            });
-        });
-
-        ServerPlayNetworking.registerGlobalReceiver(Networking.WAND_PACKET.id(), (server,player, handler, buf, responseSender) -> {
-            ItemStack item=buf.readItem();
-            server.execute(() -> {
-                ItemStack wand_stack=player.getMainHandItem();
-                CompoundTag tag=item.getTag();
-                if(tag!=null) {
-                    wand_stack.setTag(tag);
+                if (!has_p1) {
+                    //WandsMod.LOGGER.info("needs at least 1 position");
+                    return;
                 }
+                server.execute(() -> {
+                    Networking.ReceivePosPacket(player,side,has_p1,has_p2,p1,p2,hit,seed);
+                });
             });
-        });
+            ServerPlayNetworking.registerGlobalReceiver(Networking.KB_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+                int key=buf.readInt();
+                boolean shift=buf.readBoolean();
+                boolean alt=buf.readBoolean();
+                server.execute(() -> {
+                    WandsMod.process_keys(player, key,shift,alt);
+                });
+            });
+
+            ServerPlayNetworking.registerGlobalReceiver(Networking.WAND_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+                ItemStack item=buf.readItem();
+                server.execute(() -> {
+                    ItemStack wand_stack=player.getMainHandItem();
+                    CompoundTag tag=item.getTag();
+                    if(tag!=null) {
+                        wand_stack.setTag(tag);
+                    }
+                });
+            });
+            //?}
         *///?}
     }
 

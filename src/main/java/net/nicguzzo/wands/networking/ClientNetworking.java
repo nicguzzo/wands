@@ -6,7 +6,9 @@ package net.nicguzzo.wands.networking;
 
 import net.minecraft.network.FriendlyByteBuf;
 *///?}
+//? if fabric {
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+//?}
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
@@ -35,13 +37,13 @@ public class ClientNetworking {
     static public void ReceiveToastPacket(Player player, boolean no_tool, boolean damaged_tool, String needed_tool ) {
         String toolsKey = "Shift+" + WandsModClient.getKeyName(WandsMod.WandKeys.MENU);
         if (no_tool) {
-            player.displayClientMessage(Compat.translatable("wands.message.no_tool", toolsKey).withStyle(ChatFormatting.RED), true);
+            Compat.displayClientMessage(player,Compat.translatable("wands.message.no_tool", toolsKey).withStyle(ChatFormatting.RED),true);
         }
         if (damaged_tool) {
-            player.displayClientMessage(Compat.translatable("wands.message.damaged_tool", toolsKey).withStyle(ChatFormatting.RED), true);
+            Compat.displayClientMessage(player,Compat.translatable("wands.message.damaged_tool", toolsKey).withStyle(ChatFormatting.RED), true);
         }
         if (!needed_tool.isEmpty()) {
-            player.displayClientMessage(Compat.translatable("wands.message.wrong_tool", needed_tool, toolsKey).withStyle(ChatFormatting.RED), true);
+            Compat.displayClientMessage(player,Compat.translatable("wands.message.wrong_tool", needed_tool, toolsKey).withStyle(ChatFormatting.RED), true);
         }
     }
     static public void ReceiveStatePacket(Player player,int mode, int slot, boolean xp, int levels, float prog){
@@ -95,7 +97,9 @@ public class ClientNetworking {
     }
     public static void SendKbPacket(int key, boolean shift, boolean alt) {
         //? if >= 1.20.5 {
-        ClientPlayNetworking.send( new Networking.KbPacket(key, shift, alt));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.KbPacket(key, shift, alt));
+            //?}
         //?}else{
         /*Minecraft client = Minecraft.getInstance();
         if (client.getConnection() != null) {
@@ -103,14 +107,18 @@ public class ClientNetworking {
             packet.writeInt(key);
             packet.writeBoolean(shift);
             packet.writeBoolean(alt);
+            //? if fabric {
             ClientPlayNetworking.send(Networking.KB_PACKET.id(), packet);
+            //?}
         }
         *///?}
     }
     public static void SendPosPacket(Direction side, BlockPos p1, BlockPos p2, Vec3 hit, long seed) {
         //? if >= 1.20.5 {
         if(p1==null) return;
-        ClientPlayNetworking.send( new Networking.PosPacket(side.ordinal(),p2!=null,p1,(p2!=null?p2:new BlockPos(0,0,0)),new Networking.Vec3d(hit.x, hit.y, hit.z),seed));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.PosPacket(side.ordinal(),p2!=null,p1,(p2!=null?p2:new BlockPos(0,0,0)),new Networking.Vec3d(hit.x, hit.y, hit.z),seed));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(side.ordinal());
@@ -129,47 +137,65 @@ public class ClientNetworking {
         packet.writeDouble(hit.y);
         packet.writeDouble(hit.z);
         packet.writeLong(seed);
+        //? if fabric {
         ClientPlayNetworking.send(Networking.POS_PACKET.id(), packet);
+        //?}
         *///?}
     }
     static public void SendGlobalSettings(boolean drop_pos) {
         //? if >= 1.20.5 {
-        ClientPlayNetworking.send( new Networking.GlobalSettingsPacket(drop_pos));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.GlobalSettingsPacket(drop_pos));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(drop_pos);
+        //? if fabric {
         ClientPlayNetworking.send(Networking.GLOBAL_SETTINGS_PACKET.id(), packet);
+        //?}
         *///?}
     }
     public static void SendPalette(boolean next_mode, boolean toggle_rotate, int grad_h) {
         //? if >= 1.20.5 {
-        ClientPlayNetworking.send( new Networking.PalettePacket(next_mode,toggle_rotate,grad_h));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.PalettePacket(next_mode,toggle_rotate,grad_h));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(next_mode);
         packet.writeBoolean(toggle_rotate);
         packet.writeInt(grad_h);
+        //? if fabric {
         ClientPlayNetworking.send(Networking.PALETTE_PACKET.id(), packet);
+        //?}
         *///?}
     }
     public static void SendWand(ItemStack item) {
         //? if >= 1.20.5 {
-        ClientPlayNetworking.send( new Networking.WandPacket(item));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.WandPacket(item));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeItem(item);
+        //? if fabric {
         ClientPlayNetworking.send(Networking.WAND_PACKET.id(), packet);
+        //?}
         *///?}
     }
     public static void SendSyncRockPacket(int x,int y,int z) {
         //? if >= 1.20.5 {
-        ClientPlayNetworking.send( new Networking.SyncRockPacket(x,y,z));
+            //? if fabric {
+            ClientPlayNetworking.send( new Networking.SyncRockPacket(x,y,z));
+            //?}
         //?}else{
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeInt(x);
         packet.writeInt(y);
         packet.writeInt(z);
+        //? if fabric {
         ClientPlayNetworking.send(Networking.SYNC_ROCK_PACKET.id(), packet);
+        //?}
         *///?}
     }
 }
