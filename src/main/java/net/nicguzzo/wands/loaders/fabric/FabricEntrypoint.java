@@ -33,7 +33,6 @@ import net.nicguzzo.wands.menues.*;
 import net.nicguzzo.wands.networking.Networking;
 import org.slf4j.Logger;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsCommon;
 import net.nicguzzo.wands.config.WandsConfig;
 
 public class FabricEntrypoint implements ModInitializer {
@@ -88,7 +87,7 @@ public class FabricEntrypoint implements ModInitializer {
         Registry.register(BuiltInRegistries.MENU, RcId.fromNamespaceAndPath("wands", "palette_menu").id(), PALETTE_MENU_TYPE);
 
 
-        ServerLifecycleEvents.SERVER_STARTED.register(WandsCommon::onServerStarted);
+        //ServerLifecycleEvents.SERVER_STARTED.register(WandsCommon::onServerStarted);
         WandsMod.init();
 
         Item WOODEN_WAND_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.wooden_wand_id.id(), WandItem.wooden_Wand());

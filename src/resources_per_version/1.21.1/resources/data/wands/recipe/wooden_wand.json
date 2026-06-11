@@ -7,7 +7,7 @@
     ],
     "key": {
         "#": {
-            "item": "minecraft:logs"
+            "tag": "minecraft:logs"
         },
         "/": {
             "item": "minecraft:stick"

@@ -325,8 +325,8 @@ public class Networking {
         packet.writeInt(levels);
         packet.writeFloat(prog);
             //?if fabric {
-            /^ServerPlayNetworking.send(player, STATE_PACKET.id(), packet);
-            ^///?}
+            ServerPlayNetworking.send(player, STATE_PACKET.id(), packet);
+            //?}
             //?if forge {
             /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.STATE_PACKET.id(), packet));
             ^///?}
@@ -348,8 +348,8 @@ public class Networking {
         packet.writeBoolean(survival_unenchanted_drops);
         packet.writeBoolean(mend_tools);
             //?if fabric {
-            /^ServerPlayNetworking.send(player, CONF_PACKET.id(), packet);
-            ^///?}
+            ServerPlayNetworking.send(player, CONF_PACKET.id(), packet);
+            //?}
             //?if forge {
             /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.CONF_PACKET.id(), packet));
             ^///?}
@@ -368,8 +368,8 @@ public class Networking {
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeNbt(player_data);
             //?if fabric {
-            /^ServerPlayNetworking.send(player, PLAYER_DATA_PACKET.id(), packet);
-            ^///? }
+            ServerPlayNetworking.send(player, PLAYER_DATA_PACKET.id(), packet);
+            //? }
             //?if forge {
             /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.PLAYER_DATA_PACKET.id(), packet));
             ^///?}
@@ -391,8 +391,8 @@ public class Networking {
         packet.writeItem(is);
         packet.writeInt(send_sound);
             //?if fabric {
-            /^ServerPlayNetworking.send( player, Networking.SND_PACKET.id(), packet);
-            ^///?}
+            ServerPlayNetworking.send( player, Networking.SND_PACKET.id(), packet);
+            //?}
             //?if forge {
             /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.SND_PACKET.id(), packet));
             ^///?}
@@ -413,8 +413,8 @@ public class Networking {
         packet.writeBoolean(damaged_tool);
         packet.writeUtf(needed_tool);
             //?if fabric {
-            /^ServerPlayNetworking.send( player, Networking.TOAST_PACKET.id(), packet);
-            ^///?}
+            ServerPlayNetworking.send( player, Networking.TOAST_PACKET.id(), packet);
+            //?}
             //?if forge {
             /^Networking.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> player), new Networking.WandsPacket(Networking.TOAST_PACKET.id(), packet));
             ^///?}
@@ -572,7 +572,7 @@ public class Networking {
         //? if >= 1.20.5 {
         //?}else{
             /*//?if fabric {
-            /^ServerPlayNetworking.registerGlobalReceiver(Networking.SYNC_ROCK_PACKET.id(), (server,player, handler, buf, responseSender) -> {
+            ServerPlayNetworking.registerGlobalReceiver(Networking.SYNC_ROCK_PACKET.id(), (server,player, handler, buf, responseSender) -> {
                 int x=buf.readInt();
                 int y=buf.readInt();
                 int z=buf.readInt();
@@ -630,7 +630,7 @@ public class Networking {
                     }
                 });
             });
-            ^///?}
+            //?}
         *///?}
     }
     //? if neoforge {

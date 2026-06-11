@@ -28,7 +28,7 @@ import net.nicguzzo.wands.loaders.fabric.FabricEntrypoint;
 public class MagicBagMenu extends AbstractContainerMenu {
     public ItemStack bag;
     public final Inventory playerInventory;
-    //private final BagContainer bagcontainer;
+    private final BagContainer bagcontainer;
     private static final int CUSTOM_SLOT_COUNT = 1;
 
 //?if neoforge{
@@ -80,8 +80,8 @@ public class MagicBagMenu extends AbstractContainerMenu {
                 this.addSlot(new Slot(playerInventory, k++, 8 + n * 18, 84 + o * 18));
             }
         }
-
-        // this.addSlot(new BagSlot(bagcontainer, 0, 80,32,bag,playerInventory.player.level()));
+        this.bagcontainer = new BagContainer(1,bag,playerInventory.player.level());
+        this.addSlot(new BagSlot(bagcontainer, 0, 80,32,bag,playerInventory.player.level()));
     }
     //public MagicBagMenu(int syncId, Inventory playerInventory, FriendlyByteBuf packetByteBuf) {
     //    this(syncId, playerInventory, Compat.readItemStackFromBuf(packetByteBuf, playerInventory));
