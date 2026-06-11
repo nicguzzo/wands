@@ -21,6 +21,11 @@ pluginManagement {
         // clothconfig
         maven("https://maven.shedaniel.me/")
         maven("https://maven.terraformersmc.com/releases")
+        maven("https://maven.jamieswhiteshirt.com/libs-release/") {
+            content {
+                includeGroup("com.jamieswhiteshirt")
+            }
+        }
     }
 }
 

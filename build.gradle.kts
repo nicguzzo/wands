@@ -1,4 +1,3 @@
-import org.gradle.jvm.tasks.Jar
 plugins {
 //    id("dev.isxander.modstitch.base") version "0.5.12"
     id("dev.isxander.modstitch.base") version "0.8.4"
@@ -26,6 +25,11 @@ sourceSets {
 repositories {
     maven("https://maven.shedaniel.me/")
     maven("https://maven.terraformersmc.com/releases/")
+    maven("https://maven.jamieswhiteshirt.com/libs-release/") {
+        content {
+            includeGroup("com.jamieswhiteshirt")
+        }
+    }
 }
 
 dependencies {
@@ -45,10 +49,30 @@ dependencies {
             exclude(group = "net.fabricmc.fabric-api")
         }
     }
-    //if (modstitch.isModDevGradleRegular || modstitch.isModDevGradleLegacy){ //(neo)forge
-    //    modApi("me.shedaniel.cloth:cloth-config-forge:${property("cloth_config_version")}"){
-    //    }
-    //}
+    val rtreeVersion=property("rtree_version")
+    val opac=property("opac")
+    val goml=property("goml")
+    val flan=property("flan")
+    val ftbChunks=property("ftb_chunks")
+    val ftbLibrary=property("ftb_library")
+    if(rtreeVersion!=""){
+        modstitchModCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${rtreeVersion}")
+    }
+    if(opac!=""){
+        modstitchModCompileOnly("$opac")
+    }
+    if(goml!=""){
+        modstitchModCompileOnly("$goml")
+    }
+    if(flan!=""){
+        modstitchModCompileOnly("$flan")
+    }
+    if(ftbChunks!=""){
+        modstitchModCompileOnly("$ftbChunks")
+    }
+    if(ftbLibrary!=""){
+        modstitchModCompileOnly("$ftbLibrary")
+    }
 }
 
 modstitch {
@@ -74,7 +98,7 @@ modstitch {
     metadata {
         modId = "wands"
         modName = "BuildingWands"
-        modVersion = "2.6.0"
+        modVersion = "3.1.0"
         modGroup = "net.nicguzzo"
         modAuthor = "Nicguzzo"
 
@@ -189,14 +213,14 @@ stonecutter {
         put("fabric"  , modstitch.isLoom)
         put("neoforge", modstitch.isModDevGradleRegular)
         put("forge"   , modstitch.isModDevGradleLegacy)
-        //put("has_opac",       !("${property("opac")}".isNullOrEmpty()) )
-        //put("has_ftb_chunks", !("${property("ftb_chunks")}".isNullOrEmpty()) )
-        //put("has_flan",       !("${property("flan")}".isNullOrEmpty()) )
-        //put("has_goml",       !("${property("goml")}".isNullOrEmpty()) )
-        put("has_opac",       false)
-        put("has_ftb_chunks", false)
-        put("has_flan",       false)
-        put("has_goml",       false)
+        put("has_opac",       !("${property("opac")}".isNullOrEmpty()) )
+        put("has_ftb_chunks", !("${property("ftb_chunks")}".isNullOrEmpty()) )
+        put("has_flan",       !("${property("flan")}".isNullOrEmpty()) )
+        put("has_goml",       !("${property("goml")}".isNullOrEmpty()) )
+        //put("has_opac",       false)
+        //put("has_ftb_chunks", false)
+        //put("has_flan",       false)
+        //put("has_goml",       false)
     }
     replacements {
         string {

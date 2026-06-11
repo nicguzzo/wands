@@ -7,7 +7,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 import net.fabricmc.fabric.api.client.rendering.v1.ClientTooltipComponentCallback;
 
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -27,10 +27,13 @@ import net.nicguzzo.wands.networking.Networking;
 /*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 *///?}
 //?if >=1.21.11{
+
+
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 //?}
 //? if >= 1.20.5 {
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 //?}else{
 
 /*import net.minecraft.core.BlockPos;

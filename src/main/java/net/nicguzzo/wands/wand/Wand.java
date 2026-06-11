@@ -58,6 +58,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.compat.RcId;
+import net.nicguzzo.wands.compat.claims.ClaimDispatch;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
@@ -67,7 +68,6 @@ import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.utils.BlockBuffer;
 
 import net.nicguzzo.wands.compat.Compat;
-import net.nicguzzo.compat.claims.ClaimDispatch;
 import net.nicguzzo.wands.utils.WandUtils;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 

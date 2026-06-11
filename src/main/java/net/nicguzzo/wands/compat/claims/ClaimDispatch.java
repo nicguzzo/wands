@@ -1,4 +1,4 @@
-package net.nicguzzo.compat.claims;
+package net.nicguzzo.wands.compat.claims;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
