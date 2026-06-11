@@ -120,6 +120,7 @@ public class NeoforgeEntrypoint {
         Path configDir = FMLPaths.CONFIGDIR.get();
         WandsConfig.configDir=configDir.toString();
         NeoForge.EVENT_BUS.register(this);
+        ATTACHMENT_TYPES.register(modBus);
         MENUS.register(modBus);
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
