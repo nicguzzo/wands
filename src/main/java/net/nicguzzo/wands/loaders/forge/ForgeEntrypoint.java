@@ -2,13 +2,17 @@
 /*package net.nicguzzo.wands.loaders.forge;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -35,7 +39,6 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsCommon;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
@@ -130,7 +133,21 @@ public class ForgeEntrypoint {
     }
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
-        WandsCommon.onServerStarted(event.getServer());
+        //WandsCommon.onServerStarted(event.getServer());
+    }
+
+    @SubscribeEvent
+    public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
+        if(event.getEntity() instanceof ServerPlayer) {
+            WandsMod.onPlayerJoin((ServerPlayer) event.getEntity());
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerQuit(PlayerEvent.PlayerLoggedOutEvent event) {
+        if(event.getEntity() instanceof ServerPlayer) {
+            WandsMod.onPlayerQuit((ServerPlayer) event.getEntity());
+        }
     }
 
     public void onCommonSetup(FMLCommonSetupEvent event) {
@@ -158,6 +175,14 @@ public class ForgeEntrypoint {
             MenuScreens.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
             WandsModClient.initialize();
         });
+    }
+     public static CompoundTag getPlayerData(Player player){
+        CompoundTag forgeData = player.getPersistentData();
+        String key = "wands_player_data";
+        if (!forgeData.contains(key)) {
+            forgeData.put(key, new CompoundTag());
+        }
+        return forgeData.getCompound(key);
     }
 }
 *///?}

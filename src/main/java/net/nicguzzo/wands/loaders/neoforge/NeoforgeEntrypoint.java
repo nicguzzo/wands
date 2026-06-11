@@ -135,6 +135,20 @@ public class NeoforgeEntrypoint {
         WandsCommon.onServerStarted(event.getServer());
     }
 
+    @SubscribeEvent
+    public void onPlayerJoin(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent event) {
+        if(event.getEntity() instanceof net.minecraft.server.level.ServerPlayer) {
+            WandsMod.onPlayerJoin((net.minecraft.server.level.ServerPlayer) event.getEntity());
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerQuit(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        if(event.getEntity() instanceof net.minecraft.server.level.ServerPlayer) {
+            WandsMod.onPlayerQuit((net.minecraft.server.level.ServerPlayer) event.getEntity());
+        }
+    }
+
     public void onCommonSetup(FMLCommonSetupEvent event) {
         WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
         WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
