@@ -90,6 +90,7 @@ public class WandsMod {
         config=WandsConfig.get_instance();
 
         Networking.RegisterC2S();
+        Networking.RegisterS2C();
 
     }
     static public void onPlayerJoin(ServerPlayer player){

@@ -87,12 +87,6 @@ public class WandsModClientFabric implements ClientModInitializer {
     public static void registerPackets() {
         //? if >= 1.20.5 {
 
-        PayloadTypeRegistry.clientboundPlay().register(Networking.ConfPacket.TYPE, Networking.ConfPacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Networking.SndPacket.TYPE, Networking.SndPacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Networking.GlobalSettingsPacket.TYPE, Networking.GlobalSettingsPacket.STREAM_CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC);
 
         ClientPlayNetworking.registerGlobalReceiver(Networking.ConfPacket.TYPE, (payload, context) -> {
             context.client().execute(() -> {

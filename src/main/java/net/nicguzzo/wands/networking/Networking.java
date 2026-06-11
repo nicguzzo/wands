@@ -519,6 +519,7 @@ public class Networking {
             PayloadTypeRegistry.clientboundPlay().register(Networking.ToastPacket.TYPE, Networking.ToastPacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.StatePacket.TYPE, Networking.StatePacket.STREAM_CODEC);
             PayloadTypeRegistry.clientboundPlay().register(Networking.PlayerDataPacket.TYPE, Networking.PlayerDataPacket.STREAM_CODEC);
+            PayloadTypeRegistry.clientboundPlay().register(Networking.GlobalSettingsPacket.TYPE, Networking.GlobalSettingsPacket.STREAM_CODEC);
             //?}
         //?}else{
 
