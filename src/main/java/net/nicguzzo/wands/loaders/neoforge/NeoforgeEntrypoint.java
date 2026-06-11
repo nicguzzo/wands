@@ -15,7 +15,9 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.RenderGuiEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -179,14 +181,14 @@ public class NeoforgeEntrypoint {
         event.enqueueWork(() -> {
             WandsModClient.initialize();
         });
-        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(new Object() {
+        NeoForge.EVENT_BUS.register(new Object() {
             @net.neoforged.bus.api.SubscribeEvent
-            public void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post e) {
+            public void onClientTick(ClientTickEvent.Post e) {
                 WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
             }
             @net.neoforged.bus.api.SubscribeEvent
-            public void onRenderHud(net.neoforged.neoforge.client.event.RenderGuiEvent.Post e) {
-                WandsModClient.render_hud(e.getGuiGraphicsExtractor());
+            public void onRenderHud(RenderGuiEvent.Post e) {
+                WandsModClient.render_hud(e.getGuiGraphics());
             }
         });
     }

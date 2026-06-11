@@ -201,7 +201,10 @@ stonecutter {
     replacements {
         string {
             direction = eval(current.version, ">=26.1")
-            replace("GuiGraphics", "GuiGraphicsExtractor")
+
+            replace(".GuiGraphics", ".GuiGraphicsExtractor")
+            replace("GuiGraphics gui", "GuiGraphicsExtractor gui")
+            replace("GuiGraphics.class", "GuiGraphicsExtractor.class")
             replace("ClickType", "ContainerInput")
             replace("TooltipComponentCallback", "ClientTooltipComponentCallback")
             replace("gui.drawString(", "gui.text(")

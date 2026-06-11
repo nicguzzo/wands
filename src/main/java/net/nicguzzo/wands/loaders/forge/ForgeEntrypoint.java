@@ -185,7 +185,7 @@ public class ForgeEntrypoint {
             @net.minecraftforge.eventbus.api.SubscribeEvent
             public void onRenderHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Post e) {
                 if (e.getOverlay() == net.minecraftforge.client.gui.overlay.VanillaGuiOverlay.HOTBAR.type()) {
-                    WandsModClient.render_hud(e.getGuiGraphicsExtractor());
+                    WandsModClient.render_hud(e.getGuiGraphics());
                 }
             }
         });

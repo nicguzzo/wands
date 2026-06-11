@@ -4,7 +4,9 @@ package net.nicguzzo.wands.compat;
 //?}
 
 //?if>26.1{
+//?if fabric {
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
+//?}
 import net.minecraft.world.item.ItemStackTemplate;
 //?}
 //?if >1.20.5{
