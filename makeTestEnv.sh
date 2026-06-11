@@ -87,51 +87,42 @@ download_launcher() {
         CMD_LAUNCHER="portablemc"
         return
     fi
-
+    echo " launcher $CMD_LAUNCHER"
     echo ">>> 'portablemc' not found. Fetching latest release from GitHub into $TEST_ENV_DIR..."
-    local OS_TYPE=$(uname -s | tr '[:upper:]' '[:lower:]')
-    local ARCH_TYPE=$(uname -m | tr '[:upper:]' '[:lower:]')
-    local OS_REGEX="linux"
-    local IS_WINDOWS=false
-    
-    case "$OS_TYPE" in
-        linux*)     OS_REGEX="linux" ;;
-        darwin*)    OS_REGEX="darwin|mac" ;;
-        msys*|cygwin*|mingw*) OS_REGEX="win"; IS_WINDOWS=true ;;
-        *) echo "ERROR: Unsupported OS: $OS_TYPE"; exit 1 ;;
+
+    case "$(uname -s)" in
+        Linux*)     OS="linux" ;;
+        Darwin*)    OS="macos" ;;
+        CYGWIN*|MINGW*|MINGW32*|MSYS*) OS="windows" ;;
+        *)          OS="linux" ;; # Default to linux if unknown
     esac
 
-    local ARCH_REGEX="x86_64|amd64"
-    case "$ARCH_TYPE" in
-        aarch64|arm64) ARCH_REGEX="aarch64|arm64" ;;
+    # Detect the System Architecture
+    case "$(uname -m)" in
+        x86_64|amd64)   ARCH="x86_64" ;;
+        i?86)           ARCH="i686" ;;
+        aarch64|arm64)  ARCH="aarch64" ;;
+        armv7l|armv6l)  ARCH="arm" ;; # portablemc uses arm-gnueabihf
+        *)              ARCH="x86_64" ;; # Default to x86_64
     esac
 
-    local API_URL="https://api.github.com/repos/mindstorm38/portablemc/releases/latest"
-    local JSON_ASSETS=$(curl -s "$API_URL" | jq -c '.assets[]')
-    
-    if [ -z "$JSON_ASSETS" ]; then
-        echo "ERROR: Failed to fetch releases from $API_URL"
-        exit 1
-    fi
+    API_URL="https://api.github.com/repos/mindstorm38/portablemc/releases/latest"
+    echo "Detected OS: $OS"
+    echo "Detected Architecture: $ARCH"
+    echo "Fetching release information from GitHub..."
+    # Fetch the latest release JSON and use jq to filter the correct download URL
+    DOWNLOAD_URL=$(curl -sL "$API_URL" | jq -r ".assets[].browser_download_url | select(contains(\"$OS\") and contains(\"$ARCH\") and (endswith(\".sig\") | not))")
+    # In case multiple URLs are somehow matched, just take the first one
+    DOWNLOAD_URL=$(echo "$DOWNLOAD_URL" | head -n 1)
 
-    local VALID_ASSETS=$(echo "$JSON_ASSETS" | jq -c 'select(.name | ascii_downcase | test("\\.(sig|sha256|txt)$") | not)')
-    local DOWNLOAD_URL=$(echo "$VALID_ASSETS" | jq -r "select(.name | ascii_downcase | test(\"$OS_REGEX\")) | select(.name | ascii_downcase | test(\"$ARCH_REGEX\")) | .browser_download_url" | head -n 1)
-    
+    # Check if we actually found a URL
     if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
-        DOWNLOAD_URL=$(echo "$VALID_ASSETS" | jq -r "select(.name | ascii_downcase | test(\"$OS_REGEX\")) | .browser_download_url" | head -n 1)
-    fi
-
-    if $IS_WINDOWS && [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
-        DOWNLOAD_URL=$(echo "$VALID_ASSETS" | jq -r 'select(.name | ascii_downcase | test("\\.exe$")) | .browser_download_url' | head -n 1)
-    fi
-
-    if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
-        echo "ERROR: Could not find PortableMC binary for OS: $OS_TYPE Arch: $ARCH_TYPE"
+        echo "Error: Could not find a suitable download URL for $OS ($ARCH)"
         exit 1
     fi
 
     local FILE_NAME=$(basename "$DOWNLOAD_URL")
-    echo "  -> Downloading $FILE_NAME..."
+    echo "  -> Downloading $FILE_NAME...to $TEST_ENV_DIR/"
     curl -s -L -o "$TEST_ENV_DIR/$FILE_NAME" "$DOWNLOAD_URL"
     
     pushd "$TEST_ENV_DIR" >/dev/null
@@ -144,7 +135,7 @@ download_launcher() {
         rm -f "$FILE_NAME"
     fi
     
-    if $IS_WINDOWS; then
+    if [[ "$OS" == "windows" ]] ; then
         local EXE_PATH=$(find . -type f -iname "portablemc.exe" | head -n 1)
         if [ -n "$EXE_PATH" ] && [ "$EXE_PATH" != "./portablemc.exe" ]; then
             mv "$EXE_PATH" ./portablemc.exe

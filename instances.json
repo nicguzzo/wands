@@ -3,13 +3,19 @@
     "name": "1.20.1-Fabric",
     "game_version": "1.20.1",
     "loader": "fabric",
-    "jar_dir": "./mc1.20.1/fabric/build/libs",
-    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
-    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "flan", "goml-reserved"],
+    "jar_dir": "./versions/1.20.1-fabric/build/libs",
+    "dependencies": ["fabric-api", "cloth-config", "modmenu"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan",
+      "goml-reserved"
+    ],
     "optional_curseforge_dependencies": [
-      {"project_id": 472657, "slug": "ftb-chunks-fabric"},
-      {"project_id": 438497, "slug": "ftb-teams-fabric"},
-      {"project_id": 438495, "slug": "ftb-library-fabric"}
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
     ],
     "server_installer_url": "https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar",
     "java_key": "java_17"
@@ -18,13 +24,13 @@
     "name": "1.20.1-Forge",
     "game_version": "1.20.1",
     "loader": "forge",
-    "jar_dir": "./mc1.20.1/forge/build/libs",
-    "dependencies": ["architectury-api", "cloth-config"],
+    "jar_dir": "./versions/1.20.1-forge/build/libs",
+    "dependencies": ["cloth-config"],
     "optional_dependencies": ["jei", "open-parties-and-claims", "flan"],
     "optional_curseforge_dependencies": [
-      {"project_id": 314906, "slug": "ftb-chunks-forge"},
-      {"project_id": 404468, "slug": "ftb-teams-forge"},
-      {"project_id": 404465, "slug": "ftb-library-forge"}
+      { "project_id": 314906, "slug": "ftb-chunks-forge" },
+      { "project_id": 404468, "slug": "ftb-teams-forge" },
+      { "project_id": 404465, "slug": "ftb-library-forge" }
     ],
     "server_installer_url": "https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.4.10/forge-1.20.1-47.4.10-installer.jar",
     "java_key": "java_17"
@@ -33,13 +39,19 @@
     "name": "1.21.1-Fabric",
     "game_version": "1.21.1",
     "loader": "fabric",
-    "jar_dir": "./mc1.21.1/fabric/build/libs",
-    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
-    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "flan", "goml-reserved"],
+    "jar_dir": "./versions/1.21.1-fabric/build/libs",
+    "dependencies": ["fabric-api", "cloth-config", "modmenu"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan",
+      "goml-reserved"
+    ],
     "optional_curseforge_dependencies": [
-      {"project_id": 472657, "slug": "ftb-chunks-fabric"},
-      {"project_id": 438497, "slug": "ftb-teams-fabric"},
-      {"project_id": 438495, "slug": "ftb-library-fabric"}
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
     ],
     "server_installer_url": "https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar",
     "java_key": "java_21"
@@ -48,13 +60,13 @@
     "name": "1.21.1-NeoForge",
     "game_version": "1.21.1",
     "loader": "neoforge",
-    "jar_dir": "./mc1.21.1/neoforge/build/libs",
-    "dependencies": ["architectury-api", "cloth-config"],
+    "jar_dir": "./versions/1.21.1-neoforge/build/libs",
+    "dependencies": ["cloth-config"],
     "optional_dependencies": ["jei", "open-parties-and-claims", "flan"],
     "optional_curseforge_dependencies": [
-      {"project_id": 314906, "slug": "ftb-chunks-forge"},
-      {"project_id": 404468, "slug": "ftb-teams-forge"},
-      {"project_id": 404465, "slug": "ftb-library-forge"}
+      { "project_id": 314906, "slug": "ftb-chunks-forge" },
+      { "project_id": 404468, "slug": "ftb-teams-forge" },
+      { "project_id": 404465, "slug": "ftb-library-forge" }
     ],
     "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/21.1.219/neoforge-21.1.219-installer.jar",
     "java_key": "java_21"
@@ -63,9 +75,20 @@
     "name": "1.21.11-Fabric",
     "game_version": "1.21.11",
     "loader": "fabric",
-    "jar_dir": "./mc1.21.11/fabric/build/libs",
-    "dependencies": ["fabric-api", "architectury-api", "cloth-config", "modmenu"],
-    "optional_dependencies": ["jei", "open-parties-and-claims", "forge-config-api-port", "goml-reserved", "polymer"],
+    "jar_dir": "./versions/1.21.11-fabric/build/libs",
+    "dependencies": ["fabric-api", "cloth-config", "modmenu"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan",
+      "goml-reserved"
+    ],
+    "optional_curseforge_dependencies": [
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
+    ],
     "server_installer_url": "https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar",
     "java_key": "java_21"
   },
@@ -73,10 +96,63 @@
     "name": "1.21.11-NeoForge",
     "game_version": "1.21.11",
     "loader": "neoforge",
-    "jar_dir": "./mc1.21.11/neoforge/build/libs",
-    "dependencies": ["architectury-api", "cloth-config"],
-    "optional_dependencies": ["jei", "open-parties-and-claims"],
-    "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/21.11.38-beta/neoforge-21.11.38-beta-installer.jar",
+    "jar_dir": "./versions/1.21.11-neoforge/build/libs",
+    "dependencies": ["cloth-config"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan",
+      "goml-reserved"
+    ],
+    "optional_curseforge_dependencies": [
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
+    ],
+    "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/21.11.38-beta/neoforge-21.11.42-installer.jar",
     "java_key": "java_21"
   }
+{
+  "name": "26.1.2-Fabric",
+  "game_version": "26.1.2",
+  "loader": "fabric",
+  "jar_dir": "./versions/26.1.2-fabric/build/libs",
+  "dependencies": ["fabric-api", "cloth-config", "modmenu"],
+  "optional_dependencies": [
+    "jei",
+    "open-parties-and-claims",
+    "forge-config-api-port",
+    "flan",
+    "goml-reserved"
+  ],
+  "optional_curseforge_dependencies": [
+    { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+    { "project_id": 438497, "slug": "ftb-teams-fabric" },
+    { "project_id": 438495, "slug": "ftb-library-fabric" }
+  ],
+  "server_installer_url": "https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar",
+  "java_key": "java_25"
+},
+{
+  "name": "26.1.2-NeoForge",
+  "game_version": "26.1.2",
+  "loader": "neoforge",
+  "jar_dir": "./versions/1.21.11-neoforge/build/libs",
+  "dependencies": ["cloth-config"],
+  "optional_dependencies": [
+    "jei",
+    "open-parties-and-claims",
+    "forge-config-api-port",
+    "flan",
+    "goml-reserved"
+  ],
+  "optional_curseforge_dependencies": [
+    { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+    { "project_id": 438497, "slug": "ftb-teams-fabric" },
+    { "project_id": 438495, "slug": "ftb-library-fabric" }
+  ],
+  "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/26.1.2.43-beta/neoforge-26.1.2.43-beta-installer.jar",
+  "java_key": "java_25"
+}
 ]

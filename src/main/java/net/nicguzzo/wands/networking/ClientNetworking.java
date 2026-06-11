@@ -115,8 +115,8 @@ public class ClientNetworking {
             packet.writeBoolean(shift);
             packet.writeBoolean(alt);
             //? if fabric {
-            ClientPlayNetworking.send(Networking.KB_PACKET.id(), packet);
-            //?}
+            /^ClientPlayNetworking.send(Networking.KB_PACKET.id(), packet);
+            ^///?}
             //? if forge {
             /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.KB_PACKET.id(), packet));
             ^///?}
@@ -155,8 +155,8 @@ public class ClientNetworking {
         packet.writeDouble(hit.z);
         packet.writeLong(seed);
         //? if fabric {
-        ClientPlayNetworking.send(Networking.POS_PACKET.id(), packet);
-        //?}
+        /^ClientPlayNetworking.send(Networking.POS_PACKET.id(), packet);
+        ^///?}
         //? if forge {
         /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.POS_PACKET.id(), packet));
         ^///?}
@@ -178,8 +178,8 @@ public class ClientNetworking {
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeBoolean(drop_pos);
         //? if fabric {
-        ClientPlayNetworking.send(Networking.GLOBAL_SETTINGS_PACKET.id(), packet);
-        //?}
+        /^ClientPlayNetworking.send(Networking.GLOBAL_SETTINGS_PACKET.id(), packet);
+        ^///?}
         //? if forge {
         /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.GLOBAL_SETTINGS_PACKET.id(), packet));
         ^///?}
@@ -203,8 +203,8 @@ public class ClientNetworking {
         packet.writeBoolean(toggle_rotate);
         packet.writeInt(grad_h);
         //? if fabric {
-        ClientPlayNetworking.send(Networking.PALETTE_PACKET.id(), packet);
-        //?}
+        /^ClientPlayNetworking.send(Networking.PALETTE_PACKET.id(), packet);
+        ^///?}
         //? if forge {
         /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.PALETTE_PACKET.id(), packet));
         ^///?}
@@ -226,8 +226,8 @@ public class ClientNetworking {
         /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
         packet.writeItem(item);
         //? if fabric {
-        ClientPlayNetworking.send(Networking.WAND_PACKET.id(), packet);
-        //?}
+        /^ClientPlayNetworking.send(Networking.WAND_PACKET.id(), packet);
+        ^///?}
         //? if forge {
         /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.WAND_PACKET.id(), packet));
         ^///?}
@@ -251,8 +251,8 @@ public class ClientNetworking {
         packet.writeInt(y);
         packet.writeInt(z);
         //? if fabric {
-        ClientPlayNetworking.send(Networking.SYNC_ROCK_PACKET.id(), packet);
-        //?}
+        /^ClientPlayNetworking.send(Networking.SYNC_ROCK_PACKET.id(), packet);
+        ^///?}
         //? if forge {
         /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.SYNC_ROCK_PACKET.id(), packet));
         ^///?}
