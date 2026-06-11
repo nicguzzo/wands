@@ -74,7 +74,9 @@ import net.neoforged.api.distmarker.Dist;
 *///?}
 
 //?if fabric {
-    //?if <26.1{
+    //?if >26.1{
+
+    //?}else{
     /*import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
     *///?}
 import net.fabricmc.loader.api.FabricLoader;
@@ -224,38 +226,56 @@ public class Compat {
             player.openMenu(factory);
         *///?}
         //?if fabric && >= 1.21{
-            ExtendedScreenHandlerFactory<ItemStack> factory = new ExtendedScreenHandlerFactory<>() {
-
-                @Override
-                public ItemStack getScreenOpeningData(ServerPlayer player) {
-                    return item;
-                }
-
-                @Override
-                public Component getDisplayName() {
-                    return Component.literal("Palette Menu");
-                }
-                @Override
-                public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-
-                    switch(m){
-                        case 0: {
-                            WandToolsMenuData data = new WandToolsMenuData(item);
-                            return new WandToolsMenu(containerId, playerInventory, data);
+            switch(m) {
+                case 0:
+                    player.openMenu(new ExtendedScreenHandlerFactory<WandToolsMenuData>() {
+                        @Override
+                        public WandToolsMenuData getScreenOpeningData(ServerPlayer player) {
+                            return new WandToolsMenuData(item);
                         }
-                        case 1: {
-                            PaletteMenuData data = new PaletteMenuData(item);
-                            return new PaletteMenu(containerId, playerInventory, data);
+                        @Override
+                        public Component getDisplayName() {
+                            return Component.literal("Palette Menu");
                         }
-                        case 2: {
-                            MagicBagMenuData data = new MagicBagMenuData(item);
-                            return new MagicBagMenu(containerId, playerInventory, data);
+                        @Override
+                        public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                            return new WandToolsMenu(containerId, playerInventory, new WandToolsMenuData(item));
                         }
-                    }
-                    return null;
-                }
-            };
-            player.openMenu(factory);
+                    });
+                    break;
+                case 1:
+                    player.openMenu(new ExtendedScreenHandlerFactory<PaletteMenuData>() {
+                        @Override
+                        public PaletteMenuData getScreenOpeningData(ServerPlayer player) {
+                            return new PaletteMenuData(item);
+                        }
+                        @Override
+                        public Component getDisplayName() {
+                            return Component.literal("Palette Menu");
+                        }
+                        @Override
+                        public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                            return new PaletteMenu(containerId, playerInventory, new PaletteMenuData(item));
+                        }
+                    });
+                    break;
+                case 2:
+                    player.openMenu(new ExtendedScreenHandlerFactory<MagicBagMenuData>() {
+                        @Override
+                        public MagicBagMenuData getScreenOpeningData(ServerPlayer player) {
+                            return new MagicBagMenuData(item);
+                        }
+                        @Override
+                        public Component getDisplayName() {
+                            return Component.literal("Palette Menu");
+                        }
+                        @Override
+                        public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                            return new MagicBagMenu(containerId, playerInventory, new MagicBagMenuData(item));
+                        }
+                    });
+                    break;
+            }
         //?}
     }
 
