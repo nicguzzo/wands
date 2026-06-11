@@ -134,9 +134,7 @@ public class NeoforgeEntrypoint {
         modBus.addListener((net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) -> {
             final net.neoforged.neoforge.network.registration.PayloadRegistrar registrar = event.registrar(WandsMod.MOD_ID);
             net.nicguzzo.wands.networking.Networking.RegisterNeoForgeC2S(registrar);
-            if (Compat.getEnv()==Compat.Env.CLIENT) {
-                net.nicguzzo.wands.networking.Networking.RegisterNeoForgeS2C(registrar);
-            }
+            net.nicguzzo.wands.networking.Networking.RegisterNeoForgeS2C(registrar);
         });
         //?}
         WandsMod.init();
