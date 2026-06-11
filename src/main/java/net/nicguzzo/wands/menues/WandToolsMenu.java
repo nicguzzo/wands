@@ -47,9 +47,18 @@ public class WandToolsMenu extends AbstractContainerMenu {
     public final Inventory playerInventory;
 
 //?if neoforge{
-        /*public WandToolsMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+    /*//? if >= 1.21 {
+    public WandToolsMenu(int containerId, Inventory playerInventory, net.minecraft.network.RegistryFriendlyByteBuf extraData) {
+            this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    //?} else {
+    /^public WandToolsMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+            this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    ^///?}
+    public WandToolsMenu(int containerId, Inventory playerInventory, ItemStack _wand) {
         super(WAND_TOOLS_MENU_TYPE.get(), containerId);
-        this.wand= Compat.readItemStackFromBuf(extraData, playerInventory);
+        this.wand=_wand;
  *///?}else{
     //?if forge{
     /*public WandToolsMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {

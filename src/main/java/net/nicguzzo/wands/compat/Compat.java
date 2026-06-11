@@ -196,7 +196,34 @@ public class Compat {
             });
         
         *///?}
-
+        //?if neoforge {
+            /*net.minecraft.world.SimpleMenuProvider provider = new net.minecraft.world.SimpleMenuProvider(
+                (containerId, playerInventory, serverPlayerInstance) -> {
+                    switch(m){
+                        case 0: {
+                            return new WandToolsMenu(containerId, playerInventory, item);
+                        }
+                        case 1: {
+                            return new PaletteMenu(containerId, playerInventory, item);
+                        }case 2: {
+                            return new MagicBagMenu(containerId, playerInventory, item);
+                        }
+                    }
+                    return null;
+                },
+                net.minecraft.network.chat.Component.literal("Palette Menu")
+            );
+            player.openMenu(provider, buf -> {
+                //? if >= 1.21.11 {
+                    ProblemReporter.Collector reporter = new ProblemReporter.Collector();
+                    TagValueOutput tvo=TagValueOutput.createWithContext(reporter,player.level().registryAccess());
+                    tvo.store(ItemStack.MAP_CODEC,item);
+                    buf.writeNbt(tvo.buildResult());
+                //?}else{
+                    /^buf.writeNbt(item.saveOptional(player.level().registryAccess()));
+                ^///?}
+            });
+        *///?}
         //?if fabric && < 1.21{
             /*ExtendedScreenHandlerFactory factory = new ExtendedScreenHandlerFactory() {
                 @Override

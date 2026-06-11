@@ -32,9 +32,18 @@ public class MagicBagMenu extends AbstractContainerMenu {
     private static final int CUSTOM_SLOT_COUNT = 1;
 
 //?if neoforge{
-    /*public MagicBagMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+    /*//? if >= 1.21 {
+    public MagicBagMenu(int containerId, Inventory playerInventory, net.minecraft.network.RegistryFriendlyByteBuf extraData) {
+        this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    //?} else {
+    /^public MagicBagMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+        this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    ^///?}
+    public MagicBagMenu(int containerId, Inventory playerInventory, ItemStack _bag) {
         super(MAGIC_BAG_MENU_TYPE.get(), containerId);
-        this.bag=Compat.readItemStackFromBuf(extraData, playerInventory);
+        this.bag=_bag;
 *///?}else{
     //?if forge{
     /*public MagicBagMenu(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {

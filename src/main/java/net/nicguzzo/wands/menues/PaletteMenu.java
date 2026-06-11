@@ -44,9 +44,18 @@ public class PaletteMenu extends AbstractContainerMenu {
 
 //?if neoforge{
         
-    /*public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+    /*//? if >= 1.21 {
+    public PaletteMenu(int containerId, Inventory playerInventory, net.minecraft.network.RegistryFriendlyByteBuf extraData) {
+            this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    //?} else {
+    /^public PaletteMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
+            this(containerId, playerInventory, Compat.readItemStackFromBuf(extraData, playerInventory));
+    }
+    ^///?}
+    public PaletteMenu(int containerId, Inventory playerInventory, ItemStack _palette) {
             super(PALETTE_MENU_TYPE.get(), containerId);
-            this.palette=Compat.readItemStackFromBuf(extraData, playerInventory);
+            this.palette=_palette;
 *///?}else{
 
     //?if> 1.21{
