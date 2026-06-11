@@ -19,8 +19,8 @@ public class PlayerWand{
         //?}
 
         //?if neoforge {
-            //wand.player_data= WandsCommon.getPlayerData(player);
-        //?}
+            /*wand.player_data= net.nicguzzo.wands.loaders.neoforge.NeoforgeEntrypoint.getPlayerData(player);
+        *///?}
         //?if forge {
             /*wand.player_data= net.nicguzzo.wands.loaders.forge.ForgeEntrypoint.getPlayerData(player);
         *///?}

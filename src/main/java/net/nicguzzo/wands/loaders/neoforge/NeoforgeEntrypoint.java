@@ -25,7 +25,6 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.nicguzzo.wands.WandsMod;
-import net.nicguzzo.wands.WandsCommon;
 import net.nicguzzo.wands.client.WandsModClient;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
@@ -110,12 +109,12 @@ public class NeoforgeEntrypoint {
     );
 
 //?if >= 1.21.11 {
-    /^public static final Supplier<AttachmentType<CompoundTag>> PLAYER_DATA = ATTACHMENT_TYPES.register(
-    "player_data", () -> AttachmentType.builder(holder -> new CompoundTag()).serialize(CompoundTag.CODEC.fieldOf("value")).build());
-^///?}else{
     public static final Supplier<AttachmentType<CompoundTag>> PLAYER_DATA = ATTACHMENT_TYPES.register(
+    "player_data", () -> AttachmentType.builder(holder -> new CompoundTag()).serialize(CompoundTag.CODEC.fieldOf("value")).build());
+//?}else{
+    /^public static final Supplier<AttachmentType<CompoundTag>> PLAYER_DATA = ATTACHMENT_TYPES.register(
     "player_data", () -> AttachmentType.builder(() -> new CompoundTag()).serialize(CompoundTag.CODEC).build());
-//?}
+^///?}
 
     public NeoforgeEntrypoint(IEventBus modBus) {
         Path configDir = FMLPaths.CONFIGDIR.get();
@@ -132,7 +131,7 @@ public class NeoforgeEntrypoint {
 
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
-        WandsCommon.onServerStarted(event.getServer());
+
     }
 
     @SubscribeEvent
@@ -168,6 +167,16 @@ public class NeoforgeEntrypoint {
     public void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             WandsModClient.initialize();
+        });
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.register(new Object() {
+            @net.neoforged.bus.api.SubscribeEvent
+            public void onClientTick(net.neoforged.neoforge.client.event.ClientTickEvent.Post e) {
+                WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
+            }
+            @net.neoforged.bus.api.SubscribeEvent
+            public void onRenderHud(net.neoforged.neoforge.client.event.RenderGuiEvent.Post e) {
+                WandsModClient.render_hud(e.getGuiGraphicsExtractor());
+            }
         });
     }
 
