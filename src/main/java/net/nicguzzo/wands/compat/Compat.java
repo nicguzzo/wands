@@ -105,9 +105,9 @@ public class Compat {
             }
             return level>0;
         //? } else {
-        
+
             /*return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MENDING,item)!=0;
-        
+
         *///? }
      }
 
@@ -122,9 +122,9 @@ public class Compat {
             }
             return level;
         //? } else {
-        
+
             /*return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.BLOCK_FORTUNE,item);
-        
+
         *///? }
     }
     static public boolean has_silktouch(ItemStack item,Level l){
@@ -138,9 +138,9 @@ public class Compat {
             }
             return st;
         //? } else {
-        
+
             /*return EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SILK_TOUCH,item)!=0;
-        
+
         *///? }
     }
 
@@ -169,9 +169,9 @@ public class Compat {
         */
         //? } else {
             //? if < 1.21.11 {
-            
+
             /*RenderSystem.setShaderColor(r,g,b,a);
-            
+
             *///? }
         //? }
     }
@@ -191,12 +191,12 @@ public class Compat {
                     }
                     return null;
                 },
-                Component.literal("Palette Menu")
+                Component.literal("")
             );
             NetworkHooks.openScreen(player, provider, buf -> {
                 buf.writeItemStack(item,false);
             });
-        
+
         *///?}
         //?if neoforge {
             /*net.minecraft.world.SimpleMenuProvider provider = new net.minecraft.world.SimpleMenuProvider(
@@ -213,7 +213,7 @@ public class Compat {
                     }
                     return null;
                 },
-                net.minecraft.network.chat.Component.literal("Palette Menu")
+                net.minecraft.network.chat.Component.literal("")
             );
             player.openMenu(provider, buf -> {
                 //? if >= 1.21.11 {
@@ -230,7 +230,7 @@ public class Compat {
             /*ExtendedScreenHandlerFactory factory = new ExtendedScreenHandlerFactory() {
                 @Override
                 public Component getDisplayName() {
-                    return Component.literal("Palette Menu");
+                    return Component.literal("");
                 }
                 @Override
                 public void writeScreenOpeningData(ServerPlayer player, FriendlyByteBuf buf) {
@@ -266,7 +266,7 @@ public class Compat {
                         }
                         @Override
                         public Component getDisplayName() {
-                            return Component.literal("Palette Menu");
+                            return Component.literal("");
                         }
                         @Override
                         public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
@@ -282,7 +282,7 @@ public class Compat {
                         }
                         @Override
                         public Component getDisplayName() {
-                            return Component.literal("Palette Menu");
+                            return Component.literal("");
                         }
                         @Override
                         public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
@@ -298,7 +298,7 @@ public class Compat {
                         }
                         @Override
                         public Component getDisplayName() {
-                            return Component.literal("Palette Menu");
+                            return Component.literal("");
                         }
                         @Override
                         public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
@@ -347,9 +347,9 @@ public class Compat {
     }
     static public boolean is_same_with_components(ItemStack i1, ItemStack i2){
         //? if < 1.20.5 {
-        
+
             /*return ItemStack.isSameItemSameTags(i1,i2);
-        
+
         *///? } else {
             return ItemStack.isSameItemSameComponents(i1,i2);
         //? }
@@ -359,9 +359,9 @@ public class Compat {
     }
     static public CompoundTag getTags(ItemStack stack){
         //? if < 1.20.5 {
-        
+
             /*return stack.getOrCreateTag();
-        
+
         *///? } else {
         var data = stack.get(DataComponents.CUSTOM_DATA);
         if(data!=null){
@@ -375,9 +375,9 @@ public class Compat {
         //? if >= 1.21.6 {
         Minecraft.getInstance().getToastManager().addToast(toast);
         //? } else {
-        
+
         /*Minecraft.getInstance().getToasts().addToast(toast);
-        
+
         *///? }
     }
     static public CompoundTag ItemStack_save(ItemStack item, Level level){
@@ -388,15 +388,15 @@ public class Compat {
             tvo.store(ItemStack.MAP_CODEC,item);
             return tvo.buildResult();
         //? } else {
-        
+
             /*//? if >= 1.20.5 {
-                return (CompoundTag) item.saveOptional(level.registryAccess()); 
+                return (CompoundTag) item.saveOptional(level.registryAccess());
             //? } else {
-            
+
                 /^return item.save(new CompoundTag());
-            
+
             ^///? }
-        
+
         *///? }
     }
     static public Optional<ItemStack> ItemStack_read(CompoundTag item,  Level level){
@@ -406,32 +406,32 @@ public class Compat {
         TagValueInput tvi= (TagValueInput) TagValueInput.create(reporter,provider,item);
         return tvi.read(ItemStack.MAP_CODEC);
     //? } else {
-    
+
         /*//? if >= 1.20.5 {
-         return ItemStack.parse(level.registryAccess(), item); 
+         return ItemStack.parse(level.registryAccess(), item);
         //? } else {
-        
+
         /^return Optional.of(ItemStack.of(item));
-        
+
         ^///? }
-    
+
     *///? }
     }
 
 
     static public ItemStack readItemStackFromBuf(FriendlyByteBuf buf, Inventory playerInventory) {
         //? if < 1.20.5 {
-        
+
         /*return buf.readItem();
-        
+
         *///? } else {
             //? if < 1.21.11 {
-            
+
             /*return ItemStack.parse(
                 ((Level) playerInventory.player.level()).registryAccess(),
                 buf.readNbt()
             ).orElse(ItemStack.EMPTY);
-            
+
             *///? } else {
             return Objects.requireNonNull(buf.readNbt()).read(ItemStack.MAP_CODEC).orElse(ItemStack.EMPTY);
             //? }
@@ -447,15 +447,15 @@ public class Compat {
             //? if >= 1.21.11 {
                 gui.blit(RenderPipelines.GUI_TEXTURED, tx.id(), x, y, u, v, w, h, tex_w, tex_h);
             //? } else {
-            
+
                 /*//? if >= 1.21.2 {
                     gui.blit(RenderType::guiTextured, tx.res, x, y, u, v, w, h,tex_w, tex_h);
                 //? } else {
-                
+
                     /^gui.blit(tx.id(),x, y, u, v, w, h, tex_w, tex_h);
-                
+
                 ^///? }
-            
+
             *///? }
         //? }
     }
@@ -463,9 +463,9 @@ public class Compat {
         //? if >= 1.21.11 {
         gui.setComponentTooltipForNextFrame(font, lines, mouseX, mouseY);
         //? } else {
-        
+
         /*gui.renderComponentTooltip(font, lines, mouseX, mouseY);
-        
+
         *///? }
     }
 
@@ -473,103 +473,103 @@ public class Compat {
         //? if >= 1.21.11 {
              return Minecraft.getInstance().hasShiftDown();
         //? } else {
-        
+
             /*return Screen.hasShiftDown();
-        
+
         *///? }
     }
     static public boolean hasControlDown(){
         //? if >= 1.21.11 {
              return Minecraft.getInstance().hasControlDown();
         //? } else {
-        
+
         /*return Screen.hasControlDown();
-        
+
         *///? }
     }
     static public boolean hasAltDown(){
         //? if >= 1.21.11 {
              return Minecraft.getInstance().hasAltDown();
         //? } else {
-        
+
         /*return Screen.hasAltDown();
-        
+
         *///? }
     }
     static public Optional<Boolean> getBoolean(CompoundTag tag,String key) {
         //? if >= 1.21.11 {
         return tag.getBoolean(key);
         //? } else {
-        
+
              /*if(tag.contains(key)) {
                  return Optional.of(tag.getBoolean(key));
              }else{
                  return Optional.empty();
              }
-        
+
         *///? }
     }
     static public Optional<Integer> getInt(CompoundTag tag, String key) {
         //? if >= 1.21.11 {
         return tag.getInt(key);
         //? } else {
-        
+
         /*if(tag.contains(key)) {
             return Optional.of(tag.getInt(key));
         }else{
             return Optional.empty();
         }
-        
+
         *///? }
     }
     static public Optional<CompoundTag> getCompound(CompoundTag tag, String key) {
         //? if >= 1.21.11 {
         return tag.getCompound(key);
         //? } else {
-        
+
         /*if(tag.contains(key)) {
             return Optional.of(tag.getCompound(key));
         }else{
             return Optional.empty();
         }
-        
+
         *///? }
     }
     static public Optional<ListTag> getList(CompoundTag tag, String key) {
         //? if >= 1.21.11 {
         return tag.getList(key);
         //? } else {
-        
+
         /*if(tag.contains(key)) {
             return Optional.of(tag.getList(key,NbtType.COMPOUND));
         }else{
             return Optional.empty();
         }
-        
+
         *///? }
     }
     static public long getWindow() {
         //? if >= 1.21.11 {
             return Minecraft.getInstance().getWindow().handle();
         //? } else {
-        
+
             /*return Minecraft.getInstance().getWindow().getWindow();
-        
+
         *///? }
     }
     static public float getPartialTick() {
         //? if >= 1.21.11 {
             return Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true);
         //? } else {
-        
+
         /*//? if >= 1.21 {
             return 1.0f;
         //? } else {
-        
+
             /^return Minecraft.getInstance().getFrameTime();
-        
+
         ^///? }
-        
+
         *///? }
     }
     static public int getKeyCode(KeyMapping km) {
@@ -607,9 +607,9 @@ public class Compat {
             return stack.get(DataComponents.CUSTOM_DATA) == null
                 && stack.get(DataComponents.CUSTOM_NAME) == null;
         //? } else {
-        
+
             /*return stack.getTag() == null;
-        
+
         *///? }
     }
     static public List<ItemStack> get_shulker_contents(ItemStack shulker) {
@@ -630,7 +630,7 @@ public class Compat {
             }
             return list;
         //? } else {
-        
+
             /*CompoundTag entity_tag = shulker.getTagElement("BlockEntityTag");
             if (entity_tag == null) {
                 return Collections.emptyList();
@@ -645,14 +645,14 @@ public class Compat {
                 }
             }
             return list;
-        
+
         *///? }
     }
     static public void set_shulker_contents(ItemStack shulker, List<ItemStack> items) {
         //? if >= 1.21.1 {
             shulker.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(items));
         //? } else {
-        
+
             /*CompoundTag shulker_tag = shulker.getOrCreateTagElement("BlockEntityTag");
             ListTag shulker_items = new ListTag();
             int slot = 0;
@@ -665,25 +665,25 @@ public class Compat {
                 slot++;
             }
             shulker_tag.put("Items", shulker_items);
-        
+
         *///? }
     }
     static public void consumerAddVertexColor(VertexConsumer consumer, Matrix4f matrix, float x,float y,float z,Colorf c) {
         //? if >= 1.21 {
         consumer.addVertex(matrix, x, y, z).setColor(c.r, c.g, c.b, c.a);
         //? } else {
-        
+
         /*consumer.vertex(matrix, x, y, z).color(c.r, c.g, c.b, c.a).endVertex();
-        
+
         *///? }
     }
     static public void consumerAddVertexColor(VertexConsumer consumer, float x,float y,float z,Colorf c) {
         //? if >= 1.21 {
         consumer.addVertex(x, y, z).setColor(c.r, c.g, c.b, c.a);
         //? } else {
-        
+
         /*consumer.vertex(x, y, z).color(c.r, c.g, c.b, c.a).endVertex();
-        
+
         *///? }
     }
 
@@ -692,9 +692,9 @@ public class Compat {
         //? if >= 1.21 {
         consumer.addVertex(x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light);
         //? } else {
-        
+
         /*consumer.vertex(x, y, z).uv(u,v).color(color).normal(nx,ny,nz).uv2(light).endVertex();
-        
+
         *///? }
     }
 
@@ -702,9 +702,9 @@ public class Compat {
         //? if >= 1.21 {
         consumer.addVertex(matrix, x, y, z).setUv(u, v).setColor(color).setNormal(nx,ny,nz).setLight(light);
         //? } else {
-        
+
         /*consumer.vertex(matrix, x, y, z).color(color).uv(u,v).uv2(light).normal(nx,ny,nz).endVertex();
-        
+
         *///? }
     }
 
@@ -733,22 +733,22 @@ public class Compat {
             }
         *///?}
         //? } else {
-        
+
         /*if (isWater) {
             return ModelBakery.WATER_FLOW.sprite();
         } else {
             return ModelBakery.LAVA_FLOW.sprite();
         }
-        
+
         *///?}
     }
     static public Vec3 getCameraPosition(Camera camera){
         //? if >= 1.21.11 {
             return camera.position();
         //? } else {
-        
+
             /*return camera.getPosition();
-        
+
         *///? }
     }
 
@@ -760,9 +760,9 @@ public class Compat {
                 player.sendSystemMessage(component);
             }
         //? } else {
-        
+
             /*player.displayClientMessage(component, overlay);
-        
+
         *///? }
     }
     public enum Env{
