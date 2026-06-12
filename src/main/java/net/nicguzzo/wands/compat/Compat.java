@@ -1,8 +1,13 @@
 package net.nicguzzo.wands.compat;
 
 //?if<1.21.11{
-//?}
 
+// import com.mojang.blaze3d.systems.RenderSystem;
+// import net.minecraft.client.gui.screens.Screen;
+//?}
+//?if<=1.21.11{
+//import net.minecraft.client.resources.model.ModelBakery;
+//?}
 //?if>26.1{
 //?if fabric {
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
@@ -26,24 +31,23 @@ import net.minecraft.world.item.component.ItemContainerContents;
     import net.minecraft.util.ProblemReporter;
     import net.minecraft.world.level.storage.TagValueInput;
     import net.minecraft.world.level.storage.TagValueOutput;
-    import com.mojang.blaze3d.textures.GpuTexture;
     import net.minecraft.client.renderer.RenderPipelines;
     //?}
 //?}
 
 import com.mojang.blaze3d.vertex.*;
-import com.mojang.blaze3d.systems.RenderSystem;
+
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.ModelBakery;
+
 
 import net.nicguzzo.wands.menues.*;
 import org.joml.Matrix4f;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.screens.Screen;
+
 import net.minecraft.core.*;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -715,7 +719,7 @@ public class Compat {
             atlasId = RcId.parse("minecraft:blocks");
         TextureAtlas atlas = am.getAtlasOrThrow(atlasId.id());
 
-        //? if >= 26.1 {
+            //? if >= 26.1 {
             if (isWater) {
                 if(water_sprite==null)
                     water_sprite=RcId.withDefaultNamespace("block/water_flow");

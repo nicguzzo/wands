@@ -33,14 +33,14 @@ public class PaletteClientTooltip implements ClientTooltipComponent {
         return rows * SLOT_SIZE + PADDING * 2;
     }
     //?}else{
-    
+
     /*@Override
     public int getHeight() {
         if (items.isEmpty()) return 0;
         int rows = (items.size() + MAX_COLUMNS - 1) / MAX_COLUMNS;
         return rows * SLOT_SIZE + PADDING * 2;
     }
-    
+
     *///?}
 
     @Override
@@ -60,18 +60,15 @@ public class PaletteClientTooltip implements ClientTooltipComponent {
             renderGrid(font, x, y, gui);
         }
     //?}else{
-    
+
     /*public void renderImage(Font font, int x, int y, GuiGraphicsExtractor gui) {
         renderGrid(font, x, y, gui);
     }
-    
+
     *///?}
 
     private void renderGrid(Font font, int x, int y, GuiGraphicsExtractor gui) {
         if (items.isEmpty()) return;
-
-        int cols = Math.min(items.size(), MAX_COLUMNS);
-        int rows = (items.size() + MAX_COLUMNS - 1) / MAX_COLUMNS;
 
         // Draw items
         for (int i = 0; i < items.size(); i++) {

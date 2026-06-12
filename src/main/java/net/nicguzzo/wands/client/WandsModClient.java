@@ -1,8 +1,5 @@
 package net.nicguzzo.wands.client;
 
-//?if >=1.21.1{
-import net.minecraft.client.DeltaTracker;
-//?}
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -363,7 +360,7 @@ public class WandsModClient {
                     String pinStr = showPin ? Compat.translatable(pinIsActive ? "wands.hud.unpin" : "wands.hud.pin").getString() : "";
                     String movePinStr = Compat.translatable("wands.hud.move_pin").getString();
                     String settingsStr = Compat.translatable("wands.hud.settings").getString();
-                    String rotationStr = Compat.translatable("wands.hud.rotation").getString();
+                    //String rotationStr = Compat.translatable("wands.hud.rotation").getString();
                     String clearStr = Compat.translatable("wands.hud.clear").getString();
                     String undoStr = Compat.translatable("wands.hud.undo").getString();
                     String redoStr = Compat.translatable("wands.hud.redo").getString();

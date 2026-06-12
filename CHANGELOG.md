@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.1
+- Support for MC 26.1.2
+- Dropped Architectury Api mod dependency
+- Removed Manifold preprocessor plugin
+- Moved to Modstitch+Stonecutter
+
+## 3.0.5
+- v3.0.5
+- fix keybind crash when wand menu was pressed without wand or palette
+
 ## 3.0.4
 - fix empty buckets bug
 
