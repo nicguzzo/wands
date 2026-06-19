@@ -33,11 +33,11 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Setup JDK 21
+      - name: Setup JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -45,16 +45,9 @@ jobs:
       - name: Read mod metadata
         id: meta
         run: |
-          mod_version=$(grep '^mod_version=' gradle.properties | cut -d= -f2)
-          release_type=$(grep '^release_type=' gradle.properties | cut -d= -f2)
+          mod_version=$(grep 'modVersion' build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           echo "mod_version=$mod_version" >> "$GITHUB_OUTPUT"
-          echo "release_type=$release_type" >> "$GITHUB_OUTPUT"
-
-          if [[ "$release_type" == "release" ]]; then
-            echo "release_name=Building Wands ${mod_version}" >> "$GITHUB_OUTPUT"
-          else
-            echo "release_name=Building Wands ${mod_version}-${release_type}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "release_name=Building Wands ${mod_version}" >> "$GITHUB_OUTPUT"
 
       - name: Build MC version support list
         id: mc_versions
@@ -62,10 +55,11 @@ jobs:
           {
             echo "text<<MC_EOF"
             echo "### Supported Minecraft Versions"
-            for dir in mc*/; do
-              mc_ver=$(grep '^minecraft_versions=' "$dir/gradle.properties" | cut -d= -f2)
-              loaders=$(ls -d "$dir"*/ 2>/dev/null | grep -v common | xargs -I{} basename {} | paste -sd ', ')
-              echo "- **${mc_ver}** — ${loaders}"
+            for dir in versions/*/; do
+              name=$(basename "$dir")
+              mc_ver=$(grep '^deps.minecraft=' "$dir/gradle.properties" | cut -d= -f2)
+              loader="${name##*-}"
+              echo "- **${mc_ver}** — ${loader}"
             done
             echo "MC_EOF"
           } >> "$GITHUB_OUTPUT"
@@ -103,11 +97,22 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build all targets
-        run: ./gradlew build -Pfabric.loom.disable_file_lock=true
+        run: |
+          chmod +x ./gradlew
+          for dir in versions/*/; do
+            target=$(basename "$dir")
+            echo "::group::Building $target"
+            ./gradlew ":${target}:build" -Pfabric.loom.disable_file_lock=true
+            echo "::endgroup::"
+          done
 
       - name: Publish to CurseForge and Modrinth
         if: ${{ !inputs.dry_run }}
-        run: ./gradlew publishUnified -Pfabric.loom.disable_file_lock=true
+        run: |
+          for dir in versions/*/; do
+            target=$(basename "$dir")
+            ./gradlew ":${target}:publishMods" -Pfabric.loom.disable_file_lock=true
+          done
         env:
           CF_TOKEN: ${{ secrets.CF_TOKEN }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
@@ -119,8 +124,7 @@ jobs:
           name: BuildingWands-${{ steps.meta.outputs.mod_version }}
           retention-days: 90
           path: |
-            mc*/*/build/libs/BuildingWands-*-MC*-*.jar
-            !**/common/**
+            versions/*/build/libs/BuildingWands-*.jar
             !**/*-dev-shadow.jar
             !**/*-sources.jar
 
@@ -132,9 +136,8 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: ${{ steps.meta.outputs.release_name }}
           body: ${{ steps.changelog.outputs.body }}
-          prerelease: ${{ steps.meta.outputs.release_type != 'release' }}
+          prerelease: false
           files: |
-            mc*/*/build/libs/BuildingWands-*-MC*-*.jar
-            !**/common/**
+            versions/*/build/libs/BuildingWands-*.jar
             !**/*-dev-shadow.jar
             !**/*-sources.jar

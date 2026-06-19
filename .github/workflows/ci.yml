@@ -23,13 +23,9 @@ jobs:
         id: find
         run: |
           targets=$(
-            for dir in mc*/; do
-              target=$(basename "$dir")
-              for loader in "$dir"*/; do
-                name=$(basename "$loader")
-                [ "$name" = "common" ] && continue
-                echo "{\"target\":\"$target\",\"loader\":\"$name\"}"
-              done
+            for dir in versions/*/; do
+              name=$(basename "$dir")
+              echo "{\"target\":\"$name\"}"
             done | jq -s -c '.'
           )
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
@@ -45,27 +41,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup JDK 21
+      - name: Setup JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
 
-      - name: Build ${{ matrix.target.target }}/${{ matrix.target.loader }}
+      - name: Build ${{ matrix.target.target }}
         run: |
           chmod +x ./gradlew
-          ./gradlew -Ptarget=${{ matrix.target.target }} :${{ matrix.target.target }}:${{ matrix.target.loader }}:build -Pfabric.loom.disable_file_lock=true
+          ./gradlew :${{ matrix.target.target }}:build -Pfabric.loom.disable_file_lock=true
 
       - name: Upload JARs
         uses: actions/upload-artifact@v4
         with:
-          name: BuildingWands-${{ matrix.target.target }}-${{ matrix.target.loader }}-${{ github.sha }}
+          name: BuildingWands-${{ matrix.target.target }}-${{ github.sha }}
           path: |
-            ${{ matrix.target.target }}/${{ matrix.target.loader }}/build/libs/BuildingWands-*-MC*-*.jar
+            versions/${{ matrix.target.target }}/build/libs/BuildingWands-*.jar
             !**/*-dev-shadow.jar
             !**/*-sources.jar
