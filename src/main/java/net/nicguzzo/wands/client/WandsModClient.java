@@ -162,10 +162,10 @@ public class WandsModClient {
 
         if (useRawInput &&
         //?if >=26.2 {
-            client.gui.screen() == null
-        //?}else{
-            /*client.screen == null
-        *///?}
+            /*client.gui.screen() == null
+        *///?}else{
+            client.screen == null
+        //?}
         ) {
             // Bypass KeyMapping conflicts: poll GLFW directly for wand keys
             long window = Compat.getWindow();
@@ -188,10 +188,10 @@ public class WandsModClient {
                     // MENU without shift: open wand settings client-side
                     if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown()) {
                         //?if >=26.2 {
-                        client.gui.setScreen(new WandScreen(mainHand));
-                        //?}else{
-                        /*client.setScreen(new WandScreen(mainHand));
-                        *///?}
+                        /*client.gui.setScreen(new WandScreen(mainHand));
+                        *///?}else{
+                        client.setScreen(new WandScreen(mainHand));
+                        //?}
                         continue;
                     }
 
@@ -248,10 +248,10 @@ public class WandsModClient {
                     // MENU without shift: open wand settings client-side
                     if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown() && holdingWand) {
                         //?if >=26.2 {
-                        client.gui.setScreen(new WandScreen(mainHand));
-                        //?}else{
-                        /*client.setScreen(new WandScreen(mainHand));
-                        *///?}
+                        /*client.gui.setScreen(new WandScreen(mainHand));
+                        *///?}else{
+                        client.setScreen(new WandScreen(mainHand));
+                        //?}
                         continue;
                     }
                     if (key == WandsMod.WandKeys.CLEAR) {

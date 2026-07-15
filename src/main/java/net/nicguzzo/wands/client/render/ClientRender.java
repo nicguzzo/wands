@@ -106,10 +106,10 @@ public class ClientRender {
     static boolean copy_outlines = false;
     static boolean paste_outlines = false;
     //?if >=26.2 {
-    static net.minecraft.client.renderer.SubmitNodeStorage submitNodeStorage;
-    //?}else{
-    /*static net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource;
-    *///?}
+    /*static net.minecraft.client.renderer.SubmitNodeStorage submitNodeStorage;
+    *///?}else{
+    static net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource;
+    //?}
     static Minecraft client;
     private static final RcId GRID_TEXTURE = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "textures/blocks/grid.png");
 
@@ -146,19 +146,19 @@ public class ClientRender {
 
     public static void render(PoseStack matrixStack
     //?if >=26.2 {
-            ,net.minecraft.client.renderer.SubmitNodeStorage _submitNodeStorage
-    //?}else{
-            /*,net.minecraft.client.renderer.MultiBufferSource.BufferSource _bufferSource
-    *///?}
+            /*,net.minecraft.client.renderer.SubmitNodeStorage _submitNodeStorage
+    *///?}else{
+            ,net.minecraft.client.renderer.MultiBufferSource.BufferSource _bufferSource
+    //?}
     ) {
         if(wand==null) {
             return;
         }
         //?if >=26.2 {
-        submitNodeStorage = _submitNodeStorage;
-        //?}else{
-        /*bufferSource=_bufferSource;
-        *///?}
+        /*submitNodeStorage = _submitNodeStorage;
+        *///?}else{
+        bufferSource=_bufferSource;
+        //?}
         RenderUtils.wand=wand;
         RenderUtils.random=random;
         client = Minecraft.getInstance();
@@ -298,10 +298,10 @@ public class ClientRender {
     private static void preview_mode(Mode mode, PoseStack poseStack) {
 
         //?if >= 26.2 {
-        Camera camera = client.gameRenderer.mainCamera();
-        //?}else{
-        /*Camera camera = client.gameRenderer.getMainCamera();
-        *///?}
+        /*Camera camera = client.gameRenderer.mainCamera();
+        *///?}else{
+        Camera camera = client.gameRenderer.getMainCamera();
+        //?}
 
         if (camera.isInitialized() && last_pos != null) {
             poseStack.pushPose();
@@ -842,7 +842,7 @@ public class ClientRender {
        }
     }
     //?if >= 1.21.11 < 26.2 {
-    /*static private VertexConsumer getVertexConsumerDebugQuads(){
+    static private VertexConsumer getVertexConsumerDebugQuads(){
         return bufferSource.getBuffer(RenderTypes.debugQuads());
     }
     static private VertexConsumer getVertexConsumerPVBlock(){
@@ -851,7 +851,7 @@ public class ClientRender {
     static private VertexConsumer getVertexConsumerDirMode(){
         return bufferSource.getBuffer(RenderTypes.entityTranslucent(GRID_TEXTURE.id()));
     }
-    *///?}
+    //?}
     
     //?if >= 1.21 < 1.21.11 {
     /*static private VertexConsumer getVertexConsumerDebugQuads(){
@@ -883,15 +883,15 @@ public class ClientRender {
     *///?}
     static private void submitGeometry(PoseStack matrixStack, int type, java.util.function.Consumer<VertexConsumer> drawer) {
         //?if >= 26.2 {
-            net.minecraft.client.renderer.rendertype.RenderType rt = null;
+            /*net.minecraft.client.renderer.rendertype.RenderType rt = null;
             if (type == 0) rt = RenderTypes.debugQuads();
             else if (type == 1) rt = RenderTypes.translucentMovingBlock();
             else if (type == 2) rt = RenderTypes.entityTranslucent(GRID_TEXTURE.id());
             if (rt != null) {
                 submitNodeStorage.submitCustomGeometry(matrixStack, rt, (pose, consumer) -> drawer.accept(consumer));
             }
-        //?}else{
-            /*VertexConsumer consumer = null;
+        *///?}else{
+            VertexConsumer consumer = null;
             if (type == 0) consumer = getVertexConsumerDebugQuads();
             else if (type == 1) consumer = getVertexConsumerPVBlock();
             else if (type == 2) consumer = getVertexConsumerDirMode();
@@ -900,14 +900,14 @@ public class ClientRender {
                 //?if > 1.20.1 {
                 bufferSource.endLastBatch();
                 //?}else{
-                /^if (type == 2) {
+                /*if (type == 2) {
                     com.mojang.blaze3d.vertex.Tesselator.getInstance().end();
                 } else {
                     bufferSource.endLastBatch();
                 }
-                ^///?}
+                *///?}
             }
-        *///?}
+        //?}
     }
     static public void consumerDirMode(VertexConsumer consumer, Matrix4f matrix, float x, float y, float z, float u, float v, int color, float nx, float ny, float nz, int light, int overlay) {
         //?if >=1.21{
