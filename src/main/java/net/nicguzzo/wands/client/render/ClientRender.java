@@ -364,7 +364,7 @@ public class ClientRender {
     }
     /** Shared outline renderer: draws wireframe outlines from block_buffer */
     public static void render_mode_outline(PoseStack matrixStack, int pos_x,int pos_y,int pos_z){
-        Matrix4f matrix = matrixStack.last().pose();
+
         if(client.level==null) {
             return;
         }
@@ -385,7 +385,8 @@ public class ClientRender {
             };
             BlockPos.MutableBlockPos fluid_pos=new BlockPos.MutableBlockPos();
             final Colorf final_mode_outline_color = mode_outline_color;
-            submitGeometry(matrixStack, 0, (consumer) -> {
+            submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                 for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                     float x = wand.block_buffer.buffer_x[idx]-pos_x;
                     float y = wand.block_buffer.buffer_y[idx]-pos_y;
@@ -441,18 +442,18 @@ public class ClientRender {
             float v1 = sprite.getV1();
 
             int block_buffer_length = wand.block_buffer.get_length();
-            submitGeometry(matrixStack, 1, (consumer) -> {
+            submitGeometry(matrixStack, 1, (poseStack, consumer) -> {
                 for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
                     bp.set(wand.block_buffer.buffer_x[idx], wand.block_buffer.buffer_y[idx], wand.block_buffer.buffer_z[idx]);
-                    matrixStack.pushPose();
-                    matrixStack.translate(
+                    poseStack.pushPose();
+                    poseStack.translate(
                         wand.block_buffer.buffer_x[idx]-pos_x,
                         wand.block_buffer.buffer_y[idx]-pos_y,
                         wand.block_buffer.buffer_z[idx]-pos_z);
-                    RenderUtils.render_fluid(consumer, matrixStack.last().pose(),
+                    RenderUtils.render_fluid(consumer, poseStack.last().pose(),
                         0, 0, 0,
                         color, u0, v1, u1, v0);
-                    matrixStack.popPose();
+                    poseStack.popPose();
                 }
             });
         } catch (Exception e) {
@@ -464,11 +465,12 @@ public class ClientRender {
 
     /** Renders the 3x3 grid overlay on block faces for DIRECTION mode */
     static void preview_direction_mode_grid( PoseStack matrixStack, float pos_x, float pos_y, float pos_z){
-        Matrix4f matrix = matrixStack.last().pose();
+
         if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
-                submitGeometry(matrixStack, 2, (consumer) -> {
+                submitGeometry(matrixStack, 2, (poseStack, consumer) -> {
+                org.joml.Matrix4f matrix = poseStack.last().pose();
                 int vi = 0;
                 int color=0xffffffff;
                 int light=15728880;
@@ -581,19 +583,19 @@ public class ClientRender {
                     //tmap.get("Sampler0").sampler().
                     //WandsMod.log("block_buffer_length "+block_buffer_length ,prnt);
 
-                    submitGeometry(matrixStack, 1, (consumer) -> {
+                    submitGeometry(matrixStack, 1, (poseStack, consumer) -> {
                          for (int idx = 0; idx < block_buffer_length && idx < WandsConfig.max_limit; idx++) {
                              //WandsMod.log("state "+wand.block_buffer.state[idx] ,prnt);
                              if (wand.block_buffer.state[idx] != null) {
                                  BlockState l_st = wand.block_buffer.state[idx];
-                                RenderUtils.render_shape(matrixStack,consumer, l_st,
+                                RenderUtils.render_shape(poseStack,consumer, l_st,
                                         wand.block_buffer.buffer_x[idx]-pos_x,
                                         wand.block_buffer.buffer_y[idx]-pos_y,
                                         wand.block_buffer.buffer_z[idx]-pos_z);
 
                                 //TODO: all double blocks!!
                                 if (l_st.hasProperty(DoublePlantBlock.HALF)) {
-                                    RenderUtils.render_shape(matrixStack,consumer,
+                                    RenderUtils.render_shape(poseStack,consumer,
                                             l_st.setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
                                             wand.block_buffer.buffer_x[idx]-pos_x,
                                             wand.block_buffer.buffer_y[idx]-pos_y + 1,
@@ -601,7 +603,7 @@ public class ClientRender {
                                 } else {
                                     if (l_st.getBlock() instanceof DoorBlock) {
 
-                                        RenderUtils.render_shape(matrixStack,consumer,
+                                        RenderUtils.render_shape(poseStack,consumer,
                                                 l_st.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
                                                 wand.block_buffer.buffer_x[idx]-pos_x,
                                                 wand.block_buffer.buffer_y[idx]-pos_y + 1,
@@ -622,7 +624,6 @@ public class ClientRender {
     /** Renders bounding box outline for COPY, FILL, BOX, PASTE modes */
     static void preview_bbox(PoseStack matrixStack){
         float off2 = 0.05f;
-        Matrix4f matrix=matrixStack.last().pose();
         float bb1_x=wand.bb1_x;
         float bb1_y=wand.bb1_y;
         float bb1_z=wand.bb1_z;
@@ -630,7 +631,8 @@ public class ClientRender {
         float bb2_y=wand.bb2_y;
         float bb2_z=wand.bb2_z;
         // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-        submitGeometry(matrixStack, 0, (consumer) -> {
+        submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
             RenderUtils.preview_block(matrix,consumer,
                     bb1_x - off2,
                     bb1_y - off2,
@@ -657,10 +659,11 @@ public class ClientRender {
         float y2 = wand.bb2_y + off2;
         float z2 = wand.bb2_z + off2;
 
-        Matrix4f matrix = matrixStack.last().pose();
+
         Colorf color=new Colorf(bbox_col.r,bbox_col.g,bbox_col.b,alpha);
 
-        submitGeometry(matrixStack, 0, (consumer) -> {
+        submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
             // Top face (y = y2)
             Compat.consumerAddVertexColor(consumer,matrix, x1, y2, z1,color);
             Compat.consumerAddVertexColor(consumer,matrix, x1, y2, z2,color);
@@ -707,7 +710,6 @@ public class ClientRender {
                                  float pos_z,
                                  float off
     ){
-        Matrix4f matrix=matrixStack.last().pose();
         boolean pinActive = wand.pin.isActive();
         // Skip cursor ghost block/outline when pin is active — pin outline replaces it
         if (drawlines && !pinActive && wand.getP1() ==null &&(
@@ -724,8 +726,8 @@ public class ClientRender {
             if (fancy && mode != Mode.COPY){
                 if (wand.offhand_state!=null) {
                     random.setSeed(0);
-                    submitGeometry(matrixStack, 1, (consumer) -> {
-                        RenderUtils.render_shape(matrixStack,consumer, wand.offhand_state,
+                    submitGeometry(matrixStack, 1, (poseStack, consumer) -> {
+                        RenderUtils.render_shape(poseStack,consumer, wand.offhand_state,
                                                 pos_x,pos_y,pos_z);
                     });
                 } else if (wand.has_water_bucket || wand.has_lava_bucket) {
@@ -733,12 +735,12 @@ public class ClientRender {
                     //    TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
                     //    int color = get_fluid_color();
                     //    VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
-                    //    matrixStack.pushPose();
-                    //    //matrixStack.translate(pos_x, pos_y, pos_z);
-                    //    render_fluid(consumer, matrixStack.last().pose(),
+                    //    poseStack.pushPose();
+                    //    //poseStack.translate(pos_x, pos_y, pos_z);
+                    //    render_fluid(consumer, poseStack.last().pose(),
                     //        0, 0, 0, color,
                     //        sprite.getU0(), sprite.getV1(), sprite.getU1(), sprite.getV0());
-                    //    matrixStack.popPose();
+                    //    poseStack.popPose();
                     //    bufferSource.endLastBatch();
                     //} catch (Exception e) {
                     //    WandsMod.log("preview_selected fluid exception: " + e.getMessage(), true);
@@ -746,7 +748,8 @@ public class ClientRender {
                 }
             }
             // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-            submitGeometry(matrixStack, 0, (consumer) -> {
+            submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                 RenderUtils.preview_block(matrix,consumer,
                             (0  - off),
                             (0  - off),
@@ -763,7 +766,8 @@ public class ClientRender {
             float p1x = wand.getP1().getX()-pos_x;
             float p1y = wand.getP1().getY()-pos_y;
             float p1z = wand.getP1().getZ()-pos_z;
-            submitGeometry(matrixStack, 0, (consumer) -> {
+            submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                 RenderUtils.preview_block(matrix, consumer,
                             p1x - off, p1y - off, p1z - off,
                             p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
@@ -784,7 +788,8 @@ public class ClientRender {
             float ax = pinDrawPos.getX()-pos_x;
             float ay = pinDrawPos.getY()-pos_y;
             float az = pinDrawPos.getZ()-pos_z;
-            submitGeometry(matrixStack, 0, (consumer) -> {
+            submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                 RenderUtils.preview_block(matrix, consumer,
                         ax - off, ay - off, az - off,
                         ax + 1 + off, ay + 1 + off, az + 1 + off,
@@ -801,9 +806,9 @@ public class ClientRender {
                                  float off2
     )
     {
-       Matrix4f matrix = matrixStack.last().pose();
        boolean even = WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
-       submitGeometry(matrixStack, 0, (consumer) -> {
+       submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
             RenderUtils.preview_block(matrix,consumer,
                     p1_x - off,
                     p1_y - off,
@@ -816,7 +821,8 @@ public class ClientRender {
        });
        if (has_target) {
            float finalOff = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
-           submitGeometry(matrixStack, 0, (consumer) -> {
+           submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                 RenderUtils.preview_block(matrix,consumer,
                         0 - finalOff + off,
                         0 - finalOff,
@@ -828,7 +834,8 @@ public class ClientRender {
            });
            if(mode!=Mode.FILL) {
                float finalOff2 = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
-               submitGeometry(matrixStack, 0, (consumer) -> {
+               submitGeometry(matrixStack, 0, (poseStack, consumer) -> {
+            org.joml.Matrix4f matrix = poseStack.last().pose();
                    RenderUtils.player_facing_line(consumer,matrix,
                             p1_x + finalOff2,
                             p1_y + finalOff2 + 0.5f,
@@ -881,14 +888,19 @@ public class ClientRender {
         return bufferBuilder;
     }
     *///?}
-    static private void submitGeometry(PoseStack matrixStack, int type, java.util.function.Consumer<VertexConsumer> drawer) {
+    static private void submitGeometry(PoseStack matrixStack, int type, java.util.function.BiConsumer<PoseStack, VertexConsumer> drawer) {
         //?if >= 26.2 {
             /*net.minecraft.client.renderer.rendertype.RenderType rt = null;
             if (type == 0) rt = RenderTypes.debugQuads();
             else if (type == 1) rt = RenderTypes.translucentMovingBlock();
             else if (type == 2) rt = RenderTypes.entityTranslucent(GRID_TEXTURE.id());
             if (rt != null) {
-                submitNodeStorage.submitCustomGeometry(matrixStack, rt, (pose, consumer) -> drawer.accept(consumer));
+                submitNodeStorage.submitCustomGeometry(matrixStack, rt, (pose, consumer) -> {
+                    com.mojang.blaze3d.vertex.PoseStack tempStack = new com.mojang.blaze3d.vertex.PoseStack();
+                    tempStack.last().pose().set(pose.pose());
+                    tempStack.last().normal().set(pose.normal());
+                    drawer.accept(tempStack, consumer);
+                });
             }
         *///?}else{
             VertexConsumer consumer = null;
@@ -896,7 +908,7 @@ public class ClientRender {
             else if (type == 1) consumer = getVertexConsumerPVBlock();
             else if (type == 2) consumer = getVertexConsumerDirMode();
             if (consumer != null) {
-                drawer.accept(consumer);
+                drawer.accept(matrixStack, consumer);
                 //?if > 1.20.1 {
                 bufferSource.endLastBatch();
                 //?}else{
