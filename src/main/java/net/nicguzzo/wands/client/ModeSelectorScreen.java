@@ -101,7 +101,12 @@ public class ModeSelectorScreen extends Screen {
 
     public static boolean consumesKey(WandsMod.WandKeys key) {
         if (key == WandsMod.WandKeys.MODE) return true;
-        if (Minecraft.getInstance().screen instanceof ModeSelectorScreen) {
+        //?if >=26.2 {
+        /*Screen screen=Minecraft.getInstance().gui.screen();
+        *///?}else{
+        Screen screen=Minecraft.getInstance().screen;
+        //?}
+        if (screen instanceof ModeSelectorScreen) {
             switch (key) {
                 case N_INC:
                 case N_DEC:
@@ -121,9 +126,13 @@ public class ModeSelectorScreen extends Screen {
             resetHold();
             return;
         }
-
-        if (client.screen instanceof ModeSelectorScreen) return;
-        if (client.screen != null) {
+        //?if >=26.2 {
+        /*Screen screen=Minecraft.getInstance().gui.screen();
+        *///?}else{
+        Screen screen=Minecraft.getInstance().screen;
+        //?}
+        if (screen instanceof ModeSelectorScreen) return;
+        if (screen != null) {
             resetHold();
             return;
         }
@@ -143,15 +152,22 @@ public class ModeSelectorScreen extends Screen {
         }
 
         boolean modeKeyPressed = GLFW.glfwGetKey(window, modeKeyCode) == GLFW.GLFW_PRESS;
+        //?if >=26.2 {
+        /*int currentTick = client.gui.hud.getGuiTicks();
+        *///?}else{
         int currentTick = client.gui.getGuiTicks();
-
+        //?}
         if (modeKeyPressed) {
             if (holdStartTick == -1) {
                 holdStartTick = currentTick;
                 holdTriggered = false;
             } else if (!holdTriggered && (currentTick - holdStartTick) >= HOLD_THRESHOLD) {
                 holdTriggered = true;
+                //?if >=26.2 {
+                /*client.gui.setScreen(new ModeSelectorScreen(mainHand));
+                *///?}else{
                 client.setScreen(new ModeSelectorScreen(mainHand));
+                //?}
             }
         } else {
             if (holdStartTick != -1 && !holdTriggered) {
@@ -159,10 +175,6 @@ public class ModeSelectorScreen extends Screen {
             }
             resetHold();
         }
-    }
-
-    public static boolean isGridOpen() {
-        return Minecraft.getInstance().screen instanceof ModeSelectorScreen;
     }
 
     // ========== Screen overrides ==========

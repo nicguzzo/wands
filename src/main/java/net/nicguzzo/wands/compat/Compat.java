@@ -2,12 +2,12 @@ package net.nicguzzo.wands.compat;
 
 //?if<1.21.11{
 
-// import com.mojang.blaze3d.systems.RenderSystem;
-// import net.minecraft.client.gui.screens.Screen;
-//?}
+ /*import com.mojang.blaze3d.systems.RenderSystem;
+ import net.minecraft.client.gui.screens.Screen;
+*///?}
 //?if<=1.21.11{
-//import net.minecraft.client.resources.model.ModelBakery;
-//?}
+/*import net.minecraft.client.resources.model.ModelBakery;
+*///?}
 //?if>26.1{
 //?if fabric {
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
@@ -343,9 +343,9 @@ public class Compat {
     static public BlockPos get_player_pos(Player player){
         return player.getOnPos();
     }
-    static public Vec3 get_player_pos_center(Player player) {
-        return player.getOnPos().getCenter();
-    }
+    //static public Vec3 get_player_pos_center(Player player) {
+    //    return player.getOnPos().getCenter();
+    //}
     static public boolean is_same(ItemStack i1,ItemStack i2){
         return ItemStack.isSameItem(i1,i2);
     }
@@ -377,7 +377,9 @@ public class Compat {
     }
     static public void toast(Toast toast){
         //? if >= 1.21.6 {
-        Minecraft.getInstance().getToastManager().addToast(toast);
+            //?if < 26.2{
+            Minecraft.getInstance().getToastManager().addToast(toast);
+            //?}
         //? } else {
 
         /*Minecraft.getInstance().getToasts().addToast(toast);

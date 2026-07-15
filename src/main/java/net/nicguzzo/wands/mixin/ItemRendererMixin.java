@@ -13,11 +13,14 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 //?if <1.21.11{
 /*import net.minecraft.client.resources.model.BakedModel;
+
 *///?}
 //?if < 26.1 {
 /*import net.minecraft.client.renderer.entity.ItemRenderer;
-*///?}
 import net.minecraft.client.renderer.MultiBufferSource;
+
+*///?}
+
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -99,7 +102,7 @@ public abstract class ItemRendererMixin {
     }
 
 }
- 
+
 *///?}
 //?if >=1.21.11 {
 @Mixin(GuiGraphicsExtractor.class)

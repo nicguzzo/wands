@@ -1,10 +1,9 @@
 package net.nicguzzo.wands.client.render;
 
 //? if>=26.1 {
-    
+
     import net.minecraft.client.renderer.block.BlockAndTintGetter;
     import com.mojang.blaze3d.textures.GpuTextureView;
-    import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
     import net.minecraft.client.renderer.rendertype.RenderTypes;
 //?}
 
@@ -20,14 +19,13 @@ package net.nicguzzo.wands.client.render;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 *///?}
-//?if <1.21.1{
-/*import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.model.BakedQuad;
+//? if < 1.21.1 {
+/*import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.resources.model.BakedModel;
 *///?}
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.world.level.Level;
+    import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Camera;
@@ -107,23 +105,15 @@ public class ClientRender {
     static boolean fill_outlines = false;
     static boolean copy_outlines = false;
     static boolean paste_outlines = false;
-    //static PoseStack matrixStack2 = new PoseStack();
-    static float lines_width = 0.05f;
+    //?if <26.2 {
+    static  net.minecraft.client.renderer.MultiBufferSource.BufferSource bufferSource;
+    //?}
     static Minecraft client;
     private static final RcId GRID_TEXTURE = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "textures/blocks/grid.png");
-    //private static final Identifier LINE_TEXTURE = Identifier.fromNamespaceAndPath(WandsMod.MOD_ID,"textures/blocks/line.png");
-    //?if > 1.21.11 {
-    private static GpuTextureView water_texture=null;
-    private static GpuTextureView lava_texture=null;
-    //?}
-    //private static GpuTexture grid_texture=null;
+
     static public RandomSource random = RandomSource.create();
-    static Direction[] dirs = {Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, null};
-    static Vec3 player_normal;
-    //?if <=1.21.1 {
-    /*private static final float[] brightness=new float[]{1.0f, 1.0f, 1.0f, 1.0f};
-    private static final int[] lightmap= new int[]{255,255,255,255};
-    *///?}
+
+
     public enum Colors {
         BLOCK_OUTLINE,
         BOUNDING_BOX,
@@ -152,10 +142,17 @@ public class ClientRender {
     static int mirroraxis=0;
 
 
-    public static void render(PoseStack matrixStack,MultiBufferSource.BufferSource bufferSource) {
+    public static void render(PoseStack matrixStack
+    //?if <26.2 {
+            ,MultiBufferSource.BufferSource _bufferSource
+    //?}
+    ) {
         if(wand==null) {
             return;
         }
+        //bufferSource=_bufferSource;
+        RenderUtils.wand=wand;
+        RenderUtils.random=random;
         client = Minecraft.getInstance();
         if(client.level==null)
             return;
@@ -179,9 +176,10 @@ public class ClientRender {
         copy_outlines = WandsMod.config.copy_outlines;
         paste_outlines = WandsMod.config.paste_outlines;
         opacity = WandsMod.config.preview_opacity;
+        RenderUtils.opacity = opacity;
         fancy = WandsConfig.get_instance().fancy_preview;
         if (WandsConfig.get_instance().fat_lines_width > 0 && WandsConfig.get_instance().fat_lines_width < 0.5) {
-            lines_width = WandsConfig.get_instance().fat_lines_width;
+            RenderUtils.lines_width = WandsConfig.get_instance().fat_lines_width;
         }
         ItemStack stack = player.getMainHandItem();
         prnt = false;
@@ -205,26 +203,17 @@ public class ClientRender {
             boolean pinActive = wand.pin.isActive();
 
             if (pinActive) {
-                preview_pinned(player,client.level,stack,matrixStack,bufferSource);
+                preview_pinned(player,client.level,stack,matrixStack);
             }else{
-                preview_interactive(player,client.level,stack,matrixStack,bufferSource);
+                preview_interactive(player,client.level,stack,matrixStack);
             }
         }
     }
 
 
-    static private void preview_pinned(LocalPlayer player,Level level, ItemStack stack,PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
-        if(last_pos != wand.pin.getPos()) {
-            last_pos = wand.pin.getPos();
-            last_side = wand.pin.getEffectiveSide(ClientRender.client.hitResult, player.getDirection());
-            BlockState block_state = level.getBlockState(last_pos);
-            Vec3 hitLoc = player.getEyePosition();
-            wand.do_or_preview(player, level, block_state, last_pos, last_side, hitLoc, stack, (WandItem) stack.getItem(), prnt);
-        }
-        preview_mode(wand.mode, matrixStack, bufferSource);
-    }
 
-    static private void preview_interactive(LocalPlayer player, Level level, ItemStack stack, PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
+
+    static private void preview_interactive(LocalPlayer player, Level level, ItemStack stack, PoseStack matrixStack) {
         HitResult hitResult;
         if (wand.reach_distance > 0) {
             double baseReach = Compat.is_creative(player) ? 5.0 : 4.5;
@@ -282,11 +271,23 @@ public class ClientRender {
         //WandsMod.log("buffer "+wand.block_buffer.get_length(),prnt);
         //WandsMod.log("last_pos "+last_pos,prnt);
         //WandsMod.log("last_side "+last_side,prnt);
-        preview_mode(wand.mode, matrixStack, bufferSource);
+        preview_mode(wand.mode, matrixStack);
+    }
+
+
+    static private void preview_pinned(LocalPlayer player,Level level, ItemStack stack,PoseStack matrixStack) {
+        if(last_pos != wand.pin.getPos()) {
+            last_pos = wand.pin.getPos();
+            last_side = wand.pin.getEffectiveSide(ClientRender.client.hitResult, player.getDirection());
+            BlockState block_state = level.getBlockState(last_pos);
+            Vec3 hitLoc = player.getEyePosition();
+            wand.do_or_preview(player, level, block_state, last_pos, last_side, hitLoc, stack, (WandItem) stack.getItem(), prnt);
+        }
+        preview_mode(wand.mode, matrixStack);
     }
 
     /** Main preview entry point - routes to appropriate preview methods based on mode */
-    private static void preview_mode(Mode mode, PoseStack poseStack,MultiBufferSource.BufferSource bufferSource) {
+    private static void preview_mode(Mode mode, PoseStack poseStack) {
 
         Camera camera = client.gameRenderer.getMainCamera();
 
@@ -314,7 +315,7 @@ public class ClientRender {
             //RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 0.8f);
             switch (mode) {
                 case DIRECTION:
-                    preview_direction_mode_grid(bufferSource,poseStack.last().pose(),0,0,0);
+                    preview_direction_mode_grid(poseStack.last().pose(),0,0,0);
                 case ROW_COL:
                 case FILL:
                 case AREA:
@@ -327,21 +328,21 @@ public class ClientRender {
                 case ROCK:
                 case COPY:
                 case PASTE:
-                    preview_selected(mode,bufferSource,poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ(),off3);
+                    preview_selected(mode,poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ(),off3);
                     if (wand.valid || (mode.n_clicks() == 2 && wand.getP1() != null)){
                         //bbox
                         boolean showBbox = (mode == Mode.COPY && copy_outlines) ||
                             (fill_outlines && (mode == Mode.ROW_COL || mode == Mode.FILL || mode == Mode.BOX));
                         if (drawlines && showBbox) {
-                            preview_bbox(bufferSource,poseStack);
+                            preview_bbox(poseStack);
                             if (!block_outlines) {
-                                preview_bbox_faces(bufferSource, poseStack);
+                                preview_bbox_faces( poseStack);
                             }
                         }
                         //actual block preview
-                        preview_block_buffer(bufferSource,poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ());
+                        preview_block_buffer(poseStack,last_pos.getX(),last_pos.getY(), last_pos.getZ());
                         if (drawlines && p1 != null  && (mode == Mode.FILL|| mode == Mode.LINE || mode == Mode.CIRCLE || mode == Mode.SPHERE || mode == Mode.COPY)) {
-                           preview_line_circle(poseStack.last().pose(),mode,bufferSource,p1_x,p1_y,p1_z,off3,off2);
+                           preview_line_circle(poseStack.last().pose(),mode,p1_x,p1_y,p1_z,off3,off2);
                         }
                     }
                 break;
@@ -350,7 +351,7 @@ public class ClientRender {
         }
     }
     /** Shared outline renderer: draws wireframe outlines from block_buffer */
-    public static void render_mode_outline(Matrix4f matrix, MultiBufferSource.BufferSource bufferSource,int pos_x,int pos_y,int pos_z){
+    public static void render_mode_outline(Matrix4f matrix, int pos_x,int pos_y,int pos_z){
         if(client.level==null) {
             return;
         }
@@ -369,7 +370,7 @@ public class ClientRender {
             if(wand.has_empty_bucket ){
                 preview_shape = Blocks.STONE.defaultBlockState().getShape(client.level, last_pos);
             };
-            VertexConsumer consumer =getVertexConsumerDebugQuads(bufferSource);
+            VertexConsumer consumer =getVertexConsumerDebugQuads();
             BlockPos.MutableBlockPos fluid_pos=new BlockPos.MutableBlockPos();
             for (int idx = 0; idx < wand.block_buffer.get_length() && idx < WandsConfig.max_limit; idx++) {
                 float x = wand.block_buffer.buffer_x[idx]-pos_x;
@@ -391,7 +392,7 @@ public class ClientRender {
                     }
                     List<AABB> list = preview_shape.toAabbs();
                     for (AABB aabb : list) {
-                            preview_block_fat(matrix,consumer,
+                            RenderUtils.preview_block(matrix,consumer,
                             x + (float) aabb.minX, y + (float) aabb.minY, z + (float) aabb.minZ,
                             x + (float) aabb.maxX, y + (float) aabb.maxY, z + (float) aabb.maxZ,
                             mode_outline_color,wand.destroy);
@@ -400,259 +401,6 @@ public class ClientRender {
             }
             bufferSource.endLastBatch();
         }
-    }
-
-    /** Render an outline for the target air block position (used in Copy mode with target_air) */
-    public static void render_air_target_outline(BlockPos pos, PoseStack matrixStack, MultiBufferSource.BufferSource bufferSource) {
-        Camera camera = client.gameRenderer.getMainCamera();
-        //?if>=1.21.11{
-        Vec3 camPos = camera.position();
-        //?}else{
-        /*Vec3 camPos = camera.getPosition();
-        *///?}
-
-        matrixStack.pushPose();
-        matrixStack.translate(-camPos.x, -camPos.y, -camPos.z);
-
-        // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-        VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-
-        float x = pos.getX();
-        float y = pos.getY();
-        float z = pos.getZ();
-
-        preview_block_fat(matrixStack.last().pose(), consumer, x, y, z, x + 1, y + 1, z + 1, bo_col, false);
-
-        bufferSource.endLastBatch();
-        matrixStack.popPose();
-    }
-
-    // Draws box outline using quads (works with debugQuads render type)
-    static void preview_block(Matrix4f matrix, VertexConsumer consumer, float fx1, float fy1, float fz1, float fx2, float fy2, float fz2, Colorf c) {
-        // Use thin quad lines when fat_lines is disabled
-        float w = lines_width;
-        float off = 0.005f;
-        fx1 -= off;
-        fy1 -= off;
-        fz1 -= off;
-        fx2 += off;
-        fy2 += off;
-        fz2 += off;
-        // Draw box edges as thin quads
-        //north -z
-        quad_line(matrix,consumer,  0, w,0, fx1,   fy1, fz1, fx2,   fy1, fz1,c);
-        quad_line(matrix,consumer,  0,-w,0, fx2,   fy2, fz1, fx1,   fy2, fz1,c);
-        quad_line(matrix,consumer,  w, 0,0, fx1, fy2-w, fz1, fx1, fy1+w, fz1,c);
-        quad_line(matrix,consumer, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1,c);
-        //south +z
-        quad_line(matrix,consumer,  0, w,0, fx2,   fy1, fz2, fx1,   fy1, fz2,c);
-        quad_line(matrix,consumer,  0,-w,0, fx1,   fy2, fz2, fx2,   fy2, fz2,c);
-        quad_line(matrix,consumer,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2,c);
-        quad_line(matrix,consumer, -w, 0,0, fx2, fy2-w, fz2, fx2, fy1+w, fz2,c);
-        //up +y
-        quad_line(matrix,consumer,  w,0, 0, fx1  , fy2, fz2, fx1 , fy2, fz1,c);
-        quad_line(matrix,consumer, -w,0, 0, fx2  , fy2, fz1, fx2 , fy2, fz2,c);
-        quad_line(matrix,consumer,  0,0, w, fx1+w, fy2, fz1, fx2-w, fy2, fz1,c);
-        quad_line(matrix,consumer,  0,0,-w, fx2-w, fy2, fz2, fx1+w, fy2, fz2,c);
-        //down -y
-        quad_line(matrix,consumer,  w,0, 0, fx1, fy1, fz1, fx1  , fy1, fz2,c);
-        quad_line(matrix,consumer, -w,0, 0, fx2  , fy1, fz2,fx2, fy1, fz1,c);
-        quad_line(matrix,consumer,  0,0, w, fx2-w, fy1, fz1,fx1+w, fy1, fz1,c);
-        quad_line(matrix,consumer,  0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2,c);
-        //east +x
-        quad_line(matrix,consumer, 0, w, 0, fx2,   fy1, fz1, fx2,   fy1, fz2,c);
-        quad_line(matrix,consumer, 0,-w, 0, fx2,   fy2, fz2, fx2,   fy2, fz1,c);
-        quad_line(matrix,consumer, 0, 0, w, fx2, fy2-w, fz1, fx2, fy1+w, fz1,c);
-        quad_line(matrix,consumer, 0, 0,-w, fx2, fy1+w, fz2, fx2, fy2-w, fz2,c);
-        //west -x
-        quad_line(matrix,consumer, 0, w,0,   fx1,   fy1, fz2,fx1,   fy1, fz1,c);
-        quad_line(matrix,consumer, 0,-w, 0, fx1,   fy2, fz1, fx1,   fy2, fz2,c);
-        quad_line(matrix,consumer, 0, 0,-w, fx1, fy2-w, fz1, fx1, fy1+w, fz1,c);
-        quad_line(matrix,consumer, 0, 0, w, fx1, fy1+w, fz2, fx1, fy2-w, fz2,c);
-    }
-
-    /** Low-level: draws a single wireframe box as thick quads, with optional X cross */
-    static void preview_block_fat(Matrix4f matrix,VertexConsumer consumer,float fx1, float fy1, float fz1, float fx2, float fy2, float fz2,Colorf c,boolean cross) {
-        float off=0.01f;
-        fx1 -= off;
-        fy1 -= off;
-        fz1 -= off;
-        fx2 += off;
-        fy2 += off;
-        fz2 += off;
-        //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
-        //Compat.set_texture(LINE_TEXTURE);
-        float w= lines_width;
-        //north -z
-        quad_line(matrix,consumer,  0, w,0, fx1,   fy1, fz1, fx2,   fy1, fz1,c);
-        quad_line(matrix,consumer,  0,-w,0, fx2,   fy2, fz1, fx1,   fy2, fz1,c);
-        quad_line(matrix,consumer,  w, 0,0, fx1, fy2-w, fz1, fx1, fy1+w, fz1,c);
-        quad_line(matrix,consumer, -w, 0,0, fx2, fy1+w, fz1, fx2, fy2-w, fz1,c);
-        if(cross) {
-            quad_line(matrix,consumer, -w, 0, 0,fx1+w, fy1, fz1,   fx2, fy2, fz1, c);
-            quad_line(matrix,consumer,  w, 0, 0,  fx1, fy2, fz1, fx2-w, fy1, fz1, c);
-        }
-        //south +z
-        quad_line(matrix,consumer,  0, w,0, fx2,   fy1, fz2, fx1,   fy1, fz2,c);
-        quad_line(matrix,consumer,  0,-w,0, fx1,   fy2, fz2, fx2,   fy2, fz2,c);
-        quad_line(matrix,consumer,  w, 0,0, fx1, fy1+w, fz2, fx1, fy2-w, fz2,c);
-        quad_line(matrix,consumer, -w, 0,0, fx2, fy2-w, fz2, fx2, fy1+w, fz2,c);
-        if(cross) {
-            quad_line(matrix,consumer,  w, 0, 0,   fx1, fy1, fz2, fx2-w, fy2, fz2, c);
-            quad_line(matrix,consumer, -w, 0, 0, fx1+w, fy2, fz2,   fx2, fy1, fz2, c);
-        }
-        //up +y
-        quad_line(matrix,consumer,  w,0, 0, fx1  , fy2, fz2, fx1 , fy2, fz1,c);
-        quad_line(matrix,consumer, -w,0, 0, fx2  , fy2, fz1, fx2 , fy2, fz2,c);
-        quad_line(matrix,consumer,  0,0, w, fx1+w, fy2, fz1, fx2-w, fy2, fz1,c);
-        quad_line(matrix,consumer,  0,0,-w, fx2-w, fy2, fz2, fx1+w, fy2, fz2,c);
-        if(cross) {
-            quad_line(matrix,consumer, -w, 0, 0,fx1+w, fy2, fz1,fx2, fy2, fz2, c);
-            quad_line(matrix,consumer,  w, 0, 0,fx1, fy2, fz2,fx2-w, fy2, fz1, c);
-        }
-        //down -y
-        quad_line(matrix,consumer,  w,0, 0, fx1, fy1, fz1, fx1  , fy1, fz2,c);
-        quad_line(matrix,consumer, -w,0, 0, fx2  , fy1, fz2,fx2, fy1, fz1,c);
-        quad_line(matrix,consumer,  0,0, w, fx2-w, fy1, fz1,fx1+w, fy1, fz1,c);
-        quad_line(matrix,consumer,  0,0,-w, fx1+w, fy1, fz2,  fx2-w, fy1, fz2,c);
-        if(cross) {
-            quad_line(matrix,consumer,  w, 0, 0,fx1, fy1, fz1,fx2-w, fy1, fz2, c);
-            quad_line(matrix,consumer, -w, 0, 0,fx1+w, fy1, fz2,fx2, fy1, fz1, c);
-        }
-        //east +x
-        quad_line(matrix,consumer, 0, w, 0, fx2,   fy1, fz1, fx2,   fy1, fz2,c);
-        quad_line(matrix,consumer, 0,-w, 0, fx2,   fy2, fz2, fx2,   fy2, fz1,c);
-        quad_line(matrix,consumer, 0, 0, w, fx2, fy2-w, fz1, fx2, fy1+w, fz1,c);
-        quad_line(matrix,consumer, 0, 0,-w, fx2, fy1+w, fz2, fx2, fy2-w, fz2,c);
-        if(cross) {
-            quad_line(matrix,consumer, 0, 0, w,fx1, fy1, fz1,fx1, fy2, fz2-w, c);
-            quad_line(matrix,consumer, 0, 0, w,fx1, fy1, fz2-w,fx1, fy2, fz1, c);
-        }
-        //west -x
-        quad_line(matrix,consumer, 0, w,0,   fx1,   fy1, fz2,fx1,   fy1, fz1,c);
-        quad_line(matrix,consumer, 0,-w,0, fx1,   fy2, fz1,  fx1,   fy2, fz2,c);
-        quad_line(matrix,consumer, 0,0, w, fx1, fy1+w, fz1,  fx1, fy2-w, fz1,c);
-        quad_line(matrix,consumer, 0,0,-w,   fx1, fy2-w, fz2,fx1, fy1+w, fz2,c);
-        if(cross) {
-            quad_line(matrix,consumer, 0, 0, -w,fx2, fy1, fz1+w,fx2, fy2, fz2, c);
-            quad_line(matrix,consumer, 0, 0, -w,fx2, fy1, fz2,fx2, fy2, fz1+w, c);
-        }
-    }
-
-    private static void quad_line(Matrix4f matrix, VertexConsumer consumer,
-                                  float wx,float wy,float wz,
-                                  float lx1, float ly1,float lz1,
-                                  float lx2, float ly2,float lz2,
-                                  Colorf c){
-
-        Compat.consumerAddVertexColor(consumer,matrix,   lx1,    ly1,    lz1,c);
-        Compat.consumerAddVertexColor(consumer,matrix,lx1+wx, ly1+wy, lz1+wz,c);
-        Compat.consumerAddVertexColor(consumer,matrix,lx2+wx, ly2+wy, lz2+wz,c);
-        Compat.consumerAddVertexColor(consumer,matrix,   lx2,    ly2,    lz2,c);
-    }
-
-    private static void player_facing_line(VertexConsumer consumer,Matrix4f matrix,float lx1, float ly1,float lz1,float lx2, float ly2,float lz2,Colorf c){
-
-        float w=0.05f;
-
-        float p1x=-lx1;
-        float p1y=-ly1;
-        float p1z=-lz1;
-
-        float p2x=lx2-lx1;
-        float p2y=ly2-ly1;
-        float p2z=lz2-lz1;
-
-        //cross product
-        float nx = p2y * p1z - p2z * p1y;
-        float ny = p2z * p1x - p2x * p1z;
-        float nz = p2x * p1y - p2y * p1x;
-        float l=(float)Math.sqrt(nx*nx+ny*ny+nz*nz);
-        if(l!=0){
-            nx=(nx/l)*w;
-            ny=(ny/l)*w;
-            nz=(nz/l)*w;
-        }
-        //RenderSystem.setShaderColor(c.r,c.g,c.b,c.a);
-
-        Compat.consumerAddVertexColor(consumer,matrix,lx1-nx, ly1-ny, lz1-nz,c);
-        Compat.consumerAddVertexColor(consumer,matrix,lx1+nx, ly1+ny, lz1+nz,c);
-        Compat.consumerAddVertexColor(consumer,matrix,lx2+nx, ly2+ny, lz2+nz,c);
-        Compat.consumerAddVertexColor(consumer,matrix,lx2-nx, ly2-ny, lz2-nz,c);
-
-    }
-    private static void set_grid_v(int i,float x, float y,float z){
-        if(i<grid_n) {
-            grid_vx[i]=x;
-            grid_vy[i]=y;
-            grid_vz[i]=z;
-        }
-    }
-    private static void add_grid_line(float x1, float y1,float z1,float x2, float y2,float z2){
-        set_grid_v(grid_i,x1, y1,z1);
-        grid_i++;
-        set_grid_v(grid_i,x2, y2,z2);
-        grid_i++;
-    }
-    // Draws lines as quads (for use with debugQuads render type)
-    private static void draw_lines(Matrix4f matrix, VertexConsumer consumer, int from, int to, float r, float g, float b, float a) {
-        float w = lines_width * 0.5f;
-        Colorf c = new Colorf(r, g, b, a);
-        // Draw lines as pairs of vertices (from is start, every 2 vertices is a line)
-        for (int i = from; i < to - 1 && i < grid_n - 1; i += 2) {
-            float x1 = grid_vx[i], y1 = grid_vy[i], z1 = grid_vz[i];
-            float x2 = grid_vx[i+1], y2 = grid_vy[i+1], z2 = grid_vz[i+1];
-            // Determine line direction and offset for quad width
-            float dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > Math.abs(dz)) {
-                // Horizontal X line - offset in Y and Z
-                quad_line(matrix, consumer, 0, w, 0, x1, y1, z1, x2, y2, z2, c);
-            } else if (Math.abs(dy) > Math.abs(dz)) {
-                // Vertical Y line - offset in X and Z
-                quad_line(matrix, consumer, w, 0, 0, x1, y1, z1, x2, y2, z2, c);
-            } else {
-                // Horizontal Z line - offset in X and Y
-                quad_line(matrix, consumer, w, 0, 0, x1, y1, z1, x2, y2, z2, c);
-            }
-        }
-    }
-
-    static void render_fluid(VertexConsumer consumer, Matrix4f matrix, float x, float y,float z,int color,float u1,float v1,float u0,float v0) {
-
-            float h = 1.0f;
-            float o = 0.05f;
-            int bf = 15728880;
-            //up
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + h - o, z + o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o    ,u0, v1,color,0,1,0,bf);
-            //down
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + o, z + o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o    , y + o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            //north -z
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + o        ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + o    ,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o    ,u0, v1,color,0,1,0,bf);
-            //south +z
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + 1 - o        ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o    ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + 1 - o    ,u1, v0,color,0,1,0,bf);
-            //east
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
-            //weast
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + o        ,u0, v1,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + o    ,u0, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + h - o, z + 1 - o,u1, v0,color,0,1,0,bf);
-            Compat.consumerAddVertexUvColorNormalLight(consumer,matrix,x + 1 - o, y + o, z + 1 - o    ,u1, v1,color,0,1,0,bf);
-
     }
 
     static int get_fluid_color() {
@@ -668,11 +416,11 @@ public class ClientRender {
         }
     }
 
-    static void preview_fluid_buffer(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack,int pos_x,int pos_y, int pos_z) {
+    static void preview_fluid_buffer( PoseStack matrixStack,int pos_x,int pos_y, int pos_z) {
         try {
             TextureAtlasSprite sprite = Compat.getFluidFlowSprite(wand.has_water_bucket);
             int color = get_fluid_color();
-            VertexConsumer consumer = getVertexConsumerPVBlock(bufferSource);
+            VertexConsumer consumer = getVertexConsumerPVBlock();
 
             float u0 = sprite.getU0();
             float v0 = sprite.getV0();
@@ -687,7 +435,7 @@ public class ClientRender {
                     wand.block_buffer.buffer_x[idx]-pos_x,
                     wand.block_buffer.buffer_y[idx]-pos_y,
                     wand.block_buffer.buffer_z[idx]-pos_z);
-                render_fluid(consumer, matrixStack.last().pose(),
+                RenderUtils.render_fluid(consumer, matrixStack.last().pose(),
                     0, 0, 0,
                     color, u0, v1, u1, v0);
                 matrixStack.popPose();
@@ -697,277 +445,15 @@ public class ClientRender {
             WandsMod.log("preview_fluid_buffer exception: " + e.getMessage(), true);
         }
     }
-//? if>=26.1 {
-    static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z) {
-        net.minecraft.client.renderer.block.dispatch.BlockStateModel bakedModel;
-        try {
-            bakedModel = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
-            java.util.List<net.minecraft.client.renderer.block.dispatch.BlockStateModelPart> parts_list = new java.util.ArrayList<>();
-            bakedModel.collectParts(random, parts_list);
 
-            if (!parts_list.isEmpty() ) {
-                matrixStack.pushPose();
-                if(wand.mode!=Mode.COPY ){
-                    Vec3i n=wand.getSide().getUnitVec3i();
-                    if(wand.replace) {
-                        matrixStack.translate(
-                            (0.5*(1.0-n.getX()))+n.getX(),
-                            (0.5*(1.0-n.getY()))+n.getY(),
-                            (0.5*(1.0-n.getZ()))+n.getZ()
-                        );
-                        matrixStack.scale(0.5f, 0.5f, 0.5f);
-                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
-                    }else {
-                        matrixStack.translate(x+0.5f,y+0.5f,z+0.5f);
-                        matrixStack.scale(0.9f, 0.9f, 0.9f);
-                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
-                    }
-                }
-                for (net.minecraft.client.renderer.block.dispatch.BlockStateModelPart part: parts_list) {
-                    for(Direction dir: dirs) {
-                        List<net.minecraft.client.resources.model.geometry.BakedQuad> bake_list = part.getQuads(dir);
-                        for (net.minecraft.client.resources.model.geometry.BakedQuad quad : bake_list) {
-                            int kk = -1;
-                            if (quad.materialInfo().isTinted()) {
-                                net.minecraft.client.color.block.BlockTintSource tintSource = client.getBlockColors().getTintSource(state, quad.materialInfo().tintIndex());
-                                if (tintSource != null) {
-                                    kk = tintSource.color(state);
-                                }
-                            }
-                            float ff = (float) (kk >> 16 & 0xFF) / 255.0F;
-                            float gg = (float) (kk >> 8 & 0xFF) / 255.0F;
-                            float hh = (float) (kk & 0xFF) / 255.0F;
-                            float k = 1.0F;
-                            float l = 1.0F;
-                            float m = 1.0F;
-                            if (kk != -1) {
-                                k = Mth.clamp(ff, 0.0F, 1.0F);
-                                l = Mth.clamp(gg, 0.0F, 1.0F);
-                                m = Mth.clamp(hh, 0.0F, 1.0F);
-                            }
-                            com.mojang.blaze3d.vertex.QuadInstance qinst = new com.mojang.blaze3d.vertex.QuadInstance();
-                            int a = (int)(opacity * 255.0F);
-                            int r = (int)(k * 255.0F);
-                            int g = (int)(l * 255.0F);
-                            int b = (int)(m * 255.0F);
-                            int color = (a << 24) | (r << 16) | (g << 8) | b;
-                            qinst.setColor(color);
-                            qinst.setLightCoords(15728880);
-                            qinst.setOverlayCoords(OverlayTexture.NO_OVERLAY);
-                            consumer.putBakedQuad(matrixStack.last(), quad, qinst);
-                        }
-                    }
-                }
-                matrixStack.popPose();
-            }
-        } catch (Exception e) {
-            WandsMod.log("render_shape error "+e.toString(),prnt);
-        }
-    }
-//?}
 
-//? if>=1.21.11 <26.1{
-    /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
-        BlockStateModel bakedModel;
-        BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        try {
-            bakedModel = blockRenderer.getBlockModel(state);
-            List<BlockModelPart> parts_list = bakedModel.collectParts(random);
-
-            if (!parts_list.isEmpty() ) {
-                matrixStack.pushPose();
-                //Compat.set_identity(matrixStack2);
-                if(wand.mode!=Mode.COPY ){
-                    Vec3i n=wand.getSide().getUnitVec3i();
-                    if(wand.replace) {
-                        matrixStack.translate(
-                            (0.5*(1.0-n.getX()))+n.getX(),
-                            (0.5*(1.0-n.getY()))+n.getY(),
-                            (0.5*(1.0-n.getZ()))+n.getZ()
-                        );
-                        matrixStack.scale(0.5f, 0.5f, 0.5f);
-                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
-                    }else {
-                        matrixStack.translate(x+0.5f,y+0.5f,z+0.5f);
-                        matrixStack.scale(0.9f, 0.9f, 0.9f);
-                        matrixStack.translate(-0.5f,-0.5f,-0.5f);
-                    }
-                }
-                for (BlockModelPart part: parts_list) {
-                    for(Direction dir: dirs) {
-                        List<BakedQuad> bake_list = part.getQuads(dir);
-                        for (BakedQuad quad : bake_list) {
-                            //if(wand.replace ||
-                            //        Block.shouldRenderFace( state, wand.level.getBlockState(bp.relative(dir)),dir )
-                            //)
-                            {
-                                //quad.sprite().atlasLocation().
-                                TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                                AbstractTexture abstractTexture = textureManager.getTexture(quad.sprite().atlasLocation());
-
-                                //RenderSystem.setShaderTexture(0, abstractTexture.getTextureView());
-
-                                //float f = wand.level.getShade(quad.direction(), quad.shade());
-                                int kk = client.getBlockColors().getColor(state, null, null, 0);
-                                float ff = (float) (kk >> 16 & 0xFF) / 255.0F;
-                                float gg = (float) (kk >> 8 & 0xFF) / 255.0F;
-                                float hh = (float) (kk & 0xFF) / 255.0F;
-                                float k = 1.0F;
-                                float l = 1.0F;
-                                float m = 1.0F;
-                                if (quad.isTinted()) {
-                                    k = Mth.clamp(ff, 0.0F, 1.0F);
-                                    l = Mth.clamp(gg, 0.0F, 1.0F);
-                                    m = Mth.clamp(hh, 0.0F, 1.0F);
-                                }
-                                //WandsMod.log("consumer.putBulkData",prnt);
-                                consumer.putBulkData(matrixStack.last(), quad, k, l, m, opacity, 15728880, OverlayTexture.NO_OVERLAY);
-                            }
-                        }
-                    }
-                }
-                matrixStack.popPose();
-            }
-        } catch (Exception e) {
-            WandsMod.log("render_shape error "+e.toString(),prnt);
-            //WandsMod.log("couldn't get model, blacklisting block...", true);
-        }
-    }
-*///?}
-//?if >1.21 <1.21.11{
-    /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
-            BakedModel bakedModel;
-            BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-            RenderSystem.setShaderColor(1.0f,1.0f,1.0f,1.0f);
-            try {
-                bakedModel = blockRenderer.getBlockModel(state);
-                matrixStack.pushPose();
-                if (wand.mode != Mode.COPY) {
-                    Vec3i n = wand.getSide().getNormal();
-                    if (wand.replace) {
-                        matrixStack.translate(
-                                 (0.5 * (1.0 - n.getX())) + n.getX(),
-                                 (0.5 * (1.0 - n.getY())) + n.getY(),
-                                 (0.5 * (1.0 - n.getZ())) + n.getZ()
-                        );
-                        matrixStack.scale(0.5f, 0.5f, 0.5f);
-                        matrixStack.translate(-0.5f, -0.5f, -0.5f);
-                    } else {
-                        matrixStack.translate(x + 0.5f, y + 0.5f, z + 0.5f);
-                        matrixStack.scale(0.9f, 0.9f, 0.9f);
-                        matrixStack.translate(-0.5f, -0.5f, -0.5f);
-                    }
-                }
-                for (Direction dir : dirs) {
-                    List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
-                    if (!bake_list.isEmpty()) {
-                        for (BakedQuad quad : bake_list) {
-                            RenderSystem.setShaderTexture(0, quad.getSprite().atlasLocation());
-                            int kk = client.getBlockColors().getColor(state, null, null, 0);
-                            float ff = (float) (kk >> 16 & 0xFF) / 255.0F;
-                            float gg = (float) (kk >> 8 & 0xFF) / 255.0F;
-                            float hh = (float) (kk & 0xFF) / 255.0F;
-                            float k;
-                            float l;
-                            float m;
-                            if (quad.isTinted()) {
-                                k = Mth.clamp(ff, 0.0F, 1.0F);
-                                l = Mth.clamp(gg, 0.0F, 1.0F);
-                                m = Mth.clamp(hh, 0.0F, 1.0F);
-                            } else {
-                                k = 1.0F;
-                                l = 1.0F;
-                                m = 1.0F;
-                            }
-                            //WandsMod.log("consumer.putBulkData",prnt);
-                            consumer.putBulkData(matrixStack.last(), quad, k, l, m, opacity, 15728880, OverlayTexture.NO_OVERLAY);
-                        }
-                    }
-                }
-                matrixStack.popPose();
-            } catch (Exception e) {
-                WandsMod.log("render_shape error "+e.toString(),prnt);
-                //WandsMod.log("couldn't get model, blacklisting block...", true);
-            }
-        }
-    
-*///?}
-//?if <1.21.1{
-    /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
-        BakedModel bakedModel;
-        BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        //RenderSystem.setShaderColor(1.0f,1.0f,1.0f,1.0f);
-        try {
-            bakedModel = blockRenderer.getBlockModel(state);
-            matrixStack.pushPose();
-            if (wand.mode != Mode.COPY) {
-                Vec3i n = wand.getSide().getNormal();
-                if (wand.replace) {
-                    matrixStack.translate(
-                            (0.5 * (1.0 - n.getX())) + n.getX(),
-                            (0.5 * (1.0 - n.getY())) + n.getY(),
-                            (0.5 * (1.0 - n.getZ())) + n.getZ()
-                    );
-                    matrixStack.scale(0.5f, 0.5f, 0.5f);
-                    matrixStack.translate(-0.5f, -0.5f, -0.5f);
-                } else {
-                    matrixStack.translate(x + 0.5f, y + 0.5f, z + 0.5f);
-                    matrixStack.scale(0.9f, 0.9f, 0.9f);
-                    matrixStack.translate(-0.5f, -0.5f, -0.5f);
-                }
-            }
-
-            for (Direction dir : dirs) {
-                List<BakedQuad> bake_list = bakedModel.getQuads(state, dir, random);
-                if (!bake_list.isEmpty()) {
-                    for (BakedQuad quad : bake_list) {
-                        RenderSystem.setShaderTexture(0, quad.getSprite().atlasLocation());
-                        int kk = client.getBlockColors().getColor(state, null, null, 0);
-                        float ff = (float) (kk >> 16 & 0xFF) / 255.0F;
-                        float gg = (float) (kk >> 8 & 0xFF) / 255.0F;
-                        float hh = (float) (kk & 0xFF) / 255.0F;
-                        float r;
-                        float g;
-                        float b;
-                        if (quad.isTinted()) {
-                            r = Mth.clamp(ff, 0.0F, 1.0F);
-                            g = Mth.clamp(gg, 0.0F, 1.0F);
-                            b = Mth.clamp(hh, 0.0F, 1.0F);
-                        } else {
-                            r = 1.0F;
-                            g = 1.0F;
-                            b = 1.0F;
-                        }
-
-                        consumer.putBulkData(matrixStack.last(), quad, brightness, r, g, b, lightmap,  OverlayTexture.NO_OVERLAY, true);
-                    }
-                }
-            }
-            matrixStack.popPose();
-        } catch (Exception e) {
-            WandsMod.log("render_shape error "+e.toString(),prnt);
-            //WandsMod.log("couldn't get model, blacklisting block...", true);
-        }
-    }
-*///?}
-    public static void update_colors(){
-        bo_col.fromColor(WandsConfig.c_block_outline);
-        bbox_col.fromColor(WandsConfig.c_bounding_box);
-        destroy_col.fromColor(WandsConfig.c_destroy);
-        tool_use_col.fromColor(WandsConfig.c_tool_use);
-        start_col.fromColor(WandsConfig.c_start);
-        end_col.fromColor(WandsConfig.c_end);
-        paste_bb_col.fromColor(WandsConfig.c_paste_bb);
-        block_col.fromColor(WandsConfig.c_block);
-        line_col.fromColor(WandsConfig.c_line);
-    }
 
     /** Renders the 3x3 grid overlay on block faces for DIRECTION mode */
-    static void preview_direction_mode_grid(MultiBufferSource.BufferSource bufferSource, Matrix4f matrix, float pos_x, float pos_y, float pos_z){
+    static void preview_direction_mode_grid( Matrix4f matrix, float pos_x, float pos_y, float pos_z){
         if (wand.valid && (preview_shape != null && !preview_shape.isEmpty())){
             List<AABB> list = preview_shape.toAabbs();
             if (!list.isEmpty() && wand.grid_voxel_index >= 0 && wand.grid_voxel_index < list.size()) {
-                VertexConsumer consumer=getVertexConsumerDirMode(bufferSource);
+                VertexConsumer consumer=getVertexConsumerDirMode();
                 int vi = 0;
                 int color=0xffffffff;
                 int light=15728880;
@@ -1057,7 +543,7 @@ public class ClientRender {
     }
 
     /** Shared preview: renders actual block shapes from block_buffer - the single source of truth */
-    static void preview_block_buffer(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack,int pos_x,int pos_y,int pos_z){
+    static void preview_block_buffer(PoseStack matrixStack,int pos_x,int pos_y,int pos_z){
         //if (wand.has_empty_bucket || (wand.valid && (has_target || wand.pin.isActive()) && wand.block_buffer != null)) {
         if (wand.has_empty_bucket || (wand.valid && wand.block_buffer != null)) {
             random.setSeed(0);
@@ -1077,13 +563,13 @@ public class ClientRender {
                 //st=Blocks.STONE.defaultBlockState();
 
                 if(st!=null) {
-                    preview_fluid_buffer(bufferSource, matrixStack,pos_x,pos_y,pos_z);
+                    preview_fluid_buffer(matrixStack,pos_x,pos_y,pos_z);
                 }else {
                     //RenderType rt=RenderTypes.translucentMovingBlock();
                     //String sampler0=rt.pipeline().getSamplers().getFirst();
                     //Map<String, RenderSetup.TextureAndSampler> tmap= rt.state.getTextures();
                     //tmap.get("Sampler0").sampler().
-                    VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
+                    VertexConsumer consumer=getVertexConsumerPVBlock();
 
                     //WandsMod.log("block_buffer_length "+block_buffer_length ,prnt);
 
@@ -1091,14 +577,14 @@ public class ClientRender {
                          //WandsMod.log("state "+wand.block_buffer.state[idx] ,prnt);
                          if (wand.block_buffer.state[idx] != null) {
                              st = wand.block_buffer.state[idx];
-                            render_shape(matrixStack,consumer, st,
+                            RenderUtils.render_shape(matrixStack,consumer, st,
                                     wand.block_buffer.buffer_x[idx]-pos_x,
                                     wand.block_buffer.buffer_y[idx]-pos_y,
                                     wand.block_buffer.buffer_z[idx]-pos_z);
 
                             //TODO: all double blocks!!
                             if (wand.block_buffer.state[idx].hasProperty(DoublePlantBlock.HALF)) {
-                                render_shape(matrixStack,consumer,
+                                RenderUtils.render_shape(matrixStack,consumer,
                                         wand.block_buffer.state[idx].setValue(DoublePlantBlock.HALF, DoubleBlockHalf.UPPER),
                                         wand.block_buffer.buffer_x[idx]-pos_x,
                                         wand.block_buffer.buffer_y[idx]-pos_y + 1,
@@ -1106,7 +592,7 @@ public class ClientRender {
                             } else {
                                 if (wand.block_buffer.state[idx].getBlock() instanceof DoorBlock) {
 
-                                    render_shape(matrixStack,consumer,
+                                    RenderUtils.render_shape(matrixStack,consumer,
                                             wand.block_buffer.state[idx].setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER),
                                             wand.block_buffer.buffer_x[idx]-pos_x,
                                             wand.block_buffer.buffer_y[idx]-pos_y + 1,
@@ -1119,13 +605,13 @@ public class ClientRender {
                  }
             }
             if (block_buffer_length >0){
-                render_mode_outline(matrixStack.last().pose(), bufferSource,pos_x,pos_y,pos_z);
+                render_mode_outline(matrixStack.last().pose(), pos_x,pos_y,pos_z);
             }
         }
     }
 
     /** Renders bounding box outline for COPY, FILL, BOX, PASTE modes */
-    static void preview_bbox(MultiBufferSource.BufferSource bufferSource,PoseStack matrixStack){
+    static void preview_bbox(PoseStack matrixStack){
         float off2 = 0.05f;
         Matrix4f matrix=matrixStack.last().pose();
         float bb1_x=wand.bb1_x;
@@ -1135,8 +621,8 @@ public class ClientRender {
         float bb2_y=wand.bb2_y;
         float bb2_z=wand.bb2_z;
         // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-        VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-        preview_block_fat(matrix,consumer,
+        VertexConsumer consumer= getVertexConsumerDebugQuads();
+        RenderUtils.preview_block(matrix,consumer,
                 bb1_x - off2,
                 bb1_y - off2,
                 bb1_z - off2,
@@ -1148,7 +634,7 @@ public class ClientRender {
         bufferSource.endLastBatch();
     }
     /** Renders animated translucent faces for bounding box when block_outlines is disabled */
-    static void preview_bbox_faces(MultiBufferSource.BufferSource bufferSource, PoseStack matrixStack) {
+    static void preview_bbox_faces(PoseStack matrixStack) {
         // Calculate animation: sine wave over 3 seconds (3000ms)
         long currentTime = System.currentTimeMillis();
         double phase = ((currentTime % 3000) / 3000.0) * 2 * Math.PI;
@@ -1164,7 +650,7 @@ public class ClientRender {
         float z2 = wand.bb2_z + off2;
 
         Matrix4f matrix = matrixStack.last().pose();
-        VertexConsumer consumer =getVertexConsumerDebugQuads(bufferSource);
+        VertexConsumer consumer =getVertexConsumerDebugQuads();
         Colorf color=new Colorf(bbox_col.r,bbox_col.g,bbox_col.b,alpha);
 
         // Top face (y = y2)
@@ -1208,7 +694,6 @@ public class ClientRender {
 
     /** Renders highlight at cursor position showing selected/target block */
     static void preview_selected(Mode mode,
-                                 MultiBufferSource.BufferSource bufferSource,
                                  PoseStack matrixStack,
                                  float pos_x,
                                  float pos_y,
@@ -1232,8 +717,8 @@ public class ClientRender {
             if (fancy && mode != Mode.COPY){
                 if (wand.offhand_state!=null) {
                     random.setSeed(0);
-                    VertexConsumer consumer=getVertexConsumerPVBlock(bufferSource);
-                    render_shape(matrixStack,consumer, wand.offhand_state,
+                    VertexConsumer consumer=getVertexConsumerPVBlock();
+                    RenderUtils.render_shape(matrixStack,consumer, wand.offhand_state,
                                             pos_x,pos_y,pos_z);
                     bufferSource.endLastBatch();
                 } else if (wand.has_water_bucket || wand.has_lava_bucket) {
@@ -1254,8 +739,8 @@ public class ClientRender {
                 }
             }
             // Always use debugQuads - RenderTypes.lines() has incompatible vertex format in 1.21
-            VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-            preview_block_fat(matrix,consumer,
+            VertexConsumer consumer= getVertexConsumerDebugQuads();
+            RenderUtils.preview_block(matrix,consumer,
                         (0  - off),
                         (0  - off),
                         (0  - off),
@@ -1271,9 +756,9 @@ public class ClientRender {
             float p1x = wand.getP1().getX()-pos_x;
             float p1y = wand.getP1().getY()-pos_y;
             float p1z = wand.getP1().getZ()-pos_z;
-            VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
+            VertexConsumer consumer = getVertexConsumerDebugQuads();
 
-            preview_block_fat(matrix, consumer,
+            RenderUtils.preview_block(matrix, consumer,
                         p1x - off, p1y - off, p1z - off,
                         p1x + 1 + off, p1y + 1 + off, p1z + 1 + off,
                         start_col, false);
@@ -1294,9 +779,9 @@ public class ClientRender {
             float ax = pinDrawPos.getX()-pos_x;
             float ay = pinDrawPos.getY()-pos_y;
             float az = pinDrawPos.getZ()-pos_z;
-            VertexConsumer consumer = getVertexConsumerDebugQuads(bufferSource);
+            VertexConsumer consumer = getVertexConsumerDebugQuads();
 
-            preview_block_fat(matrix, consumer,
+            RenderUtils.preview_block(matrix, consumer,
                     ax - off, ay - off, az - off,
                     ax + 1 + off, ay + 1 + off, az + 1 + off,
                     start_col, false);
@@ -1305,7 +790,7 @@ public class ClientRender {
         }
     }
     /** Renders P1/P2 markers and connecting line for LINE, CIRCLE, SPHERE, FILL modes */
-    static void preview_line_circle(Matrix4f matrix, Mode mode,MultiBufferSource.BufferSource bufferSource,
+    static void preview_line_circle(Matrix4f matrix, Mode mode,
                                  float p1_x,
                                  float p1_y,
                                  float p1_z,
@@ -1315,8 +800,8 @@ public class ClientRender {
     {
        boolean even = WandProps.getFlag(wand.wand_stack, WandProps.Flag.EVEN);
        {
-            VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
-            preview_block_fat(matrix,consumer,
+            VertexConsumer consumer= getVertexConsumerDebugQuads();
+            RenderUtils.preview_block(matrix,consumer,
                     p1_x - off,
                     p1_y - off,
                     p1_z - off,
@@ -1329,9 +814,9 @@ public class ClientRender {
         }
        if (has_target) {
            {
-                VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
+                VertexConsumer consumer= getVertexConsumerDebugQuads();
                 off = (mode == Mode.CIRCLE && even) ? -0.5f : 0.0f;
-                preview_block_fat(matrix,consumer,
+                RenderUtils.preview_block(matrix,consumer,
                         0 - off + off,
                         0 - off,
                         0 - off + off,
@@ -1342,9 +827,9 @@ public class ClientRender {
                 bufferSource.endLastBatch();
            }
            if(mode!=Mode.FILL) {
-               VertexConsumer consumer= getVertexConsumerDebugQuads(bufferSource);
+               VertexConsumer consumer= getVertexConsumerDebugQuads();
                off = (mode == Mode.CIRCLE && even) ? 0.0f : 0.5f;
-               player_facing_line(consumer,matrix,
+               RenderUtils.player_facing_line(consumer,matrix,
                         p1_x + off,
                         p1_y + off + 0.5f,
                         p1_z + off,
@@ -1356,22 +841,21 @@ public class ClientRender {
            }
        }
     }
-    static private VertexConsumer getVertexConsumerDebugQuads(MultiBufferSource.BufferSource bufferSource){
+    static private VertexConsumer getVertexConsumerDebugQuads(){
         //?if>=1.21.11{
             return bufferSource.getBuffer(RenderTypes.debugQuads());
         //?}else{
             /*return bufferSource.getBuffer(RenderType.debugQuads());
         *///?}
     }
-    static private VertexConsumer getVertexConsumerPVBlock(MultiBufferSource.BufferSource bufferSource){
+    static private VertexConsumer getVertexConsumerPVBlock(){
         //?if>=1.21.11{
             return bufferSource.getBuffer(RenderTypes.translucentMovingBlock());
         //?}else{
             /*return bufferSource.getBuffer(RenderType.translucentMovingBlock());
         *///?}
     }
-
-    static private VertexConsumer getVertexConsumerDirMode(MultiBufferSource.BufferSource bufferSource){
+    static private VertexConsumer getVertexConsumerDirMode(){
         //?if>=1.21.11{
             return bufferSource.getBuffer(RenderTypes.entityTranslucent(GRID_TEXTURE.id()));
         //?}else{
@@ -1399,4 +883,15 @@ public class ClientRender {
         *///?}
     }
 
+    public static void update_colors(){
+        bo_col.fromColor(WandsConfig.c_block_outline);
+        bbox_col.fromColor(WandsConfig.c_bounding_box);
+        destroy_col.fromColor(WandsConfig.c_destroy);
+        tool_use_col.fromColor(WandsConfig.c_tool_use);
+        start_col.fromColor(WandsConfig.c_start);
+        end_col.fromColor(WandsConfig.c_end);
+        paste_bb_col.fromColor(WandsConfig.c_paste_bb);
+        block_col.fromColor(WandsConfig.c_block);
+        line_col.fromColor(WandsConfig.c_line);
+    }
 }

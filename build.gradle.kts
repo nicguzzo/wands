@@ -116,6 +116,7 @@ modstitch {
                 "1.21.1" -> "[1.21.1,)"
                 "1.21.11" -> "[1.21.11,)"
                 "26.1.2" -> "[26.1.2,)"
+                "26.2" -> "[26.2,)"
                 else -> throw IllegalArgumentException("Please set mc range version for ${property("deps.minecraft")} in build.gradle.kts")
             })
             put("forge_version_range", when (property("deps.minecraft")) {
@@ -123,14 +124,16 @@ modstitch {
                 "1.21.1" -> ""
                 "1.21.11" -> ""
                 "26.1.2" -> ""
+                "26.2" -> ""
                 else -> throw IllegalArgumentException("Please set forge version for ${property("deps.minecraft")} in build.gradle.kts")
             })
 
             put("pack_format", when (property("deps.minecraft")) {
                 "1.20.1" -> 15
                 "1.21.1" -> 34
-                "1.21.11" -> 69
-                "26.1.2" -> 14
+                "1.21.11" -> 75
+                "26.1.2" -> 84
+                "26.2" -> 88
                 else -> throw IllegalArgumentException("Please store the resource pack version for ${property("deps.minecraft")} in build.gradle.kts! https://minecraft.wiki/w/Pack_format")
             }.toString())
         }
