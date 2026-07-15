@@ -16,13 +16,17 @@ import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.wand.WandProps.Mode;
 import org.joml.Matrix4f;
-//?if <1.21.1{
+//?if <26.1{
 /*import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
-
-*///?}else{
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+*///?}
+//?if <1.21.11{
+/*import net.minecraft.client.resources.model.BakedModel;
+*///?}
+//?if >= 26.1 {
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 //?}
 
@@ -245,18 +249,19 @@ public class RenderUtils {
                 matrixStack.popPose();
             }
         } catch (Exception e) {
-            //WandsMod.log("render_shape error "+e.toString(),prnt);
+            //WandsMod.log("render_shape error "+e.toString(),false);
         }
     }
 //?}
 
 //? if>=1.21.11 <26.1{
     /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
-        BlockStateModel bakedModel;
+        net.minecraft.client.renderer.block.model.BlockStateModel bakedModel;
         BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        Minecraft client = Minecraft.getInstance();
         try {
             bakedModel = blockRenderer.getBlockModel(state);
-            List<BlockModelPart> parts_list = bakedModel.collectParts(random);
+            java.util.List<net.minecraft.client.renderer.block.model.BlockModelPart> parts_list = bakedModel.collectParts(random);
 
             if (!parts_list.isEmpty() ) {
                 matrixStack.pushPose();
@@ -277,7 +282,7 @@ public class RenderUtils {
                         matrixStack.translate(-0.5f,-0.5f,-0.5f);
                     }
                 }
-                for (BlockModelPart part: parts_list) {
+                for (net.minecraft.client.renderer.block.model.BlockModelPart part: parts_list) {
                     for(Direction dir: dirs) {
                         List<BakedQuad> bake_list = part.getQuads(dir);
                         for (BakedQuad quad : bake_list) {
@@ -286,8 +291,8 @@ public class RenderUtils {
                             //)
                             {
                                 //quad.sprite().atlasLocation().
-                                TextureManager textureManager = Minecraft.getInstance().getTextureManager();
-                                AbstractTexture abstractTexture = textureManager.getTexture(quad.sprite().atlasLocation());
+                                net.minecraft.client.renderer.texture.TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+                                net.minecraft.client.renderer.texture.AbstractTexture abstractTexture = textureManager.getTexture(quad.sprite().atlasLocation());
 
                                 //RenderSystem.setShaderTexture(0, abstractTexture.getTextureView());
 
@@ -304,7 +309,7 @@ public class RenderUtils {
                                     l = Mth.clamp(gg, 0.0F, 1.0F);
                                     m = Mth.clamp(hh, 0.0F, 1.0F);
                                 }
-                                //WandsMod.log("consumer.putBulkData",prnt);
+                                //WandsMod.log("consumer.putBulkData",false);
                                 consumer.putBulkData(matrixStack.last(), quad, k, l, m, opacity, 15728880, OverlayTexture.NO_OVERLAY);
                             }
                         }
@@ -313,15 +318,16 @@ public class RenderUtils {
                 matrixStack.popPose();
             }
         } catch (Exception e) {
-            WandsMod.log("render_shape error "+e.toString(),prnt);
+            WandsMod.log("render_shape error "+e.toString(),false);
             //WandsMod.log("couldn't get model, blacklisting block...", true);
         }
     }
 *///?}
-//?if >1.21 <1.21.11{
+//?if >=1.21.1 <1.21.11{
     /*static void render_shape(PoseStack matrixStack,VertexConsumer consumer,BlockState state,double x, double y,double z){
             BakedModel bakedModel;
             BlockRenderDispatcher blockRenderer = Minecraft.getInstance().getBlockRenderer();
+            Minecraft client = Minecraft.getInstance();
             RenderSystem.setShaderColor(1.0f,1.0f,1.0f,1.0f);
             try {
                 bakedModel = blockRenderer.getBlockModel(state);
@@ -363,14 +369,14 @@ public class RenderUtils {
                                 l = 1.0F;
                                 m = 1.0F;
                             }
-                            //WandsMod.log("consumer.putBulkData",prnt);
+                            //WandsMod.log("consumer.putBulkData",false);
                             consumer.putBulkData(matrixStack.last(), quad, k, l, m, opacity, 15728880, OverlayTexture.NO_OVERLAY);
                         }
                     }
                 }
                 matrixStack.popPose();
             } catch (Exception e) {
-                WandsMod.log("render_shape error "+e.toString(),prnt);
+                WandsMod.log("render_shape error "+e.toString(),false);
                 //WandsMod.log("couldn't get model, blacklisting block...", true);
             }
         }

@@ -378,8 +378,8 @@ public class Compat {
     static public void toast(Toast toast){
         //? if >= 1.21.6 {
             //?if < 26.2{
-            Minecraft.getInstance().getToastManager().addToast(toast);
-            //?}
+            /*Minecraft.getInstance().getToastManager().addToast(toast);
+            *///?}
         //? } else {
 
         /*Minecraft.getInstance().getToasts().addToast(toast);

@@ -455,10 +455,10 @@ public class WandScreen extends Screen {
             Screen parent = this;
             configButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.conf").copy().append("..."), (mouseX, mouseY) -> {
                 //?if >=26.2{
-                /*Minecraft.getInstance().gui.setScreen(WandConfigScreen.create(parent));
-                *///?}else{
-                Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
-                //?}
+                Minecraft.getInstance().gui.setScreen(WandConfigScreen.create(parent));
+                //?}else{
+                /*Minecraft.getInstance().setScreen(WandConfigScreen.create(parent));
+                *///?}
             });
             configButton.withTooltip(Compat.translatable("screen.wands.conf"), Compat.translatable("tooltip.wands.conf"));
             section.add(configButton);

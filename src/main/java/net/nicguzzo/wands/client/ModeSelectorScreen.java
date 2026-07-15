@@ -102,10 +102,10 @@ public class ModeSelectorScreen extends Screen {
     public static boolean consumesKey(WandsMod.WandKeys key) {
         if (key == WandsMod.WandKeys.MODE) return true;
         //?if >=26.2 {
-        /*Screen screen=Minecraft.getInstance().gui.screen();
-        *///?}else{
-        Screen screen=Minecraft.getInstance().screen;
-        //?}
+        Screen screen=Minecraft.getInstance().gui.screen();
+        //?}else{
+        /*Screen screen=Minecraft.getInstance().screen;
+        *///?}
         if (screen instanceof ModeSelectorScreen) {
             switch (key) {
                 case N_INC:
@@ -127,10 +127,10 @@ public class ModeSelectorScreen extends Screen {
             return;
         }
         //?if >=26.2 {
-        /*Screen screen=Minecraft.getInstance().gui.screen();
-        *///?}else{
-        Screen screen=Minecraft.getInstance().screen;
-        //?}
+        Screen screen=Minecraft.getInstance().gui.screen();
+        //?}else{
+        /*Screen screen=Minecraft.getInstance().screen;
+        *///?}
         if (screen instanceof ModeSelectorScreen) return;
         if (screen != null) {
             resetHold();
@@ -153,10 +153,10 @@ public class ModeSelectorScreen extends Screen {
 
         boolean modeKeyPressed = GLFW.glfwGetKey(window, modeKeyCode) == GLFW.GLFW_PRESS;
         //?if >=26.2 {
-        /*int currentTick = client.gui.hud.getGuiTicks();
-        *///?}else{
-        int currentTick = client.gui.getGuiTicks();
-        //?}
+        int currentTick = client.gui.hud.getGuiTicks();
+        //?}else{
+        /*int currentTick = client.gui.getGuiTicks();
+        *///?}
         if (modeKeyPressed) {
             if (holdStartTick == -1) {
                 holdStartTick = currentTick;
@@ -164,10 +164,10 @@ public class ModeSelectorScreen extends Screen {
             } else if (!holdTriggered && (currentTick - holdStartTick) >= HOLD_THRESHOLD) {
                 holdTriggered = true;
                 //?if >=26.2 {
-                /*client.gui.setScreen(new ModeSelectorScreen(mainHand));
-                *///?}else{
-                client.setScreen(new ModeSelectorScreen(mainHand));
-                //?}
+                client.gui.setScreen(new ModeSelectorScreen(mainHand));
+                //?}else{
+                /*client.setScreen(new ModeSelectorScreen(mainHand));
+                *///?}
             }
         } else {
             if (holdStartTick != -1 && !holdTriggered) {
