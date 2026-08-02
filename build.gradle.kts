@@ -98,7 +98,7 @@ modstitch {
     metadata {
         modId = "wands"
         modName = "BuildingWands"
-        modVersion = "3.1.0"
+        modVersion = "3.2.0"
         modGroup = "net.nicguzzo"
         modAuthor = "Nicguzzo"
 
