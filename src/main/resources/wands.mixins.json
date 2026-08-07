@@ -10,8 +10,10 @@
     "AxeItemAccessor",
     "ShovelItemAccessor",
     "HoeItemAccessor",
+    "DropExperienceBlockAccessor"
+  ],
+  "client": [
     "KeyMappingAccessor",
-    "DropExperienceBlockAccessor",
     "ItemRendererMixin",
     "LevelRendererMixin"
   ]
