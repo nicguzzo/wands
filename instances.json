@@ -151,5 +151,46 @@
     ],
     "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/26.1.2.43-beta/neoforge-26.1.2.43-beta-installer.jar",
     "java_key": "java_25"
+  },
+  {
+    "name": "26.2-Fabric",
+    "game_version": "26.2",
+    "loader": "fabric",
+    "jar_dir": "./versions/26.2-fabric/build/libs",
+    "dependencies": ["fabric-api", "cloth-config", "modmenu"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan",
+      "goml-reserved"
+    ],
+    "optional_curseforge_dependencies": [
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
+    ],
+    "server_installer_url": "https://maven.fabricmc.net/net/fabricmc/fabric-installer/1.0.1/fabric-installer-1.0.1.jar",
+    "java_key": "java_25"
+  },
+  {
+    "name": "26.2-NeoForge",
+    "game_version": "26.2",
+    "loader": "neoforge",
+    "jar_dir": "./versions/26.2-neoforge/build/libs",
+    "dependencies": ["cloth-config"],
+    "optional_dependencies": [
+      "jei",
+      "open-parties-and-claims",
+      "forge-config-api-port",
+      "flan"
+    ],
+    "optional_curseforge_dependencies": [
+      { "project_id": 472657, "slug": "ftb-chunks-fabric" },
+      { "project_id": 438497, "slug": "ftb-teams-fabric" },
+      { "project_id": 438495, "slug": "ftb-library-fabric" }
+    ],
+    "server_installer_url": "https://maven.neoforged.net/releases/net/neoforged/neoforge/26.2.0.52-beta/neoforge-26.2.0.52-beta-installer.jar",
+    "java_key": "java_25"
   }
 ]

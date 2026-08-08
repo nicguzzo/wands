@@ -307,10 +307,10 @@ for (( i=0; i<$INSTANCE_COUNT; i++ )); do
     
     # Copy newly compiled mod JAR (Targeted cleanup replaces the old blanket jar deletion)
     if [ -d "$JAR_DIR" ]; then
-        COMPILED_JAR=$(ls "$JAR_DIR"/*.jar 2>/dev/null | grep -Ev "sources|javadoc|dev" | head -n 1)
+        COMPILED_JAR=$(ls -t "$JAR_DIR"/*.jar 2>/dev/null | grep -Ev "sources|javadoc|dev" | head -n 1)
         if [ -n "$COMPILED_JAR" ] && [ -f "$COMPILED_JAR" ]; then
             # Grab the base name of your mod (e.g. 'wands' from 'wands-1.0.jar')
-            MOD_BASENAME=$(basename "$COMPILED_JAR" | sed -E 's/-[0-9].*//')
+            MOD_BASENAME=$(basename "$COMPILED_JAR" | sed -E 's/[-_][0-9].*//')
             
             # Delete ONLY previous builds of your mod to prevent duplicate loading crashes
             rm -f "$MODS_DIR"/${MOD_BASENAME}*.jar
@@ -383,7 +383,7 @@ EOF
 
     rm -f "$GUEST_MODS_DIR"/*.jar
     # Copy all mods from the main instance into the guest instance
-    cp -u "$MODS_DIR"/*.jar "$GUEST_MODS_DIR/" 2>/dev/null
+    cp "$MODS_DIR"/*.jar "$GUEST_MODS_DIR/" 2>/dev/null
 
     GUEST_SCRIPT="$TEST_ENV_DIR/launch-$NAME-guest.sh"
     cat <<EOF > "$GUEST_SCRIPT"
@@ -437,7 +437,7 @@ EOF
 
             # Sync mods directly to the server folder
             rm -f "$SERVER_MODS_DIR"/*.jar
-            cp -u "$MODS_DIR"/*.jar "$SERVER_MODS_DIR/" 2>/dev/null
+            cp "$MODS_DIR"/*.jar "$SERVER_MODS_DIR/" 2>/dev/null
 
             SERVER_SCRIPT="$TEST_ENV_DIR/launch-$NAME-server.sh"
             cat <<EOF > "$SERVER_SCRIPT"

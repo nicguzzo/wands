@@ -9,7 +9,9 @@ fun prop(name: String, consumer: (prop: String) -> Unit) {
         ?.let(consumer)
 }
 
-val minecraft = property("deps.minecraft") as String;
+val minecraft = property("deps.minecraft") as String
+val modVersionStr = "3.2.0"
+val releaseChannel = project.findProperty("release_channel") as? String ?: "release"
 
 sourceSets {
     main {
@@ -98,7 +100,7 @@ modstitch {
     metadata {
         modId = "wands"
         modName = "BuildingWands"
-        modVersion = "3.2.0"
+        modVersion = modVersionStr
         modGroup = "net.nicguzzo"
         modAuthor = "Nicguzzo"
 
@@ -291,4 +293,17 @@ publishMods {
         accessToken.set(providers.environmentVariable("MODRINTH_TOKEN"))
         minecraftVersions.add(property("deps.minecraft") as String)
     }
+}
+
+base {
+    val loader = when {
+        modstitch.isLoom -> "fabric"
+        modstitch.isModDevGradleRegular -> "neoforge"
+        else -> "forge"
+    }
+    archivesName.set("BuildingWands_${modVersionStr}_${releaseChannel}_${loader}_${minecraft}")
+}
+
+tasks.withType<org.gradle.jvm.tasks.Jar> {
+    archiveVersion.set("")
 }

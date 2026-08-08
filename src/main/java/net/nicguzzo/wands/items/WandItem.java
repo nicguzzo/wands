@@ -388,6 +388,8 @@ public class WandItem extends Item {
         WandProps.Mode mode = WandProps.getMode(stack);
         WandProps.Action action = WandProps.getAction(stack);
 
+        addLine.accept(Compat.translatable("screen.wands.limit").append(Compat.literal(": ")).append(String.valueOf(this.limit)).withStyle(ChatFormatting.GRAY));
+
         addLine.accept(Compat.translatable("key.wands.wand_mode").append(Compat.literal(": ")).append(Compat.translatable(mode.toString())).withStyle(ChatFormatting.GRAY));
         addLine.accept(Compat.translatable("screen.wands.action_prefix").append(Compat.literal(": ")).append(Compat.translatable(action.toString())).withStyle(ChatFormatting.GRAY));
 
