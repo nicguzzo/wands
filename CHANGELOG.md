@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.2
+- Support for MC 26.2
+
 ## 3.1
 - Support for MC 26.1.2
 - Dropped Architectury Api mod dependency
