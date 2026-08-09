@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#P#",
+    "RER",
+    "RRR"
+  ],
+  "key": {
+    "#": "minecraft:string",
+    "P": "minecraft:purple_dye",
+    "R": "minecraft:rabbit_hide",
+    "E": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "wands:magic_bag_1",
+    "count": 1
+  }
+}

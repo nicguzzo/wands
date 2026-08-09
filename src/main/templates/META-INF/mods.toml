@@ -22,3 +22,10 @@ license = "${mod_license}"
     modId = "minecraft"
     mandatory = true
     versionRange="${minecraft_version_range}"
+
+[[dependencies.${mod_id}]]
+    modId = "cloth_config"
+    mandatory = true
+    versionRange="[${cloth_config_version},)"
+    ordering = "NONE"
+    side = "BOTH"

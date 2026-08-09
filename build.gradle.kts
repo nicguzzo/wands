@@ -10,7 +10,7 @@ fun prop(name: String, consumer: (prop: String) -> Unit) {
 }
 
 val minecraft = property("deps.minecraft") as String
-val modVersionStr = "3.2.0"
+val modVersionStr = "3.2.1"
 val releaseChannel = project.findProperty("release_channel") as? String ?: "release"
 
 sourceSets {
@@ -112,6 +112,7 @@ modstitch {
             // You can put any other replacement properties/metadata here that
             // modstitch doesn't initially support. Some examples below.
             put("mod_issue_tracker", "https://github.com/nicguzzo/deepslateinstamine/issues")
+            put("cloth_config_version", property("cloth_config_version").toString())
 
             put("minecraft_version_range", when (property("deps.minecraft")) {
                 "1.20.1" -> "[1.20.1,)"

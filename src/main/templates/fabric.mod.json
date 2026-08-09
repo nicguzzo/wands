@@ -17,5 +17,8 @@
       },
       "update_checker": true
     }
+  },
+  "depends": {
+    "cloth-config": ">=${cloth_config_version}"
   }
 }
