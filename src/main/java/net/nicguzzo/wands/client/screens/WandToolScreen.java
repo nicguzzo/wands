@@ -5,7 +5,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 //?if >= 1.21.11{
+//?if < 26.3 {
 import com.mojang.blaze3d.textures.GpuTextureView;
+//?} else {
+/*import com.mojang.renderpearl.api.textures.GpuTextureView;
+*///?}
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.texture.TextureManager;
 //?}
@@ -23,7 +27,9 @@ import net.nicguzzo.wands.menues.WandToolsMenu;
 import net.nicguzzo.wands.compat.Compat;
 
 import org.jetbrains.annotations.NotNull;
+//?if < 26.3 {
 import org.lwjgl.glfw.GLFW;
+//?}
 
 public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
 
@@ -34,7 +40,9 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
     private static final RcId INV_TEX = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "textures/gui/inventory.png");
 
     // Hand cursor for hovering over inventory slots
+    //?if < 26.3 {
     private static long handCursor = 0;
+    //?}
     private boolean isHandCursor = false;
 
     public WandToolScreen(WandToolsMenu handler, Inventory inventory, Component title) {
@@ -99,6 +107,7 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
         boolean shouldBeHand = isOverInventorySlot(mouseX, mouseY);
         if (shouldBeHand != isHandCursor) {
             isHandCursor = shouldBeHand;
+            //?if < 26.3 {
             long window = Compat.getWindow();
             if (shouldBeHand) {
                 if (handCursor == 0) {
@@ -108,6 +117,13 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
             } else {
                 GLFW.glfwSetCursor(window, 0);
             }
+            //?} else {
+            /*if (shouldBeHand) {
+                com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND.select();
+            } else {
+                com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+            }
+            *///?}
         }
         //?if <26.1
         //this.renderTooltip(gui, mouseX, mouseY);
@@ -127,6 +143,7 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
 
     @Override
     public void onClose() {
+        //?if < 26.3 {
         if (isHandCursor) {
             GLFW.glfwSetCursor(Compat.getWindow(), 0);
             isHandCursor = false;
@@ -135,14 +152,25 @@ public class WandToolScreen extends AbstractContainerScreen<WandToolsMenu> {
             GLFW.glfwDestroyCursor(handCursor);
             handCursor = 0;
         }
+        //?} else {
+        /*if (isHandCursor) {
+            com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+            isHandCursor = false;
+        }
+        *///?}
         super.onClose();
     }
 
     @Override
     //?if >= 1.21.11{
     public boolean keyPressed(KeyEvent keyEvent) {
+        //?if < 26.3 {
         int scancode = keyEvent.scancode();
         if (WandsModClient.wand_menu_km.matches(keyEvent) || scancode == 256) {
+        //?} else {
+        /*int scancode = keyEvent.keycode();
+        if (WandsModClient.wand_menu_km.matches(keyEvent) || scancode == 256 || keyEvent.key() == com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) {
+        *///?}
     //?}else{
         
         /*public boolean keyPressed(int scancode, int keysym, int k) {

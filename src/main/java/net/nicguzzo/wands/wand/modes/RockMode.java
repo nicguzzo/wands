@@ -91,7 +91,11 @@ public class RockMode extends WandMode {
                     z=-r;
                     for(int k=z1;k<=z2;k++,z++){
                         zz=z*z;
+                        //?if < 26.3 {
                         n=noise.getValue(x+rx,y+ry,z+rz)*nf;
+                        //?} else {
+                        /*n=noise.get(x+rx,y+ry,z+rz)*nf;
+                        *///?}
                         if( xx + yy + zz < r2+n )
                         {
                             wand.add_to_buffer(i, j, k);

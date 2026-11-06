@@ -288,19 +288,31 @@ public class Wand {
         AXE_STRIP {
             @Override
             public SoundEvent get_sound() {
+                //?if < 26.3 {
                 return SoundEvents.AXE_STRIP;
+                //?} else {
+                /*return SoundEvents.AXE_STRIP.value();
+                *///?}
             }
         },
         AXE_WAX_OFF {
             @Override
             public SoundEvent get_sound() {
+                //?if < 26.3 {
                 return SoundEvents.AXE_WAX_OFF;
+                //?} else {
+                /*return SoundEvents.AXE_WAX_OFF.value();
+                *///?}
             }
         },
         AXE_SCRAPE {
             @Override
             public SoundEvent get_sound() {
+                //?if < 26.3 {
                 return SoundEvents.AXE_SCRAPE;
+                //?} else {
+                /*return SoundEvents.AXE_SCRAPE.value();
+                *///?}
             }
         };
 
@@ -1297,7 +1309,11 @@ public class Wand {
             return true;
         }
 
+        //?if < 26.3 {
         if ((use) && has_water_potion && state.is(BlockTags.CONVERTABLE_TO_MUD)) {
+        //?} else {
+        /*if ((use) && has_water_potion && state.is(BlockTags.CONVERTIBLE_TO_MUD)) {
+        *///?}
             BlockState originalState = level.getBlockState(block_pos);
             BlockState mudState = Blocks.MUD.defaultBlockState();
             level.setBlockAndUpdate(block_pos, mudState);
@@ -1480,7 +1496,13 @@ public class Wand {
 
                     }
                 } else {
+                    //?if < 26.3 {
                     blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
+                    //?} else {
+                    /*if (level instanceof ServerLevel slevel && player instanceof ServerPlayer splayer) {
+                        blockState.getBlock().playerDestroy(slevel, splayer, pos, blockState, blockEntity, digger_item);
+                    }
+                    *///?}
                 }
 
             }
@@ -1722,6 +1744,7 @@ public class Wand {
                 can_shear = can_shear(state);
                 is_allowed = WandsConfig.shears_allowed.contains(blk);
             } else {
+                //?if < 26.3 {
                 if (item_digger instanceof AxeItem) {
                     is_allowed = WandsConfig.axe_allowed.contains(blk);
                 } else {
@@ -1736,6 +1759,17 @@ public class Wand {
                         }
                     }
                 }
+                //?} else {
+                /*if (digger.is(ItemTags.AXES)) {
+                    is_allowed = WandsConfig.axe_allowed.contains(blk);
+                } else if (digger.is(ItemTags.SHOVELS)) {
+                    is_allowed = WandsConfig.shovel_allowed.contains(blk);
+                } else if (digger.is(ItemTags.HOES)) {
+                    is_allowed = WandsConfig.hoe_allowed.contains(blk);
+                } else {
+                    is_allowed = WandsConfig.pickaxe_allowed.contains(blk);
+                }
+                *///?}
             }
             if (check_speed) {
                 float destroy_speed = item_digger.getDestroySpeed(digger, state);

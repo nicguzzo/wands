@@ -26,7 +26,11 @@ import net.nicguzzo.wands.client.gui.Section;
 import net.nicguzzo.wands.client.screens.WandScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+//?if < 26.3 {
 import org.lwjgl.glfw.GLFW;
+//?} else {
+/*import com.mojang.blaze3d.platform.InputConstants;
+*///?}
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,6 +56,7 @@ public class WandsModClient {
     public static final Logger LOGGER = LogManager.getLogger();
     static final public Map<KeyMapping, WandsMod.WandKeys> keys = new HashMap<KeyMapping, WandsMod.WandKeys>();
     static final public Map<WandsMod.WandKeys, KeyMapping> reverseKeys = new HashMap<>();
+    //?if < 26.3 {
     static final public int wand_menu_key = GLFW.GLFW_KEY_Y;// InputConstants.KEY_Y;
     static final public int wand_mode_key = GLFW.GLFW_KEY_V;//InputConstants.KEY_V;
     static final public int wand_action_key = GLFW.GLFW_KEY_H;//InputConstants.KEY_H;
@@ -72,6 +77,28 @@ public class WandsModClient {
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
     static final public int pin_key = GLFW.GLFW_KEY_G;
     static final public int cycle_palette_key = GLFW.GLFW_KEY_N;
+    //?} else {
+    /*static final public int wand_menu_key = InputConstants.KEY_Y;
+    static final public int wand_mode_key = InputConstants.KEY_V;
+    static final public int wand_action_key = InputConstants.KEY_H;
+    static final public int wand_orientation_key = InputConstants.KEY_X;
+    static final public int wand_undo_key = InputConstants.KEY_U;
+    static final public int wand_invert_key = InputConstants.KEY_I;
+    static final public int wand_fill_circle_key = InputConstants.KEY_K;
+    static final public int wand_rotate = InputConstants.KEY_R;
+    static final public int palette_mode_key = InputConstants.KEY_P;
+    static final public int palette_menu_key = InputConstants.KEY_J;
+    static final public int wand_conf_key = -1;
+    static final public int wand_m_inc_key = InputConstants.KEY_RIGHT;
+    static final public int wand_m_dec_key = InputConstants.KEY_LEFT;
+    static final public int wand_n_inc_key = InputConstants.KEY_UP;
+    static final public int wand_n_dec_key = InputConstants.KEY_DOWN;
+    static final public int toggle_stair_slab_key = InputConstants.KEY_PERIOD;
+    static final public int area_diagonal_spread = InputConstants.KEY_COMMA;
+    static final public int inc_sel_block = InputConstants.KEY_Z;
+    static final public int pin_key = InputConstants.KEY_G;
+    static final public int cycle_palette_key = InputConstants.KEY_N;
+    *///?}
     //?if >= 1.21.11 {
     public static final KeyMapping.Category tab = KeyMapping.Category.register(RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "wands").id());
     //?}else{
@@ -99,7 +126,11 @@ public class WandsModClient {
         keys.put(Compat.newKeyMapping(k + "toggle_stair_slab", toggle_stair_slab_key, tab), WandsMod.WandKeys.TOGGLE_STAIRSLAB);
         keys.put(Compat.newKeyMapping(k + "area_diagonal_spread", area_diagonal_spread, tab), WandsMod.WandKeys.DIAGONAL_SPREAD);
         keys.put(Compat.newKeyMapping(k + "inc_sel_block", inc_sel_block, tab), WandsMod.WandKeys.INC_SEL_BLK);
+        //?if < 26.3 {
         keys.put(Compat.newKeyMapping(k + "clear_wand", GLFW.GLFW_KEY_C, tab), WandsMod.WandKeys.CLEAR);
+        //?} else {
+        /*keys.put(Compat.newKeyMapping(k + "clear_wand", InputConstants.KEY_C, tab), WandsMod.WandKeys.CLEAR);
+        *///?}
         keys.put(Compat.newKeyMapping(k + "pin", pin_key, tab), WandsMod.WandKeys.PIN);
         keys.put(Compat.newKeyMapping(k + "cycle_palette", cycle_palette_key, tab), WandsMod.WandKeys.CYCLE_PALETTE);
 
@@ -175,7 +206,7 @@ public class WandsModClient {
                 int keyCode = Compat.getKeyCode(km);
                 if (keyCode <= 0) continue; // Unbound
 
-                boolean pressed = GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS;
+                boolean pressed = Compat.isKeyDown(window, keyCode);
                 boolean wasPressed = prevKeyState.contains(keyCode);
 
                 if (pressed && !wasPressed) {
@@ -226,7 +257,7 @@ public class WandsModClient {
             prevKeyState.clear();
             for (Map.Entry<KeyMapping, WandsMod.WandKeys> me : keys.entrySet()) {
                 int keyCode = Compat.getKeyCode(me.getKey());
-                if (keyCode > 0 && GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS) {
+                if (keyCode > 0 && Compat.isKeyDown(window, keyCode)) {
                     prevKeyState.add(keyCode);
                 }
             }

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#P#",
+    "RER",
+    "RRR"
+  ],
+  "key": {
+    "#":"minecraft:string",
+    "P":"minecraft:magenta_dye",
+    "R":"minecraft:rabbit_hide",
+    "E":"minecraft:nether_star"
+  },
+  "result": {
+    "id": "wands:magic_bag_3",
+    "count": 1
+  }
+}

@@ -32,7 +32,9 @@ import net.nicguzzo.wands.wand.WandProps.Value;
 import net.nicguzzo.wands.compat.Compat;
 
 import org.jetbrains.annotations.NotNull;
+//?if < 26.3 {
 import org.lwjgl.glfw.GLFW;
+//?}
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -148,13 +150,16 @@ public class WandScreen extends Screen {
     int screenYOffset;
 
     // Cursor handling
+    //?if < 26.3 {
     private static long handCursor = 0;
+    //?}
     private boolean isHandCursor = false;
 
     private void updateCursor(int mouseX, int mouseY) {
         boolean shouldBeHand = isOverClickable(mouseX, mouseY);
         if (shouldBeHand != isHandCursor) {
             isHandCursor = shouldBeHand;
+            //?if < 26.3 {
             long window = Compat.getWindow();
             if (shouldBeHand) {
                 if (handCursor == 0) {
@@ -164,6 +169,13 @@ public class WandScreen extends Screen {
             } else {
                 GLFW.glfwSetCursor(window, 0);
             }
+            //?} else {
+            /*if (shouldBeHand) {
+                com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND.select();
+            } else {
+                com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+            }
+            *///?}
         }
     }
 
@@ -1073,6 +1085,7 @@ public class WandScreen extends Screen {
     @Override
     public void onClose() {
         // Reset cursor and free native cursor handle
+        //?if < 26.3 {
         if (isHandCursor) {
             GLFW.glfwSetCursor(Compat.getWindow(), 0);
             isHandCursor = false;
@@ -1081,6 +1094,12 @@ public class WandScreen extends Screen {
             GLFW.glfwDestroyCursor(handCursor);
             handCursor = 0;
         }
+        //?} else {
+        /*if (isHandCursor) {
+            com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+            isHandCursor = false;
+        }
+        *///?}
         super.onClose();
     }
 
@@ -1126,12 +1145,20 @@ public class WandScreen extends Screen {
     @Override
     //?if >= 1.21.11 {
     public boolean keyPressed(KeyEvent keyEvent){
+        //?if < 26.3 {
         int scancode=keyEvent.scancode();
+        //?} else {
+        /*int scancode=keyEvent.keycode();
+        *///?}
     //?}else{
     /*public boolean keyPressed(int scancode,int keysym, int k){
     *///?}
         //?if >= 1.21.11 {
+        //?if < 26.3 {
         if ((WandsModClient.wand_menu_km.matches(keyEvent) || scancode==256) ) {
+        //?} else {
+        /*if ((WandsModClient.wand_menu_km.matches(keyEvent) || scancode==256 || keyEvent.key() == com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE) ) {
+        *///?}
         //?}else{
         /*if ((WandsModClient.wand_menu_km.matches(keysym,scancode) || scancode==256) ) {
         *///?}

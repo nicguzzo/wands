@@ -3,11 +3,15 @@ package net.nicguzzo.wands.mixin;
 //?if >=26.2{
 /*import net.minecraft.client.renderer.SubmitNodeStorage;
 *///?}
-//?if >=1.21.11{
+//?if >= 26.3 {
+/*import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+*///?} else if >= 1.21.11 {
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+//?}
+//?if >= 1.21.11 {
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 //?}
-//?if >=1.21{
+//?if >= 1.21 < 26.3 {
 import net.minecraft.client.DeltaTracker;
 //?}
 //?if <26.1{
@@ -48,7 +52,18 @@ public class LevelRendererMixin {
     @Unique
     private final PoseStack posestack = new PoseStack();
     
-    //?if >= 26.2{
+    //?if >= 26.3 {
+    /*@Shadow
+    private SubmitNodeStorage submitNodeStorage;
+
+    @Inject(method = "render", at = @At(value = "TAIL"))
+    public void render(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean bl, CallbackInfo ci){
+        posestack.setIdentity();
+        if(ClientRender.wand != null) {
+            ClientRender.render(posestack, submitNodeStorage);
+        }
+    }
+    *///?} else if = 26.2 {
     /*@Shadow
     private SubmitNodeStorage submitNodeStorage;
 

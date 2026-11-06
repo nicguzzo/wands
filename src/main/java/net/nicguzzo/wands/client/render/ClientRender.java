@@ -3,7 +3,11 @@ package net.nicguzzo.wands.client.render;
 //? if>=26.1 {
 
     import net.minecraft.client.renderer.block.BlockAndTintGetter;
+    //?if < 26.3 {
     import com.mojang.blaze3d.textures.GpuTextureView;
+    //?} else {
+    /*import com.mojang.renderpearl.api.textures.GpuTextureView;
+    *///?}
     import net.minecraft.client.renderer.rendertype.RenderTypes;
 //?}
 

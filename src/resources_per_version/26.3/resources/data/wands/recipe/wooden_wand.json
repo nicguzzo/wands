@@ -1,0 +1,17 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "category": "misc",
+    "pattern": [
+        "  /",
+        " / ",
+        "#  "
+    ],
+    "key": {
+        "#":"#minecraft:logs",
+        "/":"minecraft:stick"
+    },
+    "result": {
+        "id": "wands:wooden_wand",
+        "count": 1
+    }
+}

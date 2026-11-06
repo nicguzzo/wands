@@ -1,7 +1,11 @@
 package net.nicguzzo.wands.client.screens;
 
 //?if >= 12.11.1 {
+//?if < 26.3 {
 import com.mojang.blaze3d.textures.GpuTexture;
+//?} else {
+/*import com.mojang.renderpearl.api.textures.GpuTexture;
+*///?}
 import net.minecraft.client.renderer.texture.TextureManager;
 //?}
 import net.minecraft.client.Minecraft;

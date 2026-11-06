@@ -9,9 +9,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.WandItem;
+//?if < 26.3 {
 import net.nicguzzo.wands.mixin.AxeItemAccessor;
 import net.nicguzzo.wands.mixin.HoeItemAccessor;
 import net.nicguzzo.wands.mixin.ShovelItemAccessor;
+//?}
 import java.util.List;
 //?if  >= 1.20.5 {
 import net.minecraft.world.item.alchemy.PotionContents;
@@ -24,10 +26,18 @@ import java.util.Optional;
 public class WandUtils{
 
     public static boolean is_tillable(BlockState state){
+        //?if < 26.3 {
         return HoeItemAccessor.getTillables().get(state.getBlock())!=null;
+        //?} else {
+        /*return state.is(BlockTags.DIRT);
+        *///?}
     }
     public static boolean is_strippable(BlockState state){
+        //?if < 26.3 {
         return AxeItemAccessor.getStrippables().get(state.getBlock())!=null;
+        //?} else {
+        /*return state.is(BlockTags.LOGS);
+        *///?}
     }
     public static boolean can_axe_use(BlockState state){
         return is_strippable(state) ||
@@ -35,7 +45,11 @@ public class WandUtils{
                HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(state.getBlock());
     }
     public static boolean is_flattenable(BlockState state){
+        //?if < 26.3 {
         return ShovelItemAccessor.getFlattenables().get(state.getBlock())!=null;
+        //?} else {
+        /*return state.is(BlockTags.TURNS_INTO_DIRT_PATH) || state.is(BlockTags.DIRT);
+        *///?}
     }
     public static boolean has_use_action(BlockState state){
         return is_tillable(state) || can_axe_use(state) || is_flattenable(state);

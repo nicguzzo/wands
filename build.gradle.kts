@@ -34,6 +34,15 @@ repositories {
     }
 }
 
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jspecify" && requested.name == "jspecify") {
+            useVersion("1.0.0")
+            because("satisfy strict constraint of minecraft-dependencies")
+        }
+    }
+}
+
 dependencies {
     modstitch.loom {
         modstitchModImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric-api")}")
@@ -120,6 +129,7 @@ modstitch {
                 "1.21.11" -> "[1.21.11,)"
                 "26.1.2" -> "[26.1.2,)"
                 "26.2" -> "[26.2,)"
+                "26.3" -> "[26.3,)"
                 else -> throw IllegalArgumentException("Please set mc range version for ${property("deps.minecraft")} in build.gradle.kts")
             })
             put("forge_version_range", when (property("deps.minecraft")) {
@@ -128,6 +138,7 @@ modstitch {
                 "1.21.11" -> ""
                 "26.1.2" -> ""
                 "26.2" -> ""
+                "26.3" -> ""
                 else -> throw IllegalArgumentException("Please set forge version for ${property("deps.minecraft")} in build.gradle.kts")
             })
 
@@ -137,6 +148,7 @@ modstitch {
                 "1.21.11" -> 75
                 "26.1.2" -> 84
                 "26.2" -> 88
+                "26.3" -> 97
                 else -> throw IllegalArgumentException("Please store the resource pack version for ${property("deps.minecraft")} in build.gradle.kts! https://minecraft.wiki/w/Pack_format")
             }.toString())
         }
@@ -164,6 +176,7 @@ modstitch {
 
             if (sc.current.parsed eq "1.21.1") { neoFormVersion = "1.21.1-20240808.144430" }
             else if (sc.current.parsed eq "26.1.2") { neoFormVersion = "26.1.2-1" }
+            else if (sc.current.parsed eq "26.3") { neoFormVersion = "26.3-1" }
 
             neoForgeVersion = "${property("deps.neoforge")}"
         } else

@@ -13,7 +13,9 @@ import net.nicguzzo.wands.compat.RcId;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.wand.WandProps;
+//?if < 26.3 {
 import org.lwjgl.glfw.GLFW;
+//?}
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,7 +74,9 @@ public class ModeSelectorScreen extends Screen {
     }
 
     // --- Static state (persists across screen instances) ---
+    //?if < 26.3 {
     private static long pointingHandCursor = 0;
+    //?}
     private static int holdStartTick = -1;
     private static boolean holdTriggered = false;
 
@@ -151,7 +155,7 @@ public class ModeSelectorScreen extends Screen {
             return;
         }
 
-        boolean modeKeyPressed = GLFW.glfwGetKey(window, modeKeyCode) == GLFW.GLFW_PRESS;
+        boolean modeKeyPressed = Compat.isKeyDown(window, modeKeyCode);
         //?if >=26.2 {
         /*int currentTick = client.gui.hud.getGuiTicks();
         *///?}else{
@@ -192,9 +196,11 @@ public class ModeSelectorScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        //?if < 26.3 {
         if (pointingHandCursor == 0) {
             pointingHandCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_POINTING_HAND_CURSOR);
         }
+        //?}
     }
 
     @Override
@@ -215,7 +221,7 @@ public class ModeSelectorScreen extends Screen {
         long window = Compat.getWindow();
         int modeKeyCode = getModeKeyCode();
 
-        if (modeKeyCode > 0 && GLFW.glfwGetKey(window, modeKeyCode) != GLFW.GLFW_PRESS) {
+        if (modeKeyCode > 0 && !Compat.isKeyDown(window, modeKeyCode)) {
             if (highlightedSlot >= 0 && highlightedSlot < GRID_SLOTS.length) {
                 WandProps.Mode mode = GRID_SLOTS[highlightedSlot];
                 if (mode != null && isModeEnabled(mode, wand)) {
@@ -229,7 +235,7 @@ public class ModeSelectorScreen extends Screen {
             return;
         }
 
-        if (GLFW.glfwGetKey(window, GLFW.GLFW_KEY_ESCAPE) == GLFW.GLFW_PRESS) {
+        if (Compat.isKeyDown(window, Compat.KEY_ESCAPE)) {
             onClose();
             return;
         }
@@ -334,7 +340,15 @@ public class ModeSelectorScreen extends Screen {
         gui.text(font, hint, panelX + (panelW - hintW) / 2, hintY, COLOR_HINT_TEXT);
 
         // Finger cursor only over enabled tiles
+        //?if < 26.3 {
         GLFW.glfwSetCursor(Compat.getWindow(), highlightedSlot >= 0 ? pointingHandCursor : 0);
+        //?} else {
+        /*if (highlightedSlot >= 0) {
+            com.mojang.blaze3d.platform.cursor.CursorTypes.POINTING_HAND.select();
+        } else {
+            com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+        }
+        *///?}
     }
 
     //?if >= 1.21.1 && <26.1 {
@@ -346,7 +360,11 @@ public class ModeSelectorScreen extends Screen {
 
     @Override
     public void onClose() {
+        //?if < 26.3 {
         GLFW.glfwSetCursor(Compat.getWindow(), 0);
+        //?} else {
+        /*com.mojang.blaze3d.platform.cursor.CursorTypes.ARROW.select();
+        *///?}
         resetHold();
         super.onClose();
     }
@@ -535,7 +553,7 @@ public class ModeSelectorScreen extends Screen {
 
     private boolean checkArrowPress(long window, int keyCode, int dc, int dr) {
         if (keyCode <= 0) return false;
-        boolean pressed = GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS;
+        boolean pressed = Compat.isKeyDown(window, keyCode);
         boolean wasPressed = prevArrowState.contains(keyCode);
         if (pressed && !wasPressed) {
             int newRow = keyFocusRow + dr;
@@ -550,7 +568,7 @@ public class ModeSelectorScreen extends Screen {
     }
 
     private void addIfPressed(long window, int keyCode) {
-        if (keyCode > 0 && GLFW.glfwGetKey(window, keyCode) == GLFW.GLFW_PRESS) {
+        if (keyCode > 0 && Compat.isKeyDown(window, keyCode)) {
             prevArrowState.add(keyCode);
         }
     }

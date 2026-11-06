@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.mixin;
 
+//?if < 26.3 {
 import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,3 +17,11 @@ public interface ShovelItemAccessor {
         throw new AssertionError();
     }
 }
+//?} else {
+/*import net.minecraft.world.item.Item;
+import org.spongepowered.asm.mixin.Mixin;
+
+@Mixin(Item.class)
+public interface ShovelItemAccessor {
+}
+*///?}

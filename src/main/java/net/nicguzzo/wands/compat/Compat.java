@@ -376,14 +376,12 @@ public class Compat {
         //? }
     }
     static public void toast(Toast toast){
-        //? if >= 1.21.6 {
-            //?if < 26.2{
-            Minecraft.getInstance().getToastManager().addToast(toast);
-            //?}
+        //? if >= 26.2 {
+        /*Minecraft.getInstance().gui.toastManager().addToast(toast);
+        *///? } else if >= 1.21.6 {
+        Minecraft.getInstance().getToastManager().addToast(toast);
         //? } else {
-
         /*Minecraft.getInstance().getToasts().addToast(toast);
-
         *///? }
     }
     static public CompoundTag ItemStack_save(ItemStack item, Level level){
@@ -836,4 +834,17 @@ public class Compat {
     public static final int HIGH_CONTRAST_DIAMOND = -11010079;
     public static final int COSMOS_PINK = -13108;
     public static final int TEXT_GRAY = -2039584;
+    //?if < 26.3 {
+    public static final int KEY_ESCAPE = org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+    //?} else {
+    /*public static final int KEY_ESCAPE = com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE;
+    *///?}
+
+    public static boolean isKeyDown(long window, int keyCode) {
+        //?if < 26.3 {
+        return org.lwjgl.glfw.GLFW.glfwGetKey(window, keyCode) == org.lwjgl.glfw.GLFW.GLFW_PRESS;
+        //?} else {
+        /*return com.mojang.blaze3d.platform.InputConstants.isKeyDown(keyCode);
+        *///?}
+    }
 }
