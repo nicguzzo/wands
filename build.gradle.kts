@@ -165,6 +165,9 @@ modstitch {
             runs {
                 all {
                     programArgs("--width", "1920", "--height", "1080")
+                    if (stonecutter.eval(stonecutter.current.version, ">=26.3")) {
+                        programArgs("--graphicsBackend", "vulkan")
+                    }
                 }
             }
         }
@@ -320,4 +323,19 @@ base {
 
 tasks.withType<org.gradle.jvm.tasks.Jar> {
     archiveVersion.set("")
+}
+
+tasks.matching { it.name == "runClient" }.configureEach {
+    doFirst {
+        val optionsFile = project.file("run/options.txt")
+        if (optionsFile.exists()) {
+            val text = optionsFile.readText()
+            if (text.contains("startedCleanly:false") || text.contains("preferredGraphicsBackend:\"opengl\"")) {
+                optionsFile.writeText(
+                    text.replace("startedCleanly:false", "startedCleanly:true")
+                        .replace("preferredGraphicsBackend:\"opengl\"", "preferredGraphicsBackend:\"default\"")
+                )
+            }
+        }
+    }
 }
