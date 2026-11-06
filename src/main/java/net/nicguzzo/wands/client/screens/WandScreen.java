@@ -915,22 +915,31 @@ public class WandScreen extends Screen {
         // Use modeTabs.width to handle variable-width tabs (e.g., flat_text layout)
         int contentX = modeTabs.x + modeTabs.width + INNER_PADDING + DIVIDER_LINE_WIDTH + INNER_PADDING;
         int contentY = modeTabs.y;
-        int contentWidth = CONTENT_WIDTH;
 
         // Mode options section (shown when mode tab selected)
-        modeOptionsSection = createModeOptionsSection(contentWidth, SPINNER_HEIGHT);
+        modeOptionsSection = createModeOptionsSection(CONTENT_WIDTH, SPINNER_HEIGHT);
+
+        // Tools section (shown when tools tab selected)
+        toolsSection = createToolsSection();
+
+        // Auto-adjust content width based on string lengths of all options
+        net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+        int maxPreferredWidth = Math.max(
+            modeOptionsSection.getPreferredWidth(font),
+            toolsSection.getPreferredWidth(font)
+        );
+        int contentWidth = Math.max(CONTENT_WIDTH, maxPreferredWidth);
+
         modeOptionsSection.x = contentX;
         modeOptionsSection.y = contentY;
-        modeOptionsSection.width = contentWidth;
+        modeOptionsSection.setWidth(contentWidth);
         modeOptionsSection.layout();
         modeOptionsSection.recalculateBounds();
         wdgets.add(modeOptionsSection);
 
-        // Tools section (shown when tools tab selected)
-        toolsSection = createToolsSection();
         toolsSection.x = contentX;
         toolsSection.y = contentY;
-        toolsSection.width = contentWidth;
+        toolsSection.setWidth(contentWidth);
         toolsSection.layout();
         toolsSection.recalculateBounds();
         wdgets.add(toolsSection);

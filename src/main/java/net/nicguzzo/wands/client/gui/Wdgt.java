@@ -109,6 +109,17 @@ public abstract class Wdgt {
     }
 
     /**
+     * Calculate preferred width based on content (e.g. font measurements).
+     * Defaults to this.width.
+     *
+     * @param font Font renderer used for measuring text
+     * @return preferred width in screen pixels
+     */
+    public int getPreferredWidth(Font font) {
+        return this.width;
+    }
+
+    /**
      * Check if a point is within this widget's bounding box.
      * @param mouseX X coordinate to test
      * @param mouseY Y coordinate to test

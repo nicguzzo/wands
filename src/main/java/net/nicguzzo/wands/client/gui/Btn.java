@@ -118,6 +118,14 @@ public class Btn extends Wdgt {
     }
 
     @Override
+    public int getPreferredWidth(Font font) {
+        if (labelText != null) {
+            return font.width(labelText) + TEXT_PADDING * 2;
+        }
+        return this.width;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
 

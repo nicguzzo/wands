@@ -141,6 +141,21 @@ public class Spinner extends Wdgt {
     }
 
     @Override
+    public int getPreferredWidth(Font font) {
+        int labelWidth = 0;
+        if (label != null) {
+            labelWidth = font.width(label.getString() + " ");
+        }
+        int maxValueWidth = font.width(valueFormatter.apply(value));
+        maxValueWidth = Math.max(maxValueWidth, font.width(valueFormatter.apply(min)));
+        maxValueWidth = Math.max(maxValueWidth, font.width(valueFormatter.apply(max)));
+        if (min <= 0 && max >= 0) {
+            maxValueWidth = Math.max(maxValueWidth, font.width(valueFormatter.apply(0)));
+        }
+        return labelWidth + maxValueWidth + TEXT_PADDING * 2 + SPINNER_BUTTON_WIDTH + 4;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         drawBackground(gui, mouseX, mouseY);

@@ -182,6 +182,23 @@ public class CycleSpinner extends Wdgt {
     }
 
     @Override
+    public int getPreferredWidth(Font font) {
+        int labelWidth = 0;
+        if (label != null) {
+            labelWidth = font.width(label.getString() + " ");
+        }
+        int maxValWidth = font.width("Off");
+        if (val != null) {
+            maxValWidth = Math.max(maxValWidth, font.width(String.valueOf(val.min)));
+            maxValWidth = Math.max(maxValWidth, font.width(String.valueOf(val.max)));
+            if (val.min <= 0 && val.max >= 0) {
+                maxValWidth = Math.max(maxValWidth, font.width(String.valueOf(0)));
+            }
+        }
+        return labelWidth + maxValWidth + TEXT_PADDING * 2 + SPINNER_BUTTON_WIDTH + 4;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         drawBackground(gui, mouseX, mouseY);

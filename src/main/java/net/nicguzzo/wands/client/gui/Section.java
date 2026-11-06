@@ -40,6 +40,27 @@ public class Section extends Wdgt {
      * This ensures consistent bounds so clicks don't fall through when widgets hide.
      * Call after adding children and setting x position.
      */
+    public void setWidth(int width) {
+        this.width = width;
+        for (Wdgt child : children) {
+            child.width = width;
+        }
+    }
+
+    @Override
+    public int getPreferredWidth(Font font) {
+        int maxWidth = 0;
+        for (Wdgt child : children) {
+            maxWidth = Math.max(maxWidth, child.getPreferredWidth(font));
+        }
+        return maxWidth;
+    }
+
+    /**
+     * Recalculate section bounds based on ALL children (not just visible).
+     * This ensures consistent bounds so clicks don't fall through when widgets hide.
+     * Call after adding children and setting x position.
+     */
     public void recalculateBounds() {
         int maxWidth = 0;
         int totalHeight = 0;
@@ -57,6 +78,9 @@ public class Section extends Wdgt {
 
         this.width = Math.max(this.width, maxWidth);
         this.height = totalHeight;
+        for (Wdgt child : children) {
+            child.width = this.width;
+        }
     }
 
     /**
@@ -66,6 +90,7 @@ public class Section extends Wdgt {
     public void layout() {
         int currentY = this.y;
         for (Wdgt child : children) {
+            child.width = this.width;
             if (!child.visible) continue;
             child.x = this.x;
             child.y = currentY;

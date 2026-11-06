@@ -227,6 +227,30 @@ public class CycleToggle<T> extends Wdgt {
     }
 
     @Override
+    public int getPreferredWidth(Font font) {
+        int labelWidth = 0;
+        if (label != null) {
+            labelWidth = font.width(label.getString() + " ");
+        }
+        int maxValueWidth = 0;
+        if (optionLabels != null) {
+            for (Component opt : optionLabels) {
+                if (opt != null) {
+                    maxValueWidth = Math.max(maxValueWidth, font.width(opt.getString()));
+                }
+            }
+        }
+        if (alternateLabels != null) {
+            for (Component opt : alternateLabels) {
+                if (opt != null) {
+                    maxValueWidth = Math.max(maxValueWidth, font.width(opt.getString()));
+                }
+            }
+        }
+        return labelWidth + maxValueWidth + TEXT_PADDING * 2;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         drawBackground(gui, mouseX, mouseY);

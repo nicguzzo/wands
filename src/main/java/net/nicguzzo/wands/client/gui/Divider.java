@@ -18,6 +18,11 @@ public class Divider extends Wdgt {
     }
 
     @Override
+    public int getPreferredWidth(Font font) {
+        return 0;
+    }
+
+    @Override
     public void render(GuiGraphicsExtractor gui, Font font, int mouseX, int mouseY) {
         if (!visible) return;
         int lineY = y + VERTICAL_PADDING;
