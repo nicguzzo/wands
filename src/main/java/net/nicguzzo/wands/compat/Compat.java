@@ -49,7 +49,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 
 import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -59,6 +61,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -192,6 +197,8 @@ public class Compat {
                             return new PaletteMenu(containerId, playerInventory, item);
                         case 2:
                             return new MagicBagMenu(containerId, playerInventory, item);
+                        case 3:
+                            return new BlueprintMenu(containerId, playerInventory, item);
                     }
                     return null;
                 },
@@ -213,6 +220,8 @@ public class Compat {
                             return new PaletteMenu(containerId, playerInventory, item);
                         }case 2: {
                             return new MagicBagMenu(containerId, playerInventory, item);
+                        }case 3: {
+                            return new BlueprintMenu(containerId, playerInventory, item);
                         }
                     }
                     return null;
@@ -252,6 +261,9 @@ public class Compat {
                         }
                         case 2: {
                             return new MagicBagMenu(containerId, playerInventory, item);
+                        }
+                        case 3: {
+                            return new BlueprintMenu(containerId, playerInventory, item);
                         }
                     }
 
@@ -307,6 +319,22 @@ public class Compat {
                         @Override
                         public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
                             return new MagicBagMenu(containerId, playerInventory, new MagicBagMenuData(item));
+                        }
+                    });
+                    break;
+                case 3:
+                    player.openMenu(new ExtendedMenuProvider<BlueprintMenuData>() {
+                        @Override
+                        public BlueprintMenuData getScreenOpeningData(ServerPlayer player) {
+                            return new BlueprintMenuData(item);
+                        }
+                        @Override
+                        public Component getDisplayName() {
+                            return Component.literal("");
+                        }
+                        @Override
+                        public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                            return new BlueprintMenu(containerId, playerInventory, new BlueprintMenuData(item));
                         }
                     });
                     break;
@@ -550,6 +578,74 @@ public class Compat {
             return Optional.empty();
         }
 
+        *///? }
+    }
+    static public Optional<String> getString(CompoundTag tag, String key) {
+        //? if >= 1.21.11 {
+        return tag.getString(key);
+        //? } else {
+
+        /*if(tag.contains(key)) {
+            return Optional.of(tag.getString(key));
+        }else{
+            return Optional.empty();
+        }
+
+        *///? }
+    }
+    static public Optional<int[]> getIntArray(CompoundTag tag, String key) {
+        //? if >= 1.21.11 {
+        return tag.getIntArray(key);
+        //? } else {
+
+        /*if(tag.contains(key)) {
+            return Optional.of(tag.getIntArray(key));
+        }else{
+            return Optional.empty();
+        }
+
+        *///? }
+    }
+    static public Optional<CompoundTag> getListCompound(ListTag list, int index) {
+        //? if >= 1.21.11 {
+        return list.getCompound(index);
+        //? } else {
+
+        /*if(index >= 0 && index < list.size()) {
+            return Optional.of(list.getCompound(index));
+        }else{
+            return Optional.empty();
+        }
+
+        *///? }
+    }
+    static public Block getBlockById(String idStr) {
+        if (idStr == null || idStr.isEmpty()) return Blocks.AIR;
+        RcId rcid = RcId.tryParse(idStr);
+        if (rcid == null || rcid.id() == null) return Blocks.AIR;
+        //? if >= 1.21.11 {
+        return BuiltInRegistries.BLOCK.get(rcid.id()).map(ref -> ref.value()).orElse(Blocks.AIR);
+        //? } else {
+
+        /*Block blk = BuiltInRegistries.BLOCK.get(rcid.id());
+        return blk != null ? blk : Blocks.AIR;
+
+        *///? }
+    }
+    static public String getBlockId(Block block) {
+        if (block == null || block == Blocks.AIR) return "";
+        return BuiltInRegistries.BLOCK.getKey(block).toString();
+    }
+    static public CompoundTag writeBlockState(BlockState state) {
+        if (state == null) return new CompoundTag();
+        return NbtUtils.writeBlockState(state);
+    }
+    static public BlockState readBlockState(CompoundTag tag) {
+        if (tag == null || tag.isEmpty()) return Blocks.AIR.defaultBlockState();
+        //? if >= 1.21.11 {
+        return NbtUtils.readBlockState(BuiltInRegistries.BLOCK, tag);
+        //? } else {
+        /*return NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), tag);
         *///? }
     }
     static public long getWindow() {

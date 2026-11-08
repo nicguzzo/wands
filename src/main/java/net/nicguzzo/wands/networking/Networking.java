@@ -27,12 +27,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.compat.RcId;
+import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.menues.BlueprintMenu;
 import net.nicguzzo.wands.utils.WandUtils;
+import net.nicguzzo.wands.wand.InventoryManager;
 import net.nicguzzo.wands.wand.PlayerWand;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
@@ -53,6 +57,7 @@ public class Networking {
     static public RcId WAND_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "wand_packet");
     static public RcId POS_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "pos_packet");
     static public RcId SYNC_ROCK_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "sync_rock_packet");
+    static public RcId BLUEPRINT_ACTION_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "blueprint_action_packet");
 
     //S2C
     static public RcId SND_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "sound_packet");
@@ -307,6 +312,24 @@ public class Networking {
             return TYPE;
         }
     }
+
+    public record BlueprintActionPacket(int action, String arg1, String arg2) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<BlueprintActionPacket> TYPE = new CustomPacketPayload.Type<>(BLUEPRINT_ACTION_PACKET.id());
+        public static final StreamCodec<ByteBuf, BlueprintActionPacket> STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT,
+                BlueprintActionPacket::action,
+                ByteBufCodecs.STRING_UTF8,
+                BlueprintActionPacket::arg1,
+                ByteBufCodecs.STRING_UTF8,
+                BlueprintActionPacket::arg2,
+                BlueprintActionPacket::new
+        );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
     //? }
 
     static public void SendStatePacket(ServerPlayer player, int mode, int slot, boolean xp, int levels, float prog) {
@@ -511,6 +534,88 @@ public class Networking {
         }
     }
 
+    public static void ReceiveBlueprintAction(ServerPlayer player, int action, String arg1, String arg2) {
+        if (player == null) return;
+        Wand wand = PlayerWand.get(player);
+        switch (action) {
+            case 0: { // SAVE_COPY_TO_OPEN_BLUEPRINT
+                ItemStack target = null;
+                if (player.containerMenu instanceof BlueprintMenu bm && bm.blueprint.getItem() instanceof BlueprintItem) {
+                    target = bm.blueprint;
+                } else if (player.getMainHandItem().getItem() instanceof BlueprintItem) {
+                    target = player.getMainHandItem();
+                }
+                if (target != null && wand != null && !wand.copy_paste_buffer.isEmpty()) {
+                    BlueprintItem.saveCopyBufferToBlueprint(target, wand.copy_paste_buffer);
+                    String id = BlueprintItem.getOrCreateId(target);
+                    wand.setActiveBlueprintId(id);
+                    if (wand.player_data != null) {
+                        SendPlayerData(player, wand.player_data);
+                    }
+                    player.inventoryMenu.broadcastChanges();
+                    Compat.displayClientMessage(player, Compat.literal("Saved " + wand.copy_paste_buffer.size() + " blocks to Blueprint"), true);
+                }
+                break;
+            }
+            case 1: { // SET_REPLACEMENT on open blueprint
+                ItemStack target = null;
+                if (player.containerMenu instanceof BlueprintMenu bm && bm.blueprint.getItem() instanceof BlueprintItem) {
+                    target = bm.blueprint;
+                } else if (player.getMainHandItem().getItem() instanceof BlueprintItem) {
+                    target = player.getMainHandItem();
+                }
+                if (target != null) {
+                    Block origBlock = Compat.getBlockById(arg1);
+                    Block replBlock = Compat.getBlockById(arg2);
+                    BlueprintItem.setReplacement(target, origBlock, replBlock);
+                    player.inventoryMenu.broadcastChanges();
+                }
+                break;
+            }
+            case 2: { // SET_NAME on open blueprint
+                ItemStack target = null;
+                if (player.containerMenu instanceof BlueprintMenu bm && bm.blueprint.getItem() instanceof BlueprintItem) {
+                    target = bm.blueprint;
+                } else if (player.getMainHandItem().getItem() instanceof BlueprintItem) {
+                    target = player.getMainHandItem();
+                }
+                if (target != null) {
+                    BlueprintItem.setBlueprintName(target, arg1);
+                    player.inventoryMenu.broadcastChanges();
+                }
+                break;
+            }
+            case 3: { // SET_ACTIVE_BLUEPRINT
+                if (wand != null) {
+                    wand.setActiveBlueprintId(arg1);
+                    if (wand.player_data != null) {
+                        SendPlayerData(player, wand.player_data);
+                    }
+                }
+                break;
+            }
+            case 4: { // SAVE_COPY_TO_BLUEPRINT_BY_ID
+                if (wand != null && !wand.copy_paste_buffer.isEmpty() && arg1 != null && !arg1.isEmpty()) {
+                    InventoryManager.BlueprintEntry entry = InventoryManager.findBlueprintById(player, arg1);
+                    if (entry != null) {
+                        boolean updated = InventoryManager.updateBlueprintEntry(player, entry, stack -> {
+                            BlueprintItem.saveCopyBufferToBlueprint(stack, wand.copy_paste_buffer);
+                        });
+                        if (updated) {
+                            wand.setActiveBlueprintId(arg1);
+                            if (wand.player_data != null) {
+                                SendPlayerData(player, wand.player_data);
+                            }
+                            player.inventoryMenu.broadcastChanges();
+                            Compat.displayClientMessage(player, Compat.literal("Saved " + wand.copy_paste_buffer.size() + " blocks to Blueprint"), true);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+
     public static void RegisterS2C() {
         //?if >= 1.20.5 {
             //?if fabric {
@@ -533,6 +638,7 @@ public class Networking {
                 PayloadTypeRegistry.serverboundPlay().register(Networking.PosPacket.TYPE, Networking.PosPacket.STREAM_CODEC);
                 PayloadTypeRegistry.serverboundPlay().register(Networking.KbPacket.TYPE, Networking.KbPacket.STREAM_CODEC);
                 PayloadTypeRegistry.serverboundPlay().register(Networking.WandPacket.TYPE, Networking.WandPacket.STREAM_CODEC);
+                PayloadTypeRegistry.serverboundPlay().register(Networking.BlueprintActionPacket.TYPE, Networking.BlueprintActionPacket.STREAM_CODEC);
 
                 ServerPlayNetworking.registerGlobalReceiver(Networking.SyncRockPacket.TYPE,(payload, context) -> {
                     context.server().execute(()->{
@@ -567,12 +673,25 @@ public class Networking {
                         }
                     });
                 });
+                ServerPlayNetworking.registerGlobalReceiver(Networking.BlueprintActionPacket.TYPE,(payload, context) -> {
+                    context.server().execute(()->{
+                        Networking.ReceiveBlueprintAction(context.player(), payload.action(), payload.arg1(), payload.arg2());
+                    });
+                });
             //?}
 
         //?}
         //? if >= 1.20.5 {
         //?}else{
             /*//?if fabric {
+            ServerPlayNetworking.registerGlobalReceiver(Networking.BLUEPRINT_ACTION_PACKET.id(), (server, player, handler, buf, responseSender) -> {
+                int action = buf.readInt();
+                String arg1 = buf.readUtf();
+                String arg2 = buf.readUtf();
+                server.execute(() -> {
+                    Networking.ReceiveBlueprintAction(player, action, arg1, arg2);
+                });
+            });
             ServerPlayNetworking.registerGlobalReceiver(Networking.SYNC_ROCK_PACKET.id(), (server,player, handler, buf, responseSender) -> {
                 int x=buf.readInt();
                 int y=buf.readInt();
@@ -666,6 +785,11 @@ public class Networking {
                         CompoundTag tag = custom_data.copyTag();
                         net.minecraft.world.item.component.CustomData.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, wand_stack, tag);
                     }
+                });
+            });
+            registrar.playToServer(Networking.BlueprintActionPacket.TYPE, Networking.BlueprintActionPacket.STREAM_CODEC, (payload, context) -> {
+                context.enqueueWork(()->{
+                    Networking.ReceiveBlueprintAction((net.minecraft.server.level.ServerPlayer)context.player(), payload.action(), payload.arg1(), payload.arg2());
                 });
             });
         }
@@ -786,6 +910,11 @@ public class Networking {
                         if (tag != null) {
                             wand_stack.setTag(tag);
                         }
+                    } else if (pid.equals(Networking.BLUEPRINT_ACTION_PACKET.id())) {
+                        int action = buf.readInt();
+                        String arg1 = buf.readUtf();
+                        String arg2 = buf.readUtf();
+                        Networking.ReceiveBlueprintAction(player, action, arg1, arg2);
                     }
                 } else {
                     if (pid.equals(Networking.CONF_PACKET.id())) {

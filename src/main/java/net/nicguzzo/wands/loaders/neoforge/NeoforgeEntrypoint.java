@@ -28,14 +28,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.WandsModClient;
+import net.nicguzzo.wands.client.screens.BlueprintScreen;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.config.WandsConfig;
+import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.menues.BlueprintMenu;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandToolsMenu;
@@ -52,6 +55,7 @@ public class NeoforgeEntrypoint {
     public static final Supplier<MenuType<WandToolsMenu>> WAND_TOOLS_MENU_TYPE = MENUS.register("wand_tools_menu", () -> IMenuTypeExtension.create(WandToolsMenu::new));
     public static final Supplier<MenuType<MagicBagMenu>> MAGIC_BAG_MENU_TYPE = MENUS.register("magic_bag_menu", () -> IMenuTypeExtension.create(MagicBagMenu::new));
     public static final Supplier<MenuType<PaletteMenu>> PALETTE_MENU_TYPE = MENUS.register("palette_menu", () -> IMenuTypeExtension.create(PaletteMenu::new));
+    public static final Supplier<MenuType<BlueprintMenu>> BLUEPRINT_MENU_TYPE = MENUS.register("blueprint_menu", () -> IMenuTypeExtension.create(BlueprintMenu::new));
 
 
      public static final Supplier<WandItem> WOODEN_WAND_ITEM = ITEMS.register(WandsMod.wooden_wand_str,
@@ -91,6 +95,10 @@ public class NeoforgeEntrypoint {
             PaletteItem::create
     );
 
+    public static final Supplier<BlueprintItem> BLUEPRINT_ITEM = ITEMS.register(WandsMod.blueprint_str,
+            BlueprintItem::create
+    );
+
     public static final Supplier<CreativeModeTab> WANDS_TAB = CREATIVE_MODE_TABS.register("wands_tab", () -> CreativeModeTab.builder()
     .title(Component.translatable("itemGroup.wands.wands_tab"))
     .icon(() -> new ItemStack(DIAMOND_WAND_ITEM.get()))
@@ -107,6 +115,7 @@ public class NeoforgeEntrypoint {
         output.accept(MAGIC_BAG_TIER2_ITEM.get());
         output.accept(MAGIC_BAG_TIER3_ITEM.get());
         output.accept(PALETTE_ITEM.get());
+        output.accept(BLUEPRINT_ITEM.get());
     })
     .build()
     );
@@ -174,6 +183,7 @@ public class NeoforgeEntrypoint {
         event.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
         event.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
         event.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
+        event.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
     }
     public void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {

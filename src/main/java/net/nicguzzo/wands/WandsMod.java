@@ -45,6 +45,7 @@ public class WandsMod {
     static public String netherite_wand_str = "netherite_wand";
     static public String creative_wand_str = "creative_wand";
     static public String palette_str = "palette";
+    static public String blueprint_str = "blueprint";
     static public String magic_bag_1_str = "magic_bag_1";
     static public String magic_bag_2_str = "magic_bag_2";
     static public String magic_bag_3_str = "magic_bag_3";
@@ -59,6 +60,7 @@ public class WandsMod {
     static public RcId netherite_wand_id = RcId.fromNamespaceAndPath(MOD_ID,netherite_wand_str);
     static public RcId creative_wand_id = RcId.fromNamespaceAndPath(MOD_ID,creative_wand_str);
     static public RcId palette_id = RcId.fromNamespaceAndPath(MOD_ID,palette_str);
+    static public RcId blueprint_id = RcId.fromNamespaceAndPath(MOD_ID,blueprint_str);
     static public RcId magic_bag_1_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_1_str);
     static public RcId magic_bag_2_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_2_str);
     static public RcId magic_bag_3_id = RcId.fromNamespaceAndPath(MOD_ID,magic_bag_3_str);
@@ -73,13 +75,14 @@ public class WandsMod {
     static public ResourceKey<Item> netherite_wand_key = ResourceKey.create(Registries.ITEM, netherite_wand_id.id());
     static public ResourceKey<Item> creative_wand_key = ResourceKey.create(Registries.ITEM, creative_wand_id.id());
     static public ResourceKey<Item> palette_key = ResourceKey.create(Registries.ITEM, palette_id.id());
+    static public ResourceKey<Item> blueprint_key = ResourceKey.create(Registries.ITEM, blueprint_id.id());
     static public ResourceKey<Item> magic_bag_1_key = ResourceKey.create(Registries.ITEM, magic_bag_1_id.id());
     static public ResourceKey<Item> magic_bag_2_key = ResourceKey.create(Registries.ITEM, magic_bag_2_id.id());
     static public ResourceKey<Item> magic_bag_3_key = ResourceKey.create(Registries.ITEM, magic_bag_3_id.id());
     //?}
 
     public enum WandKeys {
-        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, PIN, CYCLE_PALETTE
+        MENU, MODE, ACTION, ORIENTATION, UNDO, INVERT, FILL, ROTATE, CONF, M_INC, M_DEC, N_INC, N_DEC, TOGGLE_STAIRSLAB, DIAGONAL_SPREAD, INC_SEL_BLK, PALETTE_MODE, PALETTE_MENU, CLEAR, PIN, CYCLE_PALETTE, BLUEPRINT
     }
 
     public static boolean is_forge = false;

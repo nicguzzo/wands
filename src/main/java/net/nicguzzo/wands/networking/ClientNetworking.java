@@ -258,4 +258,31 @@ public class ClientNetworking {
         ^///?}
         *///?}
     }
+    public static void SendBlueprintAction(int action, String arg1, String arg2) {
+        String a1 = arg1 != null ? arg1 : "";
+        String a2 = arg2 != null ? arg2 : "";
+        //? if >= 1.20.5 {
+            //? if fabric {
+            ClientPlayNetworking.send(new Networking.BlueprintActionPacket(action, a1, a2));
+            //?}
+            //? if neoforge {
+            /*//? if >= 1.21.11 {
+            net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new Networking.BlueprintActionPacket(action, a1, a2));
+            //?} else {
+            /^net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Networking.BlueprintActionPacket(action, a1, a2));
+            ^///?}
+            *///?}
+        //?}else{
+        /*FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+        packet.writeInt(action);
+        packet.writeUtf(a1);
+        packet.writeUtf(a2);
+        //? if fabric {
+        ClientPlayNetworking.send(Networking.BLUEPRINT_ACTION_PACKET.id(), packet);
+        //?}
+        //? if forge {
+        /^Networking.CHANNEL.sendToServer(new Networking.WandsPacket(Networking.BLUEPRINT_ACTION_PACKET.id(), packet));
+        ^///?}
+        *///?}
+    }
 }

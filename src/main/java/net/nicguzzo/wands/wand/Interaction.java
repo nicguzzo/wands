@@ -66,7 +66,12 @@ public class Interaction {
             ClientRender.wand.palette.seed = System.currentTimeMillis();
             ClientRender.wand.copy();
             if (WandProps.getFlag(stack, WandProps.Flag.CLEAR_P1)) {
-                ClientRender.wand.pin.clear();
+                if (mode == WandProps.Mode.PASTE && pinActive && ClientRender.wand.pasteRemainingBlocks > ClientRender.wand.limit) {
+                    // Keep pin active while incremental paste still has remaining blocks
+                    ClientRender.wand.force_render = true;
+                } else {
+                    ClientRender.wand.pin.clear();
+                }
             }
             if (mode != WandProps.Mode.COPY) {
                 ClientRender.wand.clear(mode == WandProps.Mode.PASTE  || mode== WandProps.Mode.AREA || mode == WandProps.Mode.VEIN);

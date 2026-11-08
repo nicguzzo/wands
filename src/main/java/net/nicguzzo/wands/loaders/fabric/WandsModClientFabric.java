@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.client.PaletteClientTooltip;
 import net.nicguzzo.wands.client.WandsModClient;
+import net.nicguzzo.wands.client.screens.BlueprintScreen;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
 import net.nicguzzo.wands.client.screens.WandToolScreen;
@@ -67,6 +68,7 @@ public class WandsModClientFabric implements ClientModInitializer {
          MenuScreens.register(FabricEntrypoint.WAND_TOOLS_MENU_TYPE, WandToolScreen::new);
          MenuScreens.register(FabricEntrypoint.MAGIC_BAG_MENU_TYPE, MagicBagScreen::new);
          MenuScreens.register(FabricEntrypoint.PALETTE_MENU_TYPE, PaletteScreen::new);
+         MenuScreens.register(FabricEntrypoint.BLUEPRINT_MENU_TYPE, BlueprintScreen::new);
          registerPackets();
          ClientTickEvents.END_CLIENT_TICK.register(WandsModClient::client_tick);
          //? if >=1.21.11{

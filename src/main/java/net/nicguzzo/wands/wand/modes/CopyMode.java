@@ -97,6 +97,8 @@ public class CopyMode extends WandMode {
                             }
                         }
                     }
+                    // Switch active paste source back to the newly copied in-memory buffer
+                    wand.setActiveBlueprintId("");
                     //log("copied "+copy_paste_buffer.size() + " cp: "+cp);
                     if (!wand.preview && !WandsMod.config.disable_info_messages)
                         Compat.displayClientMessage(wand.player,Compat.literal("Copied: " + cp + " blocks"), false);

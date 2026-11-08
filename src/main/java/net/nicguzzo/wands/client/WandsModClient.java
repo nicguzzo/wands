@@ -14,12 +14,14 @@ import net.nicguzzo.wands.WandsMod;
 import net.nicguzzo.wands.compat.RcId;
 import net.nicguzzo.wands.config.WandsConfig.HudMode;
 import net.nicguzzo.wands.client.render.ClientRender;
+import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.networking.ClientNetworking;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.utils.WandUtils;
+import net.nicguzzo.wands.wand.InventoryManager;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandProps;
 import net.nicguzzo.wands.client.gui.Section;
@@ -77,6 +79,7 @@ public class WandsModClient {
     static final public int inc_sel_block = GLFW.GLFW_KEY_Z;//InputConstants.KEY_Z;
     static final public int pin_key = GLFW.GLFW_KEY_G;
     static final public int cycle_palette_key = GLFW.GLFW_KEY_N;
+    static final public int blueprint_key = GLFW.GLFW_KEY_B;
     //?} else {
     /*static final public int wand_menu_key = InputConstants.KEY_Y;
     static final public int wand_mode_key = InputConstants.KEY_V;
@@ -98,6 +101,7 @@ public class WandsModClient {
     static final public int inc_sel_block = InputConstants.KEY_Z;
     static final public int pin_key = InputConstants.KEY_G;
     static final public int cycle_palette_key = InputConstants.KEY_N;
+    static final public int blueprint_key = InputConstants.KEY_B;
     *///?}
     //?if >= 1.21.11 {
     public static final KeyMapping.Category tab = KeyMapping.Category.register(RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "wands").id());
@@ -133,6 +137,7 @@ public class WandsModClient {
         *///?}
         keys.put(Compat.newKeyMapping(k + "pin", pin_key, tab), WandsMod.WandKeys.PIN);
         keys.put(Compat.newKeyMapping(k + "cycle_palette", cycle_palette_key, tab), WandsMod.WandKeys.CYCLE_PALETTE);
+        keys.put(Compat.newKeyMapping(k + "blueprint", blueprint_key, tab), WandsMod.WandKeys.BLUEPRINT);
 
         keys.forEach((km, v) -> Compat.register_key((KeyMapping) km));
 
@@ -155,8 +160,9 @@ public class WandsModClient {
 
         if(!holdingWand && !holdingPalette)
             return;
-        // Tick the mode selector grid (handles hold/tap/release for MODE key)
+        // Tick the mode selector grid and blueprint carousel (handles hold/tap/release)
         ModeSelectorScreen.clientTick();
+        BlueprintCarouselScreen.clientTick();
 
         // Apply pop animation to hotbar/offhand slots that changed after palette cycle
         if (paletteCyclePending) {
@@ -210,8 +216,8 @@ public class WandsModClient {
                 boolean wasPressed = prevKeyState.contains(keyCode);
 
                 if (pressed && !wasPressed) {
-                    // Skip keys consumed by ModeSelector (MODE key, arrow keys while grid is open)
-                    if (ModeSelectorScreen.consumesKey(key)) continue;
+                    // Skip keys consumed by ModeSelector or BlueprintCarousel
+                    if (ModeSelectorScreen.consumesKey(key) || BlueprintCarouselScreen.consumesKey(key)) continue;
 
                     // New press detected
                     if (!any) any = true;
@@ -273,8 +279,8 @@ public class WandsModClient {
                 KeyMapping km = me.getKey();
                 WandsMod.WandKeys key = me.getValue();
                 if (km.consumeClick()) {
-                    // Skip keys consumed by ModeSelector
-                    if (ModeSelectorScreen.consumesKey(key)) continue;
+                    // Skip keys consumed by ModeSelector or BlueprintCarousel
+                    if (ModeSelectorScreen.consumesKey(key) || BlueprintCarouselScreen.consumesKey(key)) continue;
                     if (!any) any = true;
                     // MENU without shift: open wand settings client-side
                     if (key == WandsMod.WandKeys.MENU && !Compat.hasShiftDown() && holdingWand) {
@@ -554,6 +560,24 @@ public class WandsModClient {
                     String cyclePaletteStr = showCyclePalette ? Compat.translatable("wands.hud.cycle_palette").getString() : "";
                     String cyclePaletteKey = showCyclePalette ? getKeyName(WandsMod.WandKeys.CYCLE_PALETTE) : "";
 
+                    // Blueprint HUD info (for COPY / PASTE modes or when a blueprint is active)
+                    boolean showBlueprint = (mode == WandProps.Mode.COPY || mode == WandProps.Mode.PASTE);
+                    String blueprintKey = showBlueprint ? getKeyName(WandsMod.WandKeys.BLUEPRINT) : "";
+                    String blueprintStr = "";
+                    if (showBlueprint && wand != null) {
+                        String activeBpId = wand.getActiveBlueprintId();
+                        if (!activeBpId.isEmpty() && client.player != null) {
+                            InventoryManager.BlueprintEntry bpEntry = InventoryManager.findBlueprintById(client.player, activeBpId);
+                            if (bpEntry != null) {
+                                blueprintStr = "BP: " + BlueprintItem.getDisplayLabel(bpEntry.stack);
+                            } else {
+                                blueprintStr = "BP: Copied (" + wand.copy_paste_buffer.size() + ")";
+                            }
+                        } else {
+                            blueprintStr = "BP: Copied (" + wand.copy_paste_buffer.size() + ")";
+                        }
+                    }
+
                     int pad = WandScreen.SCREEN_MARGIN;
                     int lineSpacing = font.lineHeight + Section.VERTICAL_SPACING;
 
@@ -565,6 +589,7 @@ public class WandsModClient {
                     if (!p1Text.isEmpty()) lineCount++;
                     if (!p2Text.isEmpty()) lineCount++;
                     if (isFull && !infoText.isEmpty()) lineCount++;
+                    if (showBlueprint) lineCount++;
                     if (showPin) lineCount++;
                     if (pinIsActive) lineCount++; // Move pin
                     if (showClear) lineCount++;
@@ -587,6 +612,7 @@ public class WandsModClient {
                     if (showRotation) maxWidth = Math.max(maxWidth, font.width(rotLabel + " [" + getKeyName(WandsMod.WandKeys.ROTATE) + "]"));
                     if (!p1Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p1Text));
                     if (!p2Text.isEmpty()) maxWidth = Math.max(maxWidth, font.width(p2Text));
+                    if (showBlueprint) maxWidth = Math.max(maxWidth, font.width(blueprintStr + " [" + blueprintKey + ", hold " + blueprintKey + "]"));
                     if (showPin) maxWidth = Math.max(maxWidth, font.width(pinText));
                     if (pinIsActive) maxWidth = Math.max(maxWidth, font.width(movePinText));
                     if (showClear) maxWidth = Math.max(maxWidth, font.width(clearStr + " [" + clearKey + "]"));
@@ -706,7 +732,7 @@ public class WandsModClient {
                                 break;
                             case COPY:
                             case PASTE:
-                                drawHudLabelValue(gui, font, copiedBlocksLabel, String.valueOf(wand.copy_paste_buffer.size()), lineX, currentY);
+                                drawHudLabelValue(gui, font, copiedBlocksLabel, wand.pasteRemainingBlocks + "/" + wand.pasteTotalBlocks, lineX, currentY);
                                 break;
                             case BOX:
                                 int tw2 = WandProps.getVal(stack, WandProps.Value.BOX_W);
@@ -726,6 +752,12 @@ public class WandsModClient {
                                 drawHudLabelValue(gui, font, noiseLabel, String.valueOf(rockNoise2), lineX, currentY);
                                 break;
                         }
+                        currentY += lineSpacing;
+                    }
+
+                    // Blueprint [B, hold B]
+                    if (showBlueprint) {
+                        drawHudValueWithHint(gui, font, blueprintStr, blueprintKey + ", hold " + blueprintKey, hudX, currentY);
                         currentY += lineSpacing;
                     }
 

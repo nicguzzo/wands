@@ -288,7 +288,8 @@ public class ClientRender {
 
 
     static private void preview_pinned(LocalPlayer player,Level level, ItemStack stack,PoseStack matrixStack) {
-        if(last_pos != wand.pin.getPos()) {
+        if(last_pos != wand.pin.getPos() || force || wand.force_render) {
+            wand.force_render = false;
             last_pos = wand.pin.getPos();
             last_side = wand.pin.getEffectiveSide(ClientRender.client.hitResult, player.getDirection());
             BlockState block_state = level.getBlockState(last_pos);

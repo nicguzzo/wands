@@ -102,6 +102,8 @@ public class WandScreen extends Screen {
     CycleToggle<Integer> replaceModeCycle;
     CycleToggle<Boolean> dropPositionToggle;
     Btn pickToolsButton;
+    Btn blueprintsButton;
+    Btn modeBlueprintsButton;
     Btn configButton;
 
     // Mode Options Section
@@ -462,6 +464,17 @@ public class WandScreen extends Screen {
         pickToolsButton.withTooltip(Compat.translatable("screen.wands.pick_tools"), Compat.translatable("tooltip.wands.pick_tools"));
         section.add(pickToolsButton);
 
+        // Blueprints button - opens Blueprint Selector Screen
+        blueprintsButton = new Btn(0, 0, CONTENT_WIDTH, 14, Compat.translatable("screen.wands.blueprints").copy().append("..."), (mouseX, mouseY) -> {
+            //?if >=26.2{
+            /*Minecraft.getInstance().gui.setScreen(new BlueprintSelectorScreen());
+            *///?}else{
+            Minecraft.getInstance().setScreen(new BlueprintSelectorScreen());
+            //?}
+        });
+        blueprintsButton.withTooltip(Compat.translatable("screen.wands.blueprints"), Compat.translatable("tooltip.wands.blueprints"));
+        section.add(blueprintsButton);
+
         // Config button - text button with "..."
         if (WandsMod.platform != 2) {
             Screen parent = this;
@@ -785,6 +798,16 @@ public class WandScreen extends Screen {
         // Divider between shared and mode-specific options
         sectionDivider = new Divider(layoutColWidth);
 
+        // Mode-specific Blueprints button (for COPY and PASTE modes)
+        modeBlueprintsButton = new Btn(0, 0, layoutColWidth, 14, Compat.translatable("screen.wands.blueprints").copy().append("..."), (mouseX, mouseY) -> {
+            //?if >=26.2{
+            /*Minecraft.getInstance().gui.setScreen(new BlueprintSelectorScreen());
+            *///?}else{
+            Minecraft.getInstance().setScreen(new BlueprintSelectorScreen());
+            //?}
+        });
+        modeBlueprintsButton.withTooltip(Compat.translatable("screen.wands.blueprints"), Compat.translatable("tooltip.wands.blueprints"));
+
         // ===== Add widgets to section in display order =====
 
         // --- Shared options (used by 2+ modes) ---
@@ -807,6 +830,7 @@ public class WandScreen extends Screen {
         section.add(sectionDivider);
 
         // --- Mode-specific options (unique to 1 mode) ---
+        section.add(modeBlueprintsButton);
         section.add(mirrorLRToggle);
         section.add(mirrorFBToggle);
         section.add(orientationCycle);
@@ -846,6 +870,7 @@ public class WandScreen extends Screen {
         registerModeWidgets(EnumSet.of(WandProps.Mode.ROW_COL), orientationCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.CIRCLE, WandProps.Mode.FILL), planeCycle);
         registerModeWidgets(EnumSet.of(WandProps.Mode.GRID, WandProps.Mode.PASTE), rotationCycle);
+        registerModeWidgets(EnumSet.of(WandProps.Mode.COPY, WandProps.Mode.PASTE), modeBlueprintsButton);
 
         // Replace mode cycle - visible for modes that support PLACE action
         registerModeWidgets(WandProps.VALUE_MODES.get(WandProps.Value.REPLACE_MODE), replaceModeCycle);
@@ -993,7 +1018,8 @@ public class WandScreen extends Screen {
             modeWidgets.forEach((widget, modes) -> widget.visible = modes.contains(currentMode));
 
             // Show divider only when there are mode-specific widgets visible below it
-            sectionDivider.visible = mirrorLRToggle.visible || mirrorFBToggle.visible
+            sectionDivider.visible = modeBlueprintsButton.visible
+                || mirrorLRToggle.visible || mirrorFBToggle.visible
                 || orientationCycle.visible || rowColumnLimitSpinner.visible
                 || multiplierSpinner.visible || invertToggle.visible
                 || boxFillToggle.visible || boxInvertToggle.visible

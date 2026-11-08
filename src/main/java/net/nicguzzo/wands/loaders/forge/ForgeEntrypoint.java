@@ -18,11 +18,14 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.nicguzzo.wands.client.screens.BlueprintScreen;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
+import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
+import net.nicguzzo.wands.menues.BlueprintMenu;
 import net.nicguzzo.wands.menues.MagicBagMenu;
 import net.nicguzzo.wands.menues.PaletteMenu;
 import net.nicguzzo.wands.menues.WandToolsMenu;
@@ -59,6 +62,9 @@ public class ForgeEntrypoint {
 
     public static final RegistryObject<MenuType<PaletteMenu>> PALETTE_MENU_TYPE = MENUS.register("palette_menu",
             () -> IForgeMenuType.create(PaletteMenu::new));
+
+    public static final RegistryObject<MenuType<BlueprintMenu>> BLUEPRINT_MENU_TYPE = MENUS.register("blueprint_menu",
+            () -> IForgeMenuType.create(BlueprintMenu::new));
 
     public static final RegistryObject<Item> WOODEN_WAND_ITEM = ITEMS.register(WandsMod.wooden_wand_str,
             WandItem::wooden_Wand);
@@ -97,6 +103,9 @@ public class ForgeEntrypoint {
     public static final RegistryObject<Item> PALETTE_ITEM = ITEMS.register(WandsMod.palette_str,
             PaletteItem::create);
 
+    public static final RegistryObject<Item> BLUEPRINT_ITEM = ITEMS.register(WandsMod.blueprint_str,
+            BlueprintItem::create);
+
 
 
     public static final RegistryObject<CreativeModeTab> WANDS_TAB = CREATIVE_MODE_TABS.register("wands_tab", () -> CreativeModeTab.builder()
@@ -115,6 +124,7 @@ public class ForgeEntrypoint {
         output.accept(MAGIC_BAG_TIER2_ITEM.get());
         output.accept(MAGIC_BAG_TIER3_ITEM.get());
         output.accept(PALETTE_ITEM.get());
+        output.accept(BLUEPRINT_ITEM.get());
     })
     .build()
     );
@@ -173,6 +183,7 @@ public class ForgeEntrypoint {
             MenuScreens.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
             MenuScreens.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
             MenuScreens.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
+            MenuScreens.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
             WandsModClient.initialize();
         });
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new Object() {

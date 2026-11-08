@@ -26,6 +26,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.compat.RcId;
+import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
 import net.nicguzzo.wands.items.WandItem;
@@ -48,6 +49,9 @@ public class FabricEntrypoint implements ModInitializer {
     public static final ExtendedMenuType<PaletteMenu, PaletteMenuData> PALETTE_MENU_TYPE =
         new ExtendedMenuType<PaletteMenu,PaletteMenuData>(PaletteMenu::new, PaletteMenuData.STREAM_CODEC);
 
+    public static final ExtendedMenuType<BlueprintMenu, BlueprintMenuData> BLUEPRINT_MENU_TYPE =
+        new ExtendedMenuType<BlueprintMenu, BlueprintMenuData>(BlueprintMenu::new, BlueprintMenuData.STREAM_CODEC);
+
     //?}else{
     /*public static final ExtendedMenuType<WandToolsMenu> WAND_TOOLS_MENU_TYPE =
         new ExtendedMenuType<>(WandToolsMenu::new);
@@ -55,6 +59,8 @@ public class FabricEntrypoint implements ModInitializer {
         new ExtendedMenuType<>(MagicBagMenu::new);
     public static final ExtendedMenuType<PaletteMenu> PALETTE_MENU_TYPE =
         new ExtendedMenuType<>(PaletteMenu::new);
+    public static final ExtendedMenuType<BlueprintMenu> BLUEPRINT_MENU_TYPE =
+        new ExtendedMenuType<>(BlueprintMenu::new);
     *///?}
 
     public static final ResourceKey<CreativeModeTab> CUSTOM_ITEM_GROUP_KEY = ResourceKey.create(BuiltInRegistries.CREATIVE_MODE_TAB.key(), RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "wands_tab").id());
@@ -85,6 +91,7 @@ public class FabricEntrypoint implements ModInitializer {
         Registry.register(BuiltInRegistries.MENU, RcId.fromNamespaceAndPath("wands", "wand_tools_menu").id(), WAND_TOOLS_MENU_TYPE);
         Registry.register(BuiltInRegistries.MENU, RcId.fromNamespaceAndPath("wands", "magic_bag_menu").id(), MAGIC_BAG_MENU_TYPE);
         Registry.register(BuiltInRegistries.MENU, RcId.fromNamespaceAndPath("wands", "palette_menu").id(), PALETTE_MENU_TYPE);
+        Registry.register(BuiltInRegistries.MENU, RcId.fromNamespaceAndPath("wands", "blueprint_menu").id(), BLUEPRINT_MENU_TYPE);
 
 
         //ServerLifecycleEvents.SERVER_STARTED.register(WandsCommon::onServerStarted);
@@ -102,6 +109,7 @@ public class FabricEntrypoint implements ModInitializer {
         Item MAGIC_BAG_TIER2_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.magic_bag_2_id.id(), MagicBagItem.create_tier_2());
         Item MAGIC_BAG_TIER3_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.magic_bag_3_id.id(), MagicBagItem.create_tier_3());
         Item PALETTE_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.palette_id.id(), PaletteItem.create());
+        Item BLUEPRINT_ITEM = Registry.register(BuiltInRegistries.ITEM, WandsMod.blueprint_id.id(), BlueprintItem.create());
 
         //?if >=26.1{
         CUSTOM_ITEM_GROUP=FabricCreativeModeTab.builder()
@@ -120,6 +128,7 @@ public class FabricEntrypoint implements ModInitializer {
             output.accept(MAGIC_BAG_TIER2_ITEM);
             output.accept(MAGIC_BAG_TIER3_ITEM);
             output.accept(PALETTE_ITEM);
+            output.accept(BLUEPRINT_ITEM);
         })
 		.build();
         //?}else{
@@ -142,6 +151,7 @@ public class FabricEntrypoint implements ModInitializer {
             itemGroup.accept(MAGIC_BAG_TIER2_ITEM);
             itemGroup.accept(MAGIC_BAG_TIER3_ITEM);
             itemGroup.accept(PALETTE_ITEM);
+            itemGroup.accept(BLUEPRINT_ITEM);
         });
         *///?}
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, CUSTOM_ITEM_GROUP_KEY, CUSTOM_ITEM_GROUP);

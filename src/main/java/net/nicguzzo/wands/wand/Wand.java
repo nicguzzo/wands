@@ -332,6 +332,33 @@ public class Wand {
     public boolean paletteCycleActive = false;
     public int paletteCycleIndex = 0;
 
+    // Blueprint / Paste tracking
+    public int pasteRemainingBlocks = 0;
+    public int pasteTotalBlocks = 0;
+
+    public String getActiveBlueprintId() {
+        if (this.player_data == null) return "";
+        return Compat.getString(this.player_data, "ActiveBlueprint").orElse("");
+    }
+
+    public void setActiveBlueprintId(String id) {
+        if (this.player_data != null) {
+            this.player_data.putString("ActiveBlueprint", id != null ? id : "");
+        }
+        this.force_render = true;
+    }
+
+    public List<CopyBuffer> getActivePasteBuffer() {
+        String activeId = getActiveBlueprintId();
+        if (!activeId.isEmpty() && this.player != null) {
+            InventoryManager.BlueprintEntry entry = InventoryManager.findBlueprintById(this.player, activeId);
+            if (entry != null) {
+                return net.nicguzzo.wands.items.BlueprintItem.getCopyBuffer(entry.stack);
+            }
+        }
+        return this.copy_paste_buffer;
+    }
+
     private final BlockPos.MutableBlockPos tmp_pos = new BlockPos.MutableBlockPos();
     InventoryManager inventory;
     public int MAX_COPY_VOL = WandsConfig.max_limit;
@@ -612,8 +639,8 @@ public class Wand {
                 true);
         }
 
-        // Copy and Paste modes use global limit instead of wand limit
-        int effectiveLimit = (mode == Mode.COPY || mode == Mode.PASTE) ? WandsConfig.max_limit : limit;
+        // Copy mode uses global limit; Paste mode uses wand tier limit so incremental pasting works
+        int effectiveLimit = (mode == Mode.COPY) ? WandsConfig.max_limit : limit;
 
         //server stuff
         //WandsMod.log(" using palette seed: " + palette.seed,prnt);
@@ -787,6 +814,14 @@ public class Wand {
                         if (block_state != null) {
                             is = block_state.getBlock().asItem().getDefaultInstance();
                         }
+                    }
+                }
+                if (mode == Mode.PASTE && placed > 0 && !WandsMod.config.disable_info_messages) {
+                    int rem = Math.max(0, pasteRemainingBlocks - placed);
+                    if (rem > 0) {
+                        Compat.displayClientMessage(player, Compat.literal("Pasted " + placed + " blocks (" + rem + " remaining)"), true);
+                    } else if (pasteTotalBlocks > 0) {
+                        Compat.displayClientMessage(player, Compat.literal("Paste complete! (" + placed + " placed)"), true);
                     }
                 }
                 if (!is.isEmpty()) {
