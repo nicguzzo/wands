@@ -13,6 +13,12 @@ val minecraft = property("deps.minecraft") as String
 val modVersionStr = "3.2.1"
 val releaseChannel = project.findProperty("release_channel") as? String ?: "release"
 
+// Fabric supplies separate resource and data pack metadata. In 1.21.11 their
+// legacy format thresholds differ and a single pack.mcmeta cannot describe both.
+if (project.name == "1.21.11-fabric") {
+    tasks.named<ProcessResources>("processResources") { exclude("pack.mcmeta") }
+}
+
 sourceSets {
     main {
         resources {
@@ -162,8 +168,25 @@ modstitch {
 
         // Configure loom like normal in this block.
         configureLoom {
+            if (project.name == "1.21.1-fabric") {
+                val directory = rootProject.file("tests/gametest")
+                val testMod = sourceSets.create("gameTest") {
+                    java.srcDir(directory.resolve("java"))
+                    resources.srcDir(directory.resolve("resources"))
+                    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+                    runtimeClasspath += sourceSets.main.get().runtimeClasspath
+                }
+                mods.create("wands-tests") { sourceSet(testMod) }
+                runs.register("gameTest") {
+                    server()
+                    property("fabric-api.gametest")
+                    property("fabric-api.gametest.report-file", project.layout.buildDirectory.file("gametest/results.xml").get().asFile.absolutePath)
+                    source(testMod)
+                    runDir("build/gametest")
+                }
+            }
             runs {
-                all {
+                named("client") {
                     programArgs("--width", "1920", "--height", "1080")
                     if (stonecutter.eval(stonecutter.current.version, ">=26.3")) {
                         programArgs("--graphicsBackend", "vulkan")

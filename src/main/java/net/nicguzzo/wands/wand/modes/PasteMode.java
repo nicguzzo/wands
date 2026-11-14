@@ -10,8 +10,8 @@ import net.nicguzzo.wands.wand.WandProps;
 public class PasteMode extends WandMode {
 
     public void place_in_buffer(Wand wand) {
-        if(wand.copy_paste_buffer==null || wand.copy_paste_buffer.size()==0)
-            return;
+        wand.block_buffer.reset();
+        if (wand.copy_paste_buffer.isEmpty()) return;
         // Always populate buffer (for both preview and placement) so rendering matches placement
         int mx=1;
         int my=1;
@@ -27,7 +27,6 @@ public class PasteMode extends WandMode {
         }
         // wand.pos is already offset by ClientRender/WandItem when INCSELBLOCK is off
         BlockPos b_pos = wand.pos;
-        wand.block_buffer.reset();
 
         for (CopyBuffer b : wand.copy_paste_buffer) {
             BlockPos p = b.pos.rotate(wand.rotation);

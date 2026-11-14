@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "wands-tests",
+  "version": "1",
+  "name": "Building Wands Game Tests",
+  "entrypoints": {
+    "fabric-gametest": ["net.nicguzzo.wands.wand.WandGameTests"]
+  },
+  "depends": {"wands": "*", "fabric-gametest-api-v1": "*"}
+}

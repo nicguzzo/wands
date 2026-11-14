@@ -12,7 +12,6 @@ package net.nicguzzo.wands.compat;
 //?if fabric {
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 //?}
-import net.minecraft.world.item.ItemStackTemplate;
 //?}
 //?if >1.20.5{
 
@@ -617,40 +616,16 @@ public class Compat {
         *///? }
     }
     static public List<ItemStack> get_shulker_contents(ItemStack shulker) {
+        NonNullList<ItemStack> slots = NonNullList.withSize(27, ItemStack.EMPTY);
         //? if >= 1.21.1 {
-            ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-            List<ItemStack> list = new ArrayList<>();
-            //? if >= 26.1 {
-            Iterator<ItemStackTemplate> it = contents.nonEmptyItems().iterator();
-            //? } else {
-            /*Iterator<ItemStack> it = contents.nonEmptyItems().iterator();
-            *///?}
-            while (it.hasNext()) {
-                //? if >= 26.1 {
-                list.add(it.next().create());
-                //? } else {
-                /*list.add(it.next());
-                *///?}
-            }
-            return list;
+        shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(slots);
         //? } else {
-
-            /*CompoundTag entity_tag = shulker.getTagElement("BlockEntityTag");
-            if (entity_tag == null) {
-                return Collections.emptyList();
-            }
-            ListTag shulker_items = entity_tag.getList("Items", NbtType.COMPOUND);
-            List<ItemStack> list = new ArrayList<>();
-            for (int i = 0, len = shulker_items.size(); i < len; ++i) {
-                CompoundTag itemTag = shulker_items.getCompound(i);
-                ItemStack s = ItemStack.of(itemTag);
-                if (!s.isEmpty()) {
-                    list.add(s);
-                }
-            }
-            return list;
-
+        /*CompoundTag tag = shulker.getTagElement("BlockEntityTag");
+        if (tag != null) {
+            net.minecraft.world.ContainerHelper.loadAllItems(tag, slots);
+        }
         *///? }
+        return slots;
     }
     static public void set_shulker_contents(ItemStack shulker, List<ItemStack> items) {
         //? if >= 1.21.1 {
