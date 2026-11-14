@@ -1,4 +1,8 @@
 {
+  "wands.message.material_shortage": "Not enough %s: %s available, %s needed",
+  "wands.history.blocks": " · %s blocks",
+  "wands.history.skipped": " · %s skipped (changed, protected, or unloaded)",
+  "wands.history.other_world": " · Return to the dimension where you used the wand",
   "modmenu.nameTranslation.wands": "Building Wands",
   "modmenu.descriptionTranslation.wands": "Building Wands with different modes to aid construction",
   "modmenu.summaryTranslation.wands":"Building Wands with different modes to aid construction",

@@ -7,7 +7,7 @@
         "#  "
     ],
     "key": {
-        "#":"minecraft:logs",
+        "#":"#minecraft:logs",
         "/":"minecraft:stick"
     },
     "result": {

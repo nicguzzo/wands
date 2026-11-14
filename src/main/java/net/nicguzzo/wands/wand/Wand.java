@@ -27,6 +27,7 @@ import net.minecraft.server.ServerAdvancementManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.protocol.game.ClientboundLevelEventPacket;
+import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
@@ -50,7 +51,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -484,6 +484,7 @@ public class Wand {
         valid = false;
 
 
+        offhand_block = null;
         offhand = player.getOffhandItem();
         has_offhand = false;
         has_hoe = false;
@@ -590,6 +591,8 @@ public class Wand {
         }
         inventory.update_inv_aux();
         inventory.resetBlocksSentToInv();
+        // Modes may return early with no targets. Only the client reuses a preview.
+        if (!preview) block_buffer.reset();
         //process the current mode
         int m = mode.ordinal();
         if ( m < modes.length && modes[m] != null) {
@@ -615,99 +618,28 @@ public class Wand {
         // Copy and Paste modes use global limit instead of wand limit
         int effectiveLimit = (mode == Mode.COPY || mode == Mode.PASTE) ? WandsConfig.max_limit : limit;
 
-        //server stuff
-        //WandsMod.log(" using palette seed: " + palette.seed,prnt);
         if (!preview) {
+            boolean materialAction = !destroy && !use && mode != Mode.COPY;
+            if (materialAction && mode != Mode.BLAST) {
+                preparePlacementMaterials(effectiveLimit);
+            }
+            if (materialAction && !creative && !has_water_bucket && !has_empty_bucket) {
+                inventory.accountMaterials(this, false);
+                block_accounting.forEach((item, count) -> {
+                    if (count.needed > count.in_player) {
+                        Compat.displayClientMessage(player, Compat.translatable("wands.message.material_shortage",
+                                Compat.translatable(item.getDescriptionId()), count.in_player, count.needed)
+                                .withStyle(ChatFormatting.RED), false);
+                    }
+                });
+            }
             undoManager.beginAction();
-            //log(" using palette seed: " + palette_seed);
-            if (limit_reached && (mode != Mode.VEIN)) {
-                Compat.displayClientMessage(player,Compat.translatable("wands.message.wand_limit_reached").withStyle(ChatFormatting.RED), false);
+            if (limit_reached && mode != Mode.VEIN) {
+                Compat.displayClientMessage(player, Compat.translatable("wands.message.wand_limit_reached")
+                        .withStyle(ChatFormatting.RED), false);
             }
-            if (mode != Mode.BLAST) {
-                if (palette.has_palette && !destroy && !use && !is_copy_paste) {
-                    for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                        if (!replace && replace_mode != 2 && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
-                            block_buffer.state[a] = null;
-                            block_buffer.item[a] = null;
-                            continue;
-                        }
-                        BlockState st = block_buffer.state[a];
-                        if (st == null) {
-                            continue;
-                        }
-                        Item it = block_buffer.item[a];
-                        if (it == null) {
-                            continue;
-                        }
-                        BlockAccounting pa = block_accounting.get(it);
-                        if (pa == null) {
-                            //log("no palette accounting found for "+ps.stack.getItem());
-                            continue;
-                        }
-                        pa.needed++;
-
-                        if (st.getBlock() instanceof SlabBlock) {
-                            if (st.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) {
-                                pa.needed++;
-                            }
-                        } else {
-                            if (st.getBlock() instanceof SnowLayerBlock) {
-                                int sn = st.getValue(SnowLayerBlock.LAYERS);
-                                pa.needed += sn - 1;
-                            }
-                        }
-                    }
-                } else {
-                    if (!is_copy_paste) {
-                        if (has_bucket) {
-                            if (!validate_bucket_for_server()) return;
-                        }
-                        boolean buckets= has_empty_bucket || has_water_bucket || has_lava_bucket || has_powder_snow_bucket;
-                        if (buckets) {
-                            BlockAccounting lava_pa = new BlockAccounting();
-                            BlockAccounting snow_pa = new BlockAccounting();
-                            for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                                apply_bucket_accounting(lava_pa, snow_pa, a);
-                            }
-                            block_accounting.put(Items.LAVA_BUCKET, lava_pa);
-                            block_accounting.put(Items.POWDER_SNOW_BUCKET, snow_pa);
-                        } else {
-                            BlockAccounting pa = new BlockAccounting();
-                            for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                                if (!replace && replace_mode != 2 && !destroy && !use && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
-                                    block_buffer.state[a] = null;
-                                    block_buffer.item[a] = null;
-                                } else {
-                                    pa.needed++;
-                                }
-                            }
-                            if (block_buffer.get_length() > 0 && pa.needed > 0) {
-                                block_accounting.put(block_buffer.item[0], pa);
-                            }
-                        }
-                    } else {
-                        //copy paste
-                        for (int a = 0; a < block_buffer.get_length() && a < effectiveLimit; a++) {
-                            if (!replace && replace_mode != 2 && !destroy && !can_place(level.getBlockState(block_buffer.get(a)), block_buffer.get(a))) {
-                                block_buffer.state[a] = null;
-                                block_buffer.item[a] = null;
-                            } else {
-                                BlockAccounting pa = block_accounting.get(block_buffer.item[a]);
-                                if (pa == null) {
-                                    pa = new BlockAccounting();
-                                    pa.needed++;
-                                    block_accounting.put(block_buffer.item[a], pa);
-                                } else {
-                                    pa.needed++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //deal with inventory
-            inventory.check_inventory(this);
-
+            float initialXpProgress = player.experienceProgress;
+            int initialXpLevel = player.experienceLevel;
             int placed = 0;
             no_use_action = false;
 
@@ -737,13 +669,14 @@ public class Wand {
                         if (item != null) {
                             pa = block_accounting.get(item);
                         }
+                        int cost = materialCost(block_buffer.state[a]);
                         if ((destroy || use || creative || has_empty_bucket ||
                                 (has_water_bucket && inventory.n_water_buckets_in_inventory>0) ||
-                                (pa != null && pa.placed < pa.in_player))//survival has blocks in inventory
+                                (pa != null && cost <= pa.in_player - pa.placed))//survival has blocks in inventory
                         ) {
                             if (place_block(tmp_pos, block_buffer.state[a])) {
                                 if (pa != null)
-                                    pa.placed++;
+                                    pa.placed += cost;
                                 placed++;
                             }
                         }
@@ -757,8 +690,13 @@ public class Wand {
                 }
                 modes[m].action(this);
 
+                undoManager.finishAction(level);
                 inventory.remove_from_inventory(this, placed);
                 player.inventoryMenu.broadcastChanges();
+                if (initialXpProgress != player.experienceProgress || initialXpLevel != player.experienceLevel) {
+                    ((ServerPlayer) player).connection.send(new ClientboundSetExperiencePacket(
+                            player.experienceProgress, player.totalExperience, player.experienceLevel));
+                }
             }
             //System.out.println("placed " + placed);
             // Use action produced no results: check the clicked block for warnings
@@ -869,62 +807,29 @@ public class Wand {
         }
     }
 
-    /**
-     * Re-validates bucket state on the server side before placement.
-     * In creative mode, always allows. In survival, checks for a second water bucket.
-     * Returns false if placement should be aborted.
-     */
-    private boolean validate_bucket_for_server() {
-        has_bucket = false;
-        if (has_water_bucket || has_lava_bucket || has_powder_snow_bucket) {
-            if (creative) {
-                has_bucket = true;
-                if (has_water_bucket) {
-                    block_state = Blocks.WATER.defaultBlockState();
-                }
-                if (has_lava_bucket) {
-                    block_state = Blocks.LAVA.defaultBlockState();
-                }
-                if (has_powder_snow_bucket) {
-                    block_state = Blocks.POWDER_SNOW.defaultBlockState();
-                }
-            } else {
-                has_bucket = true;
-                if (has_water_bucket) {
-                    block_state = Blocks.WATER.defaultBlockState();
-                }
-                if (has_lava_bucket) {
-                    block_state = Blocks.LAVA.defaultBlockState();
-                }
-                if (has_powder_snow_bucket) {
-                    block_state = Blocks.POWDER_SNOW.defaultBlockState();
-                }
+    private void preparePlacementMaterials(int limit) {
+        for (int i = 0; i < block_buffer.get_length() && i < limit; i++) {
+            BlockState state = block_buffer.state[i];
+            Item item = block_buffer.item[i];
+            if (state == null || item == null) continue;
+            BlockPos pos = block_buffer.get(i);
+            if (!has_bucket && !replace && replace_mode != 2 && !can_place(level.getBlockState(pos), pos)) {
+                block_buffer.state[i] = null;
+                block_buffer.item[i] = null;
+                continue;
+            }
+            if (!creative && !has_empty_bucket && !has_water_bucket) {
+                block_accounting.computeIfAbsent(item, ignored -> new BlockAccounting()).needed += materialCost(state);
             }
         }
-        if (has_empty_bucket) {
-            has_bucket = true;
-            block_state = Blocks.AIR.defaultBlockState();
-        }
-        return true;
     }
 
-    /** Sets buffer state/item for a single bucket entry and increments accounting for lava/powder snow. */
-    private void apply_bucket_accounting(BlockAccounting lava_pa,BlockAccounting snow_pa, int a) {
-        //if ( has_empty_bucket ) {
-
-            if(block_buffer.item[a]==Items.LAVA_BUCKET){
-                lava_pa.needed++;
-            } else if(block_buffer.item[a]==Items.POWDER_SNOW_BUCKET){
-                snow_pa.needed++;
-            }
-        //}else {
-        //       block_buffer.state[a] = block_state;
-//            if (has_lava_bucket || has_powder_snow_bucket) {
-//                block_buffer.item[a] = bucket.getItem();
-//                pa.needed++;
-//            }
-        //}
-
+    private int materialCost(BlockState state) {
+        if (state != null && !has_bucket) {
+            if (state.getBlock() instanceof SlabBlock && state.getValue(SlabBlock.TYPE) == SlabType.DOUBLE) return 2;
+            if (state.getBlock() instanceof SnowLayerBlock) return state.getValue(SnowLayerBlock.LAYERS);
+        }
+        return 1;
     }
 
     public void skip() {
@@ -1107,8 +1012,9 @@ public class Wand {
         return st;
     }
 
-    private void recordUndo(BlockPos pos, BlockState originalState, boolean destroyed, BlockState newState) {
-        undoManager.record(pos, originalState, destroyed, newState, mode != null ? mode.toString() : null);
+    private void recordUndo(BlockPos pos, BlockSnapshot before) {
+        if (before != null) undoManager.record(pos, before, BlockSnapshot.capture(level, pos),
+                WandProps.getAction(wand_stack).toString(), mode.toString());
     }
 
     public void validate_buffer() {
@@ -1239,11 +1145,8 @@ public class Wand {
             return false;
         }
 
-        //CommonPro
-        int wand_durability = wand_stack.getMaxDamage() - wand_stack.getDamageValue();
-        int tool_durability = -1;
-
-
+        float blocksPerXp = WandsMod.config.blocks_per_xp;
+        double xpCost = !creative && blocksPerXp > 0 ? 1.0 / blocksPerXp : 0;
         boolean needs_replace = (replace_mode == 2) && !st.isAir() && !replace_fluid(st);
         boolean _can_destroy = creative;
         no_tool = false;
@@ -1292,19 +1195,25 @@ public class Wand {
                 }
             }
         }
+        if (xpCost > 0 && !canAffordXp(xpCost)) {
+            Compat.displayClientMessage(player, Compat.translatable("wands.message.not_enough_xp")
+                    .withStyle(ChatFormatting.RED), false);
+            stop = true;
+            return false;
+        }
         if ((use) && (has_shear || creative) && state.is(Blocks.PUMPKIN)) {
-            BlockState originalState = level.getBlockState(block_pos);
+            BlockSnapshot before = creative ? BlockSnapshot.capture(level, block_pos) : null;
             BlockState carved_pumpkin = Blocks.CARVED_PUMPKIN.defaultBlockState().setValue(CarvedPumpkinBlock.FACING, player.getDirection().getOpposite());
-            level.setBlockAndUpdate(block_pos, carved_pumpkin);
-            recordUndo(block_pos, originalState, true, carved_pumpkin);
+            if (!level.setBlockAndUpdate(block_pos, carved_pumpkin)) return false;
+            recordUndo(block_pos, before);
             if (!creative) {
                 ItemStack pumpkin_seeds = Items.PUMPKIN_SEEDS.getDefaultInstance();
                 pumpkin_seeds.setCount(4);
-                drop(block_pos, state, null, pumpkin_seeds);
+                drop(block_pos, state, List.of(pumpkin_seeds));
                 if (!_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
-                consume_xp();
+                consumeXp(xpCost);
             }
             return true;
         }
@@ -1314,16 +1223,16 @@ public class Wand {
         //?} else {
         /*if ((use) && has_water_potion && state.is(BlockTags.CONVERTIBLE_TO_MUD)) {
         *///?}
-            BlockState originalState = level.getBlockState(block_pos);
+            BlockSnapshot before = creative ? BlockSnapshot.capture(level, block_pos) : null;
             BlockState mudState = Blocks.MUD.defaultBlockState();
-            level.setBlockAndUpdate(block_pos, mudState);
-            recordUndo(block_pos, originalState, true, mudState);
+            if (!level.setBlockAndUpdate(block_pos, mudState)) return false;
+            recordUndo(block_pos, before);
             send_sound = Sounds.SPLASH.ordinal();
             if (!creative) {
                 if (!_wand_would_break) {
                     hurt_main_hand(wand_stack);
                 }
-                consume_xp();
+                consumeXp(xpCost);
             }
             return true;
         }
@@ -1353,11 +1262,13 @@ public class Wand {
                     UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
                     BlockPlaceContext pctx = new BlockPlaceContext(uctx);
                     state = state.getBlock().getStateForPlacement(pctx);
+                    if (state == null) return false;
                 }
             }
         }
 
         if (use && digger_item != null && (has_hoe || has_shovel || has_axe || has_shear || creative)) {
+            BlockSnapshot before = creative ? BlockSnapshot.capture(level, block_pos) : null;
             BlockState originalState = level.getBlockState(block_pos);
             BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), Direction.UP, block_pos, true);
 
@@ -1366,9 +1277,8 @@ public class Wand {
             UseOnContext ctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
             InteractionResult interaction_result = digger_item.useOn(ctx);
             player.setItemInHand(InteractionHand.OFF_HAND,tmp_item);
-            if ( interaction_result != InteractionResult.PASS) {
-                BlockState afterState = level.getBlockState(block_pos);
-                recordUndo(block_pos, originalState, true, afterState);
+            if (interaction_result.consumesAction()) {
+                recordUndo(block_pos, before);
                 // Vanilla useOn() excludes the acting player from sounds/particles, so send them directly
                 if (has_axe || (creative && WandUtils.can_axe_use(originalState))) {
                     if (HoneycombItem.WAX_OFF_BY_BLOCK.get().containsKey(originalState.getBlock())) {
@@ -1385,10 +1295,7 @@ public class Wand {
                     if (!_wand_would_break) {
                         hurt_main_hand(wand_stack);
                     }
-                    if (!_tool_would_break) {
-                        hurt_tool(digger_item, digger_item_slot);
-                    }
-                    consume_xp();
+                    consumeXp(xpCost);
                 }
             } else {
                 return false;
@@ -1397,148 +1304,88 @@ public class Wand {
         }
 
         if (creative) {
+            BlockSnapshot before = BlockSnapshot.capture(level, block_pos);
             if (destroy) {
-                BlockState stateBeforeDestroy = level.getBlockState(block_pos);
-                if (destroyBlock(block_pos, false)) {
-                    recordUndo(block_pos, stateBeforeDestroy, true, null);
-                    return true;
-                }
+                if (before.state().isAir() || !before.changeState(level, block_pos,
+                        level.getFluidState(block_pos).createLegacyBlock())) return false;
+                player.awardStat(Stats.BLOCK_MINED.get(before.state().getBlock()));
+                player.causeFoodExhaustion(0.005F);
             } else {
-                if (!use) {
-                    state = state_for_placement(state, block_pos);
-                    if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
-                        blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
-                        recordUndo(block_pos, state, false, null);
-                        return true;
-                    }
-                }
+                if (use) return false;
+                state = state_for_placement(state, block_pos);
+                if (state == null || !state.canSurvive(level, block_pos)
+                        || !before.changeState(level, block_pos, state)) return false;
+                state.getBlock().setPlacedBy(level, block_pos, state, player, state.getBlock().asItem().getDefaultInstance());
             }
-        } else {
-            //if (destroy)
-            {
+            recordUndo(block_pos, before);
+            return true;
+        }
 
-                float xp = WandUtils.calc_xp(player.experienceLevel, player.experienceProgress);
-                float dec = 0.0f;
-                float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
-                if (BLOCKS_PER_XP != 0) {
-                    dec = (1.0f / BLOCKS_PER_XP);
-                }
-                if ((BLOCKS_PER_XP == 0 || (xp - dec) >= 0)) {
-                    if (WandsMod.config.destroy_in_survival_drop && (destroy || replace || needs_replace)) {
-                        if (_can_destroy) {
-                            placed = destroyBlock(block_pos, true);
-                        }
-                    }
-                    if (!destroy || ((replace || needs_replace) && placed)) {
-                        if (!use) {
-                            state = state_for_placement(state, block_pos);
-                            if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
-                                blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
-                                placed = true;
-                            }
-                        }
-                    }
-                    if ((replace || needs_replace) && !placed) {
-                        if (digger_item.getItem() == Items.AIR)
-                            Compat.displayClientMessage(player,Compat.translatable("wands.message.incorrect_tool").withStyle(ChatFormatting.RED), false);
-                        stop = true;
-                    }
-                } else {
-                    if (BLOCKS_PER_XP != 0 && (xp - dec) < 0) {
-                        Compat.displayClientMessage(player,Compat.translatable("wands.message.not_enough_xp").withStyle(ChatFormatting.RED), false);
-                        stop = true;
-                    }
-                    if (wand_durability == 1) {
-                        Compat.displayClientMessage(player,Compat.translatable("wands.message.wand_damaged").withStyle(ChatFormatting.RED), false);
-                        if (this.allow_wand_to_break &&
-                                digger_item != null && digger_item.getItem() == Items.AIR
-                        ) {
-
-                        } else {
-                            stop = true;
-                        }
-                    }
-                }
-
-                if (placed) {
-                    if ((destroy || replace || needs_replace) && digger_item != null && !_tool_would_break) {
-                        hurt_tool(digger_item, digger_item_slot);
-                    }
-                    if (!this.unbreakable && !_wand_would_break) {
-                        hurt_main_hand(wand_stack);
-                    }
-                    consume_xp();
-                }
+        boolean breaksExisting = destroy || ((replace || needs_replace) && !st.isAir());
+        if (breaksExisting && !_can_destroy) return false;
+        boolean dropLoot = breaksExisting && WandsMod.config.destroy_in_survival_drop;
+        if (destroy) {
+            placed = destroyBlock(block_pos, dropLoot);
+        } else if (!use) {
+            state = state_for_placement(state, block_pos);
+            if (state == null || !state.canSurvive(level, block_pos)) return false;
+            placed = breaksExisting ? changeMinedBlock(block_pos, state, dropLoot)
+                    : level.setBlockAndUpdate(block_pos, state);
+            if (placed) {
+                state.getBlock().setPlacedBy(level, block_pos, state, player, state.getBlock().asItem().getDefaultInstance());
             }
         }
-        //log("place_block placed: "+placed);
+        if (placed) {
+            if ((destroy || replace || needs_replace) && digger_item != null && !_tool_would_break) {
+                hurt_tool(digger_item, digger_item_slot);
+            }
+            if (!this.unbreakable && !_wand_would_break) hurt_main_hand(wand_stack);
+            consumeXp(xpCost);
+        }
         return placed;
     }
 
-    public boolean destroyBlock(BlockPos blockPos, boolean bl) {
-        BlockState blockState = level.getBlockState(blockPos);
-        if (blockState.isAir()) {
-            return false;
-        } else {
-            FluidState fluidState = level.getFluidState(blockPos);
-            if (!(blockState.getBlock() instanceof BaseFireBlock)) {
-                //level.levelEvent(2001, blockPos, Block.getId(blockState));
-            }
-
-            if (bl) {
-                BlockEntity blockEntity = blockState.hasBlockEntity() ? level.getBlockEntity(blockPos) : null;
-                //System.out.println("destroyBlock "+bl);
-                if (this.mine_to_inventory) {
-                    if (level instanceof ServerLevel) {
-                        if (!drop(blockPos, blockState, blockEntity, null)) {
-                            return false;
-                        }
-
-                    }
-                } else {
-                    //?if < 26.3 {
-                    blockState.getBlock().playerDestroy(level, player, pos, blockState, blockEntity, digger_item);
-                    //?} else {
-                    /*if (level instanceof ServerLevel slevel && player instanceof ServerPlayer splayer) {
-                        blockState.getBlock().playerDestroy(slevel, splayer, pos, blockState, blockEntity, digger_item);
-                    }
-                    *///?}
-                }
-
-            }
-            player.awardStat(Stats.BLOCK_MINED.get(blockState.getBlock()));
-            player.causeFoodExhaustion(0.005F);
-            boolean bl2 = level.setBlock(blockPos, fluidState.createLegacyBlock(), 3, 512);
-            if (bl2) {
-                //level.gameEvent(GameEvent.BLOCK_DESTROY, blockPos, GameEvent.Context.of(entity, blockState));
-            }
-            return bl2;
-        }
+    public boolean destroyBlock(BlockPos blockPos, boolean dropLoot) {
+        return changeMinedBlock(blockPos, level.getFluidState(blockPos).createLegacyBlock(), dropLoot);
     }
 
-    boolean drop(BlockPos blockPos, BlockState blockState, BlockEntity blockEntity, ItemStack drop_item) {
-        BlockPos drop_pos;
-        if (drop_on_player) {
-            drop_pos = player.getOnPos().above();
-        } else {
-            drop_pos = blockPos;
-        }
-        if (drop_item != null) {
-            if (!inventory.place_into(this, drop_item)) {
-                if (!this.stop) {
-                    Block.popResource(level, drop_pos, drop_item);
-                }
+    // Roll loot against the original state, then deliver it only after the single world write succeeds.
+    private boolean changeMinedBlock(BlockPos blockPos, BlockState target, boolean dropLoot) {
+        BlockState blockState = level.getBlockState(blockPos);
+        if (blockState.isAir() || blockState == target) return false;
+
+        BlockEntity blockEntity = dropLoot ? level.getBlockEntity(blockPos) : null;
+        List<ItemStack> drops = List.of();
+        if (dropLoot && mine_to_inventory) {
+            drops = Block.getDrops(blockState, (ServerLevel) level, blockPos, blockEntity, player, digger_item);
+            if (!inventory.canCollectDrops(this, player.getOffhandItem(), drops)) {
+                if (!preview) Compat.displayClientMessage(player, Compat.translatable("wands.message.inventory_full").withStyle(ChatFormatting.RED), false);
+                return false;
             }
+        }
+        if (!level.setBlock(blockPos, target, 3, 512)) return false;
+
+        if (dropLoot && !mine_to_inventory) {
+            // playerDestroy awards the mining stat and exhaustion along with the drops.
+            //?if < 26.3 {
+            blockState.getBlock().playerDestroy(level, player, blockPos, blockState, blockEntity, digger_item);
+            //?} else {
+            /*if (level instanceof ServerLevel slevel && player instanceof ServerPlayer splayer) {
+                blockState.getBlock().playerDestroy(slevel, splayer, blockPos, blockState, blockEntity, digger_item);
+            }
+            *///?}
         } else {
-            Block.getDrops(blockState, (ServerLevel) level, blockPos, blockEntity, player, digger_item).forEach(
-                    (itemStackx) -> {
-                        //Compat.displayClientMessage(player,Compat.literal(itemStackx.getDescriptionId()),false);
-                        if (!inventory.place_into(this, itemStackx)) {
-                            if (!this.stop) {
-                                Block.popResource(level, drop_pos, itemStackx);
-                            }
-                        }
-                    });
+            if (dropLoot) drop(blockPos, blockState, drops);
+            player.awardStat(Stats.BLOCK_MINED.get(blockState.getBlock()));
+            player.causeFoodExhaustion(0.005F);
+        }
+        return true;
+    }
+
+    private void drop(BlockPos blockPos, BlockState blockState, List<ItemStack> drops) {
+        BlockPos drop_pos = drop_on_player ? player.getOnPos().above() : blockPos;
+        for (ItemStack stack : drops) {
+            if (!inventory.place_into(this, stack)) Block.popResource(level, drop_pos, stack);
         }
 
         if (!this.stop && digger_item != null && blockState.getBlock() instanceof DropExperienceBlock && !Compat.has_silktouch(digger_item, level)) {
@@ -1560,9 +1407,7 @@ public class Wand {
             if (!preview) {
                 Compat.displayClientMessage(player,Compat.translatable("wands.message.inventory_full").withStyle(ChatFormatting.RED), false);
             }
-            return false;
         }
-        return true;
     }
 
 
@@ -1603,32 +1448,41 @@ public class Wand {
         return false;
     }
 
-    void consume_xp() {
-        float BLOCKS_PER_XP = WandsMod.config.blocks_per_xp;
-        if (BLOCKS_PER_XP != 0) {
-            float diff = WandUtils.calc_xp_to_next_level(player.experienceLevel);
-            float prog = player.experienceProgress;
-            if (diff > 0 && BLOCKS_PER_XP != 0.0f) {
-                float a = (1.0f / diff) / BLOCKS_PER_XP;
-                if (prog - a > 0) {
-                    prog = prog - a;
-                } else {
-                    if (prog > 0.0f) {
-                        prog = 1.0f + (a - prog);
-                    } else {
-                        prog = 1.0f;
-                    }
-                    if (player.experienceLevel > 0) {
-                        player.experienceLevel--;
-                        a = (1.0f / diff) / BLOCKS_PER_XP;
-                        if (prog - a > 0) {
-                            prog = prog - a;
-                        }
-                    }
-                }
-                player.experienceProgress = prog;
+    private double xpInCurrentLevel() {
+        int width = player.getXpNeededForNextLevel();
+        double points = (double) player.experienceProgress * width;
+        // An integral XP award can be stored just above or below the integer in vanilla's float bar.
+        double nearest = Math.rint(points);
+        return Math.abs(points - nearest) <= Math.ulp(player.experienceProgress) * width ? nearest : points;
+    }
+
+    private boolean canAffordXp(double cost) {
+        double balance = WandUtils.xpAtLevel(player.experienceLevel) + xpInCurrentLevel();
+        return balance + Math.ulp(player.experienceProgress) * player.getXpNeededForNextLevel() >= cost;
+    }
+
+    private void consumeXp(double cost) {
+        if (cost == 0) return;
+        double points = xpInCurrentLevel();
+        double remaining = points - cost;
+        double nearest = Math.rint(remaining);
+        double precision = Math.ulp(player.experienceProgress) * player.getXpNeededForNextLevel();
+        if (Math.abs(remaining - nearest) <= precision) remaining = nearest;
+        double wholePointsSpent = Math.floor(points) - Math.floor(remaining);
+        if (remaining < 0) {
+            double total = Math.max(0, WandUtils.xpAtLevel(player.experienceLevel) + remaining);
+            int low = 0;
+            int high = player.experienceLevel;
+            while (low + 1 < high) {
+                int mid = low + (high - low) / 2;
+                if (WandUtils.xpAtLevel(mid) <= total) low = mid;
+                else high = mid;
             }
+            player.experienceLevel = low;
+            remaining = total - WandUtils.xpAtLevel(low);
         }
+        player.experienceProgress = Math.min((float) (remaining / player.getXpNeededForNextLevel()), Math.nextDown(1.0f));
+        player.totalExperience = (int) Math.max(0, player.totalExperience - wholePointsSpent);
     }
 
     public void update_tools() {

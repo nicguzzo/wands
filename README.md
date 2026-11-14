@@ -22,7 +22,7 @@ Building Wands lets you place, destroy, or replace hundreds of blocks at once so
 - **Shulkers boxes and magic bags** in your inventory are used to pull blocks for building and store blocks for mining 
 - **Creative and Survival** support (consumes blocks from your inventory in survival)
 - **Real-time ghost preview** shows exactly what will change before you commit
-- **Undo** support — press U to undo the last operation
+- **Creative Undo** — press U to undo the last operation or Shift+U to redo it in the same dimension
 - **Tiered progression** from Stone to Netherite, with configurable block limits
 
 ---
