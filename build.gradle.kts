@@ -10,7 +10,7 @@ fun prop(name: String, consumer: (prop: String) -> Unit) {
 }
 
 val minecraft = property("deps.minecraft") as String
-val modVersionStr = "3.2.1"
+val modVersionStr = property("mod_version").toString()
 val releaseChannel = project.findProperty("release_channel") as? String ?: "release"
 
 sourceSets {
@@ -20,6 +20,7 @@ sourceSets {
         }
     }
 }
+
 // All dependencies should be specified through modstitch's proxy configuration.
 // Wondering where the "repositories" block is? Go to "stonecutter.gradle.kts"
 // If you want to create proxy configurations for more source sets, such as client source sets,
@@ -120,7 +121,7 @@ modstitch {
         replacementProperties.populate {
             // You can put any other replacement properties/metadata here that
             // modstitch doesn't initially support. Some examples below.
-            put("mod_issue_tracker", "https://github.com/nicguzzo/deepslateinstamine/issues")
+            put("mod_issue_tracker", "https://github.com/nicguzzo/wands/issues")
             put("cloth_config_version", property("cloth_config_version").toString())
 
             put("minecraft_version_range", when (property("deps.minecraft")) {
@@ -163,7 +164,7 @@ modstitch {
         // Configure loom like normal in this block.
         configureLoom {
             runs {
-                all {
+                named("client") {
                     programArgs("--width", "1920", "--height", "1080")
                     if (stonecutter.eval(stonecutter.current.version, ">=26.3")) {
                         programArgs("--graphicsBackend", "vulkan")
@@ -179,7 +180,13 @@ modstitch {
 
             if (sc.current.parsed eq "1.21.1") { neoFormVersion = "1.21.1-20240808.144430" }
             else if (sc.current.parsed eq "26.1.2") { neoFormVersion = "26.1.2-1" }
-            else if (sc.current.parsed eq "26.3") { neoFormVersion = "26.3-1" }
+            else if (sc.current.parsed eq "26.3") {
+                neoFormVersion = "26.3-1"
+                // Older source transformers miss the anonymous HolderSet.contents() override.
+                project.extensions.configure<net.neoforged.nfrtgradle.NeoFormRuntimeExtension> {
+                    version.set("2.0.31")
+                }
+            }
 
             neoForgeVersion = "${property("deps.neoforge")}"
         } else
@@ -285,20 +292,24 @@ stonecutter {
 
 java {
     withSourcesJar()
-    val javaCompat = if (stonecutter.eval(stonecutter.current.version, "<=1.21.1")) {
-        JavaVersion.VERSION_21
-    } else {
-        JavaVersion.VERSION_25
+    val gameJava = when {
+        stonecutter.eval(stonecutter.current.version, "<=1.20.1") -> 17
+        stonecutter.eval(stonecutter.current.version, "<26.1") -> 21
+        else -> 25
     }
-    sourceCompatibility = javaCompat
-    targetCompatibility = javaCompat
+    sourceCompatibility = JavaVersion.toVersion(gameJava)
+    targetCompatibility = JavaVersion.toVersion(gameJava)
 }
 
 publishMods {
 
-    //changelog.set(System.getenv("DINSTAMINE_CHANGELOG"))
-    changelog.set("support for 26.1.2 using modstitch")
-    type.set(STABLE)
+    changelog.set(providers.environmentVariable("WANDS_CHANGELOG").orElse("Building Wands $modVersionStr"))
+    type.set(when (releaseChannel) {
+        "release" -> STABLE
+        "beta" -> BETA
+        "alpha" -> ALPHA
+        else -> error("Unknown release_channel: $releaseChannel")
+    })
 
     curseforge {
         projectId.set("363392")
