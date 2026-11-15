@@ -35,6 +35,9 @@ public class WandsMod {
     public static boolean has_ftbchunks = false;
     public static boolean has_flan = false;
     public static boolean has_goml = false;
+    public static boolean has_yawp = false;
+    public static boolean has_cadmus = false;
+    public static boolean has_factions = false;
 
     static public String wooden_wand_str = "wooden_wand";
     static public String stone_wand_str = "stone_wand";

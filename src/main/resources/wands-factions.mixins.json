@@ -1,0 +1,7 @@
+{
+  "package": "net.nicguzzo.wands.loaders.fabric.mixin",
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": ["FactionsPermissionInvoker"]
+}

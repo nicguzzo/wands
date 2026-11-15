@@ -14,14 +14,14 @@ import net.minecraft.world.entity.player.Player;
 
 public class Flan {
 
-    static public boolean canInteract(ServerLevel level, Player player, BlockPos pos) {
-        boolean r = true;
+    static public boolean canInteract(ServerLevel level, Player player, BlockPos pos, ClaimDispatch.Action action) {
         //?if has_flan {
         
         IPermissionContainer check = ClaimHandler.getPermissionStorage(level).getForPermissionCheck(pos);
-        r = check.canInteract((ServerPlayer) player, BuiltinPermission.PLACE, pos) && check.canInteract((ServerPlayer) player, BuiltinPermission.BREAK, pos);
-        
-        //?}
-        return r;
+        return (action == ClaimDispatch.Action.BREAK || check.canInteract((ServerPlayer) player, BuiltinPermission.PLACE, pos))
+                && (action == ClaimDispatch.Action.PLACE || check.canInteract((ServerPlayer) player, BuiltinPermission.BREAK, pos));
+        //?}else{
+        /*return true;
+        *///?}
     }
 }

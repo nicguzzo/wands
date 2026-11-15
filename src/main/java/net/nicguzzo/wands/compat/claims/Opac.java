@@ -5,20 +5,21 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 //?if has_opac {
 
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import xaero.pac.common.server.api.OpenPACServerAPI;
 
 //?}
 
 public class Opac {
 
-    static public boolean canInteract(ServerLevel level, Player player, BlockPos pos) {
+    static public boolean canInteract(ServerLevel level, Player player, BlockPos pos, ClaimDispatch.Action action) {
     //?if has_opac {
     
-        MinecraftServer server = level.getServer();
-        OpenPACServerAPI opac = OpenPACServerAPI.get(server);
-        boolean r = opac.getChunkProtection().onEntityPlaceBlock(player, level, pos);
-        return !r;
+        var protection = OpenPACServerAPI.get(level.getServer()).getChunkProtection();
+        return (action == ClaimDispatch.Action.BREAK || !protection.onEntityPlaceBlock(player, level, pos))
+                && (action == ClaimDispatch.Action.PLACE || !protection.onBlockInteraction(player, InteractionHand.MAIN_HAND,
+                        player.getMainHandItem(), level, pos, Direction.UP, true, false));
         
     //?}else{
         /*return true;

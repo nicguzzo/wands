@@ -161,6 +161,8 @@ public class NeoforgeEntrypoint {
 
     public void onCommonSetup(FMLCommonSetupEvent event) {
         WandsMod.has_opac = ModList.get().isLoaded("openpartiesandclaims");
+        WandsMod.has_yawp = ModList.get().isLoaded("yawp");
+        WandsMod.has_cadmus = ModList.get().isLoaded("cadmus");
         WandsMod.log("Has opac!! " + WandsMod.has_opac, true);
 
         WandsMod.has_ftbchunks = ModList.get().isLoaded("ftbchunks");
