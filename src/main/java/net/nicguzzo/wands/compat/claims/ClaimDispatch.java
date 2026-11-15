@@ -80,10 +80,10 @@ public class ClaimDispatch {
             return false;
         }
         //?if has_factions {
-        /*if (WandsMod.has_factions && !Factions.canInteract(level, player, pos, action)) {
+        if (WandsMod.has_factions && !Factions.canInteract(level, player, pos, action)) {
             return false;
         }
-        *///?}
+        //?}
         return true;
     }
 }

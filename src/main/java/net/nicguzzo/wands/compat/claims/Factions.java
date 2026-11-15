@@ -1,5 +1,5 @@
 //?if has_factions {
-/*package net.nicguzzo.wands.compat.claims;
+package net.nicguzzo.wands.compat.claims;
 
 import io.icker.factions.api.persistents.Relationship.Permissions;
 import net.minecraft.core.BlockPos;
@@ -14,4 +14,4 @@ public class Factions {
                 && (action == ClaimDispatch.Action.BREAK || FactionsPermissionInvoker.check(player, pos, level, Permissions.PLACE_BLOCKS) != InteractionResult.FAIL);
     }
 }
-*///?}
+//?}

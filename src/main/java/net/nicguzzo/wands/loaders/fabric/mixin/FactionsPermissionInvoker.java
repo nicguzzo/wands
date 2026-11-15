@@ -1,5 +1,5 @@
 //?if has_factions {
-/*package net.nicguzzo.wands.loaders.fabric.mixin;
+package net.nicguzzo.wands.loaders.fabric.mixin;
 
 import io.icker.factions.api.persistents.Relationship.Permissions;
 import net.minecraft.core.BlockPos;
@@ -19,4 +19,4 @@ public interface FactionsPermissionInvoker {
         throw new AssertionError();
     }
 }
-*///?}
+//?}
