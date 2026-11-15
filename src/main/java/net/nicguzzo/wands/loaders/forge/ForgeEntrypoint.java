@@ -165,6 +165,8 @@ public class ForgeEntrypoint {
         WandsMod.log("Has ftbchunks!! " + WandsMod.has_ftbchunks, true);
 
         WandsMod.has_flan = ModList.get().isLoaded("flan");
+        WandsMod.has_yawp = ModList.get().isLoaded("yawp");
+        WandsMod.has_cadmus = ModList.get().isLoaded("cadmus");
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 

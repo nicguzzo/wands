@@ -33,6 +33,46 @@ import net.nicguzzo.wands.wand.WandProps;
 
 
 public class ClientNetworking {
+    //?if forge && <1.20.5 {
+    /*static void receiveForgePacket(net.minecraft.resources.ResourceLocation pid, FriendlyByteBuf buf) {
+        if (pid.equals(Networking.CONF_PACKET.id())) {
+            float blocks_per_xp = buf.readFloat();
+            boolean destroy_in_survival_drop = buf.readBoolean();
+            boolean survival_unenchanted_drops = buf.readBoolean();
+            boolean mend_tools = buf.readBoolean();
+            ReceiveConfPacket(blocks_per_xp, destroy_in_survival_drop, survival_unenchanted_drops, mend_tools);
+        } else if (pid.equals(Networking.STATE_PACKET.id())) {
+            int mode = buf.readInt();
+            int slot = buf.readInt();
+            boolean xp = buf.readBoolean();
+            int levels = buf.readInt();
+            float prog = buf.readFloat();
+            Minecraft client = Minecraft.getInstance();
+            ReceiveStatePacket(client.player, mode, slot, xp, levels, prog);
+        } else if (pid.equals(Networking.GLOBAL_SETTINGS_PACKET.id())) {
+            boolean drop_pos = buf.readBoolean();
+            Minecraft client = Minecraft.getInstance();
+            ReceiveGlobalSettings(client.player, drop_pos);
+        } else if (pid.equals(Networking.SND_PACKET.id())) {
+            BlockPos pos = buf.readBlockPos();
+            boolean destroy = buf.readBoolean();
+            ItemStack is = buf.readItem();
+            int send_sound = buf.readInt();
+            Minecraft client = Minecraft.getInstance();
+            ReceiveSndPacket(client.player, pos, destroy, is, send_sound);
+        } else if (pid.equals(Networking.TOAST_PACKET.id())) {
+            boolean no_tool = buf.readBoolean();
+            boolean damaged_tool = buf.readBoolean();
+            String needed_tool = buf.readUtf();
+            Minecraft client = Minecraft.getInstance();
+            ReceiveToastPacket(client.player, no_tool, damaged_tool, needed_tool);
+        } else if (pid.equals(Networking.PLAYER_DATA_PACKET.id())) {
+            CompoundTag player_data = buf.readNbt();
+            ReceivePlayerData(player_data);
+        }
+    }
+    *///?}
+
 
     static public void ReceiveToastPacket(Player player, boolean no_tool, boolean damaged_tool, String needed_tool ) {
         String toolsKey = "Shift+" + WandsModClient.getKeyName(WandsMod.WandKeys.MENU);

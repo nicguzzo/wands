@@ -1,12 +1,15 @@
 package net.nicguzzo.wands.wand;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.compat.Compat;
+import net.nicguzzo.wands.compat.claims.ClaimDispatch;
 import net.nicguzzo.wands.config.WandsConfig;
 import net.nicguzzo.wands.utils.CircularBuffer;
 
@@ -33,82 +36,53 @@ public class UndoManager {
 
     /** Undoes n complete actions, playing sound and showing action bar feedback. */
     public void undo(int n, Level level, Player player) {
-        if (player == null || level == null) return;
-        int totalBlocks = 0;
-        String modeName = null;
-        String actionName = null;
-        for (int i = 0; i < n; i++) {
-            CircularBuffer.P first = buffer.peek();
-            if (first == null) break;
-            if (modeName == null) {
-                modeName = first.modeName;
-                actionName = actionNameFromEntry(first);
-            }
-            totalBlocks += undoOneAction(level);
-        }
-        // Undo of Place → break sound; Undo of Destroy/Use → place sound
-        showFeedback("Undo", "Place".equals(actionName), modeName, actionName, totalBlocks, level, player);
+        replay(n, level, player, false);
     }
 
     /** Redoes n complete actions, playing sound and showing action bar feedback. */
     public void redo(int n, Level level, Player player) {
-        if (player == null || level == null) return;
+        replay(n, level, player, true);
+    }
+
+    private void replay(int remainingActions, Level level, Player player, boolean redo) {
+        if (!(level instanceof ServerLevel serverLevel) || player == null || remainingActions <= 0) return;
+        CircularBuffer.P entry = redo ? buffer.peekForward() : buffer.peek();
+        if (entry == null) return;
+        String modeName = entry.modeName;
+        String actionName = actionNameFromEntry(entry);
         int totalBlocks = 0;
-        String modeName = null;
-        String actionName = null;
-        for (int i = 0; i < n; i++) {
-            CircularBuffer.P first = buffer.peekForward();
-            if (first == null) break;
-            if (modeName == null) {
-                modeName = first.modeName;
-                actionName = actionNameFromEntry(first);
-            }
-            totalBlocks += redoOneAction(level);
-        }
-        // Redo of Place → place sound; Redo of Destroy/Use → break sound
-        showFeedback("Redo", !"Place".equals(actionName), modeName, actionName, totalBlocks, level, player);
-    }
-
-    private int undoOneAction(Level level) {
-        CircularBuffer.P first = buffer.peek();
-        if (first == null) return 0;
-        int actionId = first.actionId;
-        int count = 0;
-        while (true) {
-            CircularBuffer.P p = buffer.peek();
-            if (p == null || p.actionId != actionId) break;
-            if (!p.destroyed) {
-                level.setBlockAndUpdate(p.pos, Blocks.AIR.defaultBlockState());
+        boolean denied = false;
+        while (entry != null && remainingActions > 0) {
+            int actionId = entry.actionId;
+            BlockState target;
+            if (redo) {
+                target = entry.destroyed ? entry.newState : entry.state;
             } else {
-                level.setBlockAndUpdate(p.pos, p.state);
+                target = entry.destroyed ? entry.state : null;
             }
-            count++;
-            buffer.pop();
-        }
-        return count;
-    }
-
-    private int redoOneAction(Level level) {
-        CircularBuffer.P first = buffer.peekForward();
-        if (first == null) return 0;
-        int actionId = first.actionId;
-        int count = 0;
-        while (buffer.can_go_forward()) {
-            CircularBuffer.P next = buffer.peekForward();
-            if (next == null || next.actionId != actionId) break;
-            buffer.forward();
-            CircularBuffer.P p = buffer.peek();
-            if (p == null || p.pos == null) continue;
-            if (!p.destroyed) {
-                if (p.state != null) {
-                    level.setBlockAndUpdate(p.pos, p.state);
-                }
+            if (target == null) target = Blocks.AIR.defaultBlockState();
+            BlockState existing = level.getBlockState(entry.pos);
+            ClaimDispatch.Action action = target.isAir() ? ClaimDispatch.Action.BREAK
+                    : existing.isAir() ? ClaimDispatch.Action.PLACE : ClaimDispatch.Action.REPLACE;
+            if (!ClaimDispatch.canChange(serverLevel, entry.pos, player, existing, action, target.isAir() ? null : target)) {
+                // Preserve the cursor so a denied undo cannot later become an unearned redo.
+                denied = true;
+                break;
+            }
+            if (level.setBlockAndUpdate(entry.pos, target)) totalBlocks++;
+            if (redo) {
+                buffer.forward();
+                entry = buffer.peekForward();
             } else {
-                level.setBlockAndUpdate(p.pos, p.newState != null ? p.newState : Blocks.AIR.defaultBlockState());
+                buffer.pop();
+                entry = buffer.peek();
             }
-            count++;
+            if (entry == null || entry.actionId != actionId) remainingActions--;
         }
-        return count;
+        showFeedback(redo ? "Redo" : "Undo", redo != "Place".equals(actionName), modeName, actionName, totalBlocks, level, player);
+        if (denied) {
+            Compat.displayClientMessage(player, Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), true);
+        }
     }
 
     private static String actionNameFromEntry(CircularBuffer.P entry) {

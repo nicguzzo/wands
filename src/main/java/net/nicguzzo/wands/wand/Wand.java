@@ -127,6 +127,7 @@ public class Wand {
     public Vec3 hit;
     public ItemStack wand_stack;
     private boolean restricted_destroy=false;
+    private boolean claimDenied;
 
     enum ToolType {
         PICKAXE,
@@ -406,6 +407,7 @@ public class Wand {
             this.limit = WandsConfig.max_limit;
         }
         this.restricted_destroy=false;
+        this.claimDenied = false;
         this.unbreakable = wand_item.unbreakable;
         this.removes_water = wand_item.removes_water;
         this.removes_lava = wand_item.removes_lava;
@@ -799,6 +801,9 @@ public class Wand {
                 no_tool = false;
                 damaged_tool = false;
                 needed_tool = "";
+            }
+            if (claimDenied) {
+                Compat.displayClientMessage(player, Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), true);
             }
         }
         // Clear P1/P2 after placement, but Copy mode keeps them for bbox extension
@@ -1213,20 +1218,35 @@ public class Wand {
 
     boolean place_block(BlockPos block_pos, BlockState state) {
         boolean placed = false;
-        if (!ClaimDispatch.claimCanInteract((ServerLevel) level, block_pos, player)) {
-            Compat.displayClientMessage(player,Compat.translatable("wands.message.claimed_chunk").withStyle(ChatFormatting.RED), true);
-            return false;
-        }
         if (state == null) {
             //log("state is null");
             return false;
         }
         Block blk = state.getBlock();
+        boolean addingSnow = false;
+        if (!destroy && !use && blk instanceof SnowLayerBlock) {
+            BlockState below = level.getBlockState(block_pos.below());
+            if (below.getBlock() instanceof SnowLayerBlock && below.getValue(SnowLayerBlock.LAYERS) < 8) {
+                block_pos = block_pos.below();
+                state = state.setValue(SnowLayerBlock.LAYERS, below.getValue(SnowLayerBlock.LAYERS) + 1);
+                addingSnow = true;
+            }
+        }
         if (WandsConfig.denied.contains(blk)) {
             //WandsMod.log("block ("+blk+") is in the denied list",true);
             return false;
         }
         BlockState st = level.getBlockState(block_pos);
+        ClaimDispatch.Action action = ClaimDispatch.Action.PLACE;
+        if (destroy || has_empty_bucket) {
+            action = ClaimDispatch.Action.BREAK;
+        } else if (use || (!addingSnow && !st.isAir() && (replace || replace_mode == 2 || !st.canBeReplaced()))) {
+            action = ClaimDispatch.Action.REPLACE;
+        }
+        if (!ClaimDispatch.canChange((ServerLevel) level, block_pos, player, st, action, destroy || use || has_empty_bucket ? null : state)) {
+            claimDenied = true;
+            return false;
+        }
         Block actual_blk = st.getBlock();
         if (WandsConfig.denied.contains(actual_blk)) {
             //WandsMod.log("actual block ("+actual_blk+") is in the denied list",true);
@@ -1330,30 +1350,15 @@ public class Wand {
 
         p1_state = state;
         if (!destroy) {
-            if (offhand != null) {
-                blk = Block.byItem(offhand.getItem());
-            }
-
             //if(!replace && !blk.canSurvive(state, level, block_pos)){
             if (!(replace || needs_replace) && !state.canSurvive(level, block_pos)) {
                 return false;
             }
-            if (blk instanceof SnowLayerBlock) {
-                BlockState below = level.getBlockState(block_pos.below());
-                if (below.getBlock() instanceof SnowLayerBlock) {
-                    int layers = below.getValue(SnowLayerBlock.LAYERS);
-                    if (layers < 8) {
-                        block_pos = block_pos.below();
-                        state = state.setValue(SnowLayerBlock.LAYERS, layers + 1);
-                    }
-                }
-            } else {
-                if (blk instanceof CrossCollisionBlock || blk instanceof DoorBlock) {
-                    BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), side, block_pos, true);
-                    UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
-                    BlockPlaceContext pctx = new BlockPlaceContext(uctx);
-                    state = state.getBlock().getStateForPlacement(pctx);
-                }
+            if (blk instanceof CrossCollisionBlock || blk instanceof DoorBlock) {
+                BlockHitResult hit_res = new BlockHitResult(new Vec3(block_pos.getX() + 0.5, block_pos.getY() + 1.0, block_pos.getZ() + 0.5), side, block_pos, true);
+                UseOnContext uctx = new UseOnContext(player, InteractionHand.OFF_HAND, hit_res);
+                BlockPlaceContext pctx = new BlockPlaceContext(uctx);
+                state = state.getBlock().getStateForPlacement(pctx);
             }
         }
 
@@ -1396,6 +1401,17 @@ public class Wand {
             return true;
         }
 
+        if (state == null) return false;
+        BlockState multipartPlacement = null;
+        if (!destroy && !use && ClaimDispatch.placesOtherHalf(state)) {
+            // Preflight both positions before Survival replacement destroys the old block.
+            multipartPlacement = state_for_placement(state, block_pos);
+            if (multipartPlacement == null) return false;
+            if (!ClaimDispatch.canPlaceOtherHalf((ServerLevel) level, block_pos, player, multipartPlacement)) {
+                claimDenied = true;
+                return false;
+            }
+        }
         if (creative) {
             if (destroy) {
                 BlockState stateBeforeDestroy = level.getBlockState(block_pos);
@@ -1405,9 +1421,9 @@ public class Wand {
                 }
             } else {
                 if (!use) {
-                    state = state_for_placement(state, block_pos);
+                    state = multipartPlacement != null ? multipartPlacement : state_for_placement(state, block_pos);
                     if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
-                        blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
+                        state.getBlock().setPlacedBy(level, block_pos, state, player, state.getBlock().asItem().getDefaultInstance());
                         recordUndo(block_pos, state, false, null);
                         return true;
                     }
@@ -1431,9 +1447,9 @@ public class Wand {
                     }
                     if (!destroy || ((replace || needs_replace) && placed)) {
                         if (!use) {
-                            state = state_for_placement(state, block_pos);
+                            state = multipartPlacement != null ? multipartPlacement : state_for_placement(state, block_pos);
                             if (state != null && state.canSurvive(level, block_pos) && level.setBlockAndUpdate(block_pos, state)) {
-                                blk.setPlacedBy(level, block_pos, state, player, blk.asItem().getDefaultInstance());
+                                state.getBlock().setPlacedBy(level, block_pos, state, player, state.getBlock().asItem().getDefaultInstance());
                                 placed = true;
                             }
                         }
