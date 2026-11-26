@@ -6,7 +6,7 @@ Powerful building, mining, and terraforming tools for Minecraft.
 [![Discord](https://i.imgur.com/NyP9y98.jpg)](https://discord.gg/T9VbYBNYCR "Join the Discord")
 [![CurseForge](https://img.shields.io/badge/Download-CurseForge-orange)](https://www.curseforge.com/minecraft/mc-mods/building-wands)
 
-**Supported platforms:** Forge (1.20.1) · Fabric (1.20.1, 1.21.1, 1.21.11) · NeoForge (1.21.1, 1.21.11) · Quilt (via Fabric)
+**Supported platforms:** Forge (1.20.1) · Fabric (1.20.1, 1.21.1, 1.21.11, 26.1.2, 26.2, 26.3) · NeoForge (1.21.1, 1.21.11, 26.1.2, 26.2, 26.3) · Quilt (via Fabric)
 
 ## Shader Note
 
