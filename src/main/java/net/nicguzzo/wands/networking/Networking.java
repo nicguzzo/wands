@@ -942,41 +942,7 @@ public class Networking {
                         Networking.ReceiveBlueprintAction(player, action, arg1, arg2);
                     }
                 } else {
-                    if (pid.equals(Networking.CONF_PACKET.id())) {
-                        float blocks_per_xp = buf.readFloat();
-                        boolean destroy_in_survival_drop = buf.readBoolean();
-                        boolean survival_unenchanted_drops = buf.readBoolean();
-                        boolean mend_tools = buf.readBoolean();
-                        ClientNetworking.ReceiveConfPacket(blocks_per_xp, destroy_in_survival_drop, survival_unenchanted_drops, mend_tools);
-                    } else if (pid.equals(Networking.STATE_PACKET.id())) {
-                        int mode = buf.readInt();
-                        int slot = buf.readInt();
-                        boolean xp = buf.readBoolean();
-                        int levels = buf.readInt();
-                        float prog = buf.readFloat();
-                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-                        ClientNetworking.ReceiveStatePacket(client.player, mode, slot, xp, levels, prog);
-                    } else if (pid.equals(Networking.GLOBAL_SETTINGS_PACKET.id())) {
-                        boolean drop_pos = buf.readBoolean();
-                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-                        ClientNetworking.ReceiveGlobalSettings(client.player, drop_pos);
-                    } else if (pid.equals(Networking.SND_PACKET.id())) {
-                        BlockPos pos = buf.readBlockPos();
-                        boolean destroy = buf.readBoolean();
-                        ItemStack is = buf.readItem();
-                        int send_sound = buf.readInt();
-                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-                        ClientNetworking.ReceiveSndPacket(client.player, pos, destroy, is, send_sound);
-                    } else if (pid.equals(Networking.TOAST_PACKET.id())) {
-                        boolean no_tool = buf.readBoolean();
-                        boolean damaged_tool = buf.readBoolean();
-                        String needed_tool = buf.readUtf();
-                        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-                        ClientNetworking.ReceiveToastPacket(client.player, no_tool, damaged_tool, needed_tool);
-                    } else if (pid.equals(Networking.PLAYER_DATA_PACKET.id())) {
-                        CompoundTag player_data = buf.readNbt();
-                        ClientNetworking.ReceivePlayerData(player_data);
-                    }
+                    ClientNetworking.receiveForgePacket(pid, buf);
                 }
             });
             ctx.get().setPacketHandled(true);

@@ -16,6 +16,8 @@ license = "${mod_license}"
     ordering = "NONE"
     side = "BOTH"
 
+${claim_dependencies}
+
 [[dependencies.${mod_id}]]
     modId = "minecraft"
     type = "required"

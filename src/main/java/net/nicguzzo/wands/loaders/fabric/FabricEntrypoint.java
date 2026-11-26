@@ -77,6 +77,9 @@ public class FabricEntrypoint implements ModInitializer {
         WandsConfig.configDir=configDir.toString();
 
         WandsMod.has_opac=FabricLoader.getInstance().getModContainer("openpartiesandclaims").isPresent();
+        WandsMod.has_yawp = FabricLoader.getInstance().isModLoaded("yawp");
+        WandsMod.has_cadmus = FabricLoader.getInstance().isModLoaded("cadmus");
+        WandsMod.has_factions = FabricLoader.getInstance().isModLoaded("factions");
         WandsMod.log("Has opac!! "+WandsMod.has_opac,true);
 
         WandsMod.has_ftbchunks=FabricLoader.getInstance().getModContainer("ftbchunks").isPresent();

@@ -17,6 +17,8 @@ license = "${mod_license}"
     side = "BOTH"
     versionRange="${forge_version_range}"
 
+${claim_dependencies}
+
 
 [[dependencies.${mod_id}]]
     modId = "minecraft"

@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.compat.claims.ClaimDispatch;
 import net.nicguzzo.wands.config.WandsConfig;
@@ -38,9 +39,13 @@ public class UndoManager {
         var result = history.replay(level.dimension(), count, forward, change -> {
             BlockSnapshot expected = forward ? change.before : change.after;
             BlockSnapshot target = forward ? change.after : change.before;
-            if (!server.hasChunkAt(change.pos)
-                    || !ClaimDispatch.claimCanInteract(server, change.pos, player)) return false;
-            if (!expected.equals(BlockSnapshot.capture(server, change.pos))
+            if (!server.hasChunkAt(change.pos)) return false;
+            if (!expected.equals(BlockSnapshot.capture(server, change.pos))) return false;
+            BlockState existing = expected.state();
+            BlockState targetState = target.state();
+            ClaimDispatch.Action action = targetState.isAir() ? ClaimDispatch.Action.BREAK
+                    : existing.isAir() ? ClaimDispatch.Action.PLACE : ClaimDispatch.Action.REPLACE;
+            if (!ClaimDispatch.canChange(server, change.pos, player, existing, action, targetState.isAir() ? null : targetState)
                     || !target.restore(server, change.pos, expected)) return false;
             if (first[0] == null) first[0] = change;
             return true;

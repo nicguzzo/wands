@@ -27,11 +27,30 @@ sourceSets {
     }
 }
 
+if (modstitch.isModDevGradleLegacy) {
+    // Forge uses SRG members at runtime. Modstitch generates this refmap with the mixin AP.
+    tasks.named<ProcessResources>("processResources") {
+        inputs.property("legacyMixinRefmap", "wands.refmap.json")
+        filesMatching("wands.mixins.json") {
+            filter { line: String -> if (line.trim() == "{") "{\n  \"refmap\": \"wands.refmap.json\"," else line }
+        }
+    }
+}
 // All dependencies should be specified through modstitch's proxy configuration.
 // Wondering where the "repositories" block is? Go to "stonecutter.gradle.kts"
 // If you want to create proxy configurations for more source sets, such as client source sets,
 // use the modstitch.createProxyConfigurations(sourceSets["client"]) function.
 repositories {
+    maven("https://api.modrinth.com/maven") {
+        content {
+            includeModule("maven.modrinth", "yawp")
+            includeModule("maven.modrinth", "factions")
+            includeModule("maven.modrinth", "odyssey-claims")
+        }
+    }
+    maven("https://maven.teamresourceful.com/repository/maven-public/") {
+        content { includeGroup("earth.terrarium.cadmus") }
+    }
     maven("https://maven.shedaniel.me/")
     maven("https://maven.terraformersmc.com/releases/")
     maven("https://maven.jamieswhiteshirt.com/libs-release/") {
@@ -73,6 +92,11 @@ dependencies {
     val flan=property("flan")
     val ftbChunks=property("ftb_chunks")
     val ftbLibrary=property("ftb_library")
+    for (provider in listOf("yawp", "cadmus", "factions")) {
+        prop(provider) { dependency ->
+            modstitchModCompileOnly(dependency) { isTransitive = false }
+        }
+    }
     if(rtreeVersion!=""){
         modstitchModCompileOnly("com.jamieswhiteshirt:rtree-3i-lite-fabric:${rtreeVersion}")
     }
@@ -129,6 +153,22 @@ modstitch {
             // modstitch doesn't initially support. Some examples below.
             put("mod_issue_tracker", "https://github.com/nicguzzo/wands/issues")
             put("cloth_config_version", property("cloth_config_version").toString())
+            val claimApiVersions = listOf("yawp", "cadmus", "factions").mapNotNull { id ->
+                (findProperty("${id}_min") as? String)?.let { id to it }
+            }
+            put("claim_version_breaks", claimApiVersions.joinToString(prefix = "{", postfix = "}") { (id, min) ->
+                "\"$id\": \"<$min\""
+            })
+            put("claim_dependencies", claimApiVersions.joinToString("\n") { (id, min) ->
+                """
+                [[dependencies.wands]]
+                    modId = "$id"
+                    ${if (modstitch.isModDevGradleLegacy) "mandatory = false" else "type = \"optional\""}
+                    versionRange = "[$min,)"
+                    ordering = "NONE"
+                    side = "BOTH"
+                """.trimIndent()
+            })
 
             put("minecraft_version_range", when (property("deps.minecraft")) {
                 "1.20.1" -> "[1.20.1,)"
@@ -241,6 +281,7 @@ modstitch {
         addMixinsToModManifest = true
 
         configs.register("wands")
+        if (project.hasProperty("factions")) configs.register("wands-factions")
 
         // Most of the time you wont ever need loader specific mixins.
         // If you do, simply make the mixin file and add it like so for the respective loader:
@@ -269,6 +310,9 @@ stonecutter {
         put("has_ftb_chunks", !("${property("ftb_chunks")}".isNullOrEmpty()) )
         put("has_flan",       !("${property("flan")}".isNullOrEmpty()) )
         put("has_goml",       !("${property("goml")}".isNullOrEmpty()) )
+        put("has_yawp", project.hasProperty("yawp"))
+        put("has_cadmus", project.hasProperty("cadmus"))
+        put("has_factions", project.hasProperty("factions"))
         //put("has_opac",       false)
         //put("has_ftb_chunks", false)
         //put("has_flan",       false)
