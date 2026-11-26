@@ -1,6 +1,6 @@
 package net.nicguzzo.wands.menues;
 
-import net.minecraft.core.HolderLookup;
+import net.nicguzzo.wands.compat.Compat;
 import net.minecraft.world.Container;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +19,7 @@ public class BagSlot extends Slot {
     public boolean mayPlace(ItemStack itemStack) {
         if(bag!=null) {
             ItemStack item = MagicBagItem.getItem(bag,level);
-            return item.isEmpty() || MagicBagItem.getItem(bag,level).getItem() == itemStack.getItem();
+            return item.isEmpty() || Compat.is_same_with_components(item, itemStack);
         }
         else return false;
     }

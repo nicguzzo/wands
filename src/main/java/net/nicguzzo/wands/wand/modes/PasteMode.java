@@ -12,6 +12,7 @@ import java.util.List;
 public class PasteMode extends WandMode {
 
     public void place_in_buffer(Wand wand) {
+        wand.block_buffer.reset();
         List<CopyBuffer> sourceBuffer = wand.getActivePasteBuffer();
         wand.pasteTotalBlocks = sourceBuffer != null ? sourceBuffer.size() : 0;
         wand.pasteRemainingBlocks = 0;
@@ -32,7 +33,6 @@ public class PasteMode extends WandMode {
         }
         // wand.pos is already offset by ClientRender/WandItem when INCSELBLOCK is off
         BlockPos b_pos = wand.pos;
-        wand.block_buffer.reset();
 
         BlockPos.MutableBlockPos checkPos = new BlockPos.MutableBlockPos();
         int remaining = 0;

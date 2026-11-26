@@ -128,10 +128,7 @@ public class Palette {
                     int bound = palette_slots.size();
                     Palette.PaletteSlot ps = palette_slots.get(slot);
                     st = ps.state;
-                    // Only advance slot during actual placement, not preview
-                    if (!wand.preview) {
-                        slot = (slot + 1) % bound;
-                    }
+                    slot = (slot + 1) % bound;
                 }
             }break;
             case RANDOM: {

@@ -2,6 +2,10 @@
 
 This guide covers setting up test environments and verifying mod compatibility with claim mods (Flan, OPAC, GOML) and JEI.
 
+## Server gameplay regressions
+
+With JDK 25, run `./gradlew :1.21.1-fabric:runGameTest` (on Windows, use `gradlew.bat`). The Fabric test server checks wand actions, inventory accounting, XP and Creative history. It writes its report to `versions/1.21.1-fabric/build/gametest/results.xml`.
+
 ## Test environment setup
 
 The `makeTestEnv.sh` script creates isolated [PortableMC](https://github.com/mindstorm38/portablemc) instances for each of the 6 build targets. It downloads dependencies from Modrinth and CurseForge, copies your compiled mod JAR, and generates per-instance launch scripts.

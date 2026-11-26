@@ -390,11 +390,7 @@ public class WandsMod {
                                     n = 10;
                                 }
                                 Level undoLevel = Compat.player_level(player);
-                                if (shift) {
-                                    wand.undoManager.redo(n, undoLevel, player);
-                                } else {
-                                    wand.undoManager.undo(n, undoLevel, player);
-                                }
+                                wand.undoManager.replay(n, undoLevel, player, shift);
                             }
                         }
                         break;

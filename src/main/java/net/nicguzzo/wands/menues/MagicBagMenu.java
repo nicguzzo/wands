@@ -166,10 +166,8 @@ public class MagicBagMenu extends AbstractContainerMenu {
                                         bag_item=carried.copy();
                                         bag_item.setCount(1);
                                     }
-                                    if(carried.getItem()==bag_item.getItem()){
-                                        if(Compat.is_same_with_components(carried,bag_item) &&  MagicBagItem.inc(bag,carried.getCount())) {
-                                            Compat.set_carried(player, this, ItemStack.EMPTY);
-                                        }
+                                    if (Compat.is_same_with_components(carried, bag_item) && MagicBagItem.inc(bag, carried.getCount())) {
+                                        Compat.set_carried(player, this, ItemStack.EMPTY);
                                     }
                                 }
                             }
@@ -202,7 +200,7 @@ public class MagicBagMenu extends AbstractContainerMenu {
                     if(item_src.isStackable()){
                         if(slot_dst.hasItem()){
                             ItemStack item_dst=slot_dst.getItem();
-                            if(item_src.getItem()==item_dst.getItem()) {
+                            if (Compat.is_same_with_components(item_src, item_dst)) {
                                 if(MagicBagItem.inc(bag,item_src.getCount())) {
                                     slot_src.set(ItemStack.EMPTY);
                                 }
