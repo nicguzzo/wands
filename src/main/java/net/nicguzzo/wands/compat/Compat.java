@@ -362,7 +362,13 @@ public class Compat {
         return Component.literal(msg);
     }
     static public void register_key(KeyMapping k){
-        //KeyMappingRegistry.register(k);
+        //?if fabric {
+            //?if >= 26.1 {
+            net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(k);
+            //?} else {
+            /*net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(k);
+            *///?}
+        //?}
     }
     static public void render_info(){
             //ClientGuiEvent.RENDER_HUD.register((e,d)->{ WandsModClient.render_wand_info(e);});
@@ -932,8 +938,12 @@ public class Compat {
     public static final int TEXT_GRAY = -2039584;
     //?if < 26.3 {
     public static final int KEY_ESCAPE = org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+    public static final int KEY_ENTER = org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
+    public static final int KEY_KP_ENTER = org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER;
     //?} else {
     /*public static final int KEY_ESCAPE = com.mojang.blaze3d.platform.InputConstants.KEY_ESCAPE;
+    public static final int KEY_ENTER = com.mojang.blaze3d.platform.InputConstants.KEY_RETURN;
+    public static final int KEY_KP_ENTER = com.mojang.blaze3d.platform.InputConstants.KEY_NUMPADENTER;
     *///?}
 
     public static boolean isKeyDown(long window, int keyCode) {

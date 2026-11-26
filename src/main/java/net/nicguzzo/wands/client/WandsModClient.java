@@ -111,6 +111,7 @@ public class WandsModClient {
     static final String k = "key.wands.";
 
     public static void initialize() {
+        if (!keys.isEmpty()) return;
 
         wand_menu_km = Compat.newKeyMapping(k + "wand_menu", wand_menu_key, tab);
         keys.put(wand_menu_km, WandsMod.WandKeys.MENU);
@@ -232,7 +233,7 @@ public class WandsModClient {
                         continue;
                     }
 
-                    // Try pin handling first — if consumed, don't send to server
+                    // Try pin handling first â€” if consumed, don't send to server
                     boolean consumed = false;
                     if (holdingWand && ClientRender.wand != null) {
                         consumed = handlePinKey(client, mainHand, key, Compat.hasShiftDown());
@@ -318,13 +319,13 @@ public class WandsModClient {
                 // Handle alt freeze/release via pin system
                 if (alt != newAlt && holdingWand && ClientRender.wand != null) {
                     if (newAlt) {
-                        // Alt pressed — freeze at crosshair if no toggle pin active
+                        // Alt pressed â€” freeze at crosshair if no toggle pin active
                         WandProps.Mode mode = WandProps.getMode(mainHand);
                         // Use extended hitResult (accounts for reach distance) instead of vanilla client.hitResult
                         HitResult altHit = ClientRender.wand.lastHitResult != null ? ClientRender.wand.lastHitResult : client.hitResult;
                         ClientRender.wand.pin.freeze(altHit, mainHand, mode);
                     } else {
-                        // Alt released — release non-persistent freeze
+                        // Alt released â€” release non-persistent freeze
                         ClientRender.wand.pin.release();
                     }
                 }
@@ -339,7 +340,7 @@ public class WandsModClient {
         }
 
     }
-    /** Get a short display name for a keybind (e.g. "V", "H", "→") */
+    /** Get a short display name for a keybind (e.g. "V", "H", "â†’") */
     public static String getKeyName(WandsMod.WandKeys key) {
         KeyMapping km = reverseKeys.get(key);
         if (km == null) return "?";
@@ -435,10 +436,10 @@ public class WandsModClient {
                     String rot = "";
                     if (r != null) {
                         switch (r) {
-                            case NONE: rot = "0°"; break;
-                            case CLOCKWISE_90: rot = "90°"; break;
-                            case CLOCKWISE_180: rot = "180°"; break;
-                            case COUNTERCLOCKWISE_90: rot = "270°"; break;
+                            case NONE: rot = "0\u00b0"; break;
+                            case CLOCKWISE_90: rot = "90\u00b0"; break;
+                            case CLOCKWISE_180: rot = "180\u00b0"; break;
+                            case COUNTERCLOCKWISE_90: rot = "270\u00b0"; break;
                         }
                     }
                     String rotLabel = mode == WandProps.Mode.ROCK
@@ -919,7 +920,7 @@ public class WandsModClient {
 
         if (key == WandsMod.WandKeys.PIN) {
             if (!wand.pin.isSet() && !mode.supports_pin()) {
-                // Mode doesn't support pin — consume the key but do nothing
+                // Mode doesn't support pin â€” consume the key but do nothing
                 return true;
             }
             boolean wasSet = wand.pin.isSet();

@@ -137,6 +137,7 @@ public class ForgeEntrypoint {
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
         MinecraftForge.EVENT_BUS.register(this);
+        modBus.addListener(this::registerKeyMappings);
         modBus.addListener(this::onClientSetup);
         modBus.addListener(this::onCommonSetup);
         WandsMod.init();
@@ -178,6 +179,10 @@ public class ForgeEntrypoint {
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
+    public void registerKeyMappings(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
+        WandsModClient.initialize();
+        WandsModClient.keys.forEach((km, v) -> event.register(km));
+    }
     public void onClientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             MenuScreens.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);

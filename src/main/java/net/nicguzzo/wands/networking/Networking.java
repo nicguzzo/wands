@@ -548,6 +548,12 @@ public class Networking {
                 if (target != null && wand != null && !wand.copy_paste_buffer.isEmpty()) {
                     BlueprintItem.saveCopyBufferToBlueprint(target, wand.copy_paste_buffer);
                     String id = BlueprintItem.getOrCreateId(target);
+                    if (player.getMainHandItem().getItem() instanceof BlueprintItem && player.getMainHandItem() != target) {
+                        BlueprintItem.saveBlueprintTag(player.getMainHandItem(), BlueprintItem.getBlueprintTag(target));
+                    }
+                    if (player.containerMenu instanceof BlueprintMenu bm) {
+                        bm.updateRowCount(0);
+                    }
                     wand.setActiveBlueprintId(id);
                     if (wand.player_data != null) {
                         SendPlayerData(player, wand.player_data);
@@ -568,6 +574,12 @@ public class Networking {
                     Block origBlock = Compat.getBlockById(arg1);
                     Block replBlock = Compat.getBlockById(arg2);
                     BlueprintItem.setReplacement(target, origBlock, replBlock);
+                    if (player.getMainHandItem().getItem() instanceof BlueprintItem && player.getMainHandItem() != target) {
+                        BlueprintItem.saveBlueprintTag(player.getMainHandItem(), BlueprintItem.getBlueprintTag(target));
+                    }
+                    if (player.containerMenu instanceof BlueprintMenu bm) {
+                        bm.updateRowCount(bm.scrollOffset);
+                    }
                     player.inventoryMenu.broadcastChanges();
                 }
                 break;
@@ -581,7 +593,20 @@ public class Networking {
                 }
                 if (target != null) {
                     BlueprintItem.setBlueprintName(target, arg1);
+                    if (player.getMainHandItem().getItem() instanceof BlueprintItem && player.getMainHandItem() != target) {
+                        BlueprintItem.saveBlueprintTag(player.getMainHandItem(), BlueprintItem.getBlueprintTag(target));
+                    }
                     player.inventoryMenu.broadcastChanges();
+                }
+                break;
+            }
+            case 5: { // SET_SCROLL_OFFSET on open blueprint
+                if (player.containerMenu instanceof BlueprintMenu bm) {
+                    try {
+                        int offset = Integer.parseInt(arg1);
+                        bm.updateRowCount(Math.max(0, offset));
+                    } catch (NumberFormatException ignored) {
+                    }
                 }
                 break;
             }

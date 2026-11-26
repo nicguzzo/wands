@@ -52,23 +52,12 @@ public class LevelRendererMixin {
     @Unique
     private final PoseStack posestack = new PoseStack();
     
-    //?if >= 26.3 {
+    //?if >= 26.2 {
     /*@Shadow
     private SubmitNodeStorage submitNodeStorage;
 
-    @Inject(method = "render", at = @At(value = "TAIL"))
-    public void render(GraphicsResourceAllocator resourceAllocator, boolean renderOutline, CameraRenderState cameraState, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, boolean bl, CallbackInfo ci){
-        posestack.setIdentity();
-        if(ClientRender.wand != null) {
-            ClientRender.render(posestack, submitNodeStorage);
-        }
-    }
-    *///?} else if = 26.2 {
-    /*@Shadow
-    private SubmitNodeStorage submitNodeStorage;
-
-    @Inject(method = "render", at = @At(value = "TAIL"))
-    public void render(GraphicsResourceAllocator resourceAllocator, DeltaTracker deltaTracker, boolean renderOutline, CameraRenderState cameraState, Matrix4fc modelViewMatrix, GpuBufferSlice terrainFog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci){
+    @Inject(method = "submitFeatures", at = @At(value = "TAIL"))
+    private void submitFeatures(net.minecraft.client.renderer.state.level.LevelRenderState levelRenderState, net.minecraft.client.renderer.SubmitNodeCollector submitNodeCollector, boolean renderOutline, CallbackInfo ci){
         posestack.setIdentity();
         if(ClientRender.wand != null) {
             ClientRender.render(posestack, submitNodeStorage);

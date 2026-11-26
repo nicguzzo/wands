@@ -137,6 +137,7 @@ public class NeoforgeEntrypoint {
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
         modBus.addListener(this::registerScreens);
+        modBus.addListener(this::registerKeyMappings);
         modBus.addListener(this::onClientSetup);
         modBus.addListener(this::onCommonSetup);
         //? if >= 1.20.5 {
@@ -179,6 +180,10 @@ public class NeoforgeEntrypoint {
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
+    public void registerKeyMappings(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
+        WandsModClient.initialize();
+        WandsModClient.keys.forEach((km, v) -> event.register(km));
+    }
     public void registerScreens(RegisterMenuScreensEvent event) {
         event.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
         event.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
