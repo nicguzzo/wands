@@ -58,6 +58,17 @@ repositories {
             includeGroup("com.jamieswhiteshirt")
         }
     }
+    if (modstitch.isLoom && minecraft == "26.2") {
+        // Minecraft 26.2 uses 4-part coordinates (org.lwjgl:lwjgl:3.4.1:unsafe), which makes
+        // Fabric Loom 1.14.9's LibraryContext.supportsJava19OrLater() return false and trigger
+        // forceLWJGLFromMavenCentral(). That adds an exclusiveContent rule restricting org.lwjgl
+        // to Maven Central, breaking Mojang's patched lwjgl-freetype hosted on libraries.minecraft.net.
+        // Pre-registering MavenCentralLWJGL without exclusiveContent bypasses that filter.
+        maven("https://repo.maven.apache.org/maven2/") {
+            name = "MavenCentralLWJGL"
+            content { includeGroup("org.lwjgl") }
+        }
+    }
 }
 
 configurations.configureEach {
