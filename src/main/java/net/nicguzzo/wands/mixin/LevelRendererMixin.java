@@ -98,6 +98,8 @@ public class LevelRendererMixin {
     /*@Inject(method = "renderLevel", at = @At(value = "TAIL"))
     public void renderLevel(PoseStack posestack_in, float f, long l, boolean bl, Camera camera, GameRenderer gameRenderer, LightTexture lightTexture, Matrix4f matrix4f, CallbackInfo ci) {
         this.posestack.setIdentity();
+        this.posestack.last().pose().set(posestack_in.last().pose());
+        this.posestack.last().normal().set(posestack_in.last().normal());
         if(ClientRender.wand != null) {
             ClientRender.render(this.posestack, renderBuffers.bufferSource());
         }
