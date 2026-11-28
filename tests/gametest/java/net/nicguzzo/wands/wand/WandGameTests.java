@@ -1,7 +1,9 @@
 package net.nicguzzo.wands.wand;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -16,10 +18,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
@@ -137,6 +142,31 @@ public class WandGameTests implements FabricGameTest {
         test.assertBlockPresent(Blocks.BARREL, target);
         test.assertTrue(barrel.getItem(7).is(Items.EMERALD), "Redo overwrote a changed inventory");
         test.succeed();
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void placedDoorUndoRedo(GameTestHelper test) {
+        DoorHistoryGameTests.placedDoorUndoRedo(test);
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void destroyedLowerHalfUndoRedo(GameTestHelper test) {
+        DoorHistoryGameTests.destroyedLowerHalfUndoRedo(test);
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void destroyedUpperHalfUndoRedo(GameTestHelper test) {
+        DoorHistoryGameTests.destroyedUpperHalfUndoRedo(test);
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void redoPlacementSkipsDoorWhenUpperSpaceChanged(GameTestHelper test) {
+        DoorHistoryGameTests.redoPlacementSkipsDoorWhenUpperSpaceChanged(test);
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void replacedDoorRestoresBothHalvesAndSkipsConflictingUndo(GameTestHelper test) {
+        DoorHistoryGameTests.replacedDoorRestoresBothHalvesAndSkipsConflictingUndo(test);
     }
 
     @GameTest(template = EMPTY_STRUCTURE)
@@ -378,6 +408,69 @@ public class WandGameTests implements FabricGameTest {
     }
 
     @GameTest(template = EMPTY_STRUCTURE)
+    public void survivalBlastChargesTntByRadius(GameTestHelper test) {
+        var player = player(test, GameType.SURVIVAL);
+        var stack = new ItemStack(BuiltInRegistries.ITEM.get(WandsMod.gold_wand_id.id()));
+        player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        WandProps.switchMode(stack, WandProps.Mode.BLAST);
+        var blastTarget = target.above(10);
+        var pos = test.absolutePos(blastTarget);
+        player.setPos(pos.getX() + 20.5, pos.getY(), pos.getZ() + 0.5);
+
+        WandProps.setVal(stack, WandProps.Value.BLASTRAD, 5);
+        player.getInventory().setItem(2, new ItemStack(Items.TNT));
+        test.setBlock(blastTarget, Blocks.DIRT);
+        Networking.ReceivePosPacket(player, Direction.UP, true, false, pos, null, Vec3.atCenterOf(pos), 0);
+        test.assertBlockPresent(Blocks.DIRT, blastTarget);
+        test.assertTrue(player.getInventory().getItem(2).getCount() == 1, "A shortfall spent TNT");
+
+        var shulker = new ItemStack(Items.SHULKER_BOX);
+        var supplies = new ArrayList<>(java.util.Collections.nCopies(27, ItemStack.EMPTY));
+        supplies.set(0, new ItemStack(Items.TNT, 2));
+        shulker.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(supplies));
+        player.setItemInHand(InteractionHand.OFF_HAND, shulker);
+        Networking.ReceivePosPacket(player, Direction.UP, true, false, pos, null, Vec3.atCenterOf(pos), 0);
+        test.assertBlockPresent(Blocks.AIR, blastTarget);
+        test.assertTrue(Compat.get_shulker_contents(shulker).get(0).isEmpty()
+                && player.getInventory().getItem(2).getCount() == 1,
+                "Radius five should spend two TNT from the offhand shulker first");
+
+        WandProps.setVal(stack, WandProps.Value.BLASTRAD, 4);
+        test.setBlock(blastTarget, Blocks.DIRT);
+        Networking.ReceivePosPacket(player, Direction.UP, true, false, pos, null, Vec3.atCenterOf(pos), 0);
+        test.assertBlockPresent(Blocks.AIR, blastTarget);
+        test.assertTrue(player.getInventory().getItem(2).isEmpty(), "Radius four should spend one TNT");
+        test.succeed();
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void survivalMudRequiresTwoWaterBuckets(GameTestHelper test) {
+        var player = player(test, GameType.SURVIVAL);
+        var wand = new Wand();
+        var potion = PotionContents.createItemStack(Items.POTION, Potions.WATER);
+        var originalPotion = potion.copy();
+        player.setItemInHand(InteractionHand.OFF_HAND, potion);
+        player.getInventory().setItem(2, new ItemStack(Items.WATER_BUCKET));
+        var dirt = target.east();
+        test.setBlock(target, Blocks.STONE);
+        test.setBlock(dirt, Blocks.DIRT);
+
+        fill(test, player, wand, WandProps.Action.USE, dirt);
+        test.assertBlockPresent(Blocks.DIRT, dirt);
+        test.assertTrue(player.getMainHandItem().getDamageValue() == 0, "Rejected mud conversion charged durability");
+
+        player.getInventory().setItem(3, new ItemStack(Items.WATER_BUCKET));
+        fill(test, player, wand, WandProps.Action.USE, dirt);
+        test.assertBlockPresent(Blocks.STONE, target);
+        test.assertBlockPresent(Blocks.MUD, dirt);
+        test.assertTrue(player.getMainHandItem().getDamageValue() == 1, "Mud conversion should charge once");
+        test.assertTrue(player.getInventory().getItem(2).is(Items.WATER_BUCKET)
+                && player.getInventory().getItem(3).is(Items.WATER_BUCKET)
+                && ItemStack.matches(originalPotion, player.getOffhandItem()), "Mud conversion spent its renewable supplies");
+        test.succeed();
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
     public void survivalXpCharges(GameTestHelper test) {
         var player = player(test, GameType.SURVIVAL);
         var wand = new Wand();
@@ -408,6 +501,92 @@ public class WandGameTests implements FabricGameTest {
         } finally {
             WandsMod.config.blocks_per_xp = previous;
         }
+        test.succeed();
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void rotatedGridKeepsIndependentSpacing(GameTestHelper test) {
+        var player = player(test, GameType.CREATIVE);
+        var stack = player.getMainHandItem();
+        player.setYRot(180);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.GLASS));
+        WandProps.setMode(stack, WandProps.Mode.GRID);
+        WandProps.setAction(stack, WandProps.Action.PLACE);
+        WandProps.setVal(stack, WandProps.Value.GRIDM, 4);
+        WandProps.setVal(stack, WandProps.Value.GRIDN, 2);
+        WandProps.setVal(stack, WandProps.Value.GRIDMS, 1);
+        WandProps.setVal(stack, WandProps.Value.GRIDNS, 2);
+
+        var wand = new Wand();
+        for (Direction side : List.of(Direction.UP, Direction.DOWN)) {
+            checkGrid(test, player, wand, side, Rotation.CLOCKWISE_90, Direction.SOUTH, Direction.EAST);
+            checkGrid(test, player, wand, side, Rotation.COUNTERCLOCKWISE_90, Direction.NORTH, Direction.WEST);
+            checkGrid(test, player, wand, side, Rotation.NONE, Direction.EAST, Direction.NORTH);
+            checkGrid(test, player, wand, side, Rotation.CLOCKWISE_180, Direction.WEST, Direction.SOUTH);
+        }
+        test.succeed();
+    }
+
+    private void checkGrid(GameTestHelper test, ServerPlayer player, Wand wand, Direction side,
+                           Rotation rotation, Direction mAxis, Direction nAxis) {
+        int x = mAxis == Direction.WEST ? 7 : nAxis == Direction.WEST ? 4 : 1;
+        int z = mAxis == Direction.NORTH ? 7 : nAxis == Direction.NORTH ? 4 : 1;
+        var anchor = new BlockPos(x, 4, z);
+        int gridY = anchor.getY() + side.getStepY();
+        Set<BlockPos> expected = new HashSet<>();
+        for (int m = 0; m < 4; m++) {
+            for (int n = 0; n < 2; n++) {
+                expected.add(anchor.relative(side).relative(mAxis, 2 * m).relative(nAxis, 3 * n));
+            }
+        }
+
+        for (int gridX = 1; gridX <= 7; gridX++) {
+            for (int gridZ = 1; gridZ <= 7; gridZ++) {
+                test.setBlock(new BlockPos(gridX, gridY, gridZ), Blocks.AIR);
+            }
+        }
+        test.setBlock(anchor, Blocks.STONE);
+        var pos = test.absolutePos(anchor);
+        var stack = player.getMainHandItem();
+        WandProps.setRotation(stack, rotation);
+        wand.do_or_preview(player, test.getLevel(), Blocks.STONE.defaultBlockState(), pos, side,
+                Vec3.atCenterOf(pos), stack, (WandItem) stack.getItem(), false);
+
+        Set<BlockPos> actual = new HashSet<>();
+        for (int gridX = 1; gridX <= 7; gridX++) {
+            for (int gridZ = 1; gridZ <= 7; gridZ++) {
+                var cell = new BlockPos(gridX, gridY, gridZ);
+                if (test.getLevel().getBlockState(test.absolutePos(cell)).is(Blocks.GLASS)) {
+                    actual.add(cell);
+                }
+            }
+        }
+        test.assertTrue(actual.equals(expected), side + " " + rotation + " expected " + expected.size()
+                + " grid placements at " + expected + " but got " + actual.size() + " at " + actual);
+    }
+
+    @GameTest(template = EMPTY_STRUCTURE)
+    public void veinLimitIncludesSeedAndStopsWithinFirstLayer(GameTestHelper test) {
+        var player = player(test, GameType.CREATIVE);
+        var stack = player.getMainHandItem();
+        WandProps.setMode(stack, WandProps.Mode.VEIN);
+        WandProps.setAction(stack, WandProps.Action.DESTROY);
+        WandProps.setVal(stack, WandProps.Value.AREALIM, 2);
+        var seed = new BlockPos(2, 2, 2);
+        var vein = List.of(seed, seed.north(), seed.east());
+        for (BlockPos ore : vein) {
+            test.setBlock(ore, Blocks.IRON_ORE);
+        }
+
+        var pos = test.absolutePos(seed);
+        var wand = new Wand();
+        wand.do_or_preview(player, test.getLevel(), Blocks.IRON_ORE.defaultBlockState(), pos, Direction.UP,
+                Vec3.atCenterOf(pos), stack, (WandItem) stack.getItem(), false);
+
+        long remaining = vein.stream().filter(ore ->
+                test.getLevel().getBlockState(test.absolutePos(ore)).is(Blocks.IRON_ORE)).count();
+        test.assertTrue(remaining == 1, "Expected two ores to break but got " + (vein.size() - remaining));
+        test.assertBlockPresent(Blocks.AIR, seed);
         test.succeed();
     }
 }

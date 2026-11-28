@@ -49,6 +49,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.material.Fluids;
@@ -554,19 +555,16 @@ public class Wand {
             }
         }
         detect_bucket();
-        this.has_water_potion = false;
-        if (offhand != null && offhand.getItem() instanceof PotionItem) {
-
-            this.has_water_potion=WandUtils.hasWaterPotion(offhand);
-
-            if (!creative && has_water_potion) {
-                if (inventory.n_water_buckets_in_inventory < 2) {
-                    has_water_potion = false;
-                    if (!preview) {
-                        Compat.displayClientMessage(player,Compat.translatable("wands.message.need_water_buckets").withStyle(ChatFormatting.RED), false);
-                    }
-                    return;
+        has_water_potion = use && offhand != null && offhand.getItem() instanceof PotionItem
+                && WandUtils.hasWaterPotion(offhand);
+        if (!creative && ((has_water_bucket && mode != Mode.COPY) || has_water_potion)) {
+            inventory.n_water_buckets_in_inventory = inventory.countWaterBuckets();
+            if (has_water_potion && inventory.n_water_buckets_in_inventory < 2) {
+                has_water_potion = false;
+                if (!preview) {
+                    Compat.displayClientMessage(player,Compat.translatable("wands.message.need_water_buckets").withStyle(ChatFormatting.RED), false);
                 }
+                return;
             }
         }
         boolean has_torch = false;
@@ -648,11 +646,11 @@ public class Wand {
         int effectiveLimit = (mode == Mode.COPY) ? WandsConfig.max_limit : limit;
 
         if (!preview) {
-            boolean materialAction = !destroy && !use && mode != Mode.COPY;
-            if (materialAction && mode != Mode.BLAST) {
+            boolean materialAction = !destroy && !use && mode != Mode.COPY && mode != Mode.BLAST;
+            if (materialAction) {
                 preparePlacementMaterials(effectiveLimit);
             }
-            if (materialAction && !creative && !has_water_bucket && !has_empty_bucket) {
+            if (!creative && (mode == Mode.BLAST || (materialAction && !has_water_bucket && !has_empty_bucket))) {
                 inventory.accountMaterials(this, false);
                 block_accounting.forEach((item, count) -> {
                     if (count.needed > count.in_player) {
@@ -810,7 +808,14 @@ public class Wand {
                 this.use = false;
             }
         }
-        inventory.detect_water_bucket(this);
+    }
+
+    private boolean canConvertToMud(BlockState state) {
+        //?if < 26.3 {
+        return use && has_water_potion && state.is(BlockTags.CONVERTABLE_TO_MUD);
+        //?} else {
+        /*return use && has_water_potion && state.is(BlockTags.CONVERTIBLE_TO_MUD);
+        *///?}
     }
 
     /** Maps bucket type to the corresponding block_state for preview and placement. */
@@ -1053,8 +1058,23 @@ public class Wand {
     }
 
     private void recordUndo(BlockPos pos, BlockSnapshot before) {
-        if (before != null) undoManager.record(pos, before, BlockSnapshot.capture(level, pos),
-                WandProps.getAction(wand_stack).toString(), mode.toString());
+        if (before != null) recordUndo(pos, before, null, null);
+    }
+
+    private void recordUndo(BlockPos pos, BlockSnapshot before, BlockPos partnerPos, BlockSnapshot partnerBefore) {
+        var block = new UndoManager.Edit(pos, before, BlockSnapshot.capture(level, pos));
+        var doorPartner = partnerPos == null ? null
+                : new UndoManager.Edit(partnerPos, partnerBefore, BlockSnapshot.capture(level, partnerPos));
+        undoManager.record(block, doorPartner, WandProps.getAction(wand_stack).toString(), mode.toString());
+    }
+
+    private BlockPos doorPartnerForEdit(BlockPos pos, BlockState before, BlockState target) {
+        if (target.getBlock() instanceof DoorBlock) return pos.above();
+        if (!(before.getBlock() instanceof DoorBlock)) return null;
+        DoubleBlockHalf half = before.getValue(DoorBlock.HALF);
+        BlockPos partner = half == DoubleBlockHalf.LOWER ? pos.above() : pos.below();
+        BlockState other = level.getBlockState(partner);
+        return other.is(before.getBlock()) && other.getValue(DoorBlock.HALF) != half ? partner : null;
     }
 
     public void validate_buffer() {
@@ -1273,11 +1293,7 @@ public class Wand {
             return true;
         }
 
-        //?if < 26.3 {
-        if ((use) && has_water_potion && state.is(BlockTags.CONVERTABLE_TO_MUD)) {
-        //?} else {
-        /*if ((use) && has_water_potion && state.is(BlockTags.CONVERTIBLE_TO_MUD)) {
-        *///?}
+        if (canConvertToMud(st)) {
             BlockSnapshot before = creative ? BlockSnapshot.capture(level, block_pos) : null;
             BlockState mudState = Blocks.MUD.defaultBlockState();
             if (!level.setBlockAndUpdate(block_pos, mudState)) return false;
@@ -1357,18 +1373,23 @@ public class Wand {
         if (creative) {
             BlockSnapshot before = BlockSnapshot.capture(level, block_pos);
             if (destroy) {
-                if (before.state().isAir() || !before.changeState(level, block_pos,
-                        level.getFluidState(block_pos).createLegacyBlock())) return false;
-                player.awardStat(Stats.BLOCK_MINED.get(before.state().getBlock()));
-                player.causeFoodExhaustion(0.005F);
+                if (before.state().isAir()) return false;
+                state = level.getFluidState(block_pos).createLegacyBlock();
             } else {
                 if (use) return false;
                 state = multipartPlacement != null ? multipartPlacement : state_for_placement(state, block_pos);
-                if (state == null || !state.canSurvive(level, block_pos)
-                        || !before.changeState(level, block_pos, state)) return false;
+                if (state == null || !state.canSurvive(level, block_pos)) return false;
+            }
+            BlockPos doorPartner = doorPartnerForEdit(block_pos, before.state(), state);
+            BlockSnapshot partnerBefore = doorPartner == null ? null : BlockSnapshot.capture(level, doorPartner);
+            if (!before.changeState(level, block_pos, state)) return false;
+            if (destroy) {
+                player.awardStat(Stats.BLOCK_MINED.get(before.state().getBlock()));
+                player.causeFoodExhaustion(0.005F);
+            } else {
                 state.getBlock().setPlacedBy(level, block_pos, state, player, state.getBlock().asItem().getDefaultInstance());
             }
-            recordUndo(block_pos, before);
+            recordUndo(block_pos, before, doorPartner, partnerBefore);
             return true;
         }
 
@@ -1474,7 +1495,7 @@ public class Wand {
                     if(use){
                         // Area mode adds offset positions (above surface), so check the actual target block
                         BlockState useTarget = (mode == Mode.AREA) ? level.getBlockState(tmp_pos.set(x, y, z).move(side, -1)) : st;
-                        if(can_destroy_or_use(useTarget,false) ||
+                        if (canConvertToMud(useTarget) || can_destroy_or_use(useTarget, false) ||
                            (creative && (WandUtils.has_use_action(useTarget) || can_shear(useTarget)))) {
                             return block_buffer.add(x, y, z, this, with_state);
                         // Set warning flags when block can't be used (mirrors place_block logic)

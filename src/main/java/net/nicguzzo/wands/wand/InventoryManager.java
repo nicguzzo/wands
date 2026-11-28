@@ -199,20 +199,14 @@ public class InventoryManager {
         }
         return false;
     }
-    void detect_water_bucket(Wand wand){
-        n_water_buckets_in_inventory = 0;
-        if ( wand.has_water_bucket && (!wand.creative || wand.mode == Mode.BLAST) && !wand.destroy && !wand.use && wand.mode != Mode.COPY) {
-            ItemStack stack;
-            for (int i = 0; i < 36; ++i) {
-                stack = player_inv.getItem(i);
-                if (stack.getItem() == Items.WATER_BUCKET) {
-                    n_water_buckets_in_inventory++;
-                    if (n_water_buckets_in_inventory>=2) {
-                        break;
-                    }
-                }
+    int countWaterBuckets() {
+        int count = 0;
+        for (int i = 0; i < 36 && count < 2; i++) {
+            if (player_inv.getItem(i).is(Items.WATER_BUCKET)) {
+                count++;
             }
         }
+        return count;
     }
     // Counting and consuming walk the same slots, starting with the offhand.
     void accountMaterials(Wand wand, boolean consume) {
