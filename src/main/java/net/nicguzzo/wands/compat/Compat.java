@@ -647,11 +647,26 @@ public class Compat {
     }
     static public BlockState readBlockState(CompoundTag tag) {
         if (tag == null || tag.isEmpty()) return Blocks.AIR.defaultBlockState();
+        // Blueprint palettes live in custom item data, so vanilla's 26.3 field rename
+        // does not migrate them. Adapt a foreign palette entry without modifying the item.
+        //? if >= 26.3 {
+        /*tag = adaptBlockStateTag(tag, "Name", "Properties", "id", "properties");
+        *///? } else {
+        tag = adaptBlockStateTag(tag, "id", "properties", "Name", "Properties");
+        //? }
         //? if >= 1.21.11 {
         return NbtUtils.readBlockState(BuiltInRegistries.BLOCK, tag);
         //? } else {
         /*return NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), tag);
         *///? }
+    }
+    private static CompoundTag adaptBlockStateTag(CompoundTag tag, String fromId, String fromProperties,
+                                                  String toId, String toProperties) {
+        if (tag.contains(toId) || !tag.contains(fromId)) return tag;
+        CompoundTag adapted = new CompoundTag();
+        adapted.put(toId, tag.get(fromId));
+        if (tag.contains(fromProperties)) adapted.put(toProperties, tag.get(fromProperties));
+        return adapted;
     }
     static public long getWindow() {
         //? if >= 1.21.11 {
