@@ -89,6 +89,7 @@ public class BlueprintCarouselScreen extends Screen {
         if (client.player != null) {
             List<BlueprintEntry> bpList = InventoryManager.findBlueprints(client.player);
             for (BlueprintEntry bp : bpList) {
+                if (bp.id.isEmpty()) continue;
                 String name = BlueprintItem.getBlueprintName(bp.stack);
                 if (name.isEmpty()) {
                     name = bp.stack.getHoverName().getString();
@@ -216,6 +217,7 @@ public class BlueprintCarouselScreen extends Screen {
             list.add(new CarouselEntry("", "Copied Buffer (" + copyCount + " blocks)", "", new ItemStack(Items.PAPER)));
         }
         for (BlueprintEntry bp : InventoryManager.findBlueprints(client.player)) {
+            if (bp.id.isEmpty()) continue;
             list.add(new CarouselEntry(bp.id, BlueprintItem.getDisplayLabel(bp.stack), "", bp.stack));
         }
         if (list.isEmpty()) {

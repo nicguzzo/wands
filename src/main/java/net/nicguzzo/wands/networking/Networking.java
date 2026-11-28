@@ -58,6 +58,7 @@ public class Networking {
     static public RcId POS_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "pos_packet");
     static public RcId SYNC_ROCK_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "sync_rock_packet");
     static public RcId BLUEPRINT_ACTION_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "blueprint_action_packet");
+    public static final int SYNC_BLUEPRINT_IDS = 6;
 
     //S2C
     static public RcId SND_PACKET = RcId.fromNamespaceAndPath(WandsMod.MOD_ID, "sound_packet");
@@ -628,14 +629,19 @@ public class Networking {
                         });
                         if (updated) {
                             wand.setActiveBlueprintId(arg1);
+                            player.inventoryMenu.broadcastChanges();
                             if (wand.player_data != null) {
                                 SendPlayerData(player, wand.player_data);
                             }
-                            player.inventoryMenu.broadcastChanges();
                             Compat.displayClientMessage(player, Compat.literal("Saved " + wand.copy_paste_buffer.size() + " blocks to Blueprint"), true);
                         }
                     }
                 }
+                break;
+            }
+            case SYNC_BLUEPRINT_IDS: {
+                InventoryManager.initializeBlueprintIds(player);
+                player.inventoryMenu.broadcastChanges();
                 break;
             }
         }

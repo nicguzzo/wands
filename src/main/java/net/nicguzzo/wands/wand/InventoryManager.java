@@ -1,5 +1,6 @@
 package net.nicguzzo.wands.wand;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -331,9 +332,16 @@ public class InventoryManager {
 
     /**
      * Scans player inventory (0..35), shulker boxes in inventory, and offhand for BlueprintItem stacks.
-     * Ensures every BlueprintItem has a UUID id.
      */
     public static List<BlueprintEntry> findBlueprints(Player player) {
+        return scanBlueprints(player, false);
+    }
+
+    public static void initializeBlueprintIds(ServerPlayer player) {
+        scanBlueprints(player, true);
+    }
+
+    private static List<BlueprintEntry> scanBlueprints(Player player, boolean initializeIds) {
         List<BlueprintEntry> result = new ArrayList<>();
         if (player == null) return result;
         Inventory inv = Compat.get_inventory(player);
@@ -342,14 +350,14 @@ public class InventoryManager {
         for (int s = 0; s < 36; s++) {
             ItemStack stack = inv.getItem(s);
             if (stack.getItem() instanceof BlueprintItem) {
-                String id = BlueprintItem.getOrCreateId(stack);
+                String id = initializeIds ? BlueprintItem.getOrCreateId(stack) : BlueprintItem.getId(stack);
                 result.add(new BlueprintEntry(id, stack, s, false, -1));
             }
         }
         // Offhand
         ItemStack offhand = player.getOffhandItem();
         if (offhand.getItem() instanceof BlueprintItem) {
-            String id = BlueprintItem.getOrCreateId(offhand);
+            String id = initializeIds ? BlueprintItem.getOrCreateId(offhand) : BlueprintItem.getId(offhand);
             result.add(new BlueprintEntry(id, offhand, -1, false, -1));
         }
         // Shulker boxes in inventory
@@ -361,9 +369,9 @@ public class InventoryManager {
                 for (int i = 0; i < contents.size(); i++) {
                     ItemStack item = contents.get(i);
                     if (item.getItem() instanceof BlueprintItem) {
-                        String oldId = BlueprintItem.getId(item);
-                        String id = BlueprintItem.getOrCreateId(item);
-                        if (!id.equals(oldId)) {
+                        String id = BlueprintItem.getId(item);
+                        if (initializeIds && id.isEmpty()) {
+                            id = BlueprintItem.getOrCreateId(item);
                             modified = true;
                         }
                         result.add(new BlueprintEntry(id, item, s, true, i));
@@ -388,11 +396,11 @@ public class InventoryManager {
     }
 
     public static boolean updateBlueprintEntry(Player player, BlueprintEntry entry, java.util.function.Consumer<ItemStack> mutator) {
-        if (player == null || entry == null) return false;
+        if (player == null || entry == null || entry.id.isEmpty()) return false;
         Inventory inv = Compat.get_inventory(player);
         if (!entry.inShulker) {
             ItemStack target = entry.invSlot == -1 ? player.getOffhandItem() : inv.getItem(entry.invSlot);
-            if (target.getItem() instanceof BlueprintItem) {
+            if (entry.id.equals(BlueprintItem.getId(target))) {
                 mutator.accept(target);
                 return true;
             }
@@ -402,7 +410,7 @@ public class InventoryManager {
                 List<ItemStack> contents = Compat.get_shulker_contents(shulker);
                 if (entry.shulkerIndex >= 0 && entry.shulkerIndex < contents.size()) {
                     ItemStack target = contents.get(entry.shulkerIndex);
-                    if (target.getItem() instanceof BlueprintItem) {
+                    if (entry.id.equals(BlueprintItem.getId(target))) {
                         mutator.accept(target);
                         Compat.set_shulker_contents(shulker, contents);
                         return true;

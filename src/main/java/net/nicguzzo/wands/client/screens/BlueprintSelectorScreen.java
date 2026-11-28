@@ -1,6 +1,5 @@
 package net.nicguzzo.wands.client.screens;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -8,7 +7,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 //?}
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.nicguzzo.wands.WandsMod;
@@ -18,6 +18,7 @@ import net.nicguzzo.wands.client.render.ClientRender;
 import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.networking.ClientNetworking;
+import net.nicguzzo.wands.networking.Networking;
 import net.nicguzzo.wands.wand.InventoryManager;
 import net.nicguzzo.wands.wand.InventoryManager.BlueprintEntry;
 
@@ -50,6 +51,9 @@ public class BlueprintSelectorScreen extends Screen {
     }
 
     private final List<SelectorRow> rows = new ArrayList<>();
+    private final ItemStack[] inventoryStacks = new ItemStack[36];
+    private ItemStack offhandStack;
+    private int lastCopyCount;
     private int scrollOffset = 0;
     private String selectedId = "";
     private Btn btnSaveCopy;
@@ -65,25 +69,14 @@ public class BlueprintSelectorScreen extends Screen {
         if (ClientRender.wand != null) {
             this.selectedId = ClientRender.wand.getActiveBlueprintId();
         }
-        refreshRows();
+        updateRows(true);
 
         int panelX = (this.width - PANEL_W) / 2;
         int panelY = (this.height - PANEL_H) / 2;
 
         btnSaveCopy = new Btn(panelX + 8, panelY + PANEL_H - 22, 148, 16, Compat.translatable("screen.wands.blueprint_selector.save_to_selected"), (mx, my) -> {
             if (ClientRender.wand != null && !ClientRender.wand.copy_paste_buffer.isEmpty() && !selectedId.isEmpty()) {
-                Minecraft client = Minecraft.getInstance();
-                if (client.player != null) {
-                    BlueprintEntry entry = InventoryManager.findBlueprintById(client.player, selectedId);
-                    if (entry != null) {
-                        InventoryManager.updateBlueprintEntry(client.player, entry, stack -> {
-                            BlueprintItem.saveCopyBufferToBlueprint(stack, ClientRender.wand.copy_paste_buffer);
-                        });
-                    }
-                }
-                ClientRender.wand.setActiveBlueprintId(selectedId);
                 ClientNetworking.SendBlueprintAction(4, selectedId, "");
-                refreshRows();
             }
         });
         btnSaveCopy.centerText = true;
@@ -94,17 +87,59 @@ public class BlueprintSelectorScreen extends Screen {
         btnClose.centerText = true;
     }
 
-    private void refreshRows() {
-        rows.clear();
-        Minecraft client = Minecraft.getInstance();
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        updateRows(false);
+    }
+
+    private void updateRows(boolean force) {
+        Player player = Minecraft.getInstance().player;
         int copyCount = (ClientRender.wand != null && ClientRender.wand.copy_paste_buffer != null)
                 ? ClientRender.wand.copy_paste_buffer.size() : 0;
+        boolean inventoryChanged = updateInventorySnapshot(player);
+        if (force || inventoryChanged || copyCount != lastCopyCount) {
+            lastCopyCount = copyCount;
+            refreshRows(player, copyCount, force || inventoryChanged);
+        }
+    }
+
+    private boolean updateInventorySnapshot(Player player) {
+        if (player == null) return false;
+        // Inventory slot packets replace stacks. Rebuild after the update without decoding
+        // every shulker and blueprint in the inventory on each client tick.
+        ItemStack offhand = player.getOffhandItem();
+        boolean changed = offhand != offhandStack;
+        offhandStack = offhand;
+        Inventory inventory = Compat.get_inventory(player);
+        for (int slot = 0; slot < inventoryStacks.length; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (stack != inventoryStacks[slot]) {
+                inventoryStacks[slot] = stack;
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
+    private void refreshRows(Player player, int copyCount, boolean requestIds) {
+        rows.clear();
         String copySub = copyCount > 0 ? (copyCount + " blocks copied in memory") : "Empty (use Copy mode first)";
         rows.add(new SelectorRow("", Compat.translatable("screen.wands.blueprint.in_memory").getString(), copySub, new ItemStack(Items.PAPER), false));
 
-        if (client.player != null) {
-            List<BlueprintEntry> entries = InventoryManager.findBlueprints(client.player);
+        if (player != null) {
+            boolean missingIds = false;
+            List<BlueprintEntry> entries = InventoryManager.findBlueprints(player);
             for (BlueprintEntry e : entries) {
+                if (e.id.isEmpty()) {
+                    missingIds = true;
+                    continue;
+                }
                 String name = BlueprintItem.getBlueprintName(e.stack);
                 if (name.isEmpty()) {
                     name = e.stack.getHoverName().getString();
@@ -116,6 +151,9 @@ public class BlueprintSelectorScreen extends Screen {
                         ? (count + " blocks (" + sz[0] + "x" + sz[1] + "x" + sz[2] + ")" + loc)
                         : ("Empty blueprint" + loc);
                 rows.add(new SelectorRow(e.id, name, sub, e.stack, true));
+            }
+            if (missingIds && requestIds) {
+                ClientNetworking.SendBlueprintAction(Networking.SYNC_BLUEPRINT_IDS, "", "");
             }
         }
 

@@ -4,7 +4,7 @@
   "version": "1",
   "name": "Building Wands Game Tests",
   "entrypoints": {
-    "fabric-gametest": ["net.nicguzzo.wands.wand.WandGameTests"]
+    "fabric-gametest": ["net.nicguzzo.wands.wand.WandGameTests", "net.nicguzzo.wands.wand.BlueprintGameTests"]
   },
   "depends": {"wands": "*", "fabric-gametest-api-v1": "*"}
 }

@@ -40,6 +40,7 @@ public class BlueprintItem extends Item {
     public static final String TAG_SIZE = "Size";
     public static final String TAG_STATES = "States";
     public static final String TAG_BLOCKS = "Blocks";
+    public static final String TAG_BLOCKS_WIDE = "BlocksWide";
     public static final String TAG_REPLACEMENTS = "Replacements";
 
     public static class BlockGroup {
@@ -143,8 +144,12 @@ public class BlueprintItem extends Item {
         if (stack == null || stack.isEmpty() || !(stack.getItem() instanceof BlueprintItem)) {
             return new CompoundTag();
         }
+        //?if >= 1.20.5 {
         CompoundTag root = Compat.getTags(stack);
-        return Compat.getCompound(root, TAG_BLUEPRINT).orElseGet(CompoundTag::new);
+        //?} else {
+        /*CompoundTag root = stack.getTag();
+        *///?}
+        return root == null ? new CompoundTag() : Compat.getCompound(root, TAG_BLUEPRINT).orElseGet(CompoundTag::new);
     }
 
     public static void saveBlueprintTag(ItemStack stack, CompoundTag bpTag) {
@@ -211,9 +216,34 @@ public class BlueprintItem extends Item {
     }
 
     public static int getTotalBlockCount(ItemStack stack) {
-        CompoundTag bpTag = getBlueprintTag(stack);
-        int[] blocks = Compat.getIntArray(bpTag, TAG_BLOCKS).orElse(new int[0]);
-        return blocks.length / 2;
+        return SavedBlocks.read(getBlueprintTag(stack)).count();
+    }
+
+    // Legacy entries are (signed 10-bit packed position, state). Wide entries are (x, y, z, state).
+    private record SavedBlocks(int[] data, int stride) {
+        static SavedBlocks read(CompoundTag tag) {
+            boolean wide = tag.contains(TAG_BLOCKS_WIDE);
+            String key = wide ? TAG_BLOCKS_WIDE : TAG_BLOCKS;
+            return new SavedBlocks(Compat.getIntArray(tag, key).orElse(new int[0]), wide ? 4 : 2);
+        }
+
+        int count() {
+            return data.length / stride;
+        }
+
+        int stateIndex(int i) {
+            return data[(i + 1) * stride - 1];
+        }
+
+        BlockPos position(int i) {
+            int offset = i * stride;
+            if (stride == 2) return unpackPos(data[offset]);
+            return new BlockPos(data[offset], data[offset + 1], data[offset + 2]);
+        }
+    }
+
+    private static boolean fitsPackedCoordinate(int value) {
+        return value >= -512 && value <= 511;
     }
 
     public static int[] getDimensions(ItemStack stack) {
@@ -252,20 +282,22 @@ public class BlueprintItem extends Item {
 
         // Sort blocks by Y ascending, then Z, then X for natural bottom-to-top incremental placement
         List<CopyBuffer> sorted = new ArrayList<>(copyBuffer);
+        sorted.removeIf(cb -> cb.state == null || cb.state.isAir());
         sorted.sort(Comparator.comparingInt((CopyBuffer b) -> b.pos.getY())
                 .thenComparingInt(b -> b.pos.getZ())
                 .thenComparingInt(b -> b.pos.getX()));
 
         List<BlockState> palette = new ArrayList<>();
         Map<BlockState, Integer> paletteIndex = new LinkedHashMap<>();
-        int[] packedData = new int[sorted.size() * 2];
+        boolean wide = sorted.stream().anyMatch(cb -> !fitsPackedCoordinate(cb.pos.getX())
+                || !fitsPackedCoordinate(cb.pos.getY()) || !fitsPackedCoordinate(cb.pos.getZ()));
+        int[] blockData = new int[sorted.size() * (wide ? 4 : 2)];
 
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
 
         int idx = 0;
         for (CopyBuffer cb : sorted) {
-            if (cb.state == null || cb.state.isAir()) continue;
             Integer stateIdx = paletteIndex.get(cb.state);
             if (stateIdx == null) {
                 stateIdx = palette.size();
@@ -282,12 +314,14 @@ public class BlueprintItem extends Item {
             if (y > maxY) maxY = y;
             if (z > maxZ) maxZ = z;
 
-            packedData[idx++] = packPos(x, y, z);
-            packedData[idx++] = stateIdx;
-        }
-
-        if (idx < packedData.length) {
-            packedData = Arrays.copyOf(packedData, idx);
+            if (wide) {
+                blockData[idx++] = x;
+                blockData[idx++] = y;
+                blockData[idx++] = z;
+            } else {
+                blockData[idx++] = packPos(x, y, z);
+            }
+            blockData[idx++] = stateIdx;
         }
 
         ListTag statesList = new ListTag();
@@ -300,7 +334,8 @@ public class BlueprintItem extends Item {
         int sizeZ = idx > 0 ? (maxZ - minZ + 1) : 0;
 
         bpTag.put(TAG_STATES, statesList);
-        bpTag.putIntArray(TAG_BLOCKS, packedData);
+        bpTag.remove(wide ? TAG_BLOCKS : TAG_BLOCKS_WIDE);
+        bpTag.putIntArray(wide ? TAG_BLOCKS_WIDE : TAG_BLOCKS, blockData);
         bpTag.putIntArray(TAG_SIZE, new int[]{sizeX, sizeY, sizeZ});
         // Keep existing name and compatible replacements, or prune replacements not in new blocks
         Map<Block, Block> existingRepl = getReplacements(stack);
@@ -367,8 +402,8 @@ public class BlueprintItem extends Item {
     public static List<BlockGroup> getBlockGroups(ItemStack stack) {
         CompoundTag bpTag = getBlueprintTag(stack);
         Optional<ListTag> statesOpt = Compat.getList(bpTag, TAG_STATES);
-        int[] blocks = Compat.getIntArray(bpTag, TAG_BLOCKS).orElse(new int[0]);
-        if (!statesOpt.isPresent() || blocks.length < 2) {
+        SavedBlocks blocks = SavedBlocks.read(bpTag);
+        if (!statesOpt.isPresent() || blocks.count() == 0) {
             return Collections.emptyList();
         }
         ListTag statesList = statesOpt.get();
@@ -379,8 +414,8 @@ public class BlueprintItem extends Item {
         }
 
         Map<Block, Integer> counts = new LinkedHashMap<>();
-        for (int i = 0; i + 1 < blocks.length; i += 2) {
-            int stateIdx = blocks[i + 1];
+        for (int i = 0; i < blocks.count(); i++) {
+            int stateIdx = blocks.stateIndex(i);
             if (stateIdx >= 0 && stateIdx < palette.size()) {
                 Block b = palette.get(stateIdx).getBlock();
                 if (b != Blocks.AIR) {
@@ -402,8 +437,8 @@ public class BlueprintItem extends Item {
     public static List<CopyBuffer> getCopyBuffer(ItemStack stack) {
         CompoundTag bpTag = getBlueprintTag(stack);
         Optional<ListTag> statesOpt = Compat.getList(bpTag, TAG_STATES);
-        int[] blocks = Compat.getIntArray(bpTag, TAG_BLOCKS).orElse(new int[0]);
-        if (!statesOpt.isPresent() || blocks.length < 2) {
+        SavedBlocks blocks = SavedBlocks.read(bpTag);
+        if (!statesOpt.isPresent() || blocks.count() == 0) {
             return Collections.emptyList();
         }
         ListTag statesList = statesOpt.get();
@@ -421,14 +456,13 @@ public class BlueprintItem extends Item {
             }
         }
 
-        List<CopyBuffer> result = new ArrayList<>(blocks.length / 2);
-        for (int i = 0; i + 1 < blocks.length; i += 2) {
-            BlockPos relPos = unpackPos(blocks[i]);
-            int stateIdx = blocks[i + 1];
+        List<CopyBuffer> result = new ArrayList<>(blocks.count());
+        for (int i = 0; i < blocks.count(); i++) {
+            int stateIdx = blocks.stateIndex(i);
             if (stateIdx >= 0 && stateIdx < resolvedPalette.size()) {
                 BlockState st = resolvedPalette.get(stateIdx);
                 if (!st.isAir()) {
-                    result.add(new CopyBuffer(relPos, st));
+                    result.add(new CopyBuffer(blocks.position(i), st));
                 }
             }
         }
