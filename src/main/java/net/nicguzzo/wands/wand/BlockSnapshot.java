@@ -39,20 +39,24 @@ record BlockSnapshot(BlockState state, CompoundTag data) {
 
     // Creative history retains container contents, so replacing the container must not also spill them.
     boolean changeState(Level level, BlockPos pos, BlockState target) {
+        return changeState(level, pos, target, Block.UPDATE_ALL);
+    }
+
+    private boolean changeState(Level level, BlockPos pos, BlockState target, int flags) {
         //? if >= 1.21.11 {
-        return level.setBlock(pos, target, Block.UPDATE_ALL | Block.UPDATE_SKIP_BLOCK_ENTITY_SIDEEFFECTS);
+        return level.setBlock(pos, target, flags | Block.UPDATE_SKIP_BLOCK_ENTITY_SIDEEFFECTS);
         //? } else {
         /*if (state.getBlock() != target.getBlock() && data != null) {
             net.minecraft.world.Clearable.tryClear(level.getBlockEntity(pos));
         }
-        if (level.setBlockAndUpdate(pos, target)) return true;
+        if (level.setBlock(pos, target, flags)) return true;
         loadData(level, pos);
         return false;
         *///? }
     }
 
-    boolean restore(Level level, BlockPos pos, BlockSnapshot current) {
-        if (state != current.state && !current.changeState(level, pos, state)) return false;
+    boolean restore(Level level, BlockPos pos, BlockSnapshot current, int flags) {
+        if (state != current.state && !current.changeState(level, pos, state, flags)) return false;
         loadData(level, pos);
         return true;
     }

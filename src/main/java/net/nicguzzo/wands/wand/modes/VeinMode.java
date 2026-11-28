@@ -13,51 +13,33 @@ public class VeinMode extends WandMode {
         if (!(wand.destroy || wand.replace ||wand.use)) {
             return;
         }
-        int limit2= WandProps.getVal(wand.wand_stack, WandProps.Value.AREALIM);
-        if(limit2<=0 || limit2 >wand.limit){
-            limit2=wand.limit;
+        int configuredLimit = WandProps.getVal(wand.wand_stack, WandProps.Value.AREALIM);
+        int limit = Math.min(wand.limit, WandsConfig.max_limit);
+        if (configuredLimit > 0) {
+            limit = Math.min(limit, configuredLimit);
         }
+
         wand.block_buffer.reset();
-        int found = 1;
-        limit2-=1;
-        int i=0;
-        wand.add_to_buffer(wand.pos.getX(),wand.pos.getY(),wand.pos.getZ());
-        int from=0;
-        int to=1;
-        int k;
-        int cost=0;
-        while (i < limit2 && i < WandsConfig.max_limit && found <= limit2) {
-            k=0;
-            for(int j=from;j<to;j++) {
-                next_vein_layer(vein_dirs, wand.block_buffer.get(j));
-                for (BlockPos p : vein_dirs) {
-                    if(p!=null) {
-                        BlockState st = wand.level.getBlockState(p);
-                        if (!st.isAir() && (
-                                (wand.match_state && st.equals(wand.block_state)) ||
-                                (!wand.match_state && st.getBlock().equals(wand.block_state.getBlock())) ||
-                                wand.palette.state_in_slot(st)
-                        )) {
-                            if (!wand.block_buffer.in_buffer(p)) {
-                                wand.add_to_buffer(p.getX(), p.getY(), p.getZ());
-                                found++;
-                                k++;
-                            }
-                        }
+        if (limit > 0) {
+            wand.add_to_buffer(wand.pos.getX(), wand.pos.getY(), wand.pos.getZ());
+        }
+        // The buffer is also the breadth-first queue. Only accepted blocks extend it.
+        for (int i = 0; i < wand.block_buffer.get_length() && wand.block_buffer.get_length() < limit; i++) {
+            next_vein_layer(vein_dirs, wand.block_buffer.get(i));
+            for (BlockPos p : vein_dirs) {
+                BlockState st = wand.level.getBlockState(p);
+                if (!st.isAir() && (
+                        (wand.match_state && st.equals(wand.block_state)) ||
+                        (!wand.match_state && st.getBlock().equals(wand.block_state.getBlock())) ||
+                        wand.palette.state_in_slot(st)
+                ) && !wand.block_buffer.in_buffer(p)) {
+                    wand.add_to_buffer(p.getX(), p.getY(), p.getZ());
+                    if (wand.block_buffer.get_length() == limit) {
+                        break;
                     }
-                    cost++;
                 }
             }
-            if(k==0){
-                break;
-            }
-            from=to;
-            to=wand.block_buffer.get_length();
-            i++;
         }
-        //if(!preview){
-            //WandsMod.LOGGER.info("cost: "+cost);
-        //}
         wand.validate_buffer();
     }
     void next_vein_layer(BlockPos[] vein_dirs,BlockPos bpos){

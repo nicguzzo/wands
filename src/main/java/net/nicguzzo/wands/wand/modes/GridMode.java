@@ -2,14 +2,13 @@ package net.nicguzzo.wands.wand.modes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.nicguzzo.wands.items.WandItem;
 import net.nicguzzo.wands.wand.Wand;
 import net.nicguzzo.wands.wand.WandMode;
 import net.nicguzzo.wands.wand.WandProps;
 
 public class GridMode extends WandMode {
     public void place_in_buffer(Wand wand) {
-        Direction playerdir=wand.player.getDirection();;
+        Direction playerdir=wand.player.getDirection();
 
         int ms=  WandProps.getVal(wand.wand_stack, WandProps.Value.GRIDMS);
         int ns=  WandProps.getVal(wand.wand_stack, WandProps.Value.GRIDNS);
@@ -20,68 +19,28 @@ public class GridMode extends WandMode {
 
         m=m*(ms+1);
         n=n*(ns+1);
-        int xskip=ms;
-        int yskip=0;
-        int zskip=ns;
-        if(playerdir== Direction.EAST||playerdir==Direction.WEST){
-            xskip=ns;
-            zskip=ms;
-        }
         Direction wand_side=wand.getSide();
         wand.block_buffer.reset();
-        Direction dir1=Direction.SOUTH;
-        Direction dir2= Direction.EAST;
-        switch (wand_side) {
-            case UP:
-            case DOWN:
-                switch (wand.rotation) {
-                    case NONE:
-                        dir1=playerdir.getClockWise();
-                        dir2=playerdir;
-                        break;
-                    case CLOCKWISE_90:
-                        dir1=playerdir.getClockWise().getClockWise();
-                        dir2=playerdir.getClockWise();
-                        break;
-                    case CLOCKWISE_180:
-                        dir1=playerdir.getClockWise().getClockWise().getClockWise();
-                        dir2=playerdir.getClockWise().getClockWise();
-                        break;
-                    case COUNTERCLOCKWISE_90:
-                        dir1=playerdir;
-                        dir2=playerdir.getClockWise().getClockWise().getClockWise();
-                        break;
+        Direction dir1;
+        Direction dir2;
+        if (wand_side.getAxis() == Direction.Axis.Y) {
+            dir1 = wand.rotation.rotate(playerdir.getClockWise());
+            dir2 = wand.rotation.rotate(playerdir);
+        } else {
+            dir1 = playerdir.getClockWise();
+            dir2 = Direction.UP;
+            switch (wand.rotation) {
+                case CLOCKWISE_90 -> dir2 = Direction.DOWN;
+                case CLOCKWISE_180 -> {
+                    dir1 = dir1.getOpposite();
+                    dir2 = Direction.DOWN;
                 }
-                break;
-            case SOUTH:
-            case NORTH:
-            case EAST:
-            case WEST:
-                if(playerdir==Direction.SOUTH||playerdir==Direction.NORTH)
-                    zskip=0;
-                if(playerdir==Direction.EAST||playerdir==Direction.WEST)
-                    xskip=0;
-                yskip=ns;
-                switch (wand.rotation) {
-                    case NONE:
-                        dir1=playerdir.getClockWise();
-                        dir2 = Direction.UP;
-                        break;
-                    case CLOCKWISE_90:
-                        dir1=playerdir.getClockWise();
-                        dir2 = Direction.DOWN;
-                        break;
-                    case CLOCKWISE_180:
-                        dir1=playerdir.getClockWise().getOpposite();
-                        dir2 = Direction.DOWN;
-                        break;
-                    case COUNTERCLOCKWISE_90:
-                        dir1=playerdir.getClockWise().getOpposite();
-                        dir2 = Direction.UP;
-                        break;
-                }
-                break;
+                case COUNTERCLOCKWISE_90 -> dir1 = dir1.getOpposite();
+            }
         }
+        int xskip = dir1.getAxis() == Direction.Axis.X ? ms : dir2.getAxis() == Direction.Axis.X ? ns : 0;
+        int yskip = dir2.getAxis() == Direction.Axis.Y ? ns : 0;
+        int zskip = dir1.getAxis() == Direction.Axis.Z ? ms : dir2.getAxis() == Direction.Axis.Z ? ns : 0;
         BlockPos pos1;
         BlockPos pos2;
         if (wand.destroy || wand.replace ||wand.use) {
