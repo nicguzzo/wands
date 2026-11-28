@@ -136,9 +136,9 @@ public class NeoforgeEntrypoint {
         MENUS.register(modBus);
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
-        modBus.addListener(this::registerScreens);
-        modBus.addListener(this::registerKeyMappings);
-        modBus.addListener(this::onClientSetup);
+        if (Compat.getEnv() == Compat.Env.CLIENT) {
+            ClientEvents.register(modBus);
+        }
         modBus.addListener(this::onCommonSetup);
         //? if >= 1.20.5 {
         modBus.addListener((net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) -> {
@@ -182,30 +182,40 @@ public class NeoforgeEntrypoint {
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
-    public void registerKeyMappings(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
-        WandsModClient.initialize();
-        WandsModClient.keys.forEach((km, v) -> event.register(km));
-    }
-    public void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
-        event.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
-        event.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
-        event.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
-    }
-    public void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
+    // The common event subscriber is inspected even on a dedicated server.
+    private static final class ClientEvents {
+        static void register(IEventBus modBus) {
+            modBus.addListener(ClientEvents::registerScreens);
+            modBus.addListener(ClientEvents::registerKeyMappings);
+            modBus.addListener(ClientEvents::onClientSetup);
+        }
+
+        private static void registerKeyMappings(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
             WandsModClient.initialize();
-        });
-        NeoForge.EVENT_BUS.register(new Object() {
-            @net.neoforged.bus.api.SubscribeEvent
-            public void onClientTick(ClientTickEvent.Post e) {
-                WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
-            }
-            @net.neoforged.bus.api.SubscribeEvent
-            public void onRenderHud(RenderGuiEvent.Post e) {
-                WandsModClient.render_hud(e.getGuiGraphics());
-            }
-        });
+            WandsModClient.keys.forEach((km, v) -> event.register(km));
+        }
+
+        private static void registerScreens(RegisterMenuScreensEvent event) {
+            event.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
+            event.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
+            event.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
+            event.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
+        }
+
+        private static void onClientSetup(FMLClientSetupEvent event) {
+            event.enqueueWork(WandsModClient::initialize);
+            NeoForge.EVENT_BUS.register(new Object() {
+                @SubscribeEvent
+                public void onClientTick(ClientTickEvent.Post e) {
+                    WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
+                }
+
+                @SubscribeEvent
+                public void onRenderHud(RenderGuiEvent.Post e) {
+                    WandsModClient.render_hud(e.getGuiGraphics());
+                }
+            });
+        }
     }
 
     public static CompoundTag getPlayerData(Player player){

@@ -21,6 +21,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.nicguzzo.wands.client.screens.BlueprintScreen;
 import net.nicguzzo.wands.client.screens.MagicBagScreen;
 import net.nicguzzo.wands.client.screens.PaletteScreen;
+import net.nicguzzo.wands.compat.Compat;
 import net.nicguzzo.wands.items.BlueprintItem;
 import net.nicguzzo.wands.items.MagicBagItem;
 import net.nicguzzo.wands.items.PaletteItem;
@@ -137,8 +138,9 @@ public class ForgeEntrypoint {
         ITEMS.register(modBus);
         CREATIVE_MODE_TABS.register(modBus);
         MinecraftForge.EVENT_BUS.register(this);
-        modBus.addListener(this::registerKeyMappings);
-        modBus.addListener(this::onClientSetup);
+        if (Compat.getEnv() == Compat.Env.CLIENT) {
+            ClientEvents.register(modBus);
+        }
         modBus.addListener(this::onCommonSetup);
         WandsMod.init();
     }
@@ -181,32 +183,42 @@ public class ForgeEntrypoint {
         WandsMod.log("Has flan!! " + WandsMod.has_flan, true);
     }
 
-    public void registerKeyMappings(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
-        WandsModClient.initialize();
-        WandsModClient.keys.forEach((km, v) -> event.register(km));
-    }
-    public void onClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            MenuScreens.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
-            MenuScreens.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
-            MenuScreens.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
-            MenuScreens.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
+    // The common event subscriber is inspected even on a dedicated server.
+    private static final class ClientEvents {
+        static void register(IEventBus modBus) {
+            modBus.addListener(ClientEvents::registerKeyMappings);
+            modBus.addListener(ClientEvents::onClientSetup);
+        }
+
+        private static void registerKeyMappings(net.minecraftforge.client.event.RegisterKeyMappingsEvent event) {
             WandsModClient.initialize();
-        });
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new Object() {
-            @net.minecraftforge.eventbus.api.SubscribeEvent
-            public void onClientTick(net.minecraftforge.event.TickEvent.ClientTickEvent e) {
-                if (e.phase == net.minecraftforge.event.TickEvent.Phase.END) {
-                    WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
+            WandsModClient.keys.forEach((km, v) -> event.register(km));
+        }
+
+        private static void onClientSetup(FMLClientSetupEvent event) {
+            event.enqueueWork(() -> {
+                MenuScreens.register(WAND_TOOLS_MENU_TYPE.get(), WandToolScreen::new);
+                MenuScreens.register(MAGIC_BAG_MENU_TYPE.get(), MagicBagScreen::new);
+                MenuScreens.register(PALETTE_MENU_TYPE.get(), PaletteScreen::new);
+                MenuScreens.register(BLUEPRINT_MENU_TYPE.get(), BlueprintScreen::new);
+                WandsModClient.initialize();
+            });
+            MinecraftForge.EVENT_BUS.register(new Object() {
+                @SubscribeEvent
+                public void onClientTick(net.minecraftforge.event.TickEvent.ClientTickEvent e) {
+                    if (e.phase == net.minecraftforge.event.TickEvent.Phase.END) {
+                        WandsModClient.client_tick(net.minecraft.client.Minecraft.getInstance());
+                    }
                 }
-            }
-            @net.minecraftforge.eventbus.api.SubscribeEvent
-            public void onRenderHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Post e) {
-                if (e.getOverlay() == net.minecraftforge.client.gui.overlay.VanillaGuiOverlay.HOTBAR.type()) {
-                    WandsModClient.render_hud(e.getGuiGraphics());
+
+                @SubscribeEvent
+                public void onRenderHud(net.minecraftforge.client.event.RenderGuiOverlayEvent.Post e) {
+                    if (e.getOverlay() == net.minecraftforge.client.gui.overlay.VanillaGuiOverlay.HOTBAR.type()) {
+                        WandsModClient.render_hud(e.getGuiGraphics());
+                    }
                 }
-            }
-        });
+            });
+        }
     }
      public static CompoundTag getPlayerData(Player player){
         CompoundTag forgeData = player.getPersistentData();
